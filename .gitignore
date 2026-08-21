@@ -22,6 +22,7 @@ apps/web/next-env.d.ts
 
 # Logs
 *.log
+.local-emails/
 npm-debug.log*
 pnpm-debug.log*
 yarn-debug.log*
@@ -38,6 +39,9 @@ yarn-error.log*
 !.vscode/extensions.json
 !.vscode/settings.json
 .idea/
+
+# Local read-only implementation reference
+tas3er-pro/
 
 # Operating systems
 .DS_Store

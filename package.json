@@ -6,6 +6,9 @@
     "build": "turbo run build",
     "lint": "turbo run lint",
     "check-types": "turbo run check-types",
+    "test": "turbo run test",
+    "test:integration": "turbo run test:integration",
+    "verify:build-output": "node scripts/assert-build-output.mjs",
     "db:format": "pnpm --filter @template/database db:format",
     "db:validate": "pnpm --filter @template/database db:validate",
     "db:generate": "pnpm --filter @template/database db:generate",
@@ -15,6 +18,7 @@
     "db:push": "pnpm --filter @template/database db:push",
     "db:studio": "pnpm --filter @template/database db:studio",
     "db:seed": "pnpm --filter @template/database db:seed",
+    "verify": "pnpm db:format && pnpm db:validate && pnpm db:generate && pnpm format:check && pnpm lint && pnpm check-types && pnpm test && pnpm test:integration && pnpm build && pnpm verify:build-output && git diff --check",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,mjs,cjs,json,md,mdx,yml,yaml,css}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,mjs,cjs,json,md,mdx,yml,yaml,css}\""
   },

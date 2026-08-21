@@ -1,31 +1,21 @@
 import type { ErrorRequestHandler } from "express";
-import { ZodError } from "zod";
+
+import type { ErrorEnvelope } from "@template/contracts";
 
 import { appConfig } from "../core/config/app.config.js";
-import { HTTP_STATUS } from "../core/constants/http-status.constants.js";
 import { AppError } from "../core/errors/app.error.js";
 import { InternalServerError } from "../core/errors/internal-server.error.js";
-import type {
-  ErrorResponse,
-  FieldError,
-} from "../core/responses/api-response.js";
-
-const formatZodErrors = (error: ZodError): FieldError[] =>
-  error.issues.map((issue) => ({
-    field: issue.path.join("."),
-    message: issue.message,
-  }));
+import { mapPrismaError } from "../infrastructure/database/prisma-error.mapper.js";
 
 const createErrorResponse = (
   error: AppError,
   path: string,
   requestId: string,
-): ErrorResponse => ({
+): ErrorEnvelope => ({
   success: false,
   statusCode: error.statusCode,
   code: error.code,
   message: error.message,
-  data: null,
   errors: error.errors?.length === 0 ? undefined : error.errors,
   ...(appConfig.isDevelopment ? { stack: error.stack } : {}),
   requestId,
@@ -43,19 +33,14 @@ export const errorHandlerMiddleware: ErrorRequestHandler = (
 
   if (error instanceof AppError) {
     appError = error;
-  } else if (error instanceof ZodError) {
-    appError = new AppError(
-      "Validation failed.",
-      HTTP_STATUS.BAD_REQUEST,
-      "VALIDATION_ERROR",
-      true,
-      formatZodErrors(error),
-    );
   } else {
-    appError = new InternalServerError();
-
-    if (error instanceof Error && error.stack !== undefined) {
-      appError.stack = error.stack;
+    appError = mapPrismaError(error);
+    if (appError instanceof InternalServerError) {
+      const fallback = new InternalServerError();
+      if (error instanceof Error && error.stack !== undefined) {
+        fallback.stack = error.stack;
+      }
+      appError = fallback;
     }
   }
 

@@ -14,7 +14,11 @@ overrides:
   "postcss@^8.0.0": "8.5.25"
 allowBuilds:
   "@prisma/engines": true
+  argon2: true
+  cpu-features: false
   esbuild: false
   prisma: true
+  protobufjs: false
   sharp: true
+  ssh2: false
   unrs-resolver: true

@@ -1,7 +1,6 @@
-export interface AuthenticatedUser {
-  id: string;
-  role: string;
-}
+import type { SafeUser } from "@template/contracts";
+
+export type AuthenticatedUser = SafeUser;
 
 export interface ValidatedRequestData {
   body?: unknown;

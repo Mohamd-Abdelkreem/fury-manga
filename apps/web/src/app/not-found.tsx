@@ -5,7 +5,7 @@ export default function NotFound() {
     <main className="state-page">
       <p className="eyebrow">404 / Not found</p>
       <h1>This route does not exist.</h1>
-      <Link href="/">Return to the platform overview</Link>
+      <Link href="/">Return to Relay</Link>
     </main>
   );
 }

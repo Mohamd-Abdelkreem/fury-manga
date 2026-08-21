@@ -1,7 +1,7 @@
-export {
-  ResponseHelper,
-  type ErrorResponse,
-  type FieldError,
-  type HTTPResponse,
-  type PaginationMeta,
-} from "./api-response.js";
+export { ResponseHelper } from "./api-response.js";
+export type {
+  ErrorEnvelope as ErrorResponse,
+  FieldError,
+  PaginationMeta,
+  SuccessEnvelope as HTTPResponse,
+} from "@template/contracts";

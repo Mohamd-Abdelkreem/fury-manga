@@ -1,39 +1,31 @@
 import type { Response } from "express";
 
+import {
+  paginationMetaSchema,
+  type PaginationMeta,
+  type SuccessEnvelope,
+} from "@template/contracts";
+
 import { HTTP_STATUS } from "../constants/http-status.constants.js";
 
-/* eslint-disable @typescript-eslint/no-extraneous-class, @typescript-eslint/no-unnecessary-type-parameters -- The static helper class and generic method signatures are the project's API response convention. */
+export type { FieldError, PaginationMeta } from "@template/contracts";
 
-export interface PaginationMeta {
-  page: number;
-  limit: number;
-  total: number;
-  totalPages: number;
-  hasNextPage: boolean;
-  hasPreviousPage: boolean;
-}
+/* eslint-disable @typescript-eslint/no-extraneous-class, @typescript-eslint/no-unnecessary-type-parameters -- Static generic response helpers are the API response convention. */
 
-export interface FieldError {
-  field: string;
-  message: string;
-}
-
-export interface HTTPResponse<T = unknown> {
-  success: boolean;
-  statusCode: number;
-  message: string;
-  data?: T;
-  paginationMeta?: PaginationMeta;
-  requestId: string;
-  timestamp: string;
-  path: string;
-}
-
-export interface ErrorResponse extends HTTPResponse<null> {
-  code: string;
-  errors: FieldError[] | undefined;
-  stack?: string | undefined;
-}
+const readPaginationMeta = (data: unknown): PaginationMeta | undefined => {
+  if (
+    data === null ||
+    typeof data !== "object" ||
+    Array.isArray(data) ||
+    !("pagination" in data)
+  ) {
+    return undefined;
+  }
+  const pagination = (data as { pagination?: unknown }).pagination;
+  return pagination === undefined
+    ? undefined
+    : paginationMetaSchema.parse(pagination);
+};
 
 export class ResponseHelper {
   static success<T>(
@@ -44,12 +36,8 @@ export class ResponseHelper {
     path: string,
     requestId: string,
   ): Response {
-    const paginationMeta =
-      data !== null && typeof data === "object" && "pagination" in data
-        ? ((data as { pagination?: PaginationMeta }).pagination ?? undefined)
-        : undefined;
-
-    const payload: HTTPResponse<T> = {
+    const paginationMeta = readPaginationMeta(data);
+    const payload: SuccessEnvelope<T> = {
       success: true,
       message,
       statusCode,
@@ -59,7 +47,6 @@ export class ResponseHelper {
       timestamp: new Date().toISOString(),
       path,
     };
-
     return response.status(statusCode).json(payload);
   }
 

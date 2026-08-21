@@ -5,7 +5,7 @@ const publicEnvironmentSchema = z.object({
 });
 
 const result = publicEnvironmentSchema.safeParse({
-  NEXT_PUBLIC_API_URL: process.env["NEXT_PUBLIC_API_URL"],
+  NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
 });
 
 if (!result.success) {
