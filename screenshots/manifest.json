@@ -1,0 +1,299 @@
+[
+  {
+    "file": "01-home.png",
+    "url": "/",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "fullPage": true,
+    "fixture": false,
+    "note": ""
+  },
+  {
+    "file": "02-discover.png",
+    "url": "/discover",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "fullPage": true,
+    "fixture": false,
+    "note": ""
+  },
+  {
+    "file": "03-story-details.png",
+    "url": "/story/trait-hoarder",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "fullPage": true,
+    "fixture": false,
+    "note": ""
+  },
+  {
+    "file": "04-reader-full-chapter.png",
+    "url": "/story/trait-hoarder/chapter/43",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "fullPage": true,
+    "fixture": false,
+    "note": ""
+  },
+  {
+    "file": "05-reader-single-page.png",
+    "url": "/story/trait-hoarder/chapter/43",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "fullPage": true,
+    "fixture": false,
+    "note": ""
+  },
+  {
+    "file": "06-dashboard.png",
+    "url": "/dashboard",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "fullPage": true,
+    "fixture": true,
+    "note": ""
+  },
+  {
+    "file": "07-settings.png",
+    "url": "/settings",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "fullPage": true,
+    "fixture": true,
+    "note": ""
+  },
+  {
+    "file": "08-auth-login.png",
+    "url": "/auth/login",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "fullPage": true,
+    "fixture": true,
+    "note": ""
+  },
+  {
+    "file": "09-auth-register.png",
+    "url": "/auth/register",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "fullPage": true,
+    "fixture": false,
+    "note": ""
+  },
+  {
+    "file": "10-auth-forgot-password.png",
+    "url": "/auth/forgot-password",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "fullPage": true,
+    "fixture": false,
+    "note": ""
+  },
+  {
+    "file": "11-auth-verify-email.png",
+    "url": "/auth/verify-email",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "fullPage": true,
+    "fixture": false,
+    "note": ""
+  },
+  {
+    "file": "12-auth-reset-password-form.png",
+    "url": "/auth/reset-password?token=screenshot-demo",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "fullPage": true,
+    "fixture": true,
+    "note": ""
+  },
+  {
+    "file": "13-not-found.png",
+    "url": "/not-a-real-page",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "fullPage": true,
+    "fixture": false,
+    "note": ""
+  },
+  {
+    "file": "14-notifications-unread.png",
+    "url": "/",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "fullPage": false,
+    "fixture": false,
+    "note": ""
+  },
+  {
+    "file": "15-filter-genres.png",
+    "url": "/discover",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "fullPage": false,
+    "fixture": false,
+    "note": ""
+  },
+  {
+    "file": "16-filter-status.png",
+    "url": "/discover",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "fullPage": false,
+    "fixture": false,
+    "note": ""
+  },
+  {
+    "file": "17-filter-type.png",
+    "url": "/discover",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "fullPage": false,
+    "fixture": false,
+    "note": ""
+  },
+  {
+    "file": "18-filter-order.png",
+    "url": "/discover",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "fullPage": false,
+    "fixture": false,
+    "note": ""
+  },
+  {
+    "file": "19-reader-menu-chapter-top.png",
+    "url": "/story/trait-hoarder/chapter/43",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "fullPage": false,
+    "fixture": false,
+    "note": ""
+  },
+  {
+    "file": "20-reader-menu-mode-top.png",
+    "url": "/story/trait-hoarder/chapter/43",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "fullPage": false,
+    "fixture": false,
+    "note": ""
+  },
+  {
+    "file": "21-registration-validation.png",
+    "url": "/auth/register",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "fullPage": true,
+    "fixture": true,
+    "note": "Required-field validation; browser-only guest session."
+  },
+  {
+    "file": "22-registration-confirmation.png",
+    "url": "/auth/register",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "fullPage": true,
+    "fixture": true,
+    "note": "Registration success prompting email confirmation; browser-only response, no email sent."
+  },
+  {
+    "file": "23-email-verified.png",
+    "url": "/auth/verify-email?token=screenshot-demo",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "fullPage": true,
+    "fixture": true,
+    "note": "Verified-email success using a browser-only response."
+  },
+  {
+    "file": "24-password-recovery-confirmation.png",
+    "url": "/auth/forgot-password",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "fullPage": true,
+    "fixture": true,
+    "note": "Password-recovery confirmation using a browser-only response; no email sent."
+  },
+  {
+    "file": "25-invalid-reset-link.png",
+    "url": "/auth/reset-password",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "fullPage": true,
+    "fixture": true,
+    "note": "Missing/expired password reset link state."
+  },
+  {
+    "file": "26-login-error.png",
+    "url": "/auth/login",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "fullPage": true,
+    "fixture": true,
+    "note": "Invalid-credentials response simulated in the browser."
+  },
+  {
+    "file": "27-chapter-search-empty.png",
+    "url": "/story/trait-hoarder",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "fullPage": false,
+    "fixture": true,
+    "note": "No chapters match the search. Only anonymous session is simulated."
+  }
+]
