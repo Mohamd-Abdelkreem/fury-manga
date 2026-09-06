@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 
 import { useSession } from "@/features/auth/hooks/auth.hooks";
+import { localizeAuthMessage } from "@/features/auth/utils/auth-messages";
 import { getApiError } from "@/services/api/api-client";
 
 import { SessionLoader } from "./session-loader";
@@ -55,10 +56,10 @@ export function GuestOnlyRoute({
     return (
       <div className="route-state">
         <p className="form-notice form-notice--error" role="alert">
-          {error.message}
+          {localizeAuthMessage(error.message)}
         </p>
         {error.requestId.length === 0 ? null : (
-          <small>Request ID: {error.requestId}</small>
+          <small>معرّف الطلب: {error.requestId}</small>
         )}
         <button
           className="button"
@@ -67,7 +68,7 @@ export function GuestOnlyRoute({
             void session.refetch();
           }}
         >
-          Retry
+          إعادة المحاولة
         </button>
       </div>
     );

@@ -11,6 +11,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 
+import { localizeAuthMessage } from "@/features/auth/utils/auth-messages";
+
 import { FormField } from "@/components/forms/form-field";
 import { useRegister } from "@/features/auth/hooks/auth.hooks";
 import { applyApiFormError } from "@/shared/forms/form";
@@ -48,13 +50,16 @@ export function RegisterForm() {
         <span className="success-panel__mark" aria-hidden="true">
           ✓
         </span>
-        <h2>Check your inbox.</h2>
+        <h2>تحقّق من بريدك الإلكتروني</h2>
         <p>
-          We sent a verification link to <strong>{submittedEmail}</strong>.
-          Verify your address before signing in.
+          أرسلنا رابط تأكيد إلى{" "}
+          <strong>
+            <bdi>{submittedEmail}</bdi>
+          </strong>
+          . أكّد بريدك الإلكتروني قبل تسجيل الدخول.
         </p>
         <Link className="button button--full" href="/auth/login">
-          Return to sign in
+          العودة إلى تسجيل الدخول
         </Link>
       </div>
     );
@@ -70,39 +75,41 @@ export function RegisterForm() {
     >
       <FormField
         id="fullName"
-        label="Full name"
+        label="الاسم الكامل"
         autoComplete="name"
-        error={errors.fullName?.message}
+        error={localizeAuthMessage(errors.fullName?.message)}
         {...register("fullName")}
       />
       <FormField
         id="email"
-        label="Work email"
+        label="البريد الإلكتروني"
         type="email"
+        dir="ltr"
         autoComplete="email"
-        error={errors.email?.message}
+        error={localizeAuthMessage(errors.email?.message)}
         {...register("email")}
       />
       <FormField
         id="phone"
-        label="Phone (optional)"
+        label="رقم الهاتف (اختياري)"
         type="tel"
+        dir="ltr"
         autoComplete="tel"
-        error={errors.phone?.message}
+        error={localizeAuthMessage(errors.phone?.message)}
         {...register("phone")}
       />
       <FormField
         id="password"
-        label="Password"
+        label="كلمة المرور"
         type="password"
         autoComplete="new-password"
-        hint={`Use at least ${String(PASSWORD_MIN_LENGTH)} characters.`}
-        error={errors.password?.message}
+        hint={`استخدم ${String(PASSWORD_MIN_LENGTH)} حرفًا على الأقل.`}
+        error={localizeAuthMessage(errors.password?.message)}
         {...register("password")}
       />
       {formError === null ? null : (
         <p className="form-notice form-notice--error" role="alert">
-          {formError}
+          {localizeAuthMessage(formError)}
         </p>
       )}
       <button
@@ -110,10 +117,10 @@ export function RegisterForm() {
         type="submit"
         disabled={isSubmitting}
       >
-        {isSubmitting ? "Creating account…" : "Create account"}
+        {isSubmitting ? "جارٍ إنشاء الحساب…" : "إنشاء حساب"}
       </button>
       <p className="auth-form__footer">
-        Already registered? <Link href="/auth/login">Sign in</Link>
+        لديك حساب بالفعل؟ <Link href="/auth/login">تسجيل الدخول</Link>
       </p>
     </form>
   );

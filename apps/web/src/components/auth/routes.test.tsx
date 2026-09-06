@@ -66,7 +66,7 @@ describe("GuestOnlyRoute", () => {
       session({ isPending: true, isFetched: false }),
     );
     render(<GuestOnlyRoute>Guest content</GuestOnlyRoute>);
-    expect(screen.getByText("Restoring your workspace.")).toBeInTheDocument();
+    expect(screen.getByText("جارٍ تحميل حسابك…")).toBeInTheDocument();
   });
 
   it("shows unexpected errors with a retry action", () => {
@@ -75,10 +75,10 @@ describe("GuestOnlyRoute", () => {
     );
     render(<GuestOnlyRoute>Guest content</GuestOnlyRoute>);
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "Session lookup failed.",
+      "تعذّر إتمام الطلب. راجع البيانات وحاول مرة أخرى.",
     );
-    expect(screen.getByText("Request ID: request-test")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+    expect(screen.getByText("معرّف الطلب: request-test")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "إعادة المحاولة" }));
     expect(mocks.refetch).toHaveBeenCalledOnce();
   });
 
@@ -108,7 +108,7 @@ describe("ProtectedRoute", () => {
       session({ isPending: true, isFetched: false }),
     );
     render(<ProtectedRoute>Private content</ProtectedRoute>);
-    expect(screen.getByText("Restoring your workspace.")).toBeInTheDocument();
+    expect(screen.getByText("جارٍ تحميل حسابك…")).toBeInTheDocument();
   });
 
   it("shows unexpected errors with a retry action", () => {
@@ -116,7 +116,7 @@ describe("ProtectedRoute", () => {
       session({ isError: true, error: new Error("offline") }),
     );
     render(<ProtectedRoute>Private content</ProtectedRoute>);
-    fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+    fireEvent.click(screen.getByRole("button", { name: "إعادة المحاولة" }));
     expect(screen.getByRole("alert")).toHaveTextContent(
       "Session lookup failed.",
     );

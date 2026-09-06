@@ -4,14 +4,14 @@ import { AuthShell } from "@/components/auth/auth-shell";
 import { SessionLoader } from "@/components/auth/session-loader";
 import { ResetPasswordForm } from "@/features/auth/components/reset-password-form";
 
-export const metadata = { title: "Reset password" };
+export const metadata = { title: "إعادة تعيين كلمة المرور" };
 
 export default function ResetPasswordPage() {
   return (
     <AuthShell
-      eyebrow="Account recovery"
-      title="Choose a new password"
-      summary="Use the one-time recovery link to secure your Fury account."
+      eyebrow="استعادة الحساب"
+      title="اختر كلمة مرور جديدة"
+      summary="استخدم رابط الاستعادة لتعيين كلمة مرور جديدة لحسابك على فيوري."
     >
       <Suspense fallback={<SessionLoader />}>
         <ResetPasswordForm />

@@ -9,6 +9,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 
+import { localizeAuthMessage } from "@/features/auth/utils/auth-messages";
+
 import { FormField } from "@/components/forms/form-field";
 import { useLogin } from "@/features/auth/hooks/auth.hooks";
 import { resolvePostLoginPath } from "@/features/auth/utils/safe-return-path";
@@ -54,30 +56,31 @@ export function LoginForm() {
     >
       <FormField
         id="email"
-        label="Work email"
+        label="البريد الإلكتروني"
         type="email"
+        dir="ltr"
         autoComplete="email"
-        error={errors.email?.message}
+        error={localizeAuthMessage(errors.email?.message)}
         {...register("email")}
       />
       <FormField
         id="password"
-        label="Password"
+        label="كلمة المرور"
         type="password"
         autoComplete="current-password"
-        error={errors.password?.message}
+        error={localizeAuthMessage(errors.password?.message)}
         {...register("password")}
       />
       <div className="form-row">
         <label className="check-field">
           <input type="checkbox" {...register("rememberMe")} />
-          <span>Keep me signed in</span>
+          <span>تذكرني</span>
         </label>
-        <Link href="/auth/forgot-password">Forgot password?</Link>
+        <Link href="/auth/forgot-password">نسيت كلمة المرور؟</Link>
       </div>
       {formError === null ? null : (
         <p className="form-notice form-notice--error" role="alert">
-          {formError}
+          {localizeAuthMessage(formError)}
         </p>
       )}
       <button
@@ -85,10 +88,10 @@ export function LoginForm() {
         type="submit"
         disabled={isSubmitting}
       >
-        {isSubmitting ? "Establishing session…" : "Sign in securely"}
+        {isSubmitting ? "جارٍ تسجيل الدخول…" : "تسجيل الدخول"}
       </button>
       <p className="auth-form__footer">
-        New to Fury Turbo? <Link href="/auth/register">Create an account</Link>
+        ليس لديك حساب؟ <Link href="/auth/register">أنشئ حسابًا</Link>
       </p>
     </form>
   );

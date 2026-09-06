@@ -10,6 +10,8 @@ import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import type { z } from "zod";
 
+import { localizeAuthMessage } from "@/features/auth/utils/auth-messages";
+
 import { FormField } from "@/components/forms/form-field";
 import {
   useResetPassword,
@@ -47,10 +49,10 @@ export function ResetPasswordForm() {
   if (token === null || tokenQuery.isError) {
     return (
       <div className="success-panel">
-        <h2>Link unavailable.</h2>
-        <p>This recovery link is missing, expired, or was already used.</p>
+        <h2>الرابط غير متاح</h2>
+        <p>رابط الاستعادة مفقود أو منتهي الصلاحية أو سبق استخدامه.</p>
         <Link className="button button--full" href="/auth/forgot-password">
-          Request another link
+          طلب رابط جديد
         </Link>
       </div>
     );
@@ -58,7 +60,7 @@ export function ResetPasswordForm() {
   if (tokenQuery.isPending) {
     return (
       <p className="form-notice" aria-live="polite">
-        Checking this recovery link...
+        جارٍ التحقق من رابط الاستعادة…
       </p>
     );
   }
@@ -72,24 +74,24 @@ export function ResetPasswordForm() {
     >
       <FormField
         id="newPassword"
-        label="New password"
+        label="كلمة المرور الجديدة"
         type="password"
         autoComplete="new-password"
-        hint={`Use at least ${String(PASSWORD_MIN_LENGTH)} characters.`}
-        error={errors.newPassword?.message}
+        hint={`استخدم ${String(PASSWORD_MIN_LENGTH)} حرفًا على الأقل.`}
+        error={localizeAuthMessage(errors.newPassword?.message)}
         {...register("newPassword")}
       />
       <FormField
         id="passwordConfirmation"
-        label="Confirm new password"
+        label="تأكيد كلمة المرور الجديدة"
         type="password"
         autoComplete="new-password"
-        error={errors.passwordConfirmation?.message}
+        error={localizeAuthMessage(errors.passwordConfirmation?.message)}
         {...register("passwordConfirmation")}
       />
       {formError === null ? null : (
         <p className="form-notice form-notice--error" role="alert">
-          {formError}
+          {localizeAuthMessage(formError)}
         </p>
       )}
       <button
@@ -97,7 +99,7 @@ export function ResetPasswordForm() {
         type="submit"
         disabled={isSubmitting}
       >
-        {isSubmitting ? "Updating..." : "Set new password"}
+        {isSubmitting ? "جارٍ التحديث…" : "حفظ كلمة المرور الجديدة"}
       </button>
     </form>
   );

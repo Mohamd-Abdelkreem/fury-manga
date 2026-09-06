@@ -8,6 +8,8 @@ import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 
+import { localizeAuthMessage } from "@/features/auth/utils/auth-messages";
+
 import { FormField } from "@/components/forms/form-field";
 import {
   useResendVerification,
@@ -51,8 +53,10 @@ export function VerifyEmailPanel() {
 
   const resend = handleSubmit(async (values) => {
     try {
-      const result = await resendVerification.mutateAsync(values);
-      setMessage(result.data.message);
+      await resendVerification.mutateAsync(values);
+      setMessage(
+        "إذا كان الحساب بحاجة إلى تأكيد، فستصلك رسالة تحتوي على رابط تأكيد جديد.",
+      );
     } catch (error) {
       setMessage(applyApiFormError(error, { getValues, setError }));
     }
@@ -63,7 +67,7 @@ export function VerifyEmailPanel() {
   if (visibleState === "working") {
     return (
       <p className="form-notice" aria-live="polite">
-        Verifying your one-time link…
+        جارٍ التحقق من رابط التأكيد…
       </p>
     );
   }
@@ -73,10 +77,10 @@ export function VerifyEmailPanel() {
         <span className="success-panel__mark" aria-hidden="true">
           ✓
         </span>
-        <h2>Email verified.</h2>
-        <p>Your account is active and ready for a new session.</p>
+        <h2>تم تأكيد البريد الإلكتروني</h2>
+        <p>تم تفعيل حسابك، ويمكنك الآن تسجيل الدخول.</p>
         <Link className="button button--full" href="/auth/login">
-          Continue to sign in
+          المتابعة إلى تسجيل الدخول
         </Link>
       </div>
     );
@@ -90,19 +94,20 @@ export function VerifyEmailPanel() {
       noValidate
     >
       <p className="form-notice form-notice--error">
-        This verification link is missing, invalid, or expired.
+        رابط التأكيد مفقود أو غير صالح أو منتهي الصلاحية.
       </p>
       <FormField
         id="email"
-        label="Account email"
+        label="البريد الإلكتروني"
         type="email"
+        dir="ltr"
         autoComplete="email"
-        error={errors.email?.message}
+        error={localizeAuthMessage(errors.email?.message)}
         {...register("email")}
       />
       {message === null ? null : (
         <p className="form-notice" role="status">
-          {message}
+          {localizeAuthMessage(message)}
         </p>
       )}
       <button
@@ -110,7 +115,7 @@ export function VerifyEmailPanel() {
         type="submit"
         disabled={isSubmitting}
       >
-        {isSubmitting ? "Sending…" : "Send a fresh link"}
+        {isSubmitting ? "جارٍ الإرسال…" : "إرسال رابط جديد"}
       </button>
     </form>
   );

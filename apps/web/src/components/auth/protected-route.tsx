@@ -84,7 +84,7 @@ export function ProtectedRoute({
           {error.message}
         </p>
         {error.requestId.length === 0 ? null : (
-          <small>Request ID: {error.requestId}</small>
+          <small>معرّف الطلب: {error.requestId}</small>
         )}
         <button
           className="button"
@@ -93,7 +93,7 @@ export function ProtectedRoute({
             void session.refetch();
           }}
         >
-          Retry
+          إعادة المحاولة
         </button>
       </div>
     );

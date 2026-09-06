@@ -7,6 +7,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 
+import { localizeAuthMessage } from "@/features/auth/utils/auth-messages";
+
 import { FormField } from "@/components/forms/form-field";
 import { useForgotPassword } from "@/features/auth/hooks/auth.hooks";
 import { applyApiFormError } from "@/shared/forms/form";
@@ -29,8 +31,10 @@ export function ForgotPasswordForm() {
 
   const onSubmit = handleSubmit(async (values) => {
     try {
-      const result = await forgotPassword.mutateAsync(values);
-      setMessage(result.data.message);
+      await forgotPassword.mutateAsync(values);
+      setMessage(
+        "إذا كان الحساب مؤهلاً للاستعادة، فستصلك رسالة تحتوي على رابط إعادة تعيين كلمة المرور.",
+      );
     } catch (error) {
       setMessage(applyApiFormError(error, { getValues, setError }));
     }
@@ -46,15 +50,16 @@ export function ForgotPasswordForm() {
     >
       <FormField
         id="email"
-        label="Account email"
+        label="البريد الإلكتروني"
         type="email"
+        dir="ltr"
         autoComplete="email"
-        error={errors.email?.message}
+        error={localizeAuthMessage(errors.email?.message)}
         {...register("email")}
       />
       {message === null ? null : (
         <p className="form-notice" role="status">
-          {message}
+          {localizeAuthMessage(message)}
         </p>
       )}
       <button
@@ -62,10 +67,10 @@ export function ForgotPasswordForm() {
         type="submit"
         disabled={isSubmitting}
       >
-        {isSubmitting ? "Sending…" : "Send recovery link"}
+        {isSubmitting ? "جارٍ الإرسال…" : "إرسال رابط الاستعادة"}
       </button>
       <p className="auth-form__footer">
-        <Link href="/auth/login">Back to sign in</Link>
+        <Link href="/auth/login">العودة إلى تسجيل الدخول</Link>
       </p>
     </form>
   );

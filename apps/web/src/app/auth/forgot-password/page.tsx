@@ -1,14 +1,14 @@
 import { AuthShell } from "@/components/auth/auth-shell";
 import { ForgotPasswordForm } from "@/features/auth/components/forgot-password-form";
 
-export const metadata = { title: "Forgot password" };
+export const metadata = { title: "نسيت كلمة المرور" };
 
 export default function ForgotPasswordPage() {
   return (
     <AuthShell
-      eyebrow="Account recovery"
-      title="Recover your account"
-      summary="Enter your email and we will send recovery instructions if an account is eligible."
+      eyebrow="استعادة الحساب"
+      title="استعد حسابك"
+      summary="أدخل بريدك الإلكتروني وسنرسل رابط الاستعادة إذا كان الحساب مؤهلاً للاستعادة."
     >
       <ForgotPasswordForm />
     </AuthShell>
