@@ -1,5 +1,5 @@
 {
-  "name": "@template/eslint-config",
+  "name": "@fury/eslint-config",
   "type": "module",
   "private": true,
   "exports": {

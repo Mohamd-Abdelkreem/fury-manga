@@ -6,7 +6,7 @@ import type {
   LoginBody,
   RegisterBody,
   ResetPasswordBody,
-} from "@template/contracts";
+} from "@fury/contracts";
 
 import {
   apiClient,

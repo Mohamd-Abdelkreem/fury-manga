@@ -1,4 +1,4 @@
-import { resetPasswordBodySchema } from "@template/contracts";
+import { resetPasswordBodySchema } from "@fury/contracts";
 import type { z } from "zod";
 
 export const resetPasswordBodyDtoSchema = resetPasswordBodySchema;

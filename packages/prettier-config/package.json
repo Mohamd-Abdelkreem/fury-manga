@@ -1,5 +1,5 @@
 {
-  "name": "@template/prettier-config",
+  "name": "@fury/prettier-config",
   "private": true,
   "type": "module",
   "exports": "./index.mjs",

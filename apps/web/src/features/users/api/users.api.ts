@@ -1,4 +1,4 @@
-import type { AuthUserData, UpdateProfileBody } from "@template/contracts";
+import type { AuthUserData, UpdateProfileBody } from "@fury/contracts";
 
 import { apiClient, type ApiResponse } from "@/services/api/api-client";
 

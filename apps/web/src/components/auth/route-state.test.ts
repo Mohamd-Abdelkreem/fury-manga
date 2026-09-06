@@ -1,4 +1,4 @@
-import type { AuthUserData, SafeUser } from "@template/contracts";
+import type { AuthUserData, SafeUser } from "@fury/contracts";
 import { describe, expect, it } from "vitest";
 
 import { resolveGuestOnlyRouteState } from "./guest-only-route";
@@ -7,7 +7,7 @@ import { resolveProtectedRouteState } from "./protected-route";
 const user = (overrides: Partial<SafeUser> = {}): AuthUserData => ({
   user: {
     id: "1b3d904e-a46c-4dd8-9cb7-d0767546ea95",
-    fullName: "Template User",
+    fullName: "Fury Test User",
     email: "user@example.com",
     phone: null,
     role: "USER",

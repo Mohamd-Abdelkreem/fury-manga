@@ -1,7 +1,8 @@
 "use client";
 
-import type { UserRole } from "@template/contracts";
 import type { Route } from "next";
+
+import type { UserRole } from "@fury/contracts";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 

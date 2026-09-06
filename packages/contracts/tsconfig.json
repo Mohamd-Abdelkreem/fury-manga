@@ -1,5 +1,5 @@
 {
-  "extends": "@template/typescript-config/node.json",
+  "extends": "@fury/typescript-config/node.json",
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist",

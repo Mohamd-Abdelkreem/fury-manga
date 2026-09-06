@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 
-import type { UserRole } from "@template/database";
+import type { UserRole } from "@fury/database";
 
 import { ForbiddenException } from "../core/errors/forbidden.error.js";
 import { UnauthorizedException } from "../core/errors/unauthorized.error.js";

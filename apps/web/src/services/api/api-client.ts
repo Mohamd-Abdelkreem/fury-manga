@@ -4,7 +4,7 @@ import axios, {
   type AxiosResponse,
 } from "axios";
 
-import type { SuccessEnvelope } from "@template/contracts";
+import type { SuccessEnvelope } from "@fury/contracts";
 
 import { publicEnvironment } from "@/config/public-environment";
 
@@ -80,7 +80,7 @@ let refreshPromise: ValueState<Promise<string>> = { kind: "missing" };
 
 declare module "axios" {
   interface AxiosRequestConfig {
-    _templateRetried?: boolean;
+    _furyRetried?: boolean;
   }
 }
 
@@ -140,7 +140,7 @@ const safeCurrentPath = (): string | null => {
   const value = `${location.pathname}${location.search}`;
   if (!value.startsWith("/") || value.startsWith("//")) return null;
   if (location.pathname.startsWith("/auth/")) return null;
-  const parsed = new URL(value, "https://template.invalid");
+  const parsed = new URL(value, "https://fury.invalid");
   for (const key of parsed.searchParams.keys()) {
     if (CREDENTIAL_QUERY_KEYS.has(key.toLowerCase())) return null;
   }
@@ -207,11 +207,11 @@ apiClient.interceptors.response.use(
       typeof requestUrl !== "string" ||
       error.response?.status !== 401 ||
       isPublicAuthRequest(requestUrl) ||
-      config._templateRetried === true
+      config._furyRetried === true
     ) {
       throw error;
     }
-    config._templateRetried = true;
+    config._furyRetried = true;
     try {
       await refreshAccessToken();
     } catch (refreshError: unknown) {

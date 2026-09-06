@@ -1,7 +1,7 @@
 process.env["NODE_ENV"] = "test";
 process.env["DATABASE_URL"] =
   process.env["DATABASE_URL"] ??
-  "postgresql://template_test:template_test@127.0.0.1:5432/template_test";
+  "postgresql://fury_test:fury_test@127.0.0.1:5432/fury_test";
 process.env["AUTH_JWT_SECRET"] =
   "test-only-access-secret-000000000000000000000000";
 process.env["AUTH_REFRESH_JWT_SECRET"] =

@@ -17,8 +17,8 @@ const accessSecret = readSecret("AUTH_JWT_SECRET");
 export const authConfig = Object.freeze({
   nodeEnv,
   isProduction,
-  issuer: getEnvVariable("AUTH_JWT_ISSUER", "full-stack-boilerplate"),
-  audience: getEnvVariable("AUTH_JWT_AUDIENCE", "full-stack-boilerplate-web"),
+  issuer: getEnvVariable("AUTH_JWT_ISSUER", "fury-turbo"),
+  audience: getEnvVariable("AUTH_JWT_AUDIENCE", "fury-turbo-web"),
   clockToleranceSeconds: getEnvVarAsInteger(
     "AUTH_JWT_CLOCK_TOLERANCE_SECONDS",
     5,

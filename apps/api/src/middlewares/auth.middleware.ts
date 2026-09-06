@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 
-import { UserStatus, type DatabaseClient } from "@template/database";
+import { UserStatus, type DatabaseClient } from "@fury/database";
 
 import { UnauthorizedException } from "../core/errors/unauthorized.error.js";
 import { mapSafeUser } from "../modules/users/users.mapper.js";

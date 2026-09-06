@@ -1,0 +1,85 @@
+/* ─────────────────────────────────────────
+ * Carousel.module.css
+ * Pure CSS replacement for all Tailwind
+ * classes used in ui/carousel.tsx
+ * ───────────────────────────────────────── */
+
+.carousel {
+  position: relative;
+  width: 100%;
+}
+
+.carouselContent {
+  overflow: hidden;
+}
+
+.carouselTrack {
+  display: flex;
+  margin-left: -1rem; /* -ml-4 */
+}
+
+.carouselTrackVertical {
+  flex-direction: column;
+  margin-top: -1rem; /* -mt-4 */
+  margin-left: 0;
+}
+
+.carouselItem {
+  min-width: 0;
+  flex-shrink: 0;
+  flex-grow: 0;
+  flex-basis: 100%;
+  padding-left: 1rem; /* pl-4 */
+}
+
+.carouselItemVertical {
+  padding-left: 0;
+  padding-top: 1rem; /* pt-4 */
+}
+
+/* Arrow buttons — base */
+.carouselButton {
+  position: absolute;
+  width: 2rem; /* size-8 */
+  height: 2rem;
+  border-radius: 50%; /* rounded-full */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+.carouselButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Horizontal previous: top-1/2 -left-12 -translate-y-1/2 */
+.carouselPrev {
+  top: 50%;
+  left: -3rem;
+  transform: translateY(-50%);
+}
+
+/* Horizontal next: top-1/2 -right-12 -translate-y-1/2 */
+.carouselNext {
+  top: 50%;
+  right: -3rem;
+  transform: translateY(-50%);
+}
+
+/* Vertical previous: -top-12 left-1/2 -translate-x-1/2 rotate-90 */
+.carouselPrevVertical {
+  top: -3rem;
+  left: 50%;
+  transform: translateX(-50%) rotate(90deg);
+}
+
+/* Vertical next: -bottom-12 left-1/2 -translate-x-1/2 rotate-90 */
+.carouselNextVertical {
+  bottom: -3rem;
+  left: 50%;
+  transform: translateX(-50%) rotate(90deg);
+}

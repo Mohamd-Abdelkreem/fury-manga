@@ -1,7 +1,10 @@
 import type { ReactNode } from "react";
 
-import { BrandMark } from "@/components/brand/brand-mark";
-import { ProtocolTrace } from "@/components/brand/protocol-trace";
+import { Navbar } from "@/features/home/components/Navbar/Navbar";
+import { Footer } from "@/features/home/components/Footer/Footer";
+import formStyles from "@/features/auth/components/auth-form.module.css";
+
+import styles from "./auth-shell.module.css";
 
 export function AuthShell({
   eyebrow,
@@ -15,29 +18,23 @@ export function AuthShell({
   children: ReactNode;
 }) {
   return (
-    <main className="auth-shell">
-      <aside className="auth-shell__context">
-        <BrandMark />
-        <div className="auth-shell__context-copy">
-          <p className="eyebrow">Protected by default</p>
-          <h2>
-            One identity.
-            <br />A deliberate chain of trust.
-          </h2>
-          <ProtocolTrace />
-        </div>
-        <p className="auth-shell__aside-note">
-          Access tokens remain in memory. Refresh credentials stay HttpOnly.
-        </p>
-      </aside>
-      <section className="auth-shell__form">
-        <div className="auth-card">
-          <p className="eyebrow">{eyebrow}</p>
-          <h1>{title}</h1>
-          <p className="auth-card__summary">{summary}</p>
-          {children}
-        </div>
-      </section>
-    </main>
+    <div className={styles["pageWrapper"]} dir="rtl">
+      <div style={{ position: "relative", zIndex: 10 }}>
+        <Navbar minimal />
+        <main className={styles["contentContainer"]}>
+          <div className={formStyles["container"]}>
+            <section className={formStyles["card"]}>
+              <header className={formStyles["header"]}>
+                <p className="auth-eyebrow">{eyebrow}</p>
+                <h1 className={formStyles["title"]}>{title}</h1>
+                <p className={formStyles["subtitle"]}>{summary}</p>
+              </header>
+              {children}
+            </section>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    </div>
   );
 }

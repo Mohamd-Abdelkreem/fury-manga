@@ -27,8 +27,8 @@ export const sanitizeReturnPath = (
     return null;
   }
   try {
-    const parsed = new URL(value, "https://template.invalid");
-    if (parsed.origin !== "https://template.invalid") return null;
+    const parsed = new URL(value, "https://fury.invalid");
+    if (parsed.origin !== "https://fury.invalid") return null;
     if (
       !ALLOWED_ROOTS.some(
         (root) =>

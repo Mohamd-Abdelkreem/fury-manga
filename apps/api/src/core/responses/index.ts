@@ -4,4 +4,4 @@ export type {
   FieldError,
   PaginationMeta,
   SuccessEnvelope as HTTPResponse,
-} from "@template/contracts";
+} from "@fury/contracts";

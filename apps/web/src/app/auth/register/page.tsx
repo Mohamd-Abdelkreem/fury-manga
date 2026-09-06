@@ -1,12 +1,14 @@
 import { AuthShell } from "@/components/auth/auth-shell";
 import { RegisterForm } from "@/features/auth/components/register-form";
 
+export const metadata = { title: "Create account" };
+
 export default function RegisterPage() {
   return (
     <AuthShell
-      eyebrow="New account"
-      title="Create your identity."
-      summary="Start with a verified email and a strong password. Product-specific onboarding comes next."
+      eyebrow="Join Fury"
+      title="Create your account"
+      summary="Join the Fury community and keep your reading experience connected."
     >
       <RegisterForm />
     </AuthShell>

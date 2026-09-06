@@ -1,0 +1,18 @@
+.pageWrapper {
+  min-height: 100vh;
+  background-color: var(--background);
+  font-family: "Cairo", "Cairo Play", sans-serif;
+  overflow-x: hidden;
+}
+
+.contentContainer {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem 1rem 3rem 1rem;
+}
+
+@media (min-width: 640px) {
+  .contentContainer {
+    padding: 2.5rem 1.5rem 4rem 1.5rem;
+  }
+}

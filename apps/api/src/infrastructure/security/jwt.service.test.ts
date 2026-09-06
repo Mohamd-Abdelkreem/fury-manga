@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { UserRole } from "@template/database";
+import { UserRole } from "@fury/database";
 import { describe, expect, it } from "vitest";
 
 import {

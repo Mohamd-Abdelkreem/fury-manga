@@ -1,9 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { loginBodySchema, type LoginBody } from "@template/contracts";
-import Link from "next/link";
+import { loginBodySchema, type LoginBody } from "@fury/contracts";
 import type { Route } from "next";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -88,7 +88,7 @@ export function LoginForm() {
         {isSubmitting ? "Establishing session…" : "Sign in securely"}
       </button>
       <p className="auth-form__footer">
-        New to Relay? <Link href="/auth/register">Create an account</Link>
+        New to Fury Turbo? <Link href="/auth/register">Create an account</Link>
       </p>
     </form>
   );

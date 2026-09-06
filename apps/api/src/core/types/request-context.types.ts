@@ -1,4 +1,4 @@
-import type { SafeUser } from "@template/contracts";
+import type { SafeUser } from "@fury/contracts";
 
 export type AuthenticatedUser = SafeUser;
 

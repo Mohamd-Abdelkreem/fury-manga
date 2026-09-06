@@ -3,7 +3,7 @@ import pino from "pino";
 import request, { type Response as SupertestResponse } from "supertest";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 
-import { createDatabaseClient } from "@template/database";
+import { createDatabaseClient } from "@fury/database";
 
 import { createApp } from "./app.js";
 import type {

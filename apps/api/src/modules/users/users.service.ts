@@ -1,5 +1,5 @@
-import type { SafeUser } from "@template/contracts";
-import { UserStatus, type DatabaseClient } from "@template/database";
+import type { SafeUser } from "@fury/contracts";
+import { UserStatus, type DatabaseClient } from "@fury/database";
 
 import { ForbiddenException } from "../../core/errors/forbidden.error.js";
 import { UnauthorizedException } from "../../core/errors/unauthorized.error.js";

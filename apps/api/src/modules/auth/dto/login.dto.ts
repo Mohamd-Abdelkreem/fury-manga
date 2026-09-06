@@ -1,4 +1,4 @@
-import { loginBodySchema } from "@template/contracts";
+import { loginBodySchema } from "@fury/contracts";
 import type { z } from "zod";
 
 export const loginBodyDtoSchema = loginBodySchema;

@@ -29,7 +29,7 @@ export default async function setup(): Promise<() => Promise<void>> {
   delete process.env["DATABASE_URL"];
   const container = await new PostgreSqlContainer("postgres:18.4")
     .withDatabase("template_api_integration")
-    .withUsername("template_test")
+    .withUsername("fury_test")
     .withPassword("test-only-password")
     .withStartupTimeout(120_000)
     .start();

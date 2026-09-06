@@ -1,0 +1,32 @@
+.container {
+  margin-bottom: 1.5rem;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.accentBar {
+  width: 4px;
+  height: 28px;
+  background-color: var(--primary);
+  border-radius: 9999px;
+  flex-shrink: 0;
+  box-shadow: 0 0 10px rgba(255, 71, 71, 0.4);
+}
+
+.icon {
+  width: 22px;
+  height: 22px;
+  color: #ffffff;
+}
+
+.title {
+  font-family: "Cairo", sans-serif;
+  font-weight: 800;
+  font-size: 1.4rem;
+  color: #ffffff;
+  margin: 0;
+}

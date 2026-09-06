@@ -149,7 +149,7 @@ const createHarness = () => {
 const account = {
   user: {
     id: "1b3d904e-a46c-4dd8-9cb7-d0767546ea95",
-    fullName: "Template User",
+    fullName: "Fury Test User",
     email: "user@example.com",
     phone: null,
     role: "USER" as const,

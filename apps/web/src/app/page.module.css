@@ -1,0 +1,92 @@
+.pageWrapper {
+  min-height: 100vh;
+  background-color: var(--background);
+  font-family: "Cairo", "Cairo Play", sans-serif;
+  overflow-x: hidden;
+}
+
+.contentContainer {
+  max-width: 1440px; /* Widened layout container for main grid */
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  transition: max-width 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+@media (min-width: 640px) {
+  .contentContainer {
+    padding: 2.5rem 1.5rem;
+  }
+}
+
+.layoutGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  align-items: stretch;
+}
+
+@media (min-width: 1024px) {
+  .layoutGrid {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 3rem;
+  }
+}
+
+.mainCol {
+  flex: 1;
+  min-width: 0;
+}
+
+.videoCol {
+  width: 100%;
+  max-width: 340px;
+  margin: 1.5rem auto 0;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .videoCol {
+    width: 320px;
+    max-width: 320px;
+    position: sticky;
+    top: 96px; /* Offset to keep it under sticky navbar */
+    align-self: flex-start;
+    margin: 0;
+  }
+}
+
+@media (min-width: 1280px) {
+  .videoCol {
+    width: 340px;
+    max-width: 340px;
+  }
+}
+
+.videoElement {
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  object-fit: cover;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: #000000;
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 25px rgba(255, 71, 71, 0.08); /* Subtle atmospheric red glow matching primary brand color */
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.videoElement:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 30px 60px -10px rgba(0, 0, 0, 0.6),
+    0 0 30px rgba(255, 71, 71, 0.15);
+}

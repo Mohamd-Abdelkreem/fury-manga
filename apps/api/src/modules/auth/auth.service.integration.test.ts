@@ -1,4 +1,4 @@
-import { createDatabaseClient, UserStatus } from "@template/database";
+import { createDatabaseClient, UserStatus } from "@fury/database";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { BadRequestException } from "../../core/errors/bad-request.error.js";
@@ -27,7 +27,7 @@ const delivery: EmailDelivery = {
 const emailService = new EmailService(
   delivery,
   "no-reply@example.com",
-  "Template",
+  "Fury Turbo",
   "",
   "http://localhost:3000",
 );
@@ -55,7 +55,7 @@ describe("AuthService with PostgreSQL", () => {
 
   it("registers, verifies, logs in, and atomically rotates one-time refresh tokens", async () => {
     const registered = await service.register({
-      fullName: "Template User",
+      fullName: "Fury Test User",
       email: "USER@example.com",
       phone: null,
       password: "initial-secure-password",
@@ -110,7 +110,7 @@ describe("AuthService with PostgreSQL", () => {
       new EmailService(
         { provider: "smtp", send },
         "no-reply@example.com",
-        "Template",
+        "Fury Turbo",
         "",
         "http://localhost:3000",
       ),
@@ -226,7 +226,7 @@ describe("AuthService with PostgreSQL", () => {
 
   it("uses neutral recovery, consumes reset tokens once, and revokes sessions", async () => {
     await service.register({
-      fullName: "Template User",
+      fullName: "Fury Test User",
       email: "user@example.com",
       phone: null,
       password: "initial-secure-password",

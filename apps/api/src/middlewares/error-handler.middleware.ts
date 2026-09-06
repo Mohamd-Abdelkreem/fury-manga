@@ -1,6 +1,6 @@
 import type { ErrorRequestHandler } from "express";
 
-import type { ErrorEnvelope } from "@template/contracts";
+import type { ErrorEnvelope } from "@fury/contracts";
 
 import { appConfig } from "../core/config/app.config.js";
 import { AppError } from "../core/errors/app.error.js";

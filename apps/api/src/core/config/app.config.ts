@@ -15,7 +15,7 @@ const trustProxy =
     : getEnvVarAsInteger("TRUST_PROXY", 1, 1, 10);
 
 export const appConfig = Object.freeze({
-  name: getEnvVariable("APP_NAME", "Full-Stack Boilerplate API"),
+  name: getEnvVariable("APP_NAME", "Fury Turbo API"),
   nodeEnv,
   host: getEnvVariable("API_HOST", "0.0.0.0"),
   port: getEnvVarAsInteger("API_PORT", 4000, 1, 65_535),

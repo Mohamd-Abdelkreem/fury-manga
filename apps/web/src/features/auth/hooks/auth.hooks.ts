@@ -11,7 +11,7 @@ import type {
   LoginBody,
   RegisterBody,
   ResetPasswordBody,
-} from "@template/contracts";
+} from "@fury/contracts";
 
 import { usersApi } from "@/features/users/api/users.api";
 import {

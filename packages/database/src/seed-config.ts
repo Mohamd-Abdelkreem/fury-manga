@@ -1,6 +1,6 @@
 import argon2 from "argon2";
 
-import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "@template/contracts";
+import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "@fury/contracts";
 
 import {
   UserRole,

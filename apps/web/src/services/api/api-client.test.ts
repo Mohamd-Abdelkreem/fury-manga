@@ -445,7 +445,7 @@ describe("apiClient transport security", () => {
         refreshCalls += 1;
         return Promise.resolve(refreshResponse(config));
       }
-      return config._templateRetried === true
+      return config._furyRetried === true
         ? Promise.resolve(responseFor(config, {}))
         : rejectFor(config);
     };
@@ -470,7 +470,7 @@ describe("apiClient transport security", () => {
             )
           : Promise.resolve(refreshResponse(config));
       }
-      return config._templateRetried === true
+      return config._furyRetried === true
         ? Promise.resolve(responseFor(config, {}))
         : rejectFor(config);
     };

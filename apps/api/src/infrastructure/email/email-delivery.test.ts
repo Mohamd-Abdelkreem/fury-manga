@@ -27,7 +27,7 @@ import {
 const localPreviewUrl =
   "http://localhost:3000/auth/verify-email?token=local-verification-token";
 const request = {
-  from: "Template <no-reply@example.com>",
+  from: "Fury Turbo <no-reply@example.com>",
   to: "user@example.com",
   subject: "Local preview",
   html: `<!doctype html><html><body><p>Preview body</p><a href="${localPreviewUrl}">Verify email</a></body></html>`,
@@ -66,7 +66,7 @@ describe("ConsoleEmailDelivery", () => {
   });
 
   it("discovers the pnpm workspace root from a nested API directory", async () => {
-    const workspaceRoot = await mkdtemp(join(tmpdir(), "template-workspace-"));
+    const workspaceRoot = await mkdtemp(join(tmpdir(), "fury-workspace-"));
     const nestedDirectory = join(workspaceRoot, "apps", "api");
     try {
       await mkdir(nestedDirectory, { recursive: true });
@@ -87,7 +87,7 @@ describe("ConsoleEmailDelivery", () => {
     const isolatedTemporaryRoot = join(parse(tmpdir()).root, "tmp");
     await mkdir(isolatedTemporaryRoot, { recursive: true });
     const markerlessRoot = await mkdtemp(
-      join(isolatedTemporaryRoot, "template-markerless-"),
+      join(isolatedTemporaryRoot, "fury-markerless-"),
     );
     const nestedDirectory = join(markerlessRoot, "apps", "api");
     try {
@@ -102,7 +102,7 @@ describe("ConsoleEmailDelivery", () => {
   });
 
   it("writes unique complete HTML previews at the real workspace root without logging secrets", async () => {
-    const workspaceRoot = await mkdtemp(join(tmpdir(), "template-workspace-"));
+    const workspaceRoot = await mkdtemp(join(tmpdir(), "fury-workspace-"));
     const nestedDirectory = join(workspaceRoot, "apps", "api");
     const previewDirectory = join(workspaceRoot, ".local-emails");
     const originalWorkingDirectory = process.cwd();
@@ -190,7 +190,7 @@ describe("provider failure logging", () => {
     const delivery = new ResendEmailDelivery(
       () => ({ send }),
       noWait,
-      () => "template-email/test",
+      () => "fury-email/test",
     );
 
     await expect(delivery.send(request)).rejects.toBeInstanceOf(

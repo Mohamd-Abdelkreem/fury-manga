@@ -1,0 +1,65 @@
+.pageWrapper {
+  min-height: 100vh;
+  background-color: var(--background);
+  font-family: "Cairo", "Cairo Play", sans-serif;
+  overflow-x: hidden;
+}
+
+.contentContainer {
+  max-width: 1280px;
+  margin: -80px auto 0 auto; /* Negative margin to overlap the cover banner */
+  position: relative;
+  z-index: 10;
+  padding: 1.5rem 1rem 3rem 1rem;
+}
+
+@media (min-width: 768px) {
+  .contentContainer {
+    margin-top: -150px; /* Larger negative margin on desktop */
+    padding: 2rem 1.5rem 4rem 1.5rem;
+  }
+}
+
+/* Two-column layout grid */
+.layoutGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+/* Sidebar flows on top of main column on mobile */
+.sidebarCol {
+  grid-row: 1;
+  width: 100%;
+}
+
+.mainCol {
+  grid-row: 2;
+  width: 100%;
+  min-width: 0; /* prevent layout overflow issues */
+}
+
+/* Desktop layout configurations */
+@media (min-width: 768px) {
+  .layoutGrid {
+    grid-template-columns: 260px 1fr;
+    gap: 2rem;
+  }
+
+  .sidebarCol {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .mainCol {
+    grid-column: 2;
+    grid-row: 1;
+  }
+}
+
+@media (min-width: 1024px) {
+  .layoutGrid {
+    grid-template-columns: 300px 1fr;
+    gap: 2.5rem;
+  }
+}

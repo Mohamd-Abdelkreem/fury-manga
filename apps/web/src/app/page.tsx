@@ -1,90 +1,69 @@
-import Link from "next/link";
-
-import { BrandMark } from "@/components/brand/brand-mark";
-import { ProtocolTrace } from "@/components/brand/protocol-trace";
-import { publicEnvironment } from "@/config/public-environment";
-
-const capabilities = [
-  [
-    "01",
-    "Rotating sessions",
-    "Short-lived access tokens paired with hashed, one-time refresh records.",
-  ],
-  [
-    "02",
-    "Explicit boundaries",
-    "Shared Zod contracts, safe user DTOs, and an OpenAPI 3.1 document.",
-  ],
-  [
-    "03",
-    "Operational footing",
-    "Structured logs, rate limits, direct email delivery, and PostgreSQL tests.",
-  ],
-] as const;
+import { Navbar } from "@/features/home/components/Navbar/Navbar";
+import { HeroSection } from "@/features/home/components/HeroSection/HeroSection";
+import { TrendingSection } from "@/features/home/components/TrendingSection/TrendingSection";
+import { DiscordBanner } from "@/features/home/components/DiscordBanner/DiscordBanner";
+import { LatestReleases } from "@/features/home/components/LatestReleases/LatestReleases";
+import { SuggestionsSection } from "@/features/home/components/SuggestionsSection/SuggestionsSection";
+import { Footer } from "@/features/home/components/Footer/Footer";
+import styles from "./page.module.css";
 
 export default function HomePage() {
   return (
-    <main className="landing">
-      <nav className="landing__nav" aria-label="Primary navigation">
-        <BrandMark />
-        <div className="landing__nav-actions">
-          <Link className="text-link" href="/auth/login">
-            Sign in
-          </Link>
-          <Link className="button button--small" href="/auth/register">
-            Start building
-          </Link>
-        </div>
-      </nav>
+    <div className={styles["pageWrapper"]} dir="rtl">
+      <div style={{ position: "relative", zIndex: 10 }}>
+        {/* 1 ── Navigation */}
+        <Navbar />
 
-      <section className="landing__hero">
-        <div className="landing__copy">
-          <p className="eyebrow">Next.js / Express / PostgreSQL</p>
-          <h1>The first mile is already secure.</h1>
-          <p className="landing__lede">
-            Relay is a production-oriented TypeScript foundation with the
-            account lifecycle built in—from verification to session rotation and
-            recovery.
-          </p>
-          <div className="landing__actions">
-            <Link className="button" href="/auth/register">
-              Create an account
-            </Link>
-            <a
-              className="button button--ghost"
-              href={`${publicEnvironment.NEXT_PUBLIC_API_URL}/openapi.json`}
-            >
-              Inspect the contract
-            </a>
+        {/* 2 ── Hero + Genre Bar (Full-Width) */}
+        <HeroSection />
+
+        {/* 3 ── Trending Works (Full-Width) */}
+        <div style={{ background: "var(--background)" }}>
+          <TrendingSection />
+        </div>
+
+        {/* 4 ── Main Content Layout (Widened Grid with Video on Left) */}
+        <div className={styles["contentContainer"]}>
+          {/* Discord banner (Full-Width) */}
+          <DiscordBanner />
+
+          <div className={styles["layoutGrid"]}>
+            {/* Main Content Column (Right on desktop in RTL) */}
+            <main className={styles["mainCol"]}>
+              {/* Latest Releases */}
+              <LatestReleases />
+            </main>
+
+            {/* Sticky Video Column (Left on desktop in RTL) */}
+            <aside className={styles["videoCol"]}>
+              <video
+                src="/vertical-video.mp4"
+                autoPlay
+                muted
+                loop
+                playsInline
+                className={styles["videoElement"]}
+              />
+              <video
+                src="/vertical-video.mp4"
+                autoPlay
+                muted
+                loop
+                playsInline
+                className={styles["videoElement"]}
+              />
+            </aside>
           </div>
         </div>
-        <div className="landing__trace">
-          <p className="trace-caption">A session, in motion</p>
-          <ProtocolTrace />
-        </div>
-      </section>
 
-      <section className="capability-strip" aria-labelledby="foundation-title">
-        <header>
-          <p className="eyebrow">Included foundation</p>
-          <h2 id="foundation-title">
-            Boring where it should be. Careful where it matters.
-          </h2>
-        </header>
-        <ol className="capability-list">
-          {capabilities.map(([number, title, description]) => (
-            <li key={number}>
-              <span>{number}</span>
-              <h3>{title}</h3>
-              <p>{description}</p>
-            </li>
-          ))}
-        </ol>
-      </section>
-      <footer className="landing__footer">
-        <BrandMark compact />
-        <p>Generic by design. Ready for your product.</p>
-      </footer>
-    </main>
+        {/* 5 ── Suggestions (Full-Width) */}
+        <div style={{ background: "var(--background)" }}>
+          <SuggestionsSection />
+        </div>
+
+        {/* 6 ── Footer (Full-Width) */}
+        <Footer />
+      </div>
+    </div>
   );
 }

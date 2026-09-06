@@ -20,7 +20,7 @@ importers:
 
   .:
     devDependencies:
-      '@template/prettier-config':
+      '@fury/prettier-config':
         specifier: workspace:*
         version: link:packages/prettier-config
       prettier:
@@ -32,10 +32,10 @@ importers:
 
   apps/api:
     dependencies:
-      '@template/contracts':
+      '@fury/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@template/database':
+      '@fury/database':
         specifier: workspace:*
         version: link:../../packages/database
       argon2:
@@ -84,10 +84,10 @@ importers:
         specifier: 6.0.0
         version: 6.0.0(zod@4.4.3)
     devDependencies:
-      '@template/eslint-config':
+      '@fury/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
-      '@template/typescript-config':
+      '@fury/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
       '@testcontainers/postgresql':
@@ -141,18 +141,24 @@ importers:
 
   apps/web:
     dependencies:
+      '@fury/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@hookform/resolvers':
         specifier: 5.7.1
         version: 5.7.1(@standard-schema/spec@1.1.0)(ajv@8.20.0)(effect@3.20.0)(react-hook-form@7.84.0(react@19.2.8))(valibot@1.4.2(typescript@5.9.3))(zod@4.4.3)
       '@tanstack/react-query':
         specifier: 5.101.4
         version: 5.101.4(react@19.2.8)
-      '@template/contracts':
-        specifier: workspace:*
-        version: link:../../packages/contracts
       axios:
         specifier: 1.19.0
         version: 1.19.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
+      embla-carousel-react:
+        specifier: 8.5.2
+        version: 8.5.2(react@19.2.8)
+      lucide-react:
+        specifier: 0.511.0
+        version: 0.511.0(react@19.2.8)
       next:
         specifier: 16.2.12
         version: 16.2.12(@babel/core@7.29.7(supports-color@7.2.0))(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -169,15 +175,15 @@ importers:
         specifier: 4.4.3
         version: 4.4.3
     devDependencies:
+      '@fury/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@fury/typescript-config':
+        specifier: workspace:*
+        version: link:../../packages/typescript-config
       '@tailwindcss/postcss':
         specifier: 4.3.3
         version: 4.3.3
-      '@template/eslint-config':
-        specifier: workspace:*
-        version: link:../../packages/eslint-config
-      '@template/typescript-config':
-        specifier: workspace:*
-        version: link:../../packages/typescript-config
       '@testing-library/jest-dom':
         specifier: 6.9.1
         version: 6.9.1
@@ -218,10 +224,10 @@ importers:
         specifier: 4.4.3
         version: 4.4.3
     devDependencies:
-      '@template/eslint-config':
+      '@fury/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
-      '@template/typescript-config':
+      '@fury/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
       '@types/node':
@@ -242,15 +248,15 @@ importers:
 
   packages/database:
     dependencies:
+      '@fury/contracts':
+        specifier: workspace:*
+        version: link:../contracts
       '@prisma/adapter-pg':
         specifier: 7.9.1
         version: 7.9.1
       '@prisma/client':
         specifier: 7.9.1
         version: 7.9.1(prisma@7.9.1(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@5.9.3))(typescript@5.9.3)
-      '@template/contracts':
-        specifier: workspace:*
-        version: link:../contracts
       argon2:
         specifier: 0.45.1
         version: 0.45.1
@@ -258,10 +264,10 @@ importers:
         specifier: 8.22.0
         version: 8.22.0
     devDependencies:
-      '@template/eslint-config':
+      '@fury/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
-      '@template/typescript-config':
+      '@fury/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
       '@testcontainers/postgresql':
@@ -2614,6 +2620,19 @@ packages:
   elkjs@0.11.1:
     resolution: {integrity: sha512-zxxR9k+rx5ktMwT/FwyLdPCrq7xN6e4VGGHH8hA01vVYKjTFik7nHOxBnAYtrgYUB1RpAiLvA1/U2YraWxyKKg==}
 
+  embla-carousel-react@8.5.2:
+    resolution: {integrity: sha512-Tmx+uY3MqseIGdwp0ScyUuxpBgx5jX1f7od4Cm5mDwg/dptEiTKf9xp6tw0lZN2VA9JbnVMl/aikmbc53c6QFA==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.1 || ^18.0.0 || ^19.0.0 || ^19.0.0-rc
+
+  embla-carousel-reactive-utils@8.5.2:
+    resolution: {integrity: sha512-QC8/hYSK/pEmqEdU1IO5O+XNc/Ptmmq7uCB44vKplgLKhB/l0+yvYx0+Cv0sF6Ena8Srld5vUErZkT+yTahtDg==}
+    peerDependencies:
+      embla-carousel: 8.5.2
+
+  embla-carousel@8.5.2:
+    resolution: {integrity: sha512-xQ9oVLrun/eCG/7ru3R+I5bJ7shsD8fFwLEY7yPe27/+fDHCNj0OT5EoG5ZbFyOxOcG6yTwW8oTz/dWyFnyGpg==}
+
   emoji-regex@8.0.0:
     resolution: {integrity: sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==}
 
@@ -2824,6 +2843,7 @@ packages:
   eslint@9.39.1:
     resolution: {integrity: sha512-BhHmn2yNOFA9H9JmmIVKJmd288g9hrVRDkdoIgRCRuSySRUHH7r/DI6aAXW9T1WwUuY3DFgrcaqB+deURBLR5g==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
     peerDependencies:
       jiti: '*'
@@ -3615,6 +3635,11 @@ packages:
   lru.min@1.1.4:
     resolution: {integrity: sha512-DqC6n3QQ77zdFpCMASA1a3Jlb64Hv2N2DciFGkO/4L9+q/IpIAuRlKOvCXabtRW6cQf8usbmM6BE/TOPysCdIA==}
     engines: {bun: '>=1.0.0', deno: '>=1.30.0', node: '>=8.0.0'}
+
+  lucide-react@0.511.0:
+    resolution: {integrity: sha512-VK5a2ydJ7xm8GvBeKLS9mu1pVK6ucef9780JVUjw6bAjJL/QXnd4Y0p7SPeOUMC27YhzNCZvm5d/QX0Tp3rc0w==}
+    peerDependencies:
+      react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
   lz-string@1.5.0:
     resolution: {integrity: sha512-h5bgJWpxJNswbU7qCrV0tIKQCaS3blPDrqKWx+QxzuzL1zGUzij9XCWLrSLsJPu5t+eWA/ycetzYAO5IOMcWAQ==}
@@ -7074,6 +7099,18 @@ snapshots:
 
   elkjs@0.11.1: {}
 
+  embla-carousel-react@8.5.2(react@19.2.8):
+    dependencies:
+      embla-carousel: 8.5.2
+      embla-carousel-reactive-utils: 8.5.2(embla-carousel@8.5.2)
+      react: 19.2.8
+
+  embla-carousel-reactive-utils@8.5.2(embla-carousel@8.5.2):
+    dependencies:
+      embla-carousel: 8.5.2
+
+  embla-carousel@8.5.2: {}
+
   emoji-regex@8.0.0: {}
 
   emoji-regex@9.2.2: {}
@@ -8214,6 +8251,10 @@ snapshots:
       yallist: 3.1.1
 
   lru.min@1.1.4: {}
+
+  lucide-react@0.511.0(react@19.2.8):
+    dependencies:
+      react: 19.2.8
 
   lz-string@1.5.0: {}
 

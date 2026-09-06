@@ -8,12 +8,12 @@ export function AccountSettings() {
     <main className="workspace-main">
       <header className="workspace-title">
         <div>
-          <p className="eyebrow">Account controls</p>
-          <h1>Identity, kept explicit.</h1>
+          <p className="eyebrow">Fury account</p>
+          <h1>Your profile and sessions</h1>
         </div>
         <p className="workspace-title__summary">
-          Update safe profile fields or rotate your credential. Sensitive
-          mutations require both authentication and CSRF proof.
+          Keep your reader profile current, change your password, or end active
+          sessions.
         </p>
       </header>
       <div className="settings-stack">

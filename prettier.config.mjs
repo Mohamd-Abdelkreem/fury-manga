@@ -1,4 +1,4 @@
-import config from "@template/prettier-config";
+import config from "@fury/prettier-config";
 
 export default {
   ...config,

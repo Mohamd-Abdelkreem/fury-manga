@@ -1,5 +1,5 @@
-import type { SafeUser } from "@template/contracts";
-import type { Prisma, User } from "@template/database";
+import type { SafeUser } from "@fury/contracts";
+import type { Prisma, User } from "@fury/database";
 
 export const SAFE_USER_SELECT = {
   id: true,

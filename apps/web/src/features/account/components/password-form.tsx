@@ -5,7 +5,7 @@ import {
   changePasswordBodySchema,
   PASSWORD_MIN_LENGTH,
   type ChangePasswordBody,
-} from "@template/contracts";
+} from "@fury/contracts";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";

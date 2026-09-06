@@ -1,5 +1,5 @@
 {
-  "name": "@template/contracts",
+  "name": "@fury/contracts",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -23,8 +23,8 @@
     "zod": "4.4.3"
   },
   "devDependencies": {
-    "@template/eslint-config": "workspace:*",
-    "@template/typescript-config": "workspace:*",
+    "@fury/eslint-config": "workspace:*",
+    "@fury/typescript-config": "workspace:*",
     "@types/node": "24.13.3",
     "eslint": "9.39.1",
     "rimraf": "6.1.3",

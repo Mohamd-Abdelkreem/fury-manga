@@ -1,4 +1,4 @@
-import { UserRole } from "@template/database";
+import { UserRole } from "@fury/database";
 import { describe, expect, it, vi } from "vitest";
 
 import { ForbiddenException } from "../core/errors/forbidden.error.js";

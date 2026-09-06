@@ -1,4 +1,4 @@
-import type { PaginationMeta } from "@template/contracts";
+import type { PaginationMeta } from "@fury/contracts";
 
 import { BadRequestException } from "../errors/bad-request.error.js";
 

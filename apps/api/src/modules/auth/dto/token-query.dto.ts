@@ -1,4 +1,4 @@
-import { tokenQuerySchema } from "@template/contracts";
+import { tokenQuerySchema } from "@fury/contracts";
 import type { z } from "zod";
 
 export const tokenQueryDtoSchema = tokenQuerySchema;

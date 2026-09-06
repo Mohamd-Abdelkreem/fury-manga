@@ -5,7 +5,7 @@ import {
   accountResponseSchemas,
   errorEnvelopeSchema,
   successEnvelopeSchema,
-} from "@template/contracts";
+} from "@fury/contracts";
 
 import { appConfig } from "../../core/config/app.config.js";
 import {

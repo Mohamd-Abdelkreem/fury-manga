@@ -6,7 +6,7 @@ import helmet from "helmet";
 import type { CorsOptions } from "cors";
 import type { Logger } from "pino";
 
-import type { DatabaseClient } from "@template/database";
+import type { DatabaseClient } from "@fury/database";
 
 import { appConfig } from "./core/config/app.config.js";
 import { corsConfig } from "./core/config/cors.config.js";

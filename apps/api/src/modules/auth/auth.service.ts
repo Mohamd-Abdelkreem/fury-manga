@@ -12,7 +12,7 @@ import {
   UserStatus,
   type DatabaseClient,
   type User,
-} from "@template/database";
+} from "@fury/database";
 
 import { authConfig } from "../../core/config/auth.config.js";
 import { BadRequestException } from "../../core/errors/bad-request.error.js";

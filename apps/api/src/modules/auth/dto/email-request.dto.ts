@@ -1,4 +1,4 @@
-import { emailRequestBodySchema } from "@template/contracts";
+import { emailRequestBodySchema } from "@fury/contracts";
 import type { z } from "zod";
 
 export const emailRequestBodyDtoSchema = emailRequestBodySchema;

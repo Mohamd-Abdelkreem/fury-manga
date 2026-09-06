@@ -1,6 +1,6 @@
 import type { Server } from "node:http";
 
-import { createDatabaseClient } from "@template/database";
+import { createDatabaseClient } from "@fury/database";
 
 import { createApp } from "./app.js";
 import { appConfig } from "./core/config/app.config.js";

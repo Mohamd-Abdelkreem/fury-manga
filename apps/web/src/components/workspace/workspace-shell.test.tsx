@@ -22,9 +22,6 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/components/auth/session-loader", () => ({
   SessionLoader: () => <div>Loading session</div>,
 }));
-vi.mock("@/components/brand/brand-mark", () => ({
-  BrandMark: () => <div>Template</div>,
-}));
 vi.mock("@/features/auth/hooks/auth.hooks", () => ({
   useLogout: () => ({
     isPending: mocks.isPending,
@@ -32,7 +29,7 @@ vi.mock("@/features/auth/hooks/auth.hooks", () => ({
   }),
   useSession: () => ({
     data: {
-      user: { fullName: "Template User", role: "USER" },
+      user: { fullName: "Fury Test User", role: "USER" },
     },
   }),
 }));

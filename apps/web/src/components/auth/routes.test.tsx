@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import type { AuthUserData } from "@template/contracts";
+import type { AuthUserData } from "@fury/contracts";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { GuestOnlyRoute } from "./guest-only-route";
@@ -33,7 +33,7 @@ vi.mock("@/services/api/api-client", () => ({
 const account: AuthUserData = {
   user: {
     id: "1b3d904e-a46c-4dd8-9cb7-d0767546ea95",
-    fullName: "Template User",
+    fullName: "Fury Test User",
     email: "user@example.com",
     phone: null,
     role: "USER",

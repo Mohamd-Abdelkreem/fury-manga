@@ -4,7 +4,7 @@ import {
   PASSWORD_MIN_LENGTH,
   resetPasswordBodySchema,
   type ResetPasswordBody,
-} from "@template/contracts";
+} from "@fury/contracts";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";

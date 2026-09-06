@@ -10,7 +10,7 @@ import {
 describe("authentication request contracts", () => {
   it("normalizes email, whitespace, and optional phone input", () => {
     const result = registerBodySchema.parse({
-      fullName: "Template User",
+      fullName: "Fury Test User",
       email: "  USER@Example.COM ",
       phone: " ",
       password: "a-secure-password",

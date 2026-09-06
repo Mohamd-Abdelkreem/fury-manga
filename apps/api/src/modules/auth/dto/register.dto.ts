@@ -1,4 +1,4 @@
-import { registerBodySchema } from "@template/contracts";
+import { registerBodySchema } from "@fury/contracts";
 import type { z } from "zod";
 
 export const registerBodyDtoSchema = registerBodySchema;

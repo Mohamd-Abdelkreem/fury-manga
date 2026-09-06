@@ -4,11 +4,11 @@ import {
   paginationMetaSchema,
   type PaginationMeta,
   type SuccessEnvelope,
-} from "@template/contracts";
+} from "@fury/contracts";
 
 import { HTTP_STATUS } from "../constants/http-status.constants.js";
 
-export type { FieldError, PaginationMeta } from "@template/contracts";
+export type { FieldError, PaginationMeta } from "@fury/contracts";
 
 /* eslint-disable @typescript-eslint/no-extraneous-class, @typescript-eslint/no-unnecessary-type-parameters -- Static generic response helpers are the API response convention. */
 

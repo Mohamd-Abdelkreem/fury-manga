@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   updateProfileBodySchema,
   type UpdateProfileBody,
-} from "@template/contracts";
+} from "@fury/contracts";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";

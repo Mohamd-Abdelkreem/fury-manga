@@ -189,7 +189,7 @@ export class ResendEmailDelivery implements EmailDelivery {
     private readonly getClient: () => ResendEmailClient = getResendEmailClient,
     private readonly retryWait: RetryWait = wait,
     private readonly idempotencyKeyFactory: () => string = () =>
-      `template-email/${randomUUID()}`,
+      `fury-email/${randomUUID()}`,
   ) {}
 
   async send(request: EmailSendRequest): Promise<EmailSendResult> {

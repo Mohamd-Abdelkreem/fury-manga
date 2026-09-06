@@ -7,20 +7,20 @@ authentication foundation.
 
 ```text
 Next.js UI
-  -> @template/contracts
+  -> @fury/contracts
   -> Axios API client
   -> Express routes / middleware / controllers / services
   -> Prisma
   -> PostgreSQL
 ```
 
-- `@template/contracts` owns request bodies, safe user output, field errors,
+- `@fury/contracts` owns request bodies, safe user output, field errors,
   pagination metadata, and success/error envelopes.
-- `@template/database` owns Prisma schema, migrations, generated types, seed
+- `@fury/database` owns Prisma schema, migrations, generated types, seed
   behavior, and the client factory.
-- `@template/api` owns HTTP security, account rules, delivery adapters, and
+- `@fury/api` owns HTTP security, account rules, delivery adapters, and
   persistence orchestration.
-- `@template/web` imports contracts but no API/database implementation.
+- `@fury/web` imports contracts but no API/database implementation.
 
 All packages use ESM and emitted `.js` relative imports. TypeScript strictness
 and exact optional property checking stay enabled.
@@ -38,7 +38,7 @@ Request interception adds:
 - `x-csrf-token` from the readable cookie for POST/PUT/PATCH/DELETE only
 
 Response interception classifies exact public auth paths, coalesces concurrent
-refresh, marks replayed requests with `_templateRetried`, and replays once.
+refresh, marks replayed requests with `_furyRetried`, and replays once.
 Only exact refresh `400/BAD_REQUEST` and `401/UNAUTHORIZED` failures clear
 memory and perform a safe full navigation without credential-bearing return
 parameters. Network, CSRF, rate-limit, and server refresh failures remain
@@ -75,7 +75,7 @@ Security infrastructure is in `src/infrastructure/security`:
 
 Auth DTOs use file-per-DTO modules. Auth rate-limit configuration is separate
 from CSRF configuration. All API password DTOs use the fixed 15-to-128-character
-schemas from `@template/contracts`; there is no API environment override. Role
+schemas from `@fury/contracts`; there is no API environment override. Role
 authorization is a generic allowlist middleware.
 
 Email verification consumes the normalized email, pending status, null
@@ -89,7 +89,7 @@ Only that boundary converts schema failures into operational 400 responses;
 Zod errors raised by internal response or application schemas remain 500-class
 server bugs.
 
-The response helper uses `@template/contracts` types directly. Success always
+The response helper uses `@fury/contracts` types directly. Success always
 has `data`; valid nested pagination is promoted to `paginationMeta`. Error
 envelopes never contain `data: null`.
 

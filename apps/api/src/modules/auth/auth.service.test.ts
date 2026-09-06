@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment -- Vitest types asymmetric expect.any matchers as any; the exact atomic-update assertions intentionally use them. */
 import { describe, expect, it, vi } from "vitest";
 
-import { UserStatus, type DatabaseClient } from "@template/database";
+import { UserStatus, type DatabaseClient } from "@fury/database";
 
 import { BadRequestException } from "../../core/errors/bad-request.error.js";
 import { ForbiddenException } from "../../core/errors/forbidden.error.js";
@@ -22,7 +22,7 @@ describe("AuthService registration delivery", () => {
           id: "1b3d904e-a46c-4dd8-9cb7-d0767546ea95",
           email: "user@example.com",
           passwordHash: "not-returned",
-          fullName: "Template User",
+          fullName: "Fury Test User",
           phone: null,
           role: "USER",
           status: "PENDING_VERIFICATION",
@@ -44,7 +44,7 @@ describe("AuthService registration delivery", () => {
     const service = new AuthService(database, emailService);
 
     const registration = service.register({
-      fullName: "Template User",
+      fullName: "Fury Test User",
       email: "user@example.com",
       phone: null,
       password: "a-secure-test-password",
@@ -85,7 +85,7 @@ const verificationCandidate: VerificationCandidate = {
 
 const activatedUser = {
   id: verificationCandidate.id,
-  fullName: "Template User",
+  fullName: "Fury Test User",
   email: "user@example.com",
   phone: null,
   role: "USER",

@@ -1,4 +1,4 @@
-# Full-stack TypeScript authentication boilerplate
+# Fury Turbo
 
 A generic Next.js 16, Express 5, PostgreSQL, and Prisma 7 foundation with a
 complete email/password account lifecycle. It contains no product domain,
@@ -111,7 +111,7 @@ Logout revokes the current refresh record. Logout-all, password change, and
 password reset revoke every refresh record. Refresh and reset tokens are
 single-use. These operations cannot immediately revoke an already issued,
 stateless access JWT: it remains usable until its short configured expiry (15
-minutes by default). The boilerplate intentionally has no token blacklist.
+minutes by default). Fury Turbo intentionally has no token blacklist.
 Browser session state is cleared only after the server confirms logout.
 Failures stay visible and retryable, and a failed logout-all never claims that
 sessions on other devices were revoked.

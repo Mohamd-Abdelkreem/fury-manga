@@ -5,7 +5,7 @@ import {
   PASSWORD_MIN_LENGTH,
   registerBodySchema,
   type RegisterBody,
-} from "@template/contracts";
+} from "@fury/contracts";
 import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";

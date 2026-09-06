@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import jwt, { type JwtPayload, type SignOptions } from "jsonwebtoken";
 
-import { UserRole } from "@template/database";
+import { UserRole } from "@fury/database";
 
 import { authConfig, jwtConfig } from "../../core/config/auth.config.js";
 import type {

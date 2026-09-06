@@ -5,13 +5,13 @@ import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 
 import { SessionLoader } from "@/components/auth/session-loader";
-import { BrandMark } from "@/components/brand/brand-mark";
 import { useLogout, useSession } from "@/features/auth/hooks/auth.hooks";
 import { replaceWithLogin } from "@/features/auth/utils/session-navigation";
+import { Navbar } from "@/features/home/components/Navbar/Navbar";
 import { getApiError } from "@/services/api/api-client";
 
 const navItems = [
-  ["/dashboard", "Overview"],
+  ["/dashboard", "My library"],
   ["/settings", "Account"],
 ] as const;
 
@@ -26,16 +26,15 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
 
   const signOut = (): void => {
     setLogoutError(null);
-
     logout.mutate(undefined, {
       onSuccess: () => {
         replaceWithLogin();
       },
       onError: (error: unknown) => {
         const apiError = getApiError(error);
-
         setLogoutError(
-          `${apiError.message} Server sign-out could not be confirmed. Your session may still be active.`,
+          apiError.message +
+            " Server sign-out could not be confirmed. Your session may still be active.",
         );
       },
     });
@@ -43,9 +42,18 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="workspace">
-      <header className="workspace__header">
-        <BrandMark />
-        <nav aria-label="Workspace navigation">
+      <Navbar />
+      <div className="workspace__accountbar">
+        <div className="workspace__identity">
+          <span className="workspace__avatar">
+            {user.fullName.slice(0, 1).toUpperCase()}
+          </span>
+          <div>
+            <strong>{user.fullName}</strong>
+            <small>{user.email}</small>
+          </div>
+        </div>
+        <nav className="workspace__actions" aria-label="Account navigation">
           {navItems.map(([href, label]) => (
             <Link
               key={href}
@@ -55,23 +63,16 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
               {label}
             </Link>
           ))}
-        </nav>
-        <div className="workspace__identity">
-          <span>{user.fullName.slice(0, 1).toUpperCase()}</span>
-          <div>
-            <strong>{user.fullName}</strong>
-            <small>{user.role}</small>
-          </div>
           <button type="button" onClick={signOut} disabled={logout.isPending}>
-            {logout.isPending ? "Ending…" : "Sign out"}
+            {logout.isPending ? <>Ending{"\u2026"}</> : "Sign out"}
           </button>
-          {logoutError === null ? null : (
-            <p role="alert" className="form-error">
-              {logoutError}
-            </p>
-          )}
-        </div>
-      </header>
+        </nav>
+      </div>
+      {logoutError === null ? null : (
+        <p role="alert" className="form-notice form-notice--error">
+          {logoutError}
+        </p>
+      )}
       {children}
     </div>
   );

@@ -1,10 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  emailRequestBodySchema,
-  type EmailRequestBody,
-} from "@template/contracts";
+import { emailRequestBodySchema, type EmailRequestBody } from "@fury/contracts";
 import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";

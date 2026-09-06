@@ -7,7 +7,7 @@ import {
 
 const safeUser = {
   id: "11111111-1111-4111-8111-111111111111",
-  fullName: "Template User",
+  fullName: "Fury Test User",
   email: "user@example.com",
   phone: null,
   role: "USER",

@@ -1,5 +1,5 @@
-import type { SafeUser } from "@template/contracts";
-import type { UserRole } from "@template/database";
+import type { SafeUser } from "@fury/contracts";
+import type { UserRole } from "@fury/database";
 
 export type CookieAttributes = Readonly<{
   httpOnly: boolean;

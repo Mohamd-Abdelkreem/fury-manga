@@ -12,7 +12,7 @@ const createService = () => {
     service: new EmailService(
       delivery,
       "no-reply@example.com",
-      "Template",
+      "Fury Turbo",
       "",
       "http://localhost:3000",
     ),
@@ -24,7 +24,7 @@ describe("EmailService local previews", () => {
     const { send, service } = createService();
 
     await service.sendVerificationEmail(
-      "Template User",
+      "Fury Test User",
       "user@example.com",
       "verification-token",
     );
@@ -38,7 +38,7 @@ describe("EmailService local previews", () => {
     const { send, service } = createService();
 
     await service.sendPasswordResetEmail(
-      "Template User",
+      "Fury Test User",
       "user@example.com",
       "reset-token",
     );

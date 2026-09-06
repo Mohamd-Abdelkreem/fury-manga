@@ -1,4 +1,4 @@
-import type { DatabaseClient } from "@template/database";
+import type { DatabaseClient } from "@fury/database";
 
 import type { HealthResult } from "./health.types.js";
 

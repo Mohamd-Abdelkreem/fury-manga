@@ -33,12 +33,12 @@ Total items: 206
 
 ```env
 NODE_ENV=development
-APP_NAME=Full-Stack Boilerplate API
+APP_NAME=Fury Turbo API
 API_HOST=0.0.0.0
 API_PORT=4000
 API_PREFIX=/api/v1
 CORS_ORIGINS=http://localhost:3000
-DATABASE_URL=postgresql://boilerplate:local_development_only@localhost:5432/boilerplate?schema=public
+DATABASE_URL=postgresql://fury_turbo:local_development_only@localhost:5432/fury_turbo?schema=public
 LOG_LEVEL=debug
 TRUST_PROXY=false
 BODY_LIMIT=1mb
@@ -48,9 +48,9 @@ REQUEST_TIMEOUT_MS=30000
 HEADERS_TIMEOUT_MS=31000
 KEEP_ALIVE_TIMEOUT_MS=5000
 SHUTDOWN_TIMEOUT_MS=10000
-POSTGRES_USER=boilerplate
+POSTGRES_USER=fury_turbo
 POSTGRES_PASSWORD=local_development_only
-POSTGRES_DB=boilerplate
+POSTGRES_DB=fury_turbo
 POSTGRES_PORT=5432
 
 # Authentication. Replace every secret before deployment.
@@ -58,8 +58,8 @@ AUTH_JWT_SECRET=replace-with-at-least-32-characters-of-random-data
 AUTH_REFRESH_JWT_SECRET=replace-with-a-separate-32-character-refresh-secret
 AUTH_VERIFICATION_JWT_SECRET=replace-with-a-separate-32-character-verify-secret
 AUTH_RESET_JWT_SECRET=replace-with-a-separate-32-character-reset-secret
-AUTH_JWT_ISSUER=full-stack-boilerplate
-AUTH_JWT_AUDIENCE=full-stack-boilerplate-web
+AUTH_JWT_ISSUER=fury-turbo
+AUTH_JWT_AUDIENCE=fury-turbo-web
 AUTH_JWT_CLOCK_TOLERANCE_SECONDS=5
 AUTH_ACCESS_TOKEN_TTL_SECONDS=900
 AUTH_REFRESH_FAMILY_TTL_SECONDS=86400
@@ -93,7 +93,7 @@ AUTH_LIMIT_LOGOUT_ALL_PER_15_MIN=5
 EMAIL_PROVIDER=console
 RESEND_API_KEY=
 WEB_APP_URL=http://localhost:3000
-MAIL_FROM_NAME=Full-Stack Boilerplate
+MAIL_FROM_NAME=Fury Turbo
 MAIL_FROM_ADDRESS=no-reply@example.com
 MAIL_REPLY_TO=
 SMTP_HOST=
@@ -199,7 +199,7 @@ authentication foundation.
 
 ```text
 Next.js UI
-  -> @template/contracts
+  -> @fury/contracts
   -> Axios API client
   -> Express routes / middleware / controllers / services
   -> Prisma
@@ -207,13 +207,13 @@ Next.js UI
 ```
 ````
 
-- `@template/contracts` owns request bodies, safe user output, field errors,
+- `@fury/contracts` owns request bodies, safe user output, field errors,
   pagination metadata, and success/error envelopes.
-- `@template/database` owns Prisma schema, migrations, generated types, seed
+- `@fury/database` owns Prisma schema, migrations, generated types, seed
   behavior, and the client factory.
-- `@template/api` owns HTTP security, account rules, delivery adapters, and
+- `@fury/api` owns HTTP security, account rules, delivery adapters, and
   persistence orchestration.
-- `@template/web` imports contracts but no API/database implementation.
+- `@fury/web` imports contracts but no API/database implementation.
 
 All packages use ESM and emitted `.js` relative imports. TypeScript strictness
 and exact optional property checking stay enabled.
@@ -231,7 +231,7 @@ Request interception adds:
 - `x-csrf-token` from the readable cookie for POST/PUT/PATCH/DELETE only
 
 Response interception classifies exact public auth paths, coalesces concurrent
-refresh, marks replayed requests with `_templateRetried`, and replays once.
+refresh, marks replayed requests with `_furyRetried`, and replays once.
 Refresh failure clears memory and performs a safe full navigation without
 credential-bearing return parameters.
 
@@ -263,7 +263,7 @@ Security infrastructure is in `src/infrastructure/security`:
 
 Auth DTOs use file-per-DTO modules. Auth rate-limit configuration is separate
 from CSRF configuration. All API password DTOs use the fixed 15-to-128-character
-schemas from `@template/contracts`; there is no API environment override. Role
+schemas from `@fury/contracts`; there is no API environment override. Role
 authorization is a generic allowlist middleware.
 
 Request validation uses `safeParseAsync`, aggregates body/query/params failures
@@ -272,7 +272,7 @@ Only that boundary converts schema failures into operational 400 responses;
 Zod errors raised by internal response or application schemas remain 500-class
 server bugs.
 
-The response helper uses `@template/contracts` types directly. Success always
+The response helper uses `@fury/contracts` types directly. Success always
 has `data`; valid nested pagination is promoted to `paginationMeta`. Error
 envelopes never contain `data: null`.
 
@@ -368,7 +368,7 @@ or other immediate-revocation store is included.
 ### [MODIFIED] `README.md`
 
 ```markdown
-# Full-stack TypeScript authentication boilerplate
+# Fury Turbo
 
 A generic Next.js 16, Express 5, PostgreSQL, and Prisma 7 foundation with a
 complete email/password account lifecycle. It contains no product domain,
@@ -472,7 +472,7 @@ Logout revokes the current refresh record. Logout-all, password change, and
 password reset revoke every refresh record. Refresh and reset tokens are
 single-use. These operations cannot immediately revoke an already issued,
 stateless access JWT: it remains usable until its short configured expiry (15
-minutes by default). The boilerplate intentionally has no token blacklist.
+minutes by default). Fury Turbo intentionally has no token blacklist.
 
 ## Email delivery
 
@@ -573,7 +573,7 @@ guidance.
 ### [MODIFIED] `apps/api/eslint.config.mjs`
 
 ```javascript
-import { createNodeConfig } from "@template/eslint-config/node";
+import { createNodeConfig } from "@fury/eslint-config/node";
 
 export default createNodeConfig({
   tsconfigRootDir: import.meta.dirname,
@@ -589,7 +589,7 @@ export default createNodeConfig({
 
 ```json
 {
-  "name": "@template/api",
+  "name": "@fury/api",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -606,8 +606,8 @@ export default createNodeConfig({
     "test:watch": "vitest --config vitest.config.ts"
   },
   "dependencies": {
-    "@template/contracts": "workspace:*",
-    "@template/database": "workspace:*",
+    "@fury/contracts": "workspace:*",
+    "@fury/database": "workspace:*",
     "argon2": "0.45.1",
     "compression": "1.8.1",
     "cookie-parser": "1.4.7",
@@ -625,8 +625,8 @@ export default createNodeConfig({
     "zod-openapi": "6.0.0"
   },
   "devDependencies": {
-    "@template/eslint-config": "workspace:*",
-    "@template/typescript-config": "workspace:*",
+    "@fury/eslint-config": "workspace:*",
+    "@fury/typescript-config": "workspace:*",
     "@testcontainers/postgresql": "12.1.0",
     "@types/compression": "1.8.1",
     "@types/cookie-parser": "1.4.10",
@@ -661,7 +661,7 @@ import helmet from "helmet";
 import type { CorsOptions } from "cors";
 import type { Logger } from "pino";
 
-import type { DatabaseClient } from "@template/database";
+import type { DatabaseClient } from "@fury/database";
 
 import { appConfig } from "./core/config/app.config.js";
 import { corsConfig } from "./core/config/cors.config.js";
@@ -777,11 +777,11 @@ import {
   paginationMetaSchema,
   type PaginationMeta,
   type SuccessEnvelope,
-} from "@template/contracts";
+} from "@fury/contracts";
 
 import { HTTP_STATUS } from "../constants/http-status.constants.js";
 
-export type { FieldError, PaginationMeta } from "@template/contracts";
+export type { FieldError, PaginationMeta } from "@fury/contracts";
 
 /* eslint-disable @typescript-eslint/no-extraneous-class, @typescript-eslint/no-unnecessary-type-parameters -- Static generic response helpers are the API response convention. */
 
@@ -870,13 +870,13 @@ export type {
   FieldError,
   PaginationMeta,
   SuccessEnvelope as HTTPResponse,
-} from "@template/contracts";
+} from "@fury/contracts";
 ```
 
 ### [MODIFIED] `apps/api/src/core/types/request-context.types.ts`
 
 ```typescript
-import type { SafeUser } from "@template/contracts";
+import type { SafeUser } from "@fury/contracts";
 
 export type AuthenticatedUser = SafeUser;
 
@@ -967,7 +967,7 @@ export const logger = createLogger();
 ```typescript
 import type { ErrorRequestHandler } from "express";
 
-import type { ErrorEnvelope } from "@template/contracts";
+import type { ErrorEnvelope } from "@fury/contracts";
 
 import { appConfig } from "../core/config/app.config.js";
 import { AppError } from "../core/errors/app.error.js";
@@ -1237,7 +1237,7 @@ export { UsersController, usersRoutes, UsersService } from "./users/index.js";
 ```typescript
 import { Router } from "express";
 
-import type { DatabaseClient } from "@template/database";
+import type { DatabaseClient } from "@fury/database";
 
 import { openApiRoutes } from "./infrastructure/openapi/openapi.routes.js";
 import type { EmailService } from "./infrastructure/email/email.service.js";
@@ -1281,7 +1281,7 @@ export const createApiRouter = (
 
 ```json
 {
-  "extends": "@template/typescript-config/node.json",
+  "extends": "@fury/typescript-config/node.json",
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist",
@@ -1297,7 +1297,7 @@ export const createApiRouter = (
 ### [MODIFIED] `apps/web/eslint.config.mjs`
 
 ```javascript
-import { createNextConfig } from "@template/eslint-config/next";
+import { createNextConfig } from "@fury/eslint-config/next";
 
 export default createNextConfig({
   tsconfigRootDir: import.meta.dirname,
@@ -1316,7 +1316,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   typedRoutes: true,
   reactCompiler: true,
-  transpilePackages: ["@template/contracts"],
+  transpilePackages: ["@fury/contracts"],
   turbopack: {
     root: path.resolve(import.meta.dirname, "../.."),
   },
@@ -1329,7 +1329,7 @@ export default nextConfig;
 
 ```json
 {
-  "name": "@template/web",
+  "name": "@fury/web",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -1346,7 +1346,7 @@ export default nextConfig;
   "dependencies": {
     "@hookform/resolvers": "5.7.1",
     "@tanstack/react-query": "5.101.4",
-    "@template/contracts": "workspace:*",
+    "@fury/contracts": "workspace:*",
     "axios": "1.19.0",
     "next": "16.2.12",
     "react": "19.2.8",
@@ -1355,8 +1355,8 @@ export default nextConfig;
     "zod": "4.4.3"
   },
   "devDependencies": {
-    "@template/eslint-config": "workspace:*",
-    "@template/typescript-config": "workspace:*",
+    "@fury/eslint-config": "workspace:*",
+    "@fury/typescript-config": "workspace:*",
     "@tailwindcss/postcss": "4.3.3",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.2",
@@ -1387,8 +1387,8 @@ import "@/styles/globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Relay — Full-stack TypeScript starter",
-    template: "%s | Relay",
+    default: "Fury Turbo — Full-stack TypeScript starter",
+    template: "%s | Fury Turbo",
   },
   description:
     "An authentication-ready Next.js, Express, and PostgreSQL TypeScript foundation.",
@@ -1417,7 +1417,7 @@ export default function NotFound() {
     <main className="state-page">
       <p className="eyebrow">404 / Not found</p>
       <h1>This route does not exist.</h1>
-      <Link href="/">Return to Relay</Link>
+      <Link href="/">Return to Fury Turbo</Link>
     </main>
   );
 }
@@ -1470,7 +1470,7 @@ export default function HomePage() {
           <p className="eyebrow">Next.js / Express / PostgreSQL</p>
           <h1>The first mile is already secure.</h1>
           <p className="landing__lede">
-            Relay is a production-oriented TypeScript foundation with the
+            Fury Turbo is a production-oriented TypeScript foundation with the
             account lifecycle built in—from verification to session rotation and
             recovery.
           </p>
@@ -1511,7 +1511,7 @@ export default function HomePage() {
       </section>
       <footer className="landing__footer">
         <BrandMark compact />
-        <p>Generic by design. Ready for your product.</p>
+        <p>Fury Turbo manga reading platform.</p>
       </footer>
     </main>
   );
@@ -2743,7 +2743,7 @@ input:focus-visible {
 
 ```json
 {
-  "name": "full-stack-boilerplate",
+  "name": "fury-turbo",
   "private": true,
   "scripts": {
     "dev": "turbo run dev",
@@ -2752,21 +2752,21 @@ input:focus-visible {
     "check-types": "turbo run check-types",
     "test": "turbo run test",
     "test:integration": "turbo run test:integration",
-    "db:format": "pnpm --filter @template/database db:format",
-    "db:validate": "pnpm --filter @template/database db:validate",
-    "db:generate": "pnpm --filter @template/database db:generate",
-    "db:migrate:dev": "pnpm --filter @template/database db:migrate:dev",
-    "db:migrate:deploy": "pnpm --filter @template/database db:migrate:deploy",
-    "db:migrate:reset": "pnpm --filter @template/database db:migrate:reset",
-    "db:push": "pnpm --filter @template/database db:push",
-    "db:studio": "pnpm --filter @template/database db:studio",
-    "db:seed": "pnpm --filter @template/database db:seed",
+    "db:format": "pnpm --filter @fury/database db:format",
+    "db:validate": "pnpm --filter @fury/database db:validate",
+    "db:generate": "pnpm --filter @fury/database db:generate",
+    "db:migrate:dev": "pnpm --filter @fury/database db:migrate:dev",
+    "db:migrate:deploy": "pnpm --filter @fury/database db:migrate:deploy",
+    "db:migrate:reset": "pnpm --filter @fury/database db:migrate:reset",
+    "db:push": "pnpm --filter @fury/database db:push",
+    "db:studio": "pnpm --filter @fury/database db:studio",
+    "db:seed": "pnpm --filter @fury/database db:seed",
     "verify": "pnpm db:format && pnpm db:validate && pnpm db:generate && pnpm format:check && pnpm lint && pnpm check-types && pnpm test && pnpm test:integration && pnpm build && git diff --check",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,mjs,cjs,json,md,mdx,yml,yaml,css}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,mjs,cjs,json,md,mdx,yml,yaml,css}\""
   },
   "devDependencies": {
-    "@template/prettier-config": "workspace:*",
+    "@fury/prettier-config": "workspace:*",
     "prettier": "3.9.6",
     "turbo": "2.10.8"
   },
@@ -2781,7 +2781,7 @@ input:focus-visible {
 ### [MODIFIED] `packages/database/eslint.config.mjs`
 
 ```javascript
-import { createNodeConfig } from "@template/eslint-config/node";
+import { createNodeConfig } from "@fury/eslint-config/node";
 
 export default createNodeConfig({
   tsconfigRootDir: import.meta.dirname,
@@ -2798,7 +2798,7 @@ export default createNodeConfig({
 
 ```json
 {
-  "name": "@template/database",
+  "name": "@fury/database",
   "private": true,
   "type": "module",
   "exports": {
@@ -2830,13 +2830,13 @@ export default createNodeConfig({
   "dependencies": {
     "@prisma/adapter-pg": "7.9.1",
     "@prisma/client": "7.9.1",
-    "@template/contracts": "workspace:*",
+    "@fury/contracts": "workspace:*",
     "argon2": "0.45.1",
     "pg": "8.22.0"
   },
   "devDependencies": {
-    "@template/eslint-config": "workspace:*",
-    "@template/typescript-config": "workspace:*",
+    "@fury/eslint-config": "workspace:*",
+    "@fury/typescript-config": "workspace:*",
     "@testcontainers/postgresql": "12.1.0",
     "@types/node": "24.13.3",
     "@types/pg": "8.20.3",
@@ -3024,7 +3024,7 @@ overrides:
 importers:
   .:
     devDependencies:
-      "@template/prettier-config":
+      "@fury/prettier-config":
         specifier: workspace:*
         version: link:packages/prettier-config
       prettier:
@@ -3036,10 +3036,10 @@ importers:
 
   apps/api:
     dependencies:
-      "@template/contracts":
+      "@fury/contracts":
         specifier: workspace:*
         version: link:../../packages/contracts
-      "@template/database":
+      "@fury/database":
         specifier: workspace:*
         version: link:../../packages/database
       argon2:
@@ -3088,10 +3088,10 @@ importers:
         specifier: 6.0.0
         version: 6.0.0(zod@4.4.3)
     devDependencies:
-      "@template/eslint-config":
+      "@fury/eslint-config":
         specifier: workspace:*
         version: link:../../packages/eslint-config
-      "@template/typescript-config":
+      "@fury/typescript-config":
         specifier: workspace:*
         version: link:../../packages/typescript-config
       "@testcontainers/postgresql":
@@ -3151,7 +3151,7 @@ importers:
       "@tanstack/react-query":
         specifier: 5.101.4
         version: 5.101.4(react@19.2.8)
-      "@template/contracts":
+      "@fury/contracts":
         specifier: workspace:*
         version: link:../../packages/contracts
       axios:
@@ -3176,10 +3176,10 @@ importers:
       "@tailwindcss/postcss":
         specifier: 4.3.3
         version: 4.3.3
-      "@template/eslint-config":
+      "@fury/eslint-config":
         specifier: workspace:*
         version: link:../../packages/eslint-config
-      "@template/typescript-config":
+      "@fury/typescript-config":
         specifier: workspace:*
         version: link:../../packages/typescript-config
       "@testing-library/jest-dom":
@@ -3222,10 +3222,10 @@ importers:
         specifier: 4.4.3
         version: 4.4.3
     devDependencies:
-      "@template/eslint-config":
+      "@fury/eslint-config":
         specifier: workspace:*
         version: link:../eslint-config
-      "@template/typescript-config":
+      "@fury/typescript-config":
         specifier: workspace:*
         version: link:../typescript-config
       "@types/node":
@@ -3252,7 +3252,7 @@ importers:
       "@prisma/client":
         specifier: 7.9.1
         version: 7.9.1(prisma@7.9.1(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@5.9.3))(typescript@5.9.3)
-      "@template/contracts":
+      "@fury/contracts":
         specifier: workspace:*
         version: link:../contracts
       argon2:
@@ -3262,10 +3262,10 @@ importers:
         specifier: 8.22.0
         version: 8.22.0
     devDependencies:
-      "@template/eslint-config":
+      "@fury/eslint-config":
         specifier: workspace:*
         version: link:../eslint-config
-      "@template/typescript-config":
+      "@fury/typescript-config":
         specifier: workspace:*
         version: link:../typescript-config
       "@testcontainers/postgresql":
@@ -15786,7 +15786,7 @@ import pino from "pino";
 import request, { type Response as SupertestResponse } from "supertest";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 
-import { createDatabaseClient } from "@template/database";
+import { createDatabaseClient } from "@fury/database";
 
 import { createApp } from "./app.js";
 import type {
@@ -16349,8 +16349,8 @@ const accessSecret = readSecret("AUTH_JWT_SECRET");
 export const authConfig = Object.freeze({
   nodeEnv,
   isProduction,
-  issuer: getEnvVariable("AUTH_JWT_ISSUER", "full-stack-boilerplate"),
-  audience: getEnvVariable("AUTH_JWT_AUDIENCE", "full-stack-boilerplate-web"),
+  issuer: getEnvVariable("AUTH_JWT_ISSUER", "fury-turbo"),
+  audience: getEnvVariable("AUTH_JWT_AUDIENCE", "fury-turbo-web"),
   clockToleranceSeconds: getEnvVarAsInteger(
     "AUTH_JWT_CLOCK_TOLERANCE_SECONDS",
     5,
@@ -16536,7 +16536,7 @@ export const emailConfig = Object.freeze({
   provider,
   publicWebUrl: webUrl.toString().replace(/\/+$/, ""),
   resendApiKey,
-  fromName: getEnvVariable("MAIL_FROM_NAME", "Full-Stack Boilerplate"),
+  fromName: getEnvVariable("MAIL_FROM_NAME", "Fury Turbo"),
   fromAddress,
   replyTo: getEnvVariable("MAIL_REPLY_TO", ""),
   smtpHost: smtpHost || "localhost",
@@ -16837,7 +16837,7 @@ describe("pagination", () => {
 ### [UNTRACKED] `apps/api/src/core/pagination/pagination.ts`
 
 ```typescript
-import type { PaginationMeta } from "@template/contracts";
+import type { PaginationMeta } from "@fury/contracts";
 
 import { BadRequestException } from "../errors/bad-request.error.js";
 
@@ -17340,7 +17340,7 @@ import {
 } from "./email-delivery.js";
 
 const request = {
-  from: "Template <no-reply@example.com>",
+  from: "Fury Turbo <no-reply@example.com>",
   to: "user@example.com",
   subject: "Local preview",
   html: "<p>Preview body</p>",
@@ -17381,7 +17381,7 @@ describe("ConsoleEmailDelivery", () => {
 
   it("saves an owner-restricted local action-link preview outside logs", async () => {
     const previewDirectory = await mkdtemp(
-      join(tmpdir(), "template-email-preview-"),
+      join(tmpdir(), "fury-email-preview-"),
     );
     const infoLog = vi
       .spyOn(logger, "info")
@@ -17444,7 +17444,7 @@ describe("provider failure logging", () => {
     const delivery = new ResendEmailDelivery(
       () => ({ send }),
       noWait,
-      () => "template-email/test",
+      () => "fury-email/test",
     );
 
     await expect(delivery.send(request)).rejects.toBeInstanceOf(
@@ -17642,7 +17642,7 @@ export class ResendEmailDelivery implements EmailDelivery {
     private readonly getClient: () => ResendEmailClient = getResendEmailClient,
     private readonly retryWait: RetryWait = wait,
     private readonly idempotencyKeyFactory: () => string = () =>
-      `template-email/${randomUUID()}`,
+      `fury-email/${randomUUID()}`,
   ) {}
 
   async send(request: EmailSendRequest): Promise<EmailSendResult> {
@@ -17757,7 +17757,7 @@ const createService = () => {
     service: new EmailService(
       delivery,
       "no-reply@example.com",
-      "Template",
+      "Fury Turbo",
       "",
       "http://localhost:3000",
     ),
@@ -17769,7 +17769,7 @@ describe("EmailService local previews", () => {
     const { send, service } = createService();
 
     await service.sendVerificationEmail(
-      "Template User",
+      "Fury Test User",
       "user@example.com",
       "verification-token",
     );
@@ -17783,7 +17783,7 @@ describe("EmailService local previews", () => {
     const { send, service } = createService();
 
     await service.sendPasswordResetEmail(
-      "Template User",
+      "Fury Test User",
       "user@example.com",
       "reset-token",
     );
@@ -17915,7 +17915,7 @@ export const baseLayoutTemplate = (input: {
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="padding:32px 16px;background:#eef3f1;">
       <tr><td align="center">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:580px;overflow:hidden;border:1px solid #cfdbd7;border-radius:18px;background:#ffffff;">
-          <tr><td style="padding:24px 30px;border-bottom:1px solid #e2e9e7;font-size:18px;font-weight:700;">Full-Stack Boilerplate</td></tr>
+          <tr><td style="padding:24px 30px;border-bottom:1px solid #e2e9e7;font-size:18px;font-weight:700;">Fury Turbo</td></tr>
           <tr><td style="padding:32px 30px;">${input.bodyHtml}</td></tr>
           <tr><td style="padding:20px 30px;border-top:1px solid #e2e9e7;color:#64726e;font-size:12px;line-height:1.6;">This automated message was sent by your application.</td></tr>
         </table>
@@ -18192,7 +18192,7 @@ import {
   accountResponseSchemas,
   errorEnvelopeSchema,
   successEnvelopeSchema,
-} from "@template/contracts";
+} from "@fury/contracts";
 
 import { appConfig } from "../../core/config/app.config.js";
 import {
@@ -18493,7 +18493,7 @@ export { sha256 } from "./token-hasher.js";
 ```typescript
 import { randomUUID } from "node:crypto";
 
-import { UserRole } from "@template/database";
+import { UserRole } from "@fury/database";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -18546,7 +18546,7 @@ import { randomUUID } from "node:crypto";
 
 import jwt, { type JwtPayload, type SignOptions } from "jsonwebtoken";
 
-import { UserRole } from "@template/database";
+import { UserRole } from "@fury/database";
 
 import { authConfig, jwtConfig } from "../../core/config/auth.config.js";
 import type {
@@ -18870,7 +18870,7 @@ export const sha256 = (value: string): string =>
 ```typescript
 import type { NextFunction, Request, Response } from "express";
 
-import { UserStatus, type DatabaseClient } from "@template/database";
+import { UserStatus, type DatabaseClient } from "@fury/database";
 
 import { UnauthorizedException } from "../core/errors/unauthorized.error.js";
 import { mapSafeUser } from "../modules/users/users.mapper.js";
@@ -18918,7 +18918,7 @@ export const createAuthenticationMiddleware =
 ### [UNTRACKED] `apps/api/src/middlewares/authorization.middleware.test.ts`
 
 ```typescript
-import { UserRole } from "@template/database";
+import { UserRole } from "@fury/database";
 import { describe, expect, it, vi } from "vitest";
 
 import { ForbiddenException } from "../core/errors/forbidden.error.js";
@@ -18959,7 +18959,7 @@ describe("authorizeRoles", () => {
 ```typescript
 import type { NextFunction, Request, Response } from "express";
 
-import type { UserRole } from "@template/database";
+import type { UserRole } from "@fury/database";
 
 import { ForbiddenException } from "../core/errors/forbidden.error.js";
 import { UnauthorizedException } from "../core/errors/unauthorized.error.js";
@@ -19278,7 +19278,7 @@ import type { AuthService } from "./auth.service.js";
 
 const user = {
   id: "1b3d904e-a46c-4dd8-9cb7-d0767546ea95",
-  fullName: "Template User",
+  fullName: "Fury Test User",
   email: "user@example.com",
   phone: null,
   role: "USER",
@@ -19890,7 +19890,7 @@ export const authRoutes = (
 ### [UNTRACKED] `apps/api/src/modules/auth/auth.service.integration.test.ts`
 
 ```typescript
-import { createDatabaseClient } from "@template/database";
+import { createDatabaseClient } from "@fury/database";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { EmailDelivery } from "../../infrastructure/email/email-delivery.js";
@@ -19917,7 +19917,7 @@ const delivery: EmailDelivery = {
 const emailService = new EmailService(
   delivery,
   "no-reply@example.com",
-  "Template",
+  "Fury Turbo",
   "",
   "http://localhost:3000",
 );
@@ -19945,7 +19945,7 @@ describe("AuthService with PostgreSQL", () => {
 
   it("registers, verifies, logs in, and atomically rotates one-time refresh tokens", async () => {
     const registered = await service.register({
-      fullName: "Template User",
+      fullName: "Fury Test User",
       email: "USER@example.com",
       phone: null,
       password: "initial-secure-password",
@@ -19997,7 +19997,7 @@ describe("AuthService with PostgreSQL", () => {
       new EmailService(
         { provider: "smtp", send },
         "no-reply@example.com",
-        "Template",
+        "Fury Turbo",
         "",
         "http://localhost:3000",
       ),
@@ -20022,7 +20022,7 @@ describe("AuthService with PostgreSQL", () => {
 
   it("uses neutral recovery, consumes reset tokens once, and revokes sessions", async () => {
     await service.register({
-      fullName: "Template User",
+      fullName: "Fury Test User",
       email: "user@example.com",
       phone: null,
       password: "initial-secure-password",
@@ -20080,7 +20080,7 @@ describe("AuthService with PostgreSQL", () => {
 ```typescript
 import { describe, expect, it, vi } from "vitest";
 
-import type { DatabaseClient } from "@template/database";
+import type { DatabaseClient } from "@fury/database";
 
 import { ServiceUnavailableException } from "../../core/errors/service-unavailable.error.js";
 import type { EmailService } from "../../infrastructure/email/email.service.js";
@@ -20097,7 +20097,7 @@ describe("AuthService registration delivery", () => {
           id: "1b3d904e-a46c-4dd8-9cb7-d0767546ea95",
           email: "user@example.com",
           passwordHash: "not-returned",
-          fullName: "Template User",
+          fullName: "Fury Test User",
           phone: null,
           role: "USER",
           status: "PENDING_VERIFICATION",
@@ -20119,7 +20119,7 @@ describe("AuthService registration delivery", () => {
     const service = new AuthService(database, emailService);
 
     const registration = service.register({
-      fullName: "Template User",
+      fullName: "Fury Test User",
       email: "user@example.com",
       phone: null,
       password: "a-secure-test-password",
@@ -20164,7 +20164,7 @@ import {
   UserStatus,
   type DatabaseClient,
   type User,
-} from "@template/database";
+} from "@fury/database";
 
 import { authConfig } from "../../core/config/auth.config.js";
 import { BadRequestException } from "../../core/errors/bad-request.error.js";
@@ -20692,7 +20692,7 @@ export class AuthService {
 ### [UNTRACKED] `apps/api/src/modules/auth/dto/change-password.dto.ts`
 
 ```typescript
-import { changePasswordBodySchema } from "@template/contracts";
+import { changePasswordBodySchema } from "@fury/contracts";
 import type { z } from "zod";
 
 export const changePasswordBodyDtoSchema = changePasswordBodySchema;
@@ -20702,7 +20702,7 @@ export type ChangePasswordBodyDto = z.infer<typeof changePasswordBodyDtoSchema>;
 ### [UNTRACKED] `apps/api/src/modules/auth/dto/email-request.dto.ts`
 
 ```typescript
-import { emailRequestBodySchema } from "@template/contracts";
+import { emailRequestBodySchema } from "@fury/contracts";
 import type { z } from "zod";
 
 export const emailRequestBodyDtoSchema = emailRequestBodySchema;
@@ -20732,7 +20732,7 @@ export { tokenQueryDtoSchema, type TokenQueryDto } from "./token-query.dto.js";
 ### [UNTRACKED] `apps/api/src/modules/auth/dto/login.dto.ts`
 
 ```typescript
-import { loginBodySchema } from "@template/contracts";
+import { loginBodySchema } from "@fury/contracts";
 import type { z } from "zod";
 
 export const loginBodyDtoSchema = loginBodySchema;
@@ -20742,7 +20742,7 @@ export type LoginBodyDto = z.infer<typeof loginBodyDtoSchema>;
 ### [UNTRACKED] `apps/api/src/modules/auth/dto/register.dto.ts`
 
 ```typescript
-import { registerBodySchema } from "@template/contracts";
+import { registerBodySchema } from "@fury/contracts";
 import type { z } from "zod";
 
 export const registerBodyDtoSchema = registerBodySchema;
@@ -20752,7 +20752,7 @@ export type RegisterBodyDto = z.infer<typeof registerBodyDtoSchema>;
 ### [UNTRACKED] `apps/api/src/modules/auth/dto/reset-password.dto.ts`
 
 ```typescript
-import { resetPasswordBodySchema } from "@template/contracts";
+import { resetPasswordBodySchema } from "@fury/contracts";
 import type { z } from "zod";
 
 export const resetPasswordBodyDtoSchema = resetPasswordBodySchema;
@@ -20762,7 +20762,7 @@ export type ResetPasswordBodyDto = z.infer<typeof resetPasswordBodyDtoSchema>;
 ### [UNTRACKED] `apps/api/src/modules/auth/dto/token-query.dto.ts`
 
 ```typescript
-import { tokenQuerySchema } from "@template/contracts";
+import { tokenQuerySchema } from "@fury/contracts";
 import type { z } from "zod";
 
 export const tokenQueryDtoSchema = tokenQuerySchema;
@@ -20780,8 +20780,8 @@ export { AuthService } from "./auth.service.js";
 ### [UNTRACKED] `apps/api/src/modules/auth/types/auth.types.ts`
 
 ```typescript
-import type { SafeUser } from "@template/contracts";
-import type { UserRole } from "@template/database";
+import type { SafeUser } from "@fury/contracts";
+import type { UserRole } from "@fury/database";
 
 export type CookieAttributes = Readonly<{
   httpOnly: boolean;
@@ -20841,8 +20841,8 @@ export interface AuthResponseWithoutTokens {
 ### [UNTRACKED] `apps/api/src/modules/users/dto/update-profile.dto.ts`
 
 ```typescript
-import { updateProfileBodySchema } from "@template/contracts";
-import type { UpdateProfileBody } from "@template/contracts";
+import { updateProfileBodySchema } from "@fury/contracts";
+import type { UpdateProfileBody } from "@fury/contracts";
 
 export const updateProfileBodyDtoSchema = updateProfileBodySchema;
 export type UpdateProfileBodyDto = UpdateProfileBody;
@@ -20903,8 +20903,8 @@ export class UsersController {
 ### [UNTRACKED] `apps/api/src/modules/users/users.mapper.ts`
 
 ```typescript
-import type { SafeUser } from "@template/contracts";
-import type { Prisma, User } from "@template/database";
+import type { SafeUser } from "@fury/contracts";
+import type { Prisma, User } from "@fury/database";
 
 export const SAFE_USER_SELECT = {
   id: true,
@@ -20968,8 +20968,8 @@ export const usersRoutes = (
 ### [UNTRACKED] `apps/api/src/modules/users/users.service.ts`
 
 ```typescript
-import type { SafeUser } from "@template/contracts";
-import { UserStatus, type DatabaseClient } from "@template/database";
+import type { SafeUser } from "@fury/contracts";
+import { UserStatus, type DatabaseClient } from "@fury/database";
 
 import { ForbiddenException } from "../../core/errors/forbidden.error.js";
 import { UnauthorizedException } from "../../core/errors/unauthorized.error.js";
@@ -21059,7 +21059,7 @@ export default async function setup(): Promise<() => Promise<void>> {
   delete process.env["DATABASE_URL"];
   const container = await new PostgreSqlContainer("postgres:18.4")
     .withDatabase("template_api_integration")
-    .withUsername("template_test")
+    .withUsername("fury_test")
     .withPassword("test-only-password")
     .withStartupTimeout(120_000)
     .start();
@@ -21138,7 +21138,7 @@ export default defineConfig({
 process.env["NODE_ENV"] = "test";
 process.env["DATABASE_URL"] =
   process.env["DATABASE_URL"] ??
-  "postgresql://template_test:template_test@127.0.0.1:5432/template_test";
+  "postgresql://fury_test:fury_test@127.0.0.1:5432/fury_test";
 process.env["AUTH_JWT_SECRET"] =
   "test-only-access-secret-000000000000000000000000";
 process.env["AUTH_REFRESH_JWT_SECRET"] =
@@ -21473,7 +21473,7 @@ export function GuestOnlyRoute({
 ```tsx
 "use client";
 
-import type { UserRole } from "@template/contracts";
+import type { UserRole } from "@fury/contracts";
 import type { Route } from "next";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
@@ -21578,7 +21578,7 @@ export function ProtectedRoute({
 ### [UNTRACKED] `apps/web/src/components/auth/route-state.test.ts`
 
 ```typescript
-import type { AuthUserData, SafeUser } from "@template/contracts";
+import type { AuthUserData, SafeUser } from "@fury/contracts";
 import { describe, expect, it } from "vitest";
 
 import { resolveGuestOnlyRouteState } from "./guest-only-route";
@@ -21587,7 +21587,7 @@ import { resolveProtectedRouteState } from "./protected-route";
 const user = (overrides: Partial<SafeUser> = {}): AuthUserData => ({
   user: {
     id: "1b3d904e-a46c-4dd8-9cb7-d0767546ea95",
-    fullName: "Template User",
+    fullName: "Fury Test User",
     email: "user@example.com",
     phone: null,
     role: "USER",
@@ -21674,7 +21674,7 @@ describe("pure route states", () => {
 
 ```tsx
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import type { AuthUserData } from "@template/contracts";
+import type { AuthUserData } from "@fury/contracts";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { GuestOnlyRoute } from "./guest-only-route";
@@ -21708,7 +21708,7 @@ vi.mock("@/services/api/api-client", () => ({
 const account: AuthUserData = {
   user: {
     id: "1b3d904e-a46c-4dd8-9cb7-d0767546ea95",
-    fullName: "Template User",
+    fullName: "Fury Test User",
     email: "user@example.com",
     phone: null,
     role: "USER",
@@ -21839,14 +21839,14 @@ import Link from "next/link";
 
 export function BrandMark({ compact = false }: { compact?: boolean }) {
   return (
-    <Link className="brand-mark" href="/" aria-label="Relay home">
+    <Link className="brand-mark" href="/" aria-label="Fury Turbo home">
       <span className="brand-mark__glyph" aria-hidden="true">
         R/
       </span>
       {compact ? null : (
         <span>
-          <strong>Relay</strong>
-          <small>full-stack starter</small>
+          <strong>Fury Turbo</strong>
+          <small>Arabic manga platform</small>
         </span>
       )}
     </Link>
@@ -21963,7 +21963,7 @@ vi.mock("@/features/auth/hooks/auth.hooks", () => ({
   useLogout: () => ({ isPending: mocks.isPending, mutate: mocks.mutate }),
   useSession: () => ({
     data: {
-      user: { fullName: "Template User", role: "USER" },
+      user: { fullName: "Fury Test User", role: "USER" },
     },
   }),
 }));
@@ -22109,7 +22109,7 @@ import {
   changePasswordBodySchema,
   PASSWORD_MIN_LENGTH,
   type ChangePasswordBody,
-} from "@template/contracts";
+} from "@fury/contracts";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
@@ -22302,7 +22302,7 @@ import type {
   LoginBody,
   RegisterBody,
   ResetPasswordBody,
-} from "@template/contracts";
+} from "@fury/contracts";
 
 import {
   apiClient,
@@ -22419,10 +22419,7 @@ export const authApi = {
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  emailRequestBodySchema,
-  type EmailRequestBody,
-} from "@template/contracts";
+import { emailRequestBodySchema, type EmailRequestBody } from "@fury/contracts";
 import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -22558,7 +22555,7 @@ describe("LoginForm", () => {
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { loginBodySchema, type LoginBody } from "@template/contracts";
+import { loginBodySchema, type LoginBody } from "@fury/contracts";
 import Link from "next/link";
 import type { Route } from "next";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -22645,7 +22642,7 @@ export function LoginForm() {
         {isSubmitting ? "Establishing session…" : "Sign in securely"}
       </button>
       <p className="auth-form__footer">
-        New to Relay? <Link href="/auth/register">Create an account</Link>
+        New to Fury Turbo? <Link href="/auth/register">Create an account</Link>
       </p>
     </form>
   );
@@ -22662,7 +22659,7 @@ import {
   PASSWORD_MIN_LENGTH,
   registerBodySchema,
   type RegisterBody,
-} from "@template/contracts";
+} from "@fury/contracts";
 import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -22786,7 +22783,7 @@ import {
   PASSWORD_MIN_LENGTH,
   resetPasswordBodySchema,
   type ResetPasswordBody,
-} from "@template/contracts";
+} from "@fury/contracts";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -22891,10 +22888,7 @@ export function ResetPasswordForm() {
 ```tsx
 "use client";
 
-import {
-  emailRequestBodySchema,
-  type EmailRequestBody,
-} from "@template/contracts";
+import { emailRequestBodySchema, type EmailRequestBody } from "@fury/contracts";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -23169,7 +23163,7 @@ const createHarness = () => {
 const account = {
   user: {
     id: "1b3d904e-a46c-4dd8-9cb7-d0767546ea95",
-    fullName: "Template User",
+    fullName: "Fury Test User",
     email: "user@example.com",
     phone: null,
     role: "USER" as const,
@@ -23277,7 +23271,7 @@ import type {
   LoginBody,
   RegisterBody,
   ResetPasswordBody,
-} from "@template/contracts";
+} from "@fury/contracts";
 
 import { usersApi } from "@/features/users/api/users.api";
 import {
@@ -23475,8 +23469,8 @@ export const sanitizeReturnPath = (
     return null;
   }
   try {
-    const parsed = new URL(value, "https://template.invalid");
-    if (parsed.origin !== "https://template.invalid") return null;
+    const parsed = new URL(value, "https://fury.invalid");
+    if (parsed.origin !== "https://fury.invalid") return null;
     if (
       !ALLOWED_ROOTS.some(
         (root) =>
@@ -23510,7 +23504,7 @@ export const replaceWithLogin = (): void => {
 ### [UNTRACKED] `apps/web/src/features/users/api/users.api.ts`
 
 ```typescript
-import type { AuthUserData, UpdateProfileBody } from "@template/contracts";
+import type { AuthUserData, UpdateProfileBody } from "@fury/contracts";
 
 import { apiClient, type ApiResponse } from "@/services/api/api-client";
 
@@ -23539,7 +23533,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   updateProfileBodySchema,
   type UpdateProfileBody,
-} from "@template/contracts";
+} from "@fury/contracts";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
@@ -23694,7 +23688,7 @@ describe("useUpdateProfile", () => {
 
 ```typescript
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { UpdateProfileBody } from "@template/contracts";
+import type { UpdateProfileBody } from "@fury/contracts";
 
 import { AUTH_SESSION_QUERY_KEY } from "@/features/auth/hooks/auth.hooks";
 
@@ -24147,7 +24141,7 @@ import axios, {
   type AxiosResponse,
 } from "axios";
 
-import type { SuccessEnvelope } from "@template/contracts";
+import type { SuccessEnvelope } from "@fury/contracts";
 
 import { publicEnvironment } from "@/config/public-environment";
 
@@ -24223,7 +24217,7 @@ let refreshPromise: ValueState<Promise<string>> = { kind: "missing" };
 
 declare module "axios" {
   interface AxiosRequestConfig {
-    _templateRetried?: boolean;
+    _furyRetried?: boolean;
   }
 }
 
@@ -24283,7 +24277,7 @@ const safeCurrentPath = (): string | null => {
   const value = `${location.pathname}${location.search}`;
   if (!value.startsWith("/") || value.startsWith("//")) return null;
   if (location.pathname.startsWith("/auth/")) return null;
-  const parsed = new URL(value, "https://template.invalid");
+  const parsed = new URL(value, "https://fury.invalid");
   for (const key of parsed.searchParams.keys()) {
     if (CREDENTIAL_QUERY_KEYS.has(key.toLowerCase())) return null;
   }
@@ -24341,11 +24335,11 @@ apiClient.interceptors.response.use(
       typeof requestUrl !== "string" ||
       error.response?.status !== 401 ||
       isPublicAuthRequest(requestUrl) ||
-      config._templateRetried === true
+      config._furyRetried === true
     ) {
       throw error;
     }
-    config._templateRetried = true;
+    config._furyRetried = true;
     try {
       await refreshAccessToken();
       return await apiClient.request(config);
@@ -24712,7 +24706,7 @@ export default defineConfig({
 ### [UNTRACKED] `packages/contracts/eslint.config.mjs`
 
 ```javascript
-import { createNodeConfig } from "@template/eslint-config/node";
+import { createNodeConfig } from "@fury/eslint-config/node";
 
 export default createNodeConfig({
   tsconfigRootDir: import.meta.dirname,
@@ -24724,7 +24718,7 @@ export default createNodeConfig({
 
 ```json
 {
-  "name": "@template/contracts",
+  "name": "@fury/contracts",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -24748,8 +24742,8 @@ export default createNodeConfig({
     "zod": "4.4.3"
   },
   "devDependencies": {
-    "@template/eslint-config": "workspace:*",
-    "@template/typescript-config": "workspace:*",
+    "@fury/eslint-config": "workspace:*",
+    "@fury/typescript-config": "workspace:*",
     "@types/node": "24.13.3",
     "eslint": "9.39.1",
     "rimraf": "6.1.3",
@@ -24774,7 +24768,7 @@ import {
 
 const safeUser = {
   id: "11111111-1111-4111-8111-111111111111",
-  fullName: "Template User",
+  fullName: "Fury Test User",
   email: "user@example.com",
   phone: null,
   role: "USER",
@@ -24881,7 +24875,7 @@ import {
 describe("authentication request contracts", () => {
   it("normalizes email, whitespace, and optional phone input", () => {
     const result = registerBodySchema.parse({
-      fullName: "Template User",
+      fullName: "Fury Test User",
       email: "  USER@Example.COM ",
       phone: " ",
       password: "a-secure-password",
@@ -25280,7 +25274,7 @@ export type {
 
 ```json
 {
-  "extends": "@template/typescript-config/node.json",
+  "extends": "@fury/typescript-config/node.json",
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist",
@@ -25381,7 +25375,7 @@ ALTER TABLE "users"
 ```typescript
 import argon2 from "argon2";
 
-import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "@template/contracts";
+import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "@fury/contracts";
 
 import {
   UserRole,
@@ -25525,7 +25519,7 @@ export default async function setup(): Promise<() => Promise<void>> {
   delete process.env["DATABASE_URL"];
   const container = await new PostgreSqlContainer("postgres:18.4")
     .withDatabase("template_integration")
-    .withUsername("template_test")
+    .withUsername("fury_test")
     .withPassword("test-only-password")
     .withStartupTimeout(120_000)
     .start();

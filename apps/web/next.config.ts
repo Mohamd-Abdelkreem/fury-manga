@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   typedRoutes: true,
   reactCompiler: true,
-  transpilePackages: ["@template/contracts"],
+  transpilePackages: ["@fury/contracts"],
   turbopack: {
     root: path.resolve(import.meta.dirname, "../.."),
   },

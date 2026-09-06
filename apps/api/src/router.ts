@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import type { DatabaseClient } from "@template/database";
+import type { DatabaseClient } from "@fury/database";
 
 import { openApiRoutes } from "./infrastructure/openapi/openapi.routes.js";
 import type { EmailService } from "./infrastructure/email/email.service.js";

@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  emailRequestBodySchema,
-  type EmailRequestBody,
-} from "@template/contracts";
+import { emailRequestBodySchema, type EmailRequestBody } from "@fury/contracts";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";

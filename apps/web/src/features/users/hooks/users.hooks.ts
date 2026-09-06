@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { UpdateProfileBody } from "@template/contracts";
+import type { UpdateProfileBody } from "@fury/contracts";
 
 import { AUTH_SESSION_QUERY_KEY } from "@/features/auth/hooks/auth.hooks";
 
