@@ -47,3 +47,7 @@ tas3er-pro/
 .DS_Store
 Thumbs.db
 fury-turbo/
+
+# Local workflow ownership and checkpoints
+.orchestrator/
+.specify/feature.json

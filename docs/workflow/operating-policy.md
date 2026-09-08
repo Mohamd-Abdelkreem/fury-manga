@@ -6,15 +6,21 @@ actual providers, skills and entrypoints before claiming the workflow operates.
 
 ## Roles and scope
 
-| Role         | Owns                                                                                             |
-| ------------ | ------------------------------------------------------------------------------------------------ |
-| Codex High   | Intake, planning, relevant research, diagnosis, implementation/test review and acceptance        |
-| Codex Medium | Application test files/fixtures and justified test corrections                                   |
-| Kimi         | Application/prototype implementation and application corrections                                 |
-| User         | Consequential product/design decisions, phase continuation and separately authorized publication |
+| Role                 | Owns                                                                                             |
+| -------------------- | ------------------------------------------------------------------------------------------------ |
+| Codex High           | Intake, planning, relevant research, diagnosis, implementation/test review and acceptance        |
+| Codex Medium tester  | Application test files/fixtures and justified test corrections                                   |
+| Selected implementer | Application/prototype implementation and application corrections                                 |
+| User                 | Consequential product/design decisions, phase continuation and separately authorized publication |
 
-Codex may maintain documentation/configuration. Kimi may read/run tests but must not
-weaken them. A configured test role must actually use the selected effort; text
+Current provider: **Codex trial**. Use `gpt-6-astra` High for the lead, Medium for
+`orchestrator_implementer`, and a separate Medium `orchestrator_tester`. Kimi is a
+future selectable provider, not configured or required for this trial. Start the
+installed global workflow with `codex --profile orchestrator`, then `$orchestrator`.
+Changing a provider later requires explicit selection and a verified adapter.
+
+Codex may maintain documentation/configuration. The implementer may read/run tests
+but must not weaken them. A configured test role must actually use the selected effort; text
 claiming it is not proof. Missing/quota-limited implementers save/stop rather than
 silently switching ownership.
 
@@ -53,7 +59,7 @@ Do not send only "follow clean code" or load every installed skill/reference.
 Skills provide relevant methods; these files own engineering requirements. Avoid
 copying entire skills into standards or full manuals into every task.
 
-A Kimi handoff must include accessible relevant instructions/references; Codex's
+Every worker handoff must include accessible relevant instructions/references; Codex's
 loaded skills and private conversation do not automatically transfer. The final
 adapter must prove what context and permissions the implementer actually receives.
 
@@ -89,11 +95,13 @@ authorization to invent the feature, schema or test expectations.
 5. Review the actual diff, not only the implementer's report. Trace applicable
    layer/contract/data/security/UI behavior and run meaningful checks.
 6. Diagnose each failure: implementation, test, environment or missing decision.
-   Send code corrections to Kimi; justified test corrections to the test owner.
+   Send code corrections to the selected implementer; justified test corrections to the test owner.
 7. Recheck changed behavior and affected integration; record completed evidence.
 8. At phase completion, report and pause under the user's continuation policy.
 
-Repeated no-progress corrections trigger a diagnosis and materially changed brief.
+After three unsuccessful correction rounds, the lead diagnoses the root cause and
+sends a materially improved brief to the same implementer. If the next attempt still
+makes no measurable progress, save the blocker and ask for the needed intervention.
 Do not loop indefinitely, reset a database or weaken requirements to claim success.
 
 ## Acceptance checklist in the phase report
@@ -128,7 +136,17 @@ without adding unnecessary per-task confirmations.
 
 ## Setup boundary
 
-Skills installation/adaptation, Spec Kit constitution, actual Codex/Kimi role routing,
-checkpoints and resume enforcement are separate implementation tasks. Prove the
-installed cycle with a bounded correction/interruption exercise before representing
-it as operational. This reference pack does not claim those tasks are complete.
+The global `orchestrator` skill and profile configure the Codex trial. Project
+Spec Kit skills and `.specify/memory/constitution.md` provide the planning integration;
+the local `speckit-implement` adapter preserves separate implementation/test ownership.
+Use the High-led skill route, not the stock `specify workflow run speckit` runner.
+
+Local `.orchestrator/` checkpoints and the cooperative owner lock are maintained by
+the skill's state helper. The lead checkpoints before delegation and after review,
+then releases ownership only after workers stop. An abrupt interruption preserves
+the last checkpoint; resumption reconciles actual files and worker activity. A stale
+lock is never silently stolen. This does not stop unrelated tools from editing files.
+
+Runtime installation and evidence are machine-specific. Copying this rule pack alone
+does not install global skills/profiles, configure Kimi or prove model access. Verify
+the integration in each environment before claiming the full cycle is operational.

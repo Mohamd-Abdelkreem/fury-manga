@@ -33,8 +33,11 @@ Never add an example feature merely because it appears in documentation.
 
 ## Ownership and completion
 
-Codex High plans/diagnoses/reviews, Codex Medium authors application tests, and Kimi
-implements application/prototype code and corrections under the selected workflow.
+Codex High plans/diagnoses/reviews. In the selected Codex trial, a Medium
+implementation agent writes application/prototype code and corrections, while a
+separate Medium test agent authors application tests. Kimi is a future provider
+and is not currently configured. Use `$orchestrator` for phase execution with
+`codex --profile orchestrator`; verify actual runtime settings.
 Codex may maintain documentation/configuration. Verify actual role/tool availability;
 these files alone do not activate delegation or change model effort. No silent
 implementer fallback.
