@@ -1,0 +1,7 @@
+interface:
+  display_name: "Fury Design Analysis"
+  short_description: "Extract Fury's canonical frontend design system"
+  default_prompt: "Use $fury-design-analysis to audit Fury's full frontend and generate its canonical design system and inconsistency report."
+
+policy:
+  allow_implicit_invocation: true

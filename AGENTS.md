@@ -25,7 +25,7 @@ within scope. An old source pattern does not override an explicit adopted standa
 - Frontend: [F01–F31](docs/engineering/frontend-standard.md), relevant contracts,
   security and [design](docs/design/design-system.md).
 - Verification: [testing](docs/engineering/testing.md).
-- Delegation, acceptance, decisions and resume: [operating policy](docs/workflow/operating-policy.md).
+- Scope, verification and decisions: [operating policy](docs/workflow/operating-policy.md).
 
 The rule IDs are stable review references. Embedded code examples illustrate the
 pattern; their fictional entity/package names are not dependencies to install.
@@ -33,14 +33,10 @@ Never add an example feature merely because it appears in documentation.
 
 ## Ownership and completion
 
-Codex High plans/diagnoses/reviews. In the selected Codex trial, a Medium
-implementation agent writes application/prototype code and corrections, while a
-separate Medium test agent authors application tests. Kimi is a future provider
-and is not currently configured. Use `$orchestrator` for phase execution with
-`codex --profile orchestrator`; verify actual runtime settings.
-Codex may maintain documentation/configuration. Verify actual role/tool availability;
-these files alone do not activate delegation or change model effort. No silent
-implementer fallback.
+Codex may plan, implement application code, author tests and review changes directly
+using the current session settings. There is no required role split, provider,
+profile, delegation loop or mandatory Spec Kit pipeline. Use delegation only when
+explicitly requested for the current task. Follow the actual scope and permissions.
 
 Stop after each phase unless the user explicitly authorizes batch continuation.
 Preserve scoped design approval and consequential decisions. Save resumable evidence

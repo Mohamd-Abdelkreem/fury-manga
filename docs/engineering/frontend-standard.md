@@ -393,8 +393,7 @@ integration when affected. Never mock the hook under test, weaken assertions,
 commit .only/.skip/.todo, force exit, use arbitrary sleeps or increase timeouts to
 hide races. Cleanup must let the process exit normally.
 
-Report fresh execution versus cached/replayed output. Historical test counts and bundle sizes are not current execution evidence. Test authoring
-follows the selected Codex Medium role and independent review policy.
+Report fresh execution versus cached/replayed output. Historical test counts and bundle sizes are not current execution evidence. Codex may author and review tests directly against accepted behavior.
 
 ## F31 — Browser, device and deployment evidence
 
