@@ -27,7 +27,7 @@ const shutdown = async (reason: string, exitCode = 0): Promise<void> => {
   forceShutdownTimer.unref();
 
   try {
-    if (server !== undefined) {
+    if (server?.listening === true) {
       await new Promise<void>((resolve, reject) => {
         server?.close((error) => {
           if (error !== undefined) reject(error);

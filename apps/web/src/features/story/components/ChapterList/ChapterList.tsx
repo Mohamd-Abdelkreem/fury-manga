@@ -13,6 +13,8 @@ interface ChapterListProps {
   description: string;
   genres: string[];
   chapters: Chapter[];
+  genreSlugs?: readonly string[];
+  genreRoute?: "discover" | "stories";
 }
 
 export function ChapterList({
@@ -22,6 +24,8 @@ export function ChapterList({
   description,
   genres,
   chapters,
+  genreSlugs = [],
+  genreRoute = "discover",
 }: ChapterListProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -46,10 +50,14 @@ export function ChapterList({
 
       {/* 2 ── Genres List */}
       <div className={styles["genresWrapper"]}>
-        {genres.map((genre) => (
+        {genres.map((genre, index) => (
           <Link
             key={genre}
-            href={`/discover?genre=${encodeURIComponent(genre)}`}
+            href={
+              genreRoute === "stories"
+                ? `/stories?category=${encodeURIComponent(genreSlugs[index] ?? genre)}`
+                : `/discover?genre=${encodeURIComponent(genre)}`
+            }
             className={styles["genreBadge"]}
           >
             {genre}
@@ -100,6 +108,7 @@ export function ChapterList({
           <Search className={styles["searchIcon"]} />
           <input
             type="text"
+            aria-label="بحث عن الفصول بالأرقام"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="بحث عن الفصول بالأرقام. مثال: 25 أو 178"

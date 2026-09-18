@@ -2,9 +2,9 @@ import type { HeroItem, Genre, NavLink } from "@/types";
 
 export const NAV_LINKS: NavLink[] = [
   { label: "الرئيسية", href: "/" },
-  { label: "المصنّف", href: "#" },
+  { label: "التصنيفات", href: "/categories" },
   { label: "قائمة المانجا", href: "/discover" },
-  { label: "الأنمي", href: "#" },
+  { label: "الروايات والقصص النصية", href: "/stories" },
 ];
 
 export const GENRES: Genre[] = [

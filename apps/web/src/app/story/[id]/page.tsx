@@ -7,7 +7,10 @@ import { StorySidebar } from "@/features/story/components/StorySidebar/StorySide
 import { ChapterList } from "@/features/story/components/ChapterList/ChapterList";
 import { SimilarStories } from "@/features/story/components/SimilarStories/SimilarStories";
 import { CommentsSection } from "@/features/story/components/CommentsSection/CommentsSection";
-import { STORY_DETAIL } from "@/features/story/data/storyData";
+import { getIllustratedStoryById } from "@/features/story/data/storyData";
+import { TextWorkDetails } from "@/features/text-stories/components/TextWorkDetails/TextWorkDetails";
+import { getTextWorkById } from "@/features/text-stories/data/textStories";
+import { notFound } from "next/navigation";
 import styles from "./page.module.css";
 
 interface PageProps {
@@ -18,18 +21,38 @@ export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { id } = await params;
-  const capitalizedTitle = id
-    ? id.charAt(0).toUpperCase() + id.slice(1).replace(/-/g, " ")
-    : "Trait Hoarder";
+  const work = getTextWorkById(id) ?? getIllustratedStoryById(id);
+  if (work === undefined) return { title: "العمل غير موجود" };
 
   return {
-    title: `Fury - عمل ${capitalizedTitle} مترجم`,
-    description: `شاهد صفحة تفاصيل عمل ${capitalizedTitle} وقراءة جميع الفصول مترجمة مجاناً على منصة Fury.`,
+    title: work.title,
+    description: work.description,
   };
 }
 
 export default async function StoryDetailPage({ params }: PageProps) {
   const { id } = await params;
+  const textWork = getTextWorkById(id);
+
+  if (textWork !== undefined) {
+    return (
+      <div className={styles["pageWrapper"]} dir="rtl">
+        <div style={{ position: "relative", zIndex: 10 }}>
+          <Navbar />
+          <StoryBanner bannerImage={textWork.banner ?? textWork.cover} />
+          <div className={styles["contentContainer"]}>
+            <div className={styles["layoutGrid"]}>
+              <TextWorkDetails work={textWork} />
+            </div>
+          </div>
+          <Footer />
+        </div>
+      </div>
+    );
+  }
+
+  const story = getIllustratedStoryById(id);
+  if (story === undefined) notFound();
 
   return (
     <div className={styles["pageWrapper"]} dir="rtl">
@@ -38,7 +61,7 @@ export default async function StoryDetailPage({ params }: PageProps) {
         <Navbar />
 
         {/* Story Wide Banner */}
-        <StoryBanner bannerImage={STORY_DETAIL.bannerImage} />
+        <StoryBanner bannerImage={story.bannerImage} />
 
         {/* Content Container */}
         <div className={styles["contentContainer"]}>
@@ -46,19 +69,19 @@ export default async function StoryDetailPage({ params }: PageProps) {
             {/* Sidebar Column */}
             <div className={styles["sidebarCol"]}>
               <StorySidebar
-                coverImage={STORY_DETAIL.coverImage}
-                title={STORY_DETAIL.title}
-                rating={STORY_DETAIL.rating}
-                bookmarkedBy={STORY_DETAIL.bookmarkedBy}
-                status={STORY_DETAIL.status}
-                type={STORY_DETAIL.type}
-                publishedDate={STORY_DETAIL.publishedDate}
-                author={STORY_DETAIL.author}
-                artist={STORY_DETAIL.artist}
-                publisher={STORY_DETAIL.publisher}
-                translator={STORY_DETAIL.translator}
-                lastUpdated={STORY_DETAIL.lastUpdated}
-                views={STORY_DETAIL.views}
+                coverImage={story.coverImage}
+                title={story.title}
+                rating={story.rating}
+                bookmarkedBy={story.bookmarkedBy}
+                status={story.status}
+                type={story.type}
+                publishedDate={story.publishedDate}
+                author={story.author}
+                artist={story.artist}
+                publisher={story.publisher}
+                translator={story.translator}
+                lastUpdated={story.lastUpdated}
+                views={story.views}
               />
             </div>
 
@@ -67,15 +90,15 @@ export default async function StoryDetailPage({ params }: PageProps) {
               {/* Info Details, Description & Chapters List */}
               <ChapterList
                 storyId={id}
-                title={STORY_DETAIL.title}
-                alternativeTitles={STORY_DETAIL.alternativeTitles}
-                description={STORY_DETAIL.description}
-                genres={STORY_DETAIL.genres}
-                chapters={STORY_DETAIL.chapters}
+                title={story.title}
+                alternativeTitles={story.alternativeTitles}
+                description={story.description}
+                genres={story.genres}
+                chapters={story.chapters}
               />
 
               {/* Similar Works Grid */}
-              <SimilarStories similarWorks={STORY_DETAIL.similarWorks} />
+              <SimilarStories similarWorks={story.similarWorks} />
 
               {/* Discussion / Comments Area */}
               <CommentsSection />

@@ -11,8 +11,9 @@ import { Navbar } from "@/features/home/components/Navbar/Navbar";
 import { getApiError } from "@/services/api/api-client";
 
 const navItems = [
-  ["/dashboard", "My library"],
-  ["/settings", "Account"],
+  ["/dashboard", "لوحة الحساب"],
+  ["/library", "المكتبة"],
+  ["/settings", "الإعدادات"],
 ] as const;
 
 export function WorkspaceShell({ children }: { children: ReactNode }) {
@@ -33,8 +34,7 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
       onError: (error: unknown) => {
         const apiError = getApiError(error);
         setLogoutError(
-          apiError.message +
-            " Server sign-out could not be confirmed. Your session may still be active.",
+          `${apiError.message} لم نتمكن من تأكيد تسجيل الخروج من الخادم؛ قد تظل جلستك نشطة.`,
         );
       },
     });
@@ -50,10 +50,10 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
           </span>
           <div>
             <strong>{user.fullName}</strong>
-            <small>{user.email}</small>
+            <small dir="ltr">{user.email}</small>
           </div>
         </div>
-        <nav className="workspace__actions" aria-label="Account navigation">
+        <nav className="workspace__actions" aria-label="التنقل في الحساب">
           {navItems.map(([href, label]) => (
             <Link
               key={href}
@@ -64,7 +64,7 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
             </Link>
           ))}
           <button type="button" onClick={signOut} disabled={logout.isPending}>
-            {logout.isPending ? <>Ending{"\u2026"}</> : "Sign out"}
+            {logout.isPending ? <>جارٍ تسجيل الخروج…</> : "تسجيل الخروج"}
           </button>
         </nav>
       </div>

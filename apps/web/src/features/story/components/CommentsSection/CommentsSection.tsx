@@ -1,75 +1,85 @@
 "use client";
 
-import React, { useState } from "react";
-import { Send, ThumbsUp, MessageSquare } from "lucide-react";
+import { MessageSquare, Send, ThumbsUp } from "lucide-react";
+import { useState } from "react";
+
 import styles from "./CommentsSection.module.css";
 
-interface Comment {
-  id: number;
+export type StoryComment = Readonly<{
+  id: number | string;
   user: string;
-  avatar: string;
   date: string;
   content: string;
-  likes: number;
-  repliesCount: number;
-}
+  avatar?: string;
+  likes?: number;
+  repliesCount?: number;
+}>;
 
-const MOCK_COMMENTS: Comment[] = [
+type RenderedComment = Required<StoryComment>;
+
+const DEFAULT_AVATAR =
+  "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop&auto=format";
+
+const DEFAULT_COMMENTS: readonly StoryComment[] = [
   {
     id: 1,
     user: "محمد أحمد",
-    avatar:
-      "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop&auto=format",
     date: "منذ ساعتين",
     content:
-      "القصة أسطورية والترجمة رهيبة كالعادة! شكراً لكم على المجهود وبانتظار الفصول القادمة بفارغ الصبر.",
+      "القصة أسطورية والترجمة رائعة كالعادة. شكرًا لكم على المجهود، وبانتظار الفصول القادمة.",
     likes: 12,
     repliesCount: 3,
   },
   {
     id: 2,
     user: "خالد الحربي",
-    avatar:
-      "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop&auto=format",
     date: "منذ 5 ساعات",
     content:
-      "البطل ذكي وتصرفاته غير متوقعة بالمرة، أعجبتني قدرة تبديل السمات وتنوع العوالم بالعمل.",
+      "تطور الأحداث غير متوقع، وأعجبني الإيقاع وطريقة بناء العالم داخل العمل.",
     likes: 8,
     repliesCount: 0,
   },
   {
     id: 3,
     user: "سارة العتيبي",
-    avatar:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&auto=format",
     date: "أمس",
-    content:
-      "من أفضل المانهوا التي أتابعها حالياً. الرسم 10/10 والإنتاج فخم جداً.",
+    content: "من أفضل الأعمال التي أتابعها حاليًا، وبانتظار الفصل الجديد.",
     likes: 15,
     repliesCount: 1,
   },
 ];
 
-export function CommentsSection() {
+const normalizeComment = (comment: StoryComment): RenderedComment => ({
+  ...comment,
+  avatar: comment.avatar ?? DEFAULT_AVATAR,
+  likes: comment.likes ?? 0,
+  repliesCount: comment.repliesCount ?? 0,
+});
+
+type CommentsSectionProps = Readonly<{
+  initialComments?: readonly StoryComment[];
+}>;
+
+export function CommentsSection({
+  initialComments = DEFAULT_COMMENTS,
+}: CommentsSectionProps) {
   const [commentText, setCommentText] = useState("");
-  const [commentsList, setCommentsList] = useState<Comment[]>(MOCK_COMMENTS);
+  const [comments, setComments] = useState<readonly RenderedComment[]>(() =>
+    initialComments.map(normalizeComment),
+  );
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!commentText.trim()) return;
+  const submitComment = (event: React.FormEvent): void => {
+    event.preventDefault();
+    const content = commentText.trim();
+    if (content.length === 0) return;
 
-    const newComment: Comment = {
+    const newComment = normalizeComment({
       id: Date.now(),
       user: "زائر من Fury",
-      avatar:
-        "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop&auto=format",
       date: "الآن",
-      content: commentText,
-      likes: 0,
-      repliesCount: 0,
-    };
-
-    setCommentsList([newComment, ...commentsList]);
+      content,
+    });
+    setComments((current) => [newComment, ...current]);
     setCommentText("");
   };
 
@@ -80,32 +90,29 @@ export function CommentsSection() {
         <h2 className={styles["title"]}>التعليقات</h2>
       </div>
 
-      {/* Write Comment Form */}
-      <form onSubmit={handleSubmit} className={styles["commentForm"]}>
+      <form onSubmit={submitComment} className={styles["commentForm"]}>
         <textarea
           value={commentText}
-          onChange={(e) => setCommentText(e.target.value)}
-          placeholder="اكتب تعليقاً... شاركنا رأيك حول العمل!"
+          onChange={(event) => {
+            setCommentText(event.target.value);
+          }}
+          aria-label="اكتب تعليقًا"
+          placeholder="اكتب تعليقًا... شاركنا رأيك حول العمل!"
           rows={3}
           className={styles["textarea"]}
         />
         <div className={styles["formFooter"]}>
           <button type="submit" className={styles["submitBtn"]}>
-            <Send style={{ width: 14, height: 14 }} />
+            <Send aria-hidden="true" style={{ width: 14, height: 14 }} />
             <span>إرسال تعليق</span>
           </button>
         </div>
       </form>
 
-      {/* Comments List */}
       <div className={styles["commentsList"]}>
-        {commentsList.map((comment) => (
-          <div key={comment.id} className={styles["commentCard"]}>
-            <img
-              src={comment.avatar}
-              alt={comment.user}
-              className={styles["avatar"]}
-            />
+        {comments.map((comment) => (
+          <article key={comment.id} className={styles["commentCard"]}>
+            <img src={comment.avatar} alt="" className={styles["avatar"]} />
             <div className={styles["commentContent"]}>
               <div className={styles["commentMeta"]}>
                 <span className={styles["userName"]}>{comment.user}</span>
@@ -113,21 +120,27 @@ export function CommentsSection() {
               </div>
               <p className={styles["text"]}>{comment.content}</p>
               <div className={styles["actions"]}>
-                <button className={styles["actionBtn"]}>
-                  <ThumbsUp style={{ width: 12, height: 12 }} />
+                <button type="button" className={styles["actionBtn"]}>
+                  <ThumbsUp
+                    aria-hidden="true"
+                    style={{ width: 12, height: 12 }}
+                  />
                   <span>{comment.likes} إعجاب</span>
                 </button>
-                <button className={styles["actionBtn"]}>
-                  <MessageSquare style={{ width: 12, height: 12 }} />
+                <button type="button" className={styles["actionBtn"]}>
+                  <MessageSquare
+                    aria-hidden="true"
+                    style={{ width: 12, height: 12 }}
+                  />
                   <span>
                     {comment.repliesCount > 0
-                      ? `${comment.repliesCount} ردود`
+                      ? `${String(comment.repliesCount)} ردود`
                       : "رد"}
                   </span>
                 </button>
               </div>
             </div>
-          </div>
+          </article>
         ))}
       </div>
     </section>

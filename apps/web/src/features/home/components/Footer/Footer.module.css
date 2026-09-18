@@ -3,7 +3,8 @@
  * ───────────────────────────────────────── */
 
 .footer {
-  /* background and border-top from inline styles */
+  border-top: 1px solid var(--border);
+  background: var(--footer-bg);
 }
 
 .upper {
@@ -48,7 +49,25 @@
 }
 
 .brandLogo {
+  display: inline-flex;
   margin-bottom: 1rem;
+  color: var(--foreground);
+  font-family: "Cairo Play", "Cairo", sans-serif;
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: -1px;
+}
+
+.brandAccent {
+  color: var(--primary);
+  text-shadow: 0 0 18px rgba(255, 71, 71, 0.4);
+}
+
+.brandCopy {
+  max-width: 260px;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+  line-height: 1.9;
 }
 
 .tags {
@@ -62,8 +81,16 @@
   padding: 0.125rem 0.5rem;
   border-radius: 0.25rem;
   font-size: 0.75rem;
-  cursor: pointer;
+  color: var(--muted-foreground);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
   transition: all 0.2s;
+}
+
+.tag:hover {
+  border-color: var(--primary);
+  color: var(--foreground);
+  background: rgba(255, 71, 71, 0.1);
 }
 
 /* Link columns */
@@ -73,6 +100,9 @@
 
 .linkColHeader {
   margin-bottom: 1rem;
+  color: var(--foreground);
+  font-size: 0.95rem;
+  font-weight: 800;
 }
 
 .linkList {
@@ -87,9 +117,21 @@
   text-decoration: none;
 }
 
+.footerLink:hover {
+  color: var(--primary);
+}
+
+.plainList {
+  display: grid;
+  gap: 0.625rem;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+}
+
 /* Divider */
 .divider {
   height: 1px;
+  background: var(--border);
 }
 
 /* Bottom bar */
@@ -122,6 +164,16 @@
 }
 
 .copyright {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.footerNote {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.75rem;
   text-align: center;
 }
 

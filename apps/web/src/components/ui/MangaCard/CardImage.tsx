@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Flame, Palette } from "lucide-react";
+import { BookOpenText, Flame, Palette } from "lucide-react";
 import styles from "./MangaCard.module.css";
 
 interface CardImageProps {
@@ -11,6 +11,7 @@ interface CardImageProps {
   isNew?: boolean | undefined;
   isHot?: boolean | undefined;
   badge?: string | undefined;
+  badgeIcon?: "palette" | "book" | undefined;
   rating: number;
 }
 
@@ -68,6 +69,7 @@ export function CardImage({
   isNew,
   isHot,
   badge,
+  badgeIcon = "palette",
   rating,
 }: CardImageProps) {
   const showAccentBadge = isNew || badge || !isHot;
@@ -90,7 +92,11 @@ export function CardImage({
       {/* Colored / New Badge */}
       {showAccentBadge && (
         <div className={styles["accentBadge"]}>
-          <Palette style={{ width: 11, height: 11, strokeWidth: 3 }} />
+          {badgeIcon === "book" ? (
+            <BookOpenText style={{ width: 11, height: 11, strokeWidth: 3 }} />
+          ) : (
+            <Palette style={{ width: 11, height: 11, strokeWidth: 3 }} />
+          )}
           <span
             style={{
               fontFamily: "'Cairo', sans-serif",

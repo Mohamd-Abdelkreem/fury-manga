@@ -12,6 +12,7 @@ import type { z } from "zod";
 
 import { FormField } from "@/components/forms/form-field";
 import { useChangePassword } from "@/features/auth/hooks/auth.hooks";
+import { localizeAuthMessage } from "@/features/auth/utils/auth-messages";
 import { applyApiFormError } from "@/shared/forms/form";
 
 type PasswordInput = z.input<typeof changePasswordBodySchema>;
@@ -53,35 +54,35 @@ export function PasswordForm() {
     >
       <div className="settings-form__heading">
         <div>
-          <p className="eyebrow">Credential</p>
-          <h2>Change password</h2>
+          <p className="eyebrow">كلمة المرور</p>
+          <h3>تغيير كلمة المرور</h3>
         </div>
-        <p>A successful change signs out every active device.</p>
+        <p>يؤدي التغيير الناجح إلى إنهاء كل الجلسات النشطة.</p>
       </div>
       <div className="settings-form__fields">
         <FormField
           id="currentPassword"
-          label="Current password"
+          label="كلمة المرور الحالية"
           type="password"
           autoComplete="current-password"
-          error={errors.currentPassword?.message}
+          error={localizeAuthMessage(errors.currentPassword?.message)}
           {...register("currentPassword")}
         />
         <FormField
           id="newPassword"
-          label="New password"
+          label="كلمة المرور الجديدة"
           type="password"
           autoComplete="new-password"
-          hint={`At least ${String(PASSWORD_MIN_LENGTH)} characters.`}
-          error={errors.newPassword?.message}
+          hint={`يجب ألا تقل عن ${String(PASSWORD_MIN_LENGTH)} أحرف.`}
+          error={localizeAuthMessage(errors.newPassword?.message)}
           {...register("newPassword")}
         />
         <FormField
           id="passwordConfirmation"
-          label="Confirm new password"
+          label="تأكيد كلمة المرور الجديدة"
           type="password"
           autoComplete="new-password"
-          error={errors.passwordConfirmation?.message}
+          error={localizeAuthMessage(errors.passwordConfirmation?.message)}
           {...register("passwordConfirmation")}
         />
       </div>
@@ -91,7 +92,7 @@ export function PasswordForm() {
         </p>
       )}
       <button className="button" type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Changing…" : "Change password"}
+        {isSubmitting ? "جارٍ تغيير كلمة المرور…" : "تغيير كلمة المرور"}
       </button>
     </form>
   );

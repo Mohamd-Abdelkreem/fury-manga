@@ -1,0 +1,389 @@
+.main {
+  display: grid;
+  gap: 1rem;
+}
+
+.hero,
+.points,
+.panel,
+.quickActions {
+  border: 1px solid var(--border);
+  border-radius: 0.8rem;
+  background: rgba(18, 18, 18, 0.76);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
+}
+
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: clamp(1rem, 2.5vw, 1.4rem);
+}
+
+.identity,
+.points > div,
+.panelHeading > div,
+.count,
+.textAction,
+.quickActions a {
+  display: flex;
+  align-items: center;
+}
+
+.identity {
+  min-width: 0;
+  gap: 1rem;
+}
+
+.avatar {
+  display: grid;
+  width: clamp(3.5rem, 8vw, 4.25rem);
+  aspect-ratio: 1;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgba(255, 71, 71, 0.35);
+  border-radius: 0.8rem;
+  color: var(--foreground);
+  background: linear-gradient(145deg, #e02828, #921827);
+  box-shadow: 0 0 18px rgba(255, 71, 71, 0.12);
+  font-size: clamp(1.35rem, 4vw, 1.75rem);
+  font-weight: 900;
+}
+
+.identity h1 {
+  margin: 0;
+  font-size: clamp(1.6rem, 4vw, 2.5rem);
+  line-height: 1.15;
+}
+
+.email {
+  max-width: 100%;
+  margin: 0.35rem 0 0;
+  overflow-wrap: anywhere;
+  color: var(--muted-foreground);
+  text-align: right;
+}
+
+.points {
+  display: grid;
+  grid-template-columns: minmax(12rem, 0.7fr) minmax(0, 1.3fr);
+  gap: 1.25rem;
+  align-items: center;
+  padding: 1rem;
+}
+
+.points > div {
+  gap: 1rem;
+}
+
+.points h2,
+.points p {
+  margin: 0;
+}
+
+.points h2 {
+  font-family: "Poppins", "Cairo", sans-serif;
+  font-size: clamp(1.25rem, 3vw, 1.6rem);
+}
+
+.points p {
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+
+.sectionIcon {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  place-items: center;
+  border: 1px solid rgba(255, 71, 71, 0.24);
+  border-radius: 0.75rem;
+  color: var(--primary);
+  background: rgba(255, 71, 71, 0.08);
+}
+
+.sectionIcon svg,
+.panelHeading > svg,
+.count svg,
+.textAction svg,
+.quickActions svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.panel {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.panel:first-child {
+  grid-column: span 7;
+}
+
+.panel:nth-child(2) {
+  grid-column: span 5;
+}
+
+.panel:nth-child(3) {
+  grid-column: span 12;
+}
+
+.panelHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.panelHeading > div {
+  gap: 0.65rem;
+}
+
+.panelHeading h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.panelHeading > svg {
+  color: var(--muted-foreground);
+}
+
+.marker {
+  width: 0.24rem;
+  height: 1.4rem;
+  border-radius: 999px;
+  background: var(--primary);
+}
+
+.count {
+  gap: 0.4rem;
+  color: var(--muted-foreground);
+  font-family: "Poppins", "Cairo", sans-serif;
+  font-weight: 700;
+}
+
+.continueCard {
+  display: grid;
+  grid-template-columns: 5.25rem minmax(0, 1fr);
+  gap: 0.85rem;
+}
+
+.cover,
+.miniCover {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0.75rem;
+  background: var(--card);
+}
+
+.cover {
+  aspect-ratio: 3 / 4;
+}
+
+.cover img,
+.miniCover img {
+  object-fit: cover;
+}
+
+.continueBody {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.6rem;
+  justify-content: center;
+}
+
+.continueBody h3,
+.continueBody p,
+.continueBody small,
+.savedWorks h3,
+.savedWorks p {
+  margin: 0;
+}
+
+.continueBody h3 {
+  font-size: 1.05rem;
+}
+
+.continueBody p,
+.continueBody small,
+.savedWorks p {
+  color: var(--muted-foreground);
+}
+
+.continueBody small {
+  font-size: 0.8rem;
+}
+
+.progress {
+  height: 0.45rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--secondary);
+}
+
+.progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #e02828;
+}
+
+.savedWorks {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.savedWorks article {
+  display: grid;
+  grid-template-columns: 3.4rem minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.miniCover {
+  width: 3.4rem;
+  aspect-ratio: 3 / 4;
+}
+
+.savedWorks h3 {
+  overflow: hidden;
+  font-size: 0.95rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.savedWorks p {
+  font-size: 0.8rem;
+}
+
+.giftList {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.giftList > div {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 0.8rem;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.giftList dt {
+  color: var(--muted-foreground);
+  font-size: 0.8rem;
+}
+
+.giftList dd {
+  margin: 0.4rem 0 0;
+  overflow-wrap: anywhere;
+  font-weight: 800;
+}
+
+.textAction {
+  gap: 0.45rem;
+  min-height: 2.75rem;
+  margin-top: auto;
+  color: var(--primary);
+  font-weight: 800;
+}
+
+.empty {
+  display: grid;
+  min-height: 6.5rem;
+  place-content: center;
+  gap: 0.75rem;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  text-align: center;
+}
+
+.empty p {
+  margin: 0;
+  color: var(--muted-foreground);
+}
+
+.empty a {
+  color: var(--primary);
+  font-weight: 800;
+}
+
+.quickActions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  padding: 0.6rem;
+}
+
+.quickActions a {
+  min-height: 2.75rem;
+  justify-content: center;
+  gap: 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  color: var(--foreground);
+  background: rgba(255, 255, 255, 0.03);
+  font-weight: 750;
+  transition:
+    border-color 180ms ease,
+    background 180ms ease;
+}
+
+.quickActions a:hover {
+  border-color: rgba(255, 71, 71, 0.35);
+  background: rgba(255, 71, 71, 0.08);
+}
+
+@media (max-width: 900px) {
+  .panel:first-child,
+  .panel:nth-child(2),
+  .panel:nth-child(3) {
+    grid-column: span 12;
+  }
+
+  .giftList {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .hero {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .points {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .quickActions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 390px) {
+  .continueCard {
+    grid-template-columns: 4.75rem minmax(0, 1fr);
+  }
+
+  .giftList {
+    grid-template-columns: 1fr;
+  }
+}

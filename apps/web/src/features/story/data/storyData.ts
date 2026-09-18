@@ -5,13 +5,15 @@ export interface Chapter {
 }
 
 export interface SimilarWork {
-  id: number;
+  id: number | string;
   title: string;
   chapter: string;
   rating: number;
   image: string;
   flag: string;
   type: string;
+  badge?: string;
+  badgeIcon?: "palette" | "book";
 }
 
 export interface StoryDetailData {
@@ -368,3 +370,8 @@ export const STORY_DETAIL: StoryDetailData = {
     },
   ],
 };
+
+export const getIllustratedStoryById = (
+  id: string,
+): StoryDetailData | undefined =>
+  id === STORY_DETAIL.id || id === "1" ? STORY_DETAIL : undefined;

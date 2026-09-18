@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
-import { Bookmark, Star, Palette } from "lucide-react";
+import { BookOpenText, Bookmark, Palette, Star } from "lucide-react";
+import { useState } from "react";
+
 import styles from "./StorySidebar.module.css";
 
 interface StorySidebarProps {
@@ -18,6 +19,7 @@ interface StorySidebarProps {
   translator: string;
   lastUpdated: string;
   views: string;
+  contentKind?: "illustrated" | "text";
 }
 
 export function StorySidebar({
@@ -34,44 +36,65 @@ export function StorySidebar({
   translator,
   lastUpdated,
   views,
+  contentKind = "illustrated",
 }: StorySidebarProps) {
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const isText = contentKind === "text";
+  const normalizedRating = rating > 5 ? rating / 2 : rating;
 
   return (
     <aside className={styles["sidebar"]}>
-      {/* 1 ── Thumbnail Cover */}
       <div className={styles["coverWrapper"]}>
         <img src={coverImage} alt={title} className={styles["coverImg"]} />
         <span className={styles["coloredBadge"]}>
-          <Palette style={{ width: 13, height: 13 }} />
-          ملــــون
+          {isText ? (
+            <BookOpenText
+              aria-hidden="true"
+              style={{ width: 13, height: 13 }}
+            />
+          ) : (
+            <Palette aria-hidden="true" style={{ width: 13, height: 13 }} />
+          )}
+          {isText ? "عمل نصي" : "ملـــــون"}
         </span>
       </div>
 
-      {/* 2 ── Bookmark Action */}
       <button
-        onClick={() => setIsBookmarked(!isBookmarked)}
+        type="button"
+        onClick={() => {
+          setIsBookmarked((current) => !current);
+        }}
         className={`${styles["bookmarkBtn"]} ${isBookmarked ? styles["active"] : ""}`}
+        aria-pressed={isBookmarked}
       >
         <Bookmark
+          aria-hidden="true"
           style={{
             width: 16,
             height: 16,
             fill: isBookmarked ? "#ffffff" : "none",
           }}
         />
-        <span>{isBookmarked ? "مضاف للمفضلة" : "Bookmark"}</span>
+        <span>
+          {isBookmarked
+            ? "مضاف للمفضلة"
+            : isText
+              ? "حفظ في المكتبة"
+              : "Bookmark"}
+        </span>
       </button>
 
-      {/* Followers text */}
       <div className={styles["followers"]}>
-        Followed by {bookmarkedBy} people
+        {isText
+          ? `محفوظ لدى ${String(bookmarkedBy)} قارئ`
+          : `Followed by ${String(bookmarkedBy)} people`}
       </div>
 
-      {/* 3 ── Rating Section */}
       <div className={styles["ratingBox"]}>
-        {/* SVG half-star gradient definition */}
-        <svg style={{ width: 0, height: 0, position: "absolute" }}>
+        <svg
+          aria-hidden="true"
+          style={{ width: 0, height: 0, position: "absolute" }}
+        >
           <defs>
             <linearGradient
               id="sidebarHalfStar"
@@ -86,11 +109,10 @@ export function StorySidebar({
           </defs>
         </svg>
 
-        <div className={styles["ratingStars"]}>
+        <div className={styles["ratingStars"]} aria-hidden="true">
           {[1, 2, 3, 4, 5].map((starIndex) => {
-            const normalized = rating > 5 ? rating / 2 : rating;
-            const isFilled = normalized >= starIndex;
-            const isHalf = !isFilled && normalized >= starIndex - 0.5;
+            const isFilled = normalizedRating >= starIndex;
+            const isHalf = !isFilled && normalizedRating >= starIndex - 0.5;
             return (
               <Star
                 key={starIndex}
@@ -111,51 +133,31 @@ export function StorySidebar({
             );
           })}
         </div>
-        <div className={styles["ratingValue"]}>
-          {(rating > 5 ? rating / 2 : rating).toFixed(1)}
+        <div
+          className={styles["ratingValue"]}
+          aria-label={`التقييم ${normalizedRating.toFixed(1)} من 5`}
+        >
+          {normalizedRating.toFixed(1)}
         </div>
       </div>
 
-      {/* 4 ── Info Attributes List */}
       <div className={styles["infoList"]}>
-        <div className={styles["infoItem"]}>
-          <span className={styles["label"]}>الحالة</span>
-          <span className={styles["value"]}>{status}</span>
-        </div>
-        <div className={styles["infoItem"]}>
-          <span className={styles["label"]}>النوع</span>
-          <span className={`${styles["value"]} ${styles["typeLink"]}`}>
-            {type}
-          </span>
-        </div>
-        <div className={styles["infoItem"]}>
-          <span className={styles["label"]}>تاريخ النشر</span>
-          <span className={styles["value"]}>{publishedDate}</span>
-        </div>
-        <div className={styles["infoItem"]}>
-          <span className={styles["label"]}>المؤلف</span>
-          <span className={styles["value"]}>{author}</span>
-        </div>
-        <div className={styles["infoItem"]}>
-          <span className={styles["label"]}>الرسام</span>
-          <span className={styles["value"]}>{artist}</span>
-        </div>
-        <div className={styles["infoItem"]}>
-          <span className={styles["label"]}>الناشر</span>
-          <span className={styles["value"]}>{publisher}</span>
-        </div>
-        <div className={styles["infoItem"]}>
-          <span className={styles["label"]}>المترجم</span>
-          <span className={styles["value"]}>{translator}</span>
-        </div>
-        <div className={styles["infoItem"]}>
-          <span className={styles["label"]}>أخر تحديث</span>
-          <span className={styles["value"]}>{lastUpdated}</span>
-        </div>
-        <div className={styles["infoItem"]}>
-          <span className={styles["label"]}>الزيارات</span>
-          <span className={styles["value"]}>{views}</span>
-        </div>
+        {[
+          ["الحالة", status],
+          ["النوع", type],
+          ["تاريخ النشر", publishedDate],
+          ["المؤلف", author],
+          ["الرسام", artist],
+          ["الناشر", publisher],
+          ["المترجم", translator],
+          ["آخر تحديث", lastUpdated],
+          ["الزيارات", views],
+        ].map(([label, value]) => (
+          <div className={styles["infoItem"]} key={label}>
+            <span className={styles["label"]}>{label}</span>
+            <span className={styles["value"]}>{value}</span>
+          </div>
+        ))}
       </div>
     </aside>
   );

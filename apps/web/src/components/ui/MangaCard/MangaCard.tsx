@@ -24,6 +24,7 @@ export function MangaCard({
   isNew,
   isHot,
   badge,
+  badgeIcon,
   size = "md",
   stretch = false,
 }: MangaCardProps) {
@@ -47,6 +48,7 @@ export function MangaCard({
             isNew={isNew}
             isHot={isHot}
             badge={badge}
+            badgeIcon={badgeIcon}
             rating={rating}
           />
           <CardOverlay isSmall={isSmall} />

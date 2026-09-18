@@ -1,0 +1,5 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - paragraph [ref=e4]: التحقق من الجلسة
+    - heading "جارٍ تحميل حسابك…" [level=1] [ref=e5]
+  - button "Open Next.js Dev Tools" [ref=e11] [cursor=pointer]

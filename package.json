@@ -11,6 +11,7 @@
     "test:web-routes": "node scripts/check-web-routes.mjs",
     "test:integration": "turbo run test:integration",
     "verify:build-output": "node scripts/assert-build-output.mjs",
+    "bundle:code": "node scripts/bundle-project-code.mjs",
     "db:format": "pnpm --filter @fury/database db:format",
     "db:validate": "pnpm --filter @fury/database db:validate",
     "db:generate": "pnpm --filter @fury/database db:generate",

@@ -5,7 +5,7 @@ import type { Route } from "next";
  */
 
 export interface MangaCardData {
-  id: number;
+  id: number | string;
   title: string;
   chapter: string;
   rating: number;
@@ -14,6 +14,7 @@ export interface MangaCardData {
   isNew?: boolean;
   isHot?: boolean;
   badge?: string;
+  badgeIcon?: "palette" | "book";
 }
 
 export interface HeroItem {

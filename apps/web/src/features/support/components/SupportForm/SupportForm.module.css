@@ -1,0 +1,287 @@
+.page {
+  min-height: 100vh;
+  background: var(--background);
+}
+
+.main {
+  width: min(1040px, calc(100% - 2rem));
+  margin-inline: auto;
+  padding: 2rem 0 3.5rem;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+  margin-bottom: 1.4rem;
+}
+
+.heroIcon {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  border: 1px solid rgba(255, 71, 71, 0.25);
+  border-radius: 0.75rem;
+  color: var(--primary);
+  background: rgba(255, 71, 71, 0.08);
+}
+
+.heroIcon svg {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+.hero h1,
+.hero p {
+  margin: 0;
+}
+
+.hero h1 {
+  font-size: clamp(1.8rem, 4vw, 2.7rem);
+  line-height: 1.2;
+}
+
+.hero p:last-child {
+  max-width: 46rem;
+  margin-top: 0.65rem;
+  color: var(--muted-foreground);
+  font-size: 0.92rem;
+  line-height: 1.7;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 17rem;
+  gap: 1rem;
+  align-items: start;
+}
+
+.form,
+.success,
+.aside,
+.state {
+  border: 1px solid var(--border);
+  border-radius: 0.8rem;
+  background: rgba(18, 18, 18, 0.78);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.24);
+}
+
+.form {
+  display: grid;
+  gap: 1rem;
+  padding: clamp(1rem, 3vw, 1.35rem);
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.field {
+  display: grid;
+  min-width: 0;
+  gap: 0.5rem;
+}
+
+.fieldWide {
+  grid-column: 1 / -1;
+}
+
+.labelRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.labelRow label {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.labelRow span,
+.field small {
+  color: var(--muted-foreground);
+  font-size: 0.78rem;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  min-height: 2.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  padding: 0.65rem 0.8rem;
+  color: var(--foreground);
+  background: rgba(255, 255, 255, 0.025);
+  outline: none;
+  font: inherit;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.field select {
+  cursor: pointer;
+}
+
+.field textarea {
+  min-height: 8.5rem;
+  resize: vertical;
+  line-height: 1.75;
+}
+
+.field input:hover,
+.field select:hover,
+.field textarea:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 14px rgba(255, 71, 71, 0.17);
+}
+
+.field input[aria-invalid="true"],
+.field select[aria-invalid="true"],
+.field textarea[aria-invalid="true"] {
+  border-color: #ff6868;
+}
+
+.fieldError {
+  color: #ff7777 !important;
+}
+
+.formActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.9rem;
+}
+
+.formActions p {
+  max-width: 32rem;
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.82rem;
+  line-height: 1.65;
+}
+
+.formActions button {
+  flex: 0 0 auto;
+}
+
+.aside {
+  position: sticky;
+  top: 5.5rem;
+  padding: 1rem;
+}
+
+.aside h2,
+.aside p {
+  margin: 0;
+}
+
+.aside h2 {
+  font-size: 1.1rem;
+}
+
+.aside p:last-of-type {
+  margin-top: 0.65rem;
+  color: var(--muted-foreground);
+  line-height: 1.75;
+}
+
+.aside a {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  margin-top: 1rem;
+  color: var(--primary);
+  font-weight: 800;
+}
+
+.success,
+.state {
+  display: grid;
+  min-height: 20rem;
+  place-items: center;
+  align-content: center;
+  gap: 0.85rem;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.success > span {
+  display: grid;
+  width: 3.25rem;
+  height: 3.25rem;
+  place-items: center;
+  border: 1px solid rgba(46, 213, 115, 0.25);
+  border-radius: 50%;
+  color: #8be8b2;
+  background: rgba(46, 213, 115, 0.08);
+}
+
+.success svg {
+  width: 1.8rem;
+  height: 1.8rem;
+}
+
+.success h2,
+.success p,
+.state h2,
+.state p {
+  margin: 0;
+}
+
+.success p,
+.state p {
+  max-width: 38rem;
+  color: var(--muted-foreground);
+  line-height: 1.8;
+}
+
+@media (min-width: 640px) {
+  .main {
+    width: min(1040px, calc(100% - 3rem));
+  }
+}
+
+@media (max-width: 800px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .aside {
+    position: static;
+  }
+}
+
+@media (max-width: 560px) {
+  .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .formActions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .formActions button {
+    width: 100%;
+  }
+}

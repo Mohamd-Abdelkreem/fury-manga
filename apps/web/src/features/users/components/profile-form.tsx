@@ -30,7 +30,6 @@ export function ProfileForm() {
     resolver: zodResolver(updateProfileBodySchema),
     values: {
       fullName: user?.fullName ?? "",
-      phone: user?.phone ?? null,
     },
   });
 
@@ -38,7 +37,7 @@ export function ProfileForm() {
     setMessage(null);
     try {
       await updateProfile.mutateAsync(values);
-      setMessage("Profile details saved.");
+      setMessage("تم حفظ اسم العرض في حسابك.");
     } catch (error) {
       setMessage(applyApiFormError(error, { getValues, setError }));
     }
@@ -54,32 +53,29 @@ export function ProfileForm() {
     >
       <div className="settings-form__heading">
         <div>
-          <p className="eyebrow">Profile</p>
-          <h2>Personal details</h2>
+          <p className="eyebrow">الهوية</p>
+          <h3>اسم العرض والبريد</h3>
         </div>
-        <p>Only explicitly safe account fields reach the browser.</p>
+        <p>يمكن تعديل اسم العرض فقط. لا يتوفر تغيير البريد أو الهاتف هنا.</p>
       </div>
       <div className="settings-form__fields">
         <FormField
           id="fullName"
-          label="Full name"
+          label="اسم العرض"
           autoComplete="name"
-          error={errors.fullName?.message}
+          error={
+            errors.fullName === undefined
+              ? undefined
+              : "أدخل اسمًا صالحًا لا يتجاوز 150 حرفًا."
+          }
           {...register("fullName")}
         />
         <FormField
-          id="phone"
-          label="Phone (optional)"
-          type="tel"
-          autoComplete="tel"
-          error={errors.phone?.message}
-          {...register("phone")}
-        />
-        <FormField
           id="profileEmail"
-          label="Email"
+          label="البريد الإلكتروني"
           type="email"
           value={user?.email ?? ""}
+          dir="ltr"
           disabled
           readOnly
         />
@@ -90,7 +86,7 @@ export function ProfileForm() {
         </p>
       )}
       <button className="button" type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Saving…" : "Save profile"}
+        {isSubmitting ? "جارٍ حفظ الاسم…" : "حفظ اسم العرض"}
       </button>
     </form>
   );

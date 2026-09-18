@@ -1,0 +1,10 @@
+.sidebarCol,
+.mainCol {
+  width: 100%;
+  min-width: 0;
+}
+
+.stateMain {
+  grid-column: 1 / -1;
+  min-height: 28rem;
+}

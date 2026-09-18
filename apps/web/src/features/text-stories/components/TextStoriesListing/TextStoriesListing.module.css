@@ -1,0 +1,181 @@
+.main {
+  width: 100%;
+  min-width: 0;
+}
+
+.filterForm {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  width: 100%;
+  margin-bottom: 2rem;
+}
+
+.dropdownWrapper {
+  min-width: 0;
+}
+
+.dropdownControl {
+  display: flex;
+  width: 100%;
+  height: 40px;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.5rem;
+  padding-inline: 1rem;
+  color: #fff;
+  background-color: #1a1a1a;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.dropdownControl:hover,
+.dropdownControl:focus-within {
+  border-color: var(--primary);
+  background-color: #222;
+  box-shadow: 0 0 12px rgba(255, 71, 71, 0.15);
+}
+
+.dropdownControl label {
+  flex: 0 0 auto;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.dropdownControl select {
+  min-width: 0;
+  flex: 1;
+  appearance: none;
+  overflow: hidden;
+  border: 0;
+  outline: 0;
+  color: #fff;
+  background: transparent;
+  font:
+    700 0.85rem "Cairo",
+    sans-serif;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.dropdownControl option {
+  color: #fff;
+  background: #121212;
+}
+
+.dropdownControl svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  color: rgba(255, 255, 255, 0.4);
+  pointer-events: none;
+}
+
+.searchBtn,
+.pageBtn {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  color: #fff;
+  background-color: var(--primary);
+  box-shadow: 0 4px 14px rgba(255, 71, 71, 0.25);
+  font-family: "Cairo", sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  transition:
+    transform 0.25s ease,
+    background-color 0.25s ease,
+    box-shadow 0.25s ease;
+  cursor: pointer;
+}
+
+.searchBtn {
+  grid-column: span 2;
+  width: 100%;
+  padding-inline: 1.75rem;
+}
+
+.searchBtn:hover,
+.pageBtn:hover {
+  background-color: #b71f2a;
+  box-shadow: 0 6px 18px rgba(255, 71, 71, 0.35);
+  transform: translateY(-1px);
+}
+
+.searchBtn svg,
+.pageBtn svg {
+  width: 15px;
+  height: 15px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.paginationWrapper {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-block: 3rem 2rem;
+}
+
+.pageBtn {
+  min-width: 8rem;
+  padding: 0.625rem 2.5rem;
+}
+
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.75rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .filterForm {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .dropdownWrapper {
+    width: 180px;
+    flex: 0 0 180px;
+  }
+
+  .searchBtn {
+    width: auto;
+    min-width: 120px;
+  }
+
+  .grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 2.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dropdownControl,
+  .searchBtn,
+  .pageBtn {
+    transition: none;
+  }
+}

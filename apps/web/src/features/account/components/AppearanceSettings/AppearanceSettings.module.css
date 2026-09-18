@@ -1,0 +1,344 @@
+.section {
+  display: grid;
+  gap: 1.1rem;
+  scroll-margin-top: 5.5rem;
+  border: 1px solid var(--border);
+  border-radius: 0.8rem;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  background: rgba(18, 18, 18, 0.76);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.9rem;
+}
+
+.heading h2,
+.heading p {
+  margin: 0;
+}
+
+.heading h2 {
+  font-size: 1.2rem;
+}
+
+.heading p:last-child {
+  max-width: 46rem;
+  margin-top: 0.5rem;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+
+.heading > svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex: 0 0 auto;
+  color: var(--primary);
+}
+
+.frameLayout {
+  display: grid;
+  grid-template-columns: 8rem minmax(0, 1fr);
+  gap: 1.1rem;
+  align-items: start;
+}
+
+.avatarPreview {
+  display: grid;
+  width: 6.5rem;
+  aspect-ratio: 1;
+  place-items: center;
+  justify-self: center;
+  border: 4px solid var(--frame-accent, var(--primary));
+  border-radius: 50%;
+  background: var(--card-hover);
+  box-shadow:
+    0 0 0 4px var(--frame-ring, rgba(255, 71, 71, 0.16)),
+    0 8px 18px rgba(0, 0, 0, 0.3);
+}
+
+.avatarPreview.noFrame {
+  border-color: var(--border);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
+}
+
+.avatarPreview > span {
+  display: grid;
+  width: calc(100% - 0.8rem);
+  aspect-ratio: 1;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--foreground);
+  background: linear-gradient(145deg, #e02828, #921827);
+  font-size: 1.6rem;
+  font-weight: 900;
+}
+
+.avatarPreview svg {
+  width: 2rem;
+  height: 2rem;
+}
+
+.choices,
+.decorationChoices {
+  display: grid;
+  gap: 0.6rem;
+  min-width: 0;
+  border: 0;
+  padding: 0;
+}
+
+.choices legend,
+.decorationChoices legend {
+  margin-bottom: 0.55rem;
+  color: var(--foreground);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.choice,
+.decorationChoice {
+  display: grid;
+  min-width: 0;
+  align-items: center;
+  gap: 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 0.65rem;
+  background: rgba(255, 255, 255, 0.02);
+  cursor: pointer;
+  transition:
+    border-color 180ms ease,
+    background 180ms ease;
+}
+
+.choice {
+  grid-template-columns: auto 3.25rem minmax(0, 1fr) auto;
+}
+
+.decorationChoice {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.choice:hover,
+.decorationChoice:hover,
+.choice:has(input:checked),
+.decorationChoice:has(input:checked) {
+  border-color: rgba(255, 71, 71, 0.38);
+  background: rgba(255, 71, 71, 0.07);
+}
+
+.choice:focus-within,
+.decorationChoice:focus-within {
+  outline: 3px solid rgba(255, 71, 71, 0.35);
+  outline-offset: 3px;
+}
+
+.choice[data-unavailable],
+.decorationChoice[data-unavailable] {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.choice input,
+.decorationChoice input {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--primary);
+}
+
+.choice > span:nth-of-type(2),
+.decorationChoice > span {
+  display: grid;
+  min-width: 0;
+  gap: 0.15rem;
+}
+
+.choice strong,
+.choice small,
+.choice em,
+.decorationChoice strong,
+.decorationChoice small,
+.decorationChoice em {
+  overflow-wrap: anywhere;
+}
+
+.choice small,
+.decorationChoice small {
+  color: var(--muted-foreground);
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.choice em,
+.decorationChoice em {
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.choice > svg,
+.decorationChoice > svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  color: var(--primary);
+}
+
+.thumbnail {
+  display: grid;
+  width: 2.8rem;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  color: var(--foreground);
+  background: var(--secondary);
+  font-weight: 900;
+}
+
+.thumbnail svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.commentPreview {
+  display: grid;
+  max-width: 48rem;
+  gap: 0.75rem;
+  border: 1px solid var(--border);
+  border-inline-start: 4px solid rgba(255, 255, 255, 0.16);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.commentPreview[data-tone="ember"] {
+  border-inline-start-color: var(--primary);
+  background: rgba(255, 71, 71, 0.055);
+}
+
+.commentPreview[data-tone="gold"] {
+  border-inline-start-color: var(--accent);
+  background: rgba(255, 179, 0, 0.045);
+}
+
+.commentPreview[data-tone="midnight"] {
+  border-inline-start-color: rgba(255, 255, 255, 0.24);
+}
+
+.commentMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.commentAvatar {
+  display: grid;
+  width: 2.4rem;
+  height: 2.4rem;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--foreground);
+  background: #b71f2a;
+  font-weight: 900;
+}
+
+.commentMeta strong,
+.commentMeta small {
+  display: block;
+}
+
+.commentMeta small {
+  color: var(--muted-foreground);
+  font-size: 0.78rem;
+}
+
+.commentPreview > p {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 0.925rem;
+  line-height: 1.8;
+}
+
+.commentActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.commentActions button {
+  min-height: 2.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.65rem;
+  padding-inline: 0.9rem;
+  color: var(--muted-foreground);
+  background: rgba(255, 255, 255, 0.03);
+  opacity: 0.82;
+}
+
+.decorationChoices {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.decorationChoices legend {
+  grid-column: 1 / -1;
+}
+
+.decorationChoice[data-tone="ember"] {
+  border-inline-start: 3px solid var(--primary);
+}
+
+.decorationChoice[data-tone="gold"] {
+  border-inline-start: 3px solid var(--accent);
+}
+
+.decorationChoice[data-tone="midnight"] {
+  border-inline-start: 3px solid rgba(255, 255, 255, 0.24);
+}
+
+.localNotice {
+  margin: 0;
+  border-radius: 0.75rem;
+  padding: 0.7rem 0.85rem;
+  color: var(--muted-foreground);
+  background: rgba(255, 255, 255, 0.025);
+  font-size: 0.85rem;
+  line-height: 1.7;
+}
+
+@media (max-width: 768px) {
+  .frameLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .avatarPreview {
+    justify-self: start;
+    margin-inline-start: 0.5rem;
+  }
+
+  .decorationChoices {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 420px) {
+  .heading {
+    gap: 0.75rem;
+  }
+
+  .choice {
+    grid-template-columns: auto 2.75rem minmax(0, 1fr) auto;
+  }
+
+  .thumbnail {
+    width: 2.75rem;
+  }
+}

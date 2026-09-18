@@ -5,15 +5,21 @@ import { SessionControls } from "./session-controls";
 
 const mocks = vi.hoisted(() => ({
   getApiError: vi.fn(),
-  isPending: false,
-  mutate: vi.fn(),
+  logoutAllPending: false,
+  logoutAllMutate: vi.fn(),
+  logoutPending: false,
+  logoutMutate: vi.fn(),
   replaceWithLogin: vi.fn(),
 }));
 
 vi.mock("@/features/auth/hooks/auth.hooks", () => ({
+  useLogout: () => ({
+    isPending: mocks.logoutPending,
+    mutate: mocks.logoutMutate,
+  }),
   useLogoutAll: () => ({
-    isPending: mocks.isPending,
-    mutate: mocks.mutate,
+    isPending: mocks.logoutAllPending,
+    mutate: mocks.logoutAllMutate,
   }),
 }));
 vi.mock("@/features/auth/utils/session-navigation", () => ({
@@ -27,16 +33,17 @@ describe("SessionControls", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.getApiError.mockReturnValue({ message: "Logout failed." });
-    mocks.isPending = false;
+    mocks.logoutPending = false;
+    mocks.logoutAllPending = false;
   });
 
   it("replaces the page with login only after server logout-all succeeds", () => {
     render(<SessionControls />);
 
     fireEvent.click(
-      screen.getByRole("button", { name: "Sign out all devices" }),
+      screen.getByRole("button", { name: "تسجيل الخروج من كل الأجهزة" }),
     );
-    const options = mocks.mutate.mock.calls[0]?.[1] as
+    const options = mocks.logoutAllMutate.mock.calls[0]?.[1] as
       | { onError?: (error: unknown) => void; onSuccess?: () => void }
       | undefined;
     act(() => {
@@ -49,9 +56,9 @@ describe("SessionControls", () => {
     render(<SessionControls />);
 
     fireEvent.click(
-      screen.getByRole("button", { name: "Sign out all devices" }),
+      screen.getByRole("button", { name: "تسجيل الخروج من كل الأجهزة" }),
     );
-    const options = mocks.mutate.mock.calls[0]?.[1] as
+    const options = mocks.logoutAllMutate.mock.calls[0]?.[1] as
       | { onError?: (error: unknown) => void; onSuccess?: () => void }
       | undefined;
     act(() => {
@@ -59,22 +66,39 @@ describe("SessionControls", () => {
     });
 
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "Revocation of sessions on your other devices could not be confirmed",
+      "لم نتمكن من تأكيد إنهاء الجلسات على أجهزتك الأخرى",
     );
     expect(mocks.replaceWithLogin).not.toHaveBeenCalled();
 
     fireEvent.click(
-      screen.getByRole("button", { name: "Sign out all devices" }),
+      screen.getByRole("button", { name: "تسجيل الخروج من كل الأجهزة" }),
     );
 
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-    expect(mocks.mutate).toHaveBeenCalledTimes(2);
+    expect(mocks.logoutAllMutate).toHaveBeenCalledTimes(2);
   });
 
   it("derives the disabled loading state from the mutation", () => {
-    mocks.isPending = true;
+    mocks.logoutAllPending = true;
     render(<SessionControls />);
 
-    expect(screen.getByRole("button", { name: "Revoking…" })).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "جارٍ إنهاء الجلسات…" }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "تسجيل خروج هذه الجلسة" }),
+    ).toBeDisabled();
+  });
+
+  it("keeps the current-session server action mounted and navigates only after success", () => {
+    render(<SessionControls />);
+    fireEvent.click(
+      screen.getByRole("button", { name: "تسجيل خروج هذه الجلسة" }),
+    );
+    const options = mocks.logoutMutate.mock.calls[0]?.[1] as
+      { onSuccess?: () => void } | undefined;
+    expect(mocks.replaceWithLogin).not.toHaveBeenCalled();
+    act(() => options?.onSuccess?.());
+    expect(mocks.replaceWithLogin).toHaveBeenCalledOnce();
   });
 });

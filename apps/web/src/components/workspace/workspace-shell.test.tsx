@@ -18,6 +18,7 @@ vi.mock("next/link", () => ({
 }));
 vi.mock("next/navigation", () => ({
   usePathname: () => "/dashboard",
+  useRouter: () => ({ push: vi.fn() }),
 }));
 vi.mock("@/components/auth/session-loader", () => ({
   SessionLoader: () => <div>Loading session</div>,
@@ -54,7 +55,7 @@ describe("WorkspaceShell session control", () => {
       </WorkspaceShell>,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
+    fireEvent.click(screen.getByRole("button", { name: "تسجيل الخروج" }));
     const options = mocks.mutate.mock.calls[0]?.[1] as
       | { onError?: (error: unknown) => void; onSuccess?: () => void }
       | undefined;
@@ -71,7 +72,7 @@ describe("WorkspaceShell session control", () => {
       </WorkspaceShell>,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
+    fireEvent.click(screen.getByRole("button", { name: "تسجيل الخروج" }));
     const options = mocks.mutate.mock.calls[0]?.[1] as
       | { onError?: (error: unknown) => void; onSuccess?: () => void }
       | undefined;
@@ -80,11 +81,11 @@ describe("WorkspaceShell session control", () => {
     });
 
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "Server sign-out could not be confirmed",
+      "لم نتمكن من تأكيد تسجيل الخروج من الخادم",
     );
     expect(mocks.replaceWithLogin).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
+    fireEvent.click(screen.getByRole("button", { name: "تسجيل الخروج" }));
 
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     expect(mocks.mutate).toHaveBeenCalledTimes(2);
@@ -98,6 +99,8 @@ describe("WorkspaceShell session control", () => {
       </WorkspaceShell>,
     );
 
-    expect(screen.getByRole("button", { name: "Ending…" })).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "جارٍ تسجيل الخروج…" }),
+    ).toBeDisabled();
   });
 });

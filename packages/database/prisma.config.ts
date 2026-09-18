@@ -24,6 +24,11 @@ const configDirectory = dirname(fileURLToPath(import.meta.url));
 const workspaceRoot = findWorkspaceRoot(configDirectory);
 
 loadDotenv({ path: join(workspaceRoot, ".env"), quiet: true });
+loadDotenv({
+  path: join(workspaceRoot, ".env.seed"),
+  override: true,
+  quiet: true,
+});
 
 export default defineConfig({
   schema: "prisma/schema.prisma",

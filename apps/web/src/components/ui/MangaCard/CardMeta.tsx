@@ -6,7 +6,7 @@ import { Star } from "lucide-react";
 import styles from "./MangaCard.module.css";
 
 interface CardMetaProps {
-  id: number;
+  id: number | string;
   title: string;
   chapter: string;
   rating: number;
@@ -26,14 +26,12 @@ export function CardMeta({
   const numMatch = chapter.match(/\d+/);
   const latestNum = numMatch ? parseInt(numMatch[0], 10) : null;
 
-  // Render 2 chapters if it's a number, otherwise just render the raw string
   const chapters = latestNum
     ? [latestNum, latestNum - 1].filter((n) => n > 0).slice(0, 2)
     : [];
 
   return (
     <div className={styles["meta"]}>
-      {/* Title */}
       <Link href={`/story/${id}`} className={styles["metaTitleLink"]}>
         <h3
           dir="auto"
@@ -47,7 +45,6 @@ export function CardMeta({
         </h3>
       </Link>
 
-      {/* Chapter + Rating Row */}
       <div className={styles["metaInfoRow"]}>
         <div className={styles["chapterList"]}>
           {chapters.length > 0 ? (

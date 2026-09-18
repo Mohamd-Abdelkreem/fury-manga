@@ -1,0 +1,136 @@
+.main {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.hero {
+  border: 1px solid var(--border);
+  border-radius: 0.8rem;
+  padding: clamp(1.1rem, 3vw, 1.6rem);
+  background:
+    radial-gradient(
+      circle at 10% 20%,
+      rgba(255, 71, 71, 0.06),
+      transparent 30%
+    ),
+    rgba(18, 18, 18, 0.76);
+}
+
+.hero h1,
+.hero p {
+  margin: 0;
+}
+
+.hero h1 {
+  max-width: 48rem;
+  font-size: clamp(1.75rem, 4vw, 2.6rem);
+  line-height: 1.2;
+}
+
+.hero p:last-child {
+  max-width: 44rem;
+  margin-top: 0.55rem;
+  color: var(--muted-foreground);
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+.sectionNav {
+  position: sticky;
+  top: 4.5rem;
+  z-index: 8;
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 0.7rem;
+  padding: 0.35rem;
+  background: rgba(18, 18, 18, 0.94);
+  backdrop-filter: blur(16px);
+  scrollbar-width: none;
+}
+
+.sectionNav::-webkit-scrollbar {
+  display: none;
+}
+
+.sectionNav a {
+  display: inline-flex;
+  min-width: max-content;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid transparent;
+  border-radius: 0.55rem;
+  padding-inline: 0.7rem;
+  color: var(--muted-foreground);
+  font-weight: 750;
+}
+
+.sectionNav a:hover,
+.sectionNav a:focus-visible {
+  border-color: rgba(255, 71, 71, 0.3);
+  color: var(--foreground);
+  background: rgba(255, 71, 71, 0.07);
+}
+
+.sectionNav svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.section,
+.security {
+  display: grid;
+  gap: 1.1rem;
+  scroll-margin-top: 8rem;
+  border: 1px solid var(--border);
+  border-radius: 0.8rem;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  background: rgba(18, 18, 18, 0.76);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.sectionHeading {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.9rem;
+}
+
+.sectionHeading h2,
+.sectionHeading p {
+  margin: 0;
+}
+
+.sectionHeading h2 {
+  font-size: 1.2rem;
+}
+
+.sectionHeading p:last-child {
+  max-width: 50rem;
+  margin-top: 0.45rem;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+
+.section :global(.settings-form),
+.security :global(.settings-form),
+.security :global(.danger-panel) {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.section :global(.settings-form__heading),
+.security :global(.settings-form__heading) {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+@media (max-width: 640px) {
+  .sectionNav {
+    top: 4.2rem;
+    margin-inline: -0.25rem;
+  }
+}

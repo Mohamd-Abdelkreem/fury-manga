@@ -13,7 +13,13 @@ import {
 import { Navbar } from "@/features/home/components/Navbar/Navbar";
 import { Footer } from "@/features/home/components/Footer/Footer";
 import { CommentsSection } from "@/features/story/components/CommentsSection/CommentsSection";
-import { STORY_DETAIL } from "@/features/story/data/storyData";
+import { getIllustratedStoryById } from "@/features/story/data/storyData";
+import { FeatureState } from "@/components/ui/FeatureState/FeatureState";
+import { TextChapterReader } from "@/features/text-stories/components/TextChapterReader/TextChapterReader";
+import {
+  getTextChapterById,
+  getTextWorkById,
+} from "@/features/text-stories/data/textStories";
 import styles from "./page.module.css";
 
 interface Option {
@@ -118,8 +124,49 @@ export default function ChapterReadingPage() {
     setActivePageIndex(0);
   }, [chapterId, readingMode]);
 
-  // Load active story data
-  const story = STORY_DETAIL;
+  const textWork = getTextWorkById(params.id);
+  if (textWork !== undefined) {
+    const textChapter = getTextChapterById(textWork, params.chapterId);
+    return (
+      <div className={styles["pageWrapper"]} dir="rtl">
+        <Navbar />
+        {textChapter === undefined ? (
+          <main className={styles["readerContainer"]}>
+            <FeatureState
+              kind="unavailable"
+              title="الفصل غير موجود"
+              message="هذا المعرّف لا يطابق فصلًا منشورًا في العمل."
+              actionHref={`/story/${textWork.id}`}
+              actionLabel="العودة إلى تفاصيل العمل"
+            />
+          </main>
+        ) : (
+          <TextChapterReader work={textWork} chapter={textChapter} />
+        )}
+        <Footer />
+      </div>
+    );
+  }
+
+  // Load active illustrated story data without treating an unknown ID as the fixture.
+  const story = getIllustratedStoryById(params.id);
+  if (story === undefined) {
+    return (
+      <div className={styles["pageWrapper"]} dir="rtl">
+        <Navbar />
+        <main className={styles["readerContainer"]}>
+          <FeatureState
+            kind="unavailable"
+            title="العمل غير موجود"
+            message="هذا المعرّف لا يطابق عملًا متاحًا للقراءة."
+            actionHref="/discover"
+            actionLabel="استكشاف الأعمال"
+          />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   // Find index of current chapter in descending list
   const chaptersList = story.chapters;
