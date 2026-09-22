@@ -2,6 +2,8 @@
 
 **Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
 
+**PLAN.md Phase**: [P00-P14 and title] | **Dependencies Accepted**: [list or N/A]
+
 **Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
 
 **Note**: This template is filled in by the `/speckit-plan` command. See `.specify/templates/plan-template.md` for the execution workflow.
@@ -18,17 +20,19 @@
   the iteration process.
 -->
 
-**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]
+**Language/Version**: TypeScript 5.9 on Node.js 24
 
-**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]
+**Primary Dependencies**: [select the affected installed stack: Next.js 16/React 19,
+Express 5, Zod 4, Prisma 7, PostgreSQL 18, React Query 5, or N/A]
 
-**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
+**Storage**: [PostgreSQL via @fury/database, approved persistent media, or N/A]
 
-**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]
+**Testing**: Vitest; Supertest with the real Express stack; PostgreSQL 18
+Testcontainers; Testing Library/jsdom; real browser/device evidence where required
 
-**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
+**Target Platform**: Next.js web client and/or Linux-hosted Express API
 
-**Project Type**: [e.g., library/cli/web-service/mobile-app/compiler/desktop-app or NEEDS CLARIFICATION]
+**Project Type**: pnpm/Turborepo web monorepo
 
 **Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]
 
@@ -38,9 +42,30 @@
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
-[Gates determined based on constitution file]
+Record `PASS`, `N/A` with a capability reason, or a blocking violation for each gate.
+
+- **Scope and reality**: PLAN.md phase/dependencies, current executable baseline,
+  preserved behavior/user edits, fixture or local sources to replace, exclusions, and
+  exit gate are explicit.
+- **Authority and privacy**: actors, server auth/status/role/ownership/publication,
+  CSRF/rate limits, validation bounds, public projection, safe errors/logs, and secrets
+  are defined where applicable.
+- **Contract agreement**: shared `@fury/contracts` Zod schemas and exact HTTP/OpenAPI/
+  adapter/test agreement are identified.
+- **Architecture**: existing API and web owners are named; new abstractions and
+  dependencies have a concrete scoped justification.
+- **Data and races**: invariants, constraints/indexes, transactions, duplicate/stale/
+  retry/history/deletion/side-effect semantics, forward migration, existing-data
+  strategy, and recovery evidence are defined where applicable.
+- **Frontend truth and access**: Arabic/RTL, async states, draft/cache/access behavior,
+  accessibility/responsiveness/reduced motion, and installed Next.js documentation are
+  addressed where applicable.
+- **Evidence**: requirements map to meaningful unit, contract, real PostgreSQL,
+  real-HTTP-stack, component/hook, browser/device, deployment, or documentation checks.
+- **Change safety**: git status, user-owned changes, review and stop gates,
+  documentation, unauthorized external actions, and final reporting are explicit.
 
 ## Project Structure
 
@@ -57,47 +82,22 @@ specs/[###-feature]/
 ```
 
 ### Source Code (repository root)
+
 <!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
+  ACTION REQUIRED: Keep only the real paths touched by this feature and expand
+  them to the responsible modules. Do not create folders merely to match this map.
 -->
 
 ```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
-src/
-├── models/
-├── services/
-├── cli/
-└── lib/
-
-tests/
-├── contract/
-├── integration/
-└── unit/
-
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
-
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+apps/api/src/                 # Express composition, modules, middleware, infrastructure
+apps/api/tests/               # API integration setup when applicable
+apps/web/src/app/             # Thin Next.js route composition
+apps/web/src/features/        # Feature api/hooks/model/components
+apps/web/src/components/      # Established shared UI only when justified
+packages/contracts/src/       # Browser-safe shared Zod HTTP contracts
+packages/database/prisma/     # Schema and new forward migrations
+packages/database/src/        # Database client/server-owned exports
+packages/database/tests/      # Schema and PostgreSQL integration evidence
 ```
 
 **Structure Decision**: [Document the selected structure and reference the real
@@ -107,7 +107,10 @@ directories captured above]
 
 > **Fill ONLY if Constitution Check has violations that must be justified**
 
-| Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|-------------------------------------|
-| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
+| Violation                  | Why Needed         | Simpler Alternative Rejected Because |
+| -------------------------- | ------------------ | ------------------------------------ |
+| [e.g., 4th project]        | [current need]     | [why 3 projects insufficient]        |
+| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient]  |
+
+Constitution violations cannot be waived here; they require resolution or an accepted
+constitutional amendment.
