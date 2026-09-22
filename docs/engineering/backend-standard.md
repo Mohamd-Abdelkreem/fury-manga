@@ -1,7 +1,5 @@
 # Backend coding standard
 
-B01–B54 are general engineering rules for new/touched code. Conditional rules apply
-when that feature exists; they do not require creating extra product subsystems.
 Use [the ownership map](README.md), [style](code-style.md), and the linked technical
 guides. A known old pattern is not an exception to an explicit standard.
 
@@ -95,11 +93,6 @@ needed. Keep an encrypted recoverable copy only for an approved redisplay requir
 never store raw credentials. Follow the existing session/token protocol rather
 than inventing a parallel one.
 
-**B18 — Scoped encryption, when needed.** Bind ciphertext to entity context with
-authenticated associated data; mismatched context must fail. Define a versioned
-format, correct random nonce and startup key validation. No homemade crypto and
-no unnecessary encrypted copy when a hash suffices.
-
 **B19 — Exact collision retries.** If generating unique tokens, retry only the
 specific token-hash unique constraint. Other P2002 failures must propagate/map
 normally. Bound retries; exhaustion returns a stable documented 503. Identify
@@ -110,11 +103,6 @@ fields, sensitive bodies/private messages, ciphertext or raw secret-bearing URLs
 Sanitize success/error envelope paths as well as logs if a route path can hold a
 credential. Test absence using sentinel secrets, including nested/provider errors.
 
-**B21 — Sensitive audit, where required.** Record actor, action, entity/context,
-request ID and safe metadata. Required audit commits atomically with the business
-change; failed transactions leave no success audit. Do not add an audit subsystem
-to a trivial feature that has no such requirement.
-
 **B22 — Minimal public responses.** Public output contains only the authorized
 projection; privileged fields are not made safe by hiding them in the UI. Test
 forbidden-field absence, not just expected-field presence.
@@ -122,11 +110,6 @@ forbidden-field absence, not just expected-field presence.
 **B23 — Read semantics.** Public reads, previews, copying and sharing do not create
 business submissions, attendance or state transitions. Explicit command endpoints
 own such actions. Operational request logging is not a business mutation.
-
-**B24 — Immutable event snapshots, where required.** Record the event independently
-of the current object's status. Snapshot the fields needed to interpret the event
-at its occurrence. Later edits must not silently rewrite historical meaning.
-The product defines what is an event and which snapshots/retention are required.
 
 **B25 — History versus current state.** Revoking, regenerating or changing a
 current object must not erase required historical facts. Make retention and
@@ -187,11 +170,6 @@ explicitly.
 failure policy. Avoid holding a transaction open around external I/O. Required
 delivery may need compensation or a durable job/outbox design; neither makes two
 systems magically atomic. Retries must account for uncertain delivery and duplicates.
-
-**B39 — Media security, when in scope.** Validate authority, MIME, size, decoding,
-pixel/resource limits and path containment. Generate storage paths on the server;
-define safe replacement/cleanup. Implement correct ranges for supported streaming
-types. Apply the same access policy to direct media and API responses.
 
 **B40 — Shared access policy.** Centralize genuinely shared availability decisions
 so views, API and media agree on the same publication/access states. Include only
