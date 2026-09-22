@@ -20,7 +20,12 @@ import styles from "./SettingsScreen.module.css";
 const sectionLinks = [
   { href: "#account", label: "الحساب", icon: UserRound, id: "account" },
   { href: "#security", label: "الأمان", icon: ShieldCheck, id: "security" },
-  { href: "#avatar-frame", label: "إطار الصورة", icon: KeyRound, id: "avatar-frame" },
+  {
+    href: "#avatar-frame",
+    label: "إطار الصورة",
+    icon: KeyRound,
+    id: "avatar-frame",
+  },
   {
     href: "#comment-decoration",
     label: "زخرفة التعليق",
@@ -81,9 +86,8 @@ export function SettingsScreen() {
             </span>
             <h1 id="settings-hero-title">حسابك، أمانك، ومظهرك</h1>
             <p>
-              حدّث اسم العرض عبر حسابك الحقيقي، وأدر كلمات المرور والجلسات
-              المتصلة بالخادم، ثم عاين هدايا المظهر وزخارف التعليقات في مساحتك
-              الخاصة.
+              حدّث اسم العرض، وأدر كلمة المرور والجلسات، واختر هدايا المظهر
+              وزخارف التعليقات في مساحتك الخاصة.
             </p>
           </div>
           <div className={styles["statusSummary"]}>
@@ -91,14 +95,14 @@ export function SettingsScreen() {
               <ShieldCheck aria-hidden="true" />
               <div>
                 <strong>حماية الجلسات</strong>
-                <span>متصلة بالخادم مباشرة</span>
+                <span>إدارة كلمة المرور والجلسات</span>
               </div>
             </div>
             <div className={styles["statusItem"]}>
               <KeyRound aria-hidden="true" />
               <div>
                 <strong>تخصيص الهوية</strong>
-                <span>معاينة حية محلية</span>
+                <span>إطارات وزخارف مملوكة</span>
               </div>
             </div>
           </div>
@@ -132,8 +136,8 @@ export function SettingsScreen() {
             <p className={styles["sectionCategory"]}>البيانات الأساسية</p>
             <h2 id="account-title">الحساب</h2>
             <p>
-              البريد للعرض فقط. تعديل الاسم يستخدم سلوك الحساب المتصل بالخادم؛
-              صورة الحساب أدناه معاينة محلية فقط.
+              البريد الإلكتروني للعرض فقط. يمكنك تعديل اسم العرض واختيار صورة
+              الحساب من هنا.
             </p>
           </div>
         </div>
@@ -154,8 +158,7 @@ export function SettingsScreen() {
             <p className={styles["sectionCategory"]}>حماية الوصول</p>
             <h2 id="security-title">الأمان والجلسات</h2>
             <p>
-              هذه الإجراءات متصلة بسلوك المصادقة الحالي ولم تُستبدل بمحاكاة
-              محلية.
+              استخدم هذه الأدوات لتغيير كلمة المرور أو إنهاء الجلسات المفتوحة.
             </p>
           </div>
         </div>

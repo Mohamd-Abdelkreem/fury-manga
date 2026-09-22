@@ -78,8 +78,7 @@ export function AppearanceSettings({
             <p className="eyebrow">هدية المظهر</p>
             <h2 id="avatar-frame-title">إطار صورة الحساب</h2>
             <p>
-              اختر إطارًا واحدًا أو اترك الصورة بلا إطار. الاختيار محلي لهذه
-              المعاينة ولا يُحفظ على الخادم.
+              اختر إطارًا واحدًا من الهدايا المملوكة أو اترك الصورة بلا إطار.
             </p>
           </div>
           <Gift aria-hidden="true" />
@@ -165,8 +164,7 @@ export function AppearanceSettings({
           )}
         </div>
         <p className={styles["localNotice"]} role="status" aria-live="polite">
-          الاختيار الحالي في المعاينة: {selectedFrameName}. لا توجد مزامنة مع
-          الخادم.
+          الإطار المختار حاليًا: {selectedFrameName}.
         </p>
       </section>
 
@@ -206,9 +204,6 @@ export function AppearanceSettings({
           <div className={styles["commentActions"]}>
             <button type="button" disabled>
               إعجاب · 24
-            </button>
-            <button type="button" disabled>
-              رد
             </button>
           </div>
         </article>
@@ -269,8 +264,7 @@ export function AppearanceSettings({
           </fieldset>
         )}
         <p className={styles["localNotice"]} role="status" aria-live="polite">
-          الاختيار الحالي في المعاينة: {selectedDecorationName}. لا توجد مزامنة
-          مع الخادم.
+          زخرفة التعليق المختارة حاليًا: {selectedDecorationName}.
         </p>
       </section>
     </>

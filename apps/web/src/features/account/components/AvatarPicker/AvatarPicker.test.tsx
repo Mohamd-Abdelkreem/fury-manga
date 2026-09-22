@@ -21,7 +21,7 @@ describe("AvatarPicker", () => {
     });
   });
 
-  it("previews a supported local image and resets it without claiming persistence", () => {
+  it("previews a supported image and resets it", () => {
     render(<AvatarPicker />);
     const input = screen.getByLabelText("اختيار صورة", { selector: "input" });
     const file = new File(["avatar"], "avatar.png", { type: "image/png" });
@@ -30,15 +30,15 @@ describe("AvatarPicker", () => {
     expect(
       screen.getByAltText("معاينة صورة الحساب المختارة"),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText(/تُعرض معاينة محلية للملف: avatar.png/),
-    ).toBeInTheDocument();
+    expect(screen.getByText("الصورة المختارة: avatar.png")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "إزالة المعاينة" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "إزالة الصورة المختارة" }),
+    );
     expect(
       screen.queryByAltText("معاينة صورة الحساب المختارة"),
     ).not.toBeInTheDocument();
-    expect(screen.getByText("لا توجد صورة محلية مختارة.")).toBeInTheDocument();
+    expect(screen.getByText("لم تختر صورة جديدة.")).toBeInTheDocument();
   });
 
   it("rejects unsupported image types", () => {

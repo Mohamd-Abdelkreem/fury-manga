@@ -8,32 +8,11 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 
 import { useSession } from "@/features/auth/hooks/auth.hooks";
 import { NAV_LINKS } from "@/features/home/data/heroData";
+import {
+  NOTIFICATION_FIXTURES,
+  type NotificationFixture,
+} from "@/features/notifications/data/notifications";
 import styles from "./Navbar.module.css";
-
-type NotificationItem = Readonly<{
-  id: number;
-  text: string;
-  time: string;
-  unread: boolean;
-  href: string;
-}>;
-
-const NOTIFICATIONS: readonly NotificationItem[] = [
-  {
-    id: 1,
-    text: "صدر فصل جديد من عمل محفوظ لديك.",
-    time: "قبل 3 دقائق",
-    unread: true,
-    href: "/story/trait-hoarder/chapter/43",
-  },
-  {
-    id: 2,
-    text: "لديك إطارات وزخارف جاهزة للمعاينة.",
-    time: "قبل ساعتين",
-    unread: true,
-    href: "/settings#avatar-frame",
-  },
-] as const;
 
 export function NavLogo() {
   return (
@@ -81,8 +60,9 @@ export function Navbar({ minimal = false }: Readonly<{ minimal?: boolean }>) {
   const [query, setQuery] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [notifications, setNotifications] =
-    useState<readonly NotificationItem[]>(NOTIFICATIONS);
+  const [notifications, setNotifications] = useState<
+    readonly NotificationFixture[]
+  >(NOTIFICATION_FIXTURES);
   const bellRef = useRef<HTMLDivElement>(null);
   const bellButtonRef = useRef<HTMLButtonElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
@@ -92,7 +72,7 @@ export function Navbar({ minimal = false }: Readonly<{ minimal?: boolean }>) {
     const value = query.trim();
     if (value.length === 0) return;
     setMobileOpen(false);
-    router.push(`/stories?q=${encodeURIComponent(value)}` as Route);
+    router.push(`/discover?q=${encodeURIComponent(value)}` as Route);
   };
 
   useEffect(() => {
@@ -143,7 +123,7 @@ export function Navbar({ minimal = false }: Readonly<{ minimal?: boolean }>) {
                 onSubmit={submitSearch}
               >
                 <label className="sr-only" htmlFor="global-search">
-                  البحث في الأعمال النصية
+                  البحث في جميع الأعمال
                 </label>
                 <span className={styles["searchInner"]}>
                   <Search className={styles["searchIcon"]} aria-hidden="true" />
@@ -153,89 +133,91 @@ export function Navbar({ minimal = false }: Readonly<{ minimal?: boolean }>) {
                     type="search"
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
-                    placeholder="ابحث في الروايات…"
+                    placeholder="ابحث في جميع الأعمال…"
                   />
                 </span>
               </form>
 
-              <div className={styles["bellWrapper"]} ref={bellRef}>
-                <button
-                  ref={bellButtonRef}
-                  type="button"
-                  className={styles["iconBtn"]}
-                  aria-label={`الإشعارات${unreadCount > 0 ? `، ${unreadCount} غير مقروءة` : ""}`}
-                  aria-expanded={notificationsOpen}
-                  aria-controls="navbar-notifications"
-                  onClick={() => setNotificationsOpen((current) => !current)}
-                >
-                  <Bell aria-hidden="true" />
-                  {unreadCount > 0 ? (
-                    <span className={styles["pulseDot"]} />
-                  ) : null}
-                </button>
-                {notificationsOpen ? (
-                  <div
-                    id="navbar-notifications"
-                    className={styles["notificationsDropdown"]}
+              {user === null ? null : (
+                <div className={styles["bellWrapper"]} ref={bellRef}>
+                  <button
+                    ref={bellButtonRef}
+                    type="button"
+                    className={styles["iconBtn"]}
+                    aria-label={`الإشعارات${unreadCount > 0 ? `، ${unreadCount} غير مقروءة` : ""}`}
+                    aria-expanded={notificationsOpen}
+                    aria-controls="navbar-notifications"
+                    onClick={() => setNotificationsOpen((current) => !current)}
                   >
-                    <div className={styles["notificationsHeader"]}>
-                      <strong className={styles["notificationsTitle"]}>
-                        الإشعارات ({unreadCount})
-                      </strong>
-                      {unreadCount > 0 ? (
-                        <button
-                          type="button"
-                          className={styles["markAllReadBtn"]}
-                          onClick={() =>
-                            setNotifications((current) =>
-                              current.map((item) => ({
-                                ...item,
-                                unread: false,
-                              })),
-                            )
-                          }
-                        >
-                          تحديد الكل كمقروء
-                        </button>
-                      ) : null}
-                    </div>
-                    <div className={styles["notificationsList"]}>
-                      {notifications.map((item) => (
-                        <Link
-                          key={item.id}
-                          href={item.href as Route}
-                          className={`${styles["notificationItem"]} ${item.unread ? styles["unreadItem"] : ""}`}
-                          onClick={() => {
-                            setNotifications((current) =>
-                              current.map((candidate) =>
-                                candidate.id === item.id
-                                  ? { ...candidate, unread: false }
-                                  : candidate,
-                              ),
-                            );
-                            setNotificationsOpen(false);
-                          }}
-                        >
-                          {item.unread ? (
-                            <span
-                              className={styles["unreadDot"]}
-                              aria-hidden="true"
-                            />
-                          ) : null}
-                          <span className={styles["notificationContent"]}>
-                            <span className={styles["notificationText"]}>
-                              {item.text}
+                    <Bell aria-hidden="true" />
+                    {unreadCount > 0 ? (
+                      <span className={styles["pulseDot"]} />
+                    ) : null}
+                  </button>
+                  {notificationsOpen ? (
+                    <div
+                      id="navbar-notifications"
+                      className={styles["notificationsDropdown"]}
+                    >
+                      <div className={styles["notificationsHeader"]}>
+                        <strong className={styles["notificationsTitle"]}>
+                          الإشعارات ({unreadCount})
+                        </strong>
+                        {unreadCount > 0 ? (
+                          <button
+                            type="button"
+                            className={styles["markAllReadBtn"]}
+                            onClick={() =>
+                              setNotifications((current) =>
+                                current.map((item) => ({
+                                  ...item,
+                                  unread: false,
+                                })),
+                              )
+                            }
+                          >
+                            تحديد الكل كمقروء
+                          </button>
+                        ) : null}
+                      </div>
+                      <div className={styles["notificationsList"]}>
+                        {notifications.map((item) => (
+                          <Link
+                            key={item.id}
+                            href={item.href as Route}
+                            className={`${styles["notificationItem"]} ${item.unread ? styles["unreadItem"] : ""}`}
+                            onClick={() => {
+                              setNotifications((current) =>
+                                current.map((candidate) =>
+                                  candidate.id === item.id
+                                    ? { ...candidate, unread: false }
+                                    : candidate,
+                                ),
+                              );
+                              setNotificationsOpen(false);
+                            }}
+                          >
+                            {item.unread ? (
+                              <span
+                                className={styles["unreadDot"]}
+                                aria-hidden="true"
+                              />
+                            ) : null}
+                            <span className={styles["notificationContent"]}>
+                              <span className={styles["notificationText"]}>
+                                {item.text}
+                              </span>
+                              <span className={styles["notificationTime"]}>
+                                {item.time}
+                              </span>
                             </span>
-                            <span className={styles["notificationTime"]}>
-                              {item.time}
-                            </span>
-                          </span>
-                        </Link>
-                      ))}
+                          </Link>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ) : null}
-              </div>
+                  ) : null}
+                </div>
+              )}
 
               {user === null ? null : (
                 <Link
@@ -299,7 +281,7 @@ export function Navbar({ minimal = false }: Readonly<{ minimal?: boolean }>) {
             onSubmit={submitSearch}
           >
             <label className="sr-only" htmlFor="mobile-global-search">
-              البحث في الأعمال النصية
+              البحث في جميع الأعمال
             </label>
             <Search aria-hidden="true" />
             <input
@@ -308,7 +290,7 @@ export function Navbar({ minimal = false }: Readonly<{ minimal?: boolean }>) {
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="ابحث في الروايات…"
+              placeholder="ابحث في جميع الأعمال…"
             />
           </form>
         </div>

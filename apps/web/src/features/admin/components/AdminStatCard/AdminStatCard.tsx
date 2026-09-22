@@ -53,7 +53,9 @@ export function AdminStatCard({
             <span
               className={cn(
                 styles["trend"],
-                trend.isPositive ? styles["trendPositive"] : styles["trendNeutral"],
+                trend.isPositive
+                  ? styles["trendPositive"]
+                  : styles["trendNeutral"],
               )}
             >
               {trend.text}
@@ -63,10 +65,7 @@ export function AdminStatCard({
           )}
 
           {action !== undefined ? (
-            <Link
-              href={action.href as Route}
-              className={styles["actionLink"]}
-            >
+            <Link href={action.href as Route} className={styles["actionLink"]}>
               {action.label}
             </Link>
           ) : null}

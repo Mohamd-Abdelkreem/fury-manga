@@ -6,7 +6,6 @@ import Image from "next/image";
 import type { Route } from "next";
 import {
   AlertCircle,
-  AlertTriangle,
   Award,
   Ban,
   Bookmark,
@@ -153,15 +152,11 @@ export function AdminUserDetail({ userId }: AdminUserDetailProps) {
                   background:
                     user.role === "admin"
                       ? "rgba(239, 68, 68, 0.15)"
-                      : user.role === "moderator"
-                        ? "rgba(59, 130, 246, 0.15)"
-                        : "rgba(255, 255, 255, 0.06)",
+                      : "rgba(255, 255, 255, 0.06)",
                   color:
                     user.role === "admin"
                       ? "#ff6b6b"
-                      : user.role === "moderator"
-                        ? "#60a5fa"
-                        : "rgba(255, 255, 255, 0.8)",
+                      : "rgba(255, 255, 255, 0.8)",
                   fontWeight: 700,
                   border: "1px solid rgba(255, 255, 255, 0.1)",
                 }}
@@ -235,34 +230,6 @@ export function AdminUserDetail({ userId }: AdminUserDetailProps) {
               تعليق الحساب
             </button>
           )}
-        </div>
-      </div>
-
-      {/* Points & Policy Disclaimer Card */}
-      <div className={styles["pointsDisclaimerCard"]}>
-        <div className={styles["pointsValueArea"]}>
-          <span className={styles["pointsNumber"]}>{String(user.points)}</span>
-          <span className={styles["pointsLabel"]}>نقاط المشاهدة المكتسبة</span>
-        </div>
-        <div
-          style={{ display: "flex", alignItems: "flex-start", gap: "0.5rem" }}
-        >
-          <AlertTriangle
-            style={{
-              width: "1.125rem",
-              height: "1.125rem",
-              color: "#ffb300",
-              flexShrink: 0,
-              marginTop: "0.125rem",
-            }}
-          />
-          <p className={styles["pointsText"]}>
-            <strong>ملاحظة سياسة النظام:</strong> عداد نقاط المشاهدة يمثل مؤشراً
-            تراكمياً لعدد إعلانات المكافأة التي شاهدها المستخدم لدعم المترجمين
-            والمنصة، ولا يمثل رصيداً مالياً قابلاً للتعديل اليدوي. كما أن البريد
-            الإلكتروني للمستخدم ثابت ولا يمكن تعديله إدارياً حفاظاً على أمان
-            وموثوقية الحساب.
-          </p>
         </div>
       </div>
 

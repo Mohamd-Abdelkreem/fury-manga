@@ -1,0 +1,40 @@
+.region {
+  display: grid;
+  width: 100%;
+  gap: 0.75rem;
+}
+
+.slot {
+  display: grid;
+  min-height: 90px;
+  place-content: center;
+  gap: 0.2rem;
+  overflow: hidden;
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--muted-foreground);
+  text-align: center;
+}
+
+.slot span {
+  color: var(--primary);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.slot strong {
+  color: var(--foreground);
+  font-size: 0.9rem;
+}
+
+.slot small {
+  font-family: "Poppins", sans-serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slot * {
+    animation: none;
+  }
+}

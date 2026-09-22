@@ -41,7 +41,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 describe("AdminUserDetail Component", () => {
-  it("renders user information, join date, and points balance", () => {
+  it("renders user information without obsolete account balances", () => {
     render(
       <AdminDataProvider>
         <AdminUserDetail userId="user-2" />
@@ -50,20 +50,7 @@ describe("AdminUserDetail Component", () => {
 
     expect(screen.getByText("سارة العتيبي")).toBeInTheDocument();
     expect(screen.getByText("sara.otaibi@example.com")).toBeInTheDocument();
-    expect(screen.getByText("320")).toBeInTheDocument();
-    expect(screen.getByText("نقاط المشاهدة المكتسبة")).toBeInTheDocument();
-  });
-
-  it("displays points read-only policy disclaimer", () => {
-    render(
-      <AdminDataProvider>
-        <AdminUserDetail userId="user-2" />
-      </AdminDataProvider>,
-    );
-
-    expect(
-      screen.getByText(/لا يمثل رصيداً مالياً قابلاً للتعديل اليدوي/),
-    ).toBeInTheDocument();
+    expect(screen.queryByText(/نقاط|رصيد/)).not.toBeInTheDocument();
   });
 
   it("renders owned gifts and allows revoking an owned gift", () => {

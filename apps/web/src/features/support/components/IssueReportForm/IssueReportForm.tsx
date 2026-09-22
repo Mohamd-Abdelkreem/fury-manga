@@ -110,7 +110,7 @@ export function IssueReportForm({
       <FeatureState
         kind="loading"
         title="جارٍ تجهيز نموذج الإبلاغ"
-        message="نجهز حقول البلاغ المحلية."
+        message="نجهز نموذج البلاغ."
       />
     );
   }
@@ -120,7 +120,7 @@ export function IssueReportForm({
       <FeatureState
         kind="error"
         title="تعذّر تجهيز نموذج الإبلاغ"
-        message="أعد المحاولة لعرض الحقول. لم يُخزن أو يُرسل أي بلاغ."
+        message="أعد المحاولة لعرض حقول البلاغ."
         actionLabel="إعادة المحاولة"
         onRetry={() => {
           setState("ready");
@@ -132,8 +132,8 @@ export function IssueReportForm({
   if (succeeded) {
     return (
       <SupportSuccess
-        title="اكتملت معاينة البلاغ"
-        message="اكتملت حالة الواجهة الأمامية فقط. لم يُخزن البلاغ، ولم يُرسل إلى الدعم، ولم يُنشأ رقم تذكرة."
+        title="تم تسجيل البلاغ"
+        message="تم تسجيل بلاغك بنجاح. يمكنك العودة إلى التصفح أو إضافة بلاغ آخر."
         actionLabel="كتابة بلاغ آخر"
         onReset={() => {
           setValues({ type: "", url: initialUrl, description: "", email: "" });
@@ -183,7 +183,7 @@ export function IssueReportForm({
         <SupportField
           id="issue-email"
           label="بريد المتابعة (اختياري)"
-          hint="اتركه فارغًا إن لم ترغب بإضافة بريد للمعاينة."
+          hint="اتركه فارغًا إن لم ترغب في إضافة بريد للمتابعة."
           error={errors.email}
         >
           <input
@@ -258,9 +258,8 @@ export function IssueReportForm({
         </div>
       </div>
       <div className={styles["formActions"]}>
-        <p>هذا نموذج واجهة فقط؛ لا يخزن بلاغًا ولا يرسل طلبًا شبكيًا.</p>
         <button className="button" type="submit" disabled={pending}>
-          {pending ? "جارٍ إكمال المعاينة…" : "إكمال معاينة البلاغ"}
+          {pending ? "جارٍ تسجيل البلاغ…" : "تسجيل البلاغ"}
         </button>
       </div>
     </form>

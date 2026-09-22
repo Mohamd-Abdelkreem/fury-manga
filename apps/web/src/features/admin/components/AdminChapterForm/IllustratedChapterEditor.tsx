@@ -123,7 +123,7 @@ export function IllustratedChapterEditor({
           قم بترتيب الصفحات باستخدام أزرار الأسهم لضمان التسلسل الصحيح للقراءة.
         </span>
         <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)" }}>
-          الصيغ المدعومة محلياً: JPG, PNG, WebP
+          الصيغ المدعومة: JPG, PNG, WebP
         </span>
       </div>
 
@@ -173,7 +173,9 @@ export function IllustratedChapterEditor({
                 <div className={styles["pageReorderButtons"]}>
                   <button
                     type="button"
-                    onClick={() => { handleMoveUp(idx); }}
+                    onClick={() => {
+                      handleMoveUp(idx);
+                    }}
                     disabled={idx === 0}
                     className={styles["pageBtn"]}
                     aria-label={`تحريك الصفحة ${String(idx + 1)} لأعلى`}
@@ -185,7 +187,9 @@ export function IllustratedChapterEditor({
                   </button>
                   <button
                     type="button"
-                    onClick={() => { handleMoveDown(idx); }}
+                    onClick={() => {
+                      handleMoveDown(idx);
+                    }}
                     disabled={idx === pages.length - 1}
                     className={styles["pageBtn"]}
                     aria-label={`تحريك الصفحة ${String(idx + 1)} لأسفل`}
@@ -197,7 +201,9 @@ export function IllustratedChapterEditor({
                   </button>
                   <button
                     type="button"
-                    onClick={() => { handleReplace(idx); }}
+                    onClick={() => {
+                      handleReplace(idx);
+                    }}
                     className={styles["pageBtn"]}
                     aria-label={`استبدال صورة الصفحة ${String(idx + 1)}`}
                     title="استبدال الصورة"
@@ -209,7 +215,9 @@ export function IllustratedChapterEditor({
                 </div>
                 <button
                   type="button"
-                  onClick={() => { handleDelete(idx); }}
+                  onClick={() => {
+                    handleDelete(idx);
+                  }}
                   className={styles["deletePageBtn"]}
                   aria-label={`حذف الصفحة ${String(idx + 1)}`}
                   title="حذف الصفحة"

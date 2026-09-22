@@ -1,18 +1,9 @@
 import type { TextBlock } from "../../text-stories/data/textStories";
 
 export type AdminWorkType =
-  | "manga"
-  | "manhwa"
-  | "manhua"
-  | "comics"
-  | "novel"
-  | "text-story";
+  "manga" | "manhwa" | "manhua" | "comics" | "novel" | "text-story";
 
-export type AdminStoryStatus =
-  | "ongoing"
-  | "completed"
-  | "hiatus"
-  | "cancelled";
+export type AdminStoryStatus = "ongoing" | "completed" | "hiatus" | "cancelled";
 
 export type AdminPublishStatus = "draft" | "published" | "archived";
 
@@ -128,7 +119,7 @@ export const AVAILABLE_GENRES: readonly string[] = [
   "عوالم أخرى",
 ];
 
-export type AdminUserRole = "user" | "moderator" | "admin";
+export type AdminUserRole = "user" | "admin";
 export type AdminUserStatus = "active" | "suspended";
 
 export interface AdminUser {
@@ -137,7 +128,6 @@ export interface AdminUser {
   email: string;
   role: AdminUserRole;
   status: AdminUserStatus;
-  points: number;
   avatarUrl?: string | undefined;
   joinedAt: string;
   lastActiveAt: string;
@@ -217,7 +207,6 @@ export interface AdminGiftGrantRecord {
 
 export const ADMIN_USER_ROLE_LABELS: Record<AdminUserRole, string> = {
   admin: "مدير",
-  moderator: "مشرف",
   user: "مستخدم",
 };
 
@@ -265,23 +254,13 @@ export const ADMIN_COMMENT_STATUS_LABELS: Record<AdminCommentStatus, string> = {
 
 // --- Reports Moderation Types ---
 export type AdminReportReason =
-  | "abuse"
-  | "inappropriate"
-  | "spoiler"
-  | "spam"
-  | "other";
+  "abuse" | "inappropriate" | "spoiler" | "spam" | "other";
 
 export type AdminReportStatus =
-  | "open"
-  | "under_review"
-  | "resolved"
-  | "dismissed";
+  "open" | "under_review" | "resolved" | "dismissed";
 
 export type AdminReportResolution =
-  | "comment_hidden"
-  | "no_violation"
-  | "duplicate"
-  | "user_reviewed";
+  "comment_hidden" | "no_violation" | "duplicate" | "user_reviewed";
 
 export interface AdminReport {
   id: string;
@@ -365,10 +344,7 @@ export const ADMIN_CONTACT_SENDER_LABELS: Record<
 };
 
 // --- Advertisement Settings Types ---
-export type AdminAdPlacementType =
-  | "home_banner_primary"
-  | "home_banner_secondary"
-  | "chapter_threshold_popunder";
+export type AdminAdPlacementType = "home-banner" | "catalog-banner";
 
 export interface AdminAdPlacement {
   id: string;
@@ -376,17 +352,14 @@ export interface AdminAdPlacement {
   type: AdminAdPlacementType;
   enabled: boolean;
   provider: "Adsterra";
-  zoneId: string;
-  dimensions?: string | undefined;
-  codeSnippet: string;
+  configurationStatus: "pending" | "configured";
+  dimensions: string;
+  routes: readonly string[];
+  location: string;
   updatedAt: string;
-  implementationNote?: string | undefined;
 }
 
 export const ADMIN_AD_PLACEMENT_LABELS: Record<AdminAdPlacementType, string> = {
-  home_banner_primary: "إعلان البانر الرئيسي — الصفحة الرئيسية",
-  home_banner_secondary: "إعلان البانر الثانوي — الصفحة الرئيسية",
-  chapter_threshold_popunder: "إعلان البوب أندر لنقاط الفصول",
+  "home-banner": "بانر الصفحة الرئيسية",
+  "catalog-banner": "بانر صفحات التصفح",
 };
-
-

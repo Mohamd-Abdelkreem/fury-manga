@@ -15,7 +15,7 @@ export type SavedWorkPreview = Readonly<{
 }>;
 
 export type DashboardFixture = Readonly<{
-  points: number;
+  unreadNotifications: number;
   continueReading: readonly ContinueReadingItem[];
   savedWorks: readonly SavedWorkPreview[];
   bookmarkCount: number;
@@ -24,7 +24,7 @@ export type DashboardFixture = Readonly<{
 }>;
 
 export const DASHBOARD_FIXTURE: DashboardFixture = {
-  points: 1840,
+  unreadNotifications: 2,
   continueReading: [
     {
       id: "trait-hoarder-43",

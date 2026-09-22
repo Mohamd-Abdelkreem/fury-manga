@@ -115,7 +115,9 @@ describe("AdminChapterForm Component", () => {
     expect(screen.getByRole("dialog")).toBeInTheDocument();
     expect(screen.getByText(/نمط القارئ المباشر/)).toBeInTheDocument();
 
-    const closeButtons = screen.getAllByRole("button", { name: "إغلاق المعاينة" });
+    const closeButtons = screen.getAllByRole("button", {
+      name: "إغلاق المعاينة",
+    });
     const firstCloseBtn = closeButtons[0];
     expect(firstCloseBtn).toBeDefined();
     if (firstCloseBtn) {
@@ -132,7 +134,9 @@ describe("AdminChapterForm Component", () => {
       </AdminDataProvider>,
     );
 
-    expect(screen.getByDisplayValue("المعركة الحاسمة في القبو المظلم")).toBeInTheDocument();
+    expect(
+      screen.getByDisplayValue("المعركة الحاسمة في القبو المظلم"),
+    ).toBeInTheDocument();
     expect(screen.getByDisplayValue("43")).toBeInTheDocument();
   });
 
@@ -149,7 +153,9 @@ describe("AdminChapterForm Component", () => {
     const submitBtn = screen.getByRole("button", { name: /حفظ ونشر/ });
     fireEvent.click(submitBtn);
 
-    expect(screen.getByText("تم إنشاء الفصل بنجاح وإضافته لقائمة الفصول.")).toBeInTheDocument();
+    expect(
+      screen.getByText("تم إنشاء الفصل بنجاح وإضافته لقائمة الفصول."),
+    ).toBeInTheDocument();
   });
 
   it("renders not found state when workId does not exist", () => {

@@ -38,7 +38,9 @@ describe("AdminChapters Component", () => {
     // Breadcrumbs
     expect(screen.getByText("إدارة الفصول")).toBeInTheDocument();
     // Chapters in table
-    expect(screen.getByText("المعركة الحاسمة في القبو المظلم")).toBeInTheDocument();
+    expect(
+      screen.getByText("المعركة الحاسمة في القبو المظلم"),
+    ).toBeInTheDocument();
     expect(screen.getByText("#43")).toBeInTheDocument();
   });
 

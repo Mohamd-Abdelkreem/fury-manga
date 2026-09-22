@@ -56,6 +56,10 @@ describe("AdminUsers Component", () => {
     expect(screen.getByText("أحمد المنصور")).toBeInTheDocument();
     expect(screen.getByText("سارة العتيبي")).toBeInTheDocument();
     expect(screen.getByText("طارق النجار")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("option", { name: "مشرف" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/نقاط/)).not.toBeInTheDocument();
   });
 
   it("filters users by text search", () => {

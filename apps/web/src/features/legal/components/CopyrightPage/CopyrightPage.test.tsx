@@ -15,7 +15,10 @@ describe("CopyrightPage", () => {
     render(<CopyrightPage />);
 
     expect(
-      screen.getByRole("heading", { level: 1, name: "سياسة حقوق الملكية والنشر" }),
+      screen.getByRole("heading", {
+        level: 1,
+        name: "سياسة حقوق الملكية والنشر",
+      }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: "اعتماد قانوني مطلوب" }),

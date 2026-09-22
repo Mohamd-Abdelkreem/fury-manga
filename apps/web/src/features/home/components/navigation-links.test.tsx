@@ -4,15 +4,30 @@ import { describe, expect, it, vi } from "vitest";
 import { Footer } from "./Footer/Footer";
 import { Navbar } from "./Navbar/Navbar";
 
+const { pushMock } = vi.hoisted(() => ({ pushMock: vi.fn() }));
+
 vi.mock("next/navigation", () => ({
   usePathname: () => "/stories",
-  useRouter: () => ({ push: vi.fn() }),
+  useRouter: () => ({ push: pushMock }),
 }));
 vi.mock("@/features/auth/hooks/auth.hooks", () => ({
   useSession: () => ({ data: null }),
 }));
 
 describe("shared navigation destinations", () => {
+  it("searches all works through discover and hides notifications from visitors", () => {
+    render(<Navbar />);
+    const search = screen.getByLabelText("البحث في جميع الأعمال");
+    fireEvent.change(search, { target: { value: "Trait Hoarder" } });
+    const form = search.closest("form");
+    expect(form).not.toBeNull();
+    if (form !== null) fireEvent.submit(form);
+    expect(pushMock).toHaveBeenCalledWith("/discover?q=Trait%20Hoarder");
+    expect(
+      screen.queryByRole("button", { name: /الإشعارات/ }),
+    ).not.toBeInTheDocument();
+  });
+
   it("exposes equivalent real category and text-story destinations without placeholder links", () => {
     const { container } = render(
       <>

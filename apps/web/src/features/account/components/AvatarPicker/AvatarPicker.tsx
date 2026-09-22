@@ -74,12 +74,9 @@ export function AvatarPicker() {
       </div>
       <div className={styles["content"]}>
         <div>
-          <p className="eyebrow">معاينة محلية</p>
+          <p className="eyebrow">صورة الحساب</p>
           <h3 id="avatar-picker-title">صورة الحساب</h3>
-          <p>
-            اختر صورة لمعاينتها داخل هذه الصفحة. لن تُرفع أو تُحفظ على الخادم في
-            هذه المرحلة.
-          </p>
+          <p>اختر صورة واضحة لتجربة مظهرها في حسابك قبل الحفظ.</p>
         </div>
         <div className={styles["actions"]}>
           <label className="button button--small" htmlFor="avatar-upload">
@@ -102,7 +99,7 @@ export function AvatarPicker() {
             disabled={previewUrl === null}
           >
             <RotateCcw aria-hidden="true" />
-            إزالة المعاينة
+            إزالة الصورة المختارة
           </button>
         </div>
         <small id="avatar-upload-hint">
@@ -110,8 +107,8 @@ export function AvatarPicker() {
         </small>
         <p id="avatar-upload-status" className={styles["status"]} role="status">
           {fileName === null
-            ? "لا توجد صورة محلية مختارة."
-            : `تُعرض معاينة محلية للملف: ${fileName}`}
+            ? "لم تختر صورة جديدة."
+            : `الصورة المختارة: ${fileName}`}
         </p>
         {error === null ? null : (
           <p className="form-notice form-notice--error" role="alert">

@@ -90,15 +90,6 @@ export function RegisterForm() {
         {...register("email")}
       />
       <FormField
-        id="phone"
-        label="رقم الهاتف (اختياري)"
-        type="tel"
-        dir="ltr"
-        autoComplete="tel"
-        error={localizeAuthMessage(errors.phone?.message)}
-        {...register("phone")}
-      />
-      <FormField
         id="password"
         label="كلمة المرور"
         type="password"

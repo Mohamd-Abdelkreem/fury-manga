@@ -1,8 +1,16 @@
 import type { MangaCardData } from "@/types";
+import { TEXT_WORKS } from "@/features/text-stories/data/textStories";
 
 export interface FilterOption {
   value: string;
   label: string;
+}
+
+export interface DiscoverWork extends MangaCardData {
+  categories: readonly string[];
+  status: "ongoing" | "completed" | "hiatus";
+  workType: "manga" | "manhwa" | "manhua" | "comic" | "novel" | "short-story";
+  updatedAt: string;
 }
 
 export const DISCOVER_GENRES: FilterOption[] = [
@@ -52,6 +60,7 @@ export const DISCOVER_TYPES: FilterOption[] = [
   { value: "manhua", label: "Manhua" },
   { value: "comic", label: "Comic" },
   { value: "novel", label: "Novel" },
+  { value: "short-story", label: "قصة قصيرة" },
 ];
 
 export const DISCOVER_ORDERS: FilterOption[] = [
@@ -63,7 +72,7 @@ export const DISCOVER_ORDERS: FilterOption[] = [
   { value: "popular", label: "مشهورة" },
 ];
 
-export const MOCK_DISCOVER_MANGA: MangaCardData[] = [
+export const MOCK_DISCOVER_MANGA: DiscoverWork[] = [
   {
     id: 101,
     title: "Wooden stick 99+",
@@ -72,6 +81,10 @@ export const MOCK_DISCOVER_MANGA: MangaCardData[] = [
     flag: "🇰🇷",
     image: "/anime/341452.jpg",
     badge: "ملون",
+    categories: ["action", "games"],
+    status: "ongoing",
+    workType: "manhwa",
+    updatedAt: "2026-09-20",
   },
   {
     id: 102,
@@ -81,6 +94,10 @@ export const MOCK_DISCOVER_MANGA: MangaCardData[] = [
     flag: "🇰🇷",
     image: "/anime/366722.jpg",
     badge: "ملون",
+    categories: ["action", "comedy"],
+    status: "ongoing",
+    workType: "manhwa",
+    updatedAt: "2026-09-18",
   },
   {
     id: 103,
@@ -90,6 +107,10 @@ export const MOCK_DISCOVER_MANGA: MangaCardData[] = [
     flag: "🇰🇷",
     image: "/anime/384226.jpg",
     badge: "ملون",
+    categories: ["school_life", "drama"],
+    status: "completed",
+    workType: "manhwa",
+    updatedAt: "2026-08-12",
   },
   {
     id: 104,
@@ -99,6 +120,10 @@ export const MOCK_DISCOVER_MANGA: MangaCardData[] = [
     flag: "🇰🇷",
     image: "/anime/411246.jpg",
     badge: "ملون",
+    categories: ["fantasy", "adventure"],
+    status: "ongoing",
+    workType: "manga",
+    updatedAt: "2026-09-21",
   },
   {
     id: 105,
@@ -109,6 +134,10 @@ export const MOCK_DISCOVER_MANGA: MangaCardData[] = [
     image: "/anime/463379.jpg",
     badge: "ملون",
     isHot: true,
+    categories: ["reincarnation", "action"],
+    status: "ongoing",
+    workType: "manhwa",
+    updatedAt: "2026-09-22",
   },
   {
     id: 106,
@@ -118,6 +147,10 @@ export const MOCK_DISCOVER_MANGA: MangaCardData[] = [
     flag: "🇰🇷",
     image: "/anime/463592.jpg",
     badge: "ملون",
+    categories: ["fantasy", "mystery"],
+    status: "hiatus",
+    workType: "manga",
+    updatedAt: "2026-06-10",
   },
   {
     id: 107,
@@ -127,6 +160,10 @@ export const MOCK_DISCOVER_MANGA: MangaCardData[] = [
     flag: "🇰🇷",
     image: "/anime/472451.jpg",
     isNew: true,
+    categories: ["romance", "fantasy"],
+    status: "ongoing",
+    workType: "manga",
+    updatedAt: "2026-09-17",
   },
   {
     id: 108,
@@ -136,6 +173,10 @@ export const MOCK_DISCOVER_MANGA: MangaCardData[] = [
     flag: "🇰🇷",
     image: "/anime/473048.jpg",
     badge: "ملون",
+    categories: ["cultivation", "martial_arts"],
+    status: "completed",
+    workType: "manhua",
+    updatedAt: "2026-07-01",
   },
   {
     id: 109,
@@ -145,6 +186,10 @@ export const MOCK_DISCOVER_MANGA: MangaCardData[] = [
     flag: "🇯🇵",
     image: "/anime/477473.jpg",
     isHot: true,
+    categories: ["fantasy", "worlds"],
+    status: "ongoing",
+    workType: "manhua",
+    updatedAt: "2026-09-19",
   },
   {
     id: 110,
@@ -154,5 +199,34 @@ export const MOCK_DISCOVER_MANGA: MangaCardData[] = [
     flag: "🇯🇵",
     image: "/anime/478748.jpg",
     isNew: true,
+    categories: ["adventure", "historical"],
+    status: "ongoing",
+    workType: "comic",
+    updatedAt: "2026-09-16",
   },
+];
+
+const TEXT_DISCOVER_WORKS = TEXT_WORKS.flatMap<DiscoverWork>((work) => {
+  if (work.status === "archived") return [];
+  return [
+    {
+      id: work.id,
+      title: work.title,
+      chapter: String(work.chapters.at(-1)?.number ?? 0),
+      rating: work.rating ?? 0,
+      flag: "🇸🇦",
+      image: work.cover,
+      badge: "نصي",
+      badgeIcon: "book",
+      categories: work.categorySlugs,
+      status: work.status,
+      workType: work.type,
+      updatedAt: work.updatedAt,
+    },
+  ];
+});
+
+export const DISCOVER_WORK_FIXTURES: readonly DiscoverWork[] = [
+  ...MOCK_DISCOVER_MANGA,
+  ...TEXT_DISCOVER_WORKS,
 ];

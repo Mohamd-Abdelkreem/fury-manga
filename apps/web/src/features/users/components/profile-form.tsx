@@ -56,7 +56,7 @@ export function ProfileForm() {
           <p className="eyebrow">الهوية</p>
           <h3>اسم العرض والبريد</h3>
         </div>
-        <p>يمكن تعديل اسم العرض فقط. لا يتوفر تغيير البريد أو الهاتف هنا.</p>
+        <p>يمكن تعديل اسم العرض فقط. لا يتوفر تغيير البريد الإلكتروني هنا.</p>
       </div>
       <div className="settings-form__fields">
         <FormField

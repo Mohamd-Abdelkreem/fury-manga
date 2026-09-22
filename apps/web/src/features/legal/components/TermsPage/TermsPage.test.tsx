@@ -23,9 +23,7 @@ describe("TermsPage", () => {
     expect(
       screen.getByRole("heading", { name: "قبول الشروط والأحكام" }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: "نظام النقاط وبوابات متابعة القراءة" }),
-    ).toBeInTheDocument();
+    expect(screen.queryByText(/نقاط/)).not.toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /مسؤوليات الحساب/ }),
     ).toHaveAttribute("href", "#account-responsibilities");

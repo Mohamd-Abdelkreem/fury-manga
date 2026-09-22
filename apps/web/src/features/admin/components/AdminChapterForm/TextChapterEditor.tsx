@@ -63,20 +63,41 @@ export function TextChapterEditor({
           <FileText className={styles["cardIcon"]} />
           <span>محتوى الفصل النصي</span>
         </div>
-        <div className={styles["tabsRow"]} style={{ borderBottom: "none", paddingBottom: 0 }}>
+        <div
+          className={styles["tabsRow"]}
+          style={{ borderBottom: "none", paddingBottom: 0 }}
+        >
           <button
             type="button"
-            onClick={() => { setActiveTab("edit"); }}
-            className={cn(styles["tabBtn"], activeTab === "edit" && styles["tabBtnActive"])}
+            onClick={() => {
+              setActiveTab("edit");
+            }}
+            className={cn(
+              styles["tabBtn"],
+              activeTab === "edit" && styles["tabBtnActive"],
+            )}
           >
             المحرر
           </button>
           <button
             type="button"
-            onClick={() => { setActiveTab("preview"); }}
-            className={cn(styles["tabBtn"], activeTab === "preview" && styles["tabBtnActive"])}
+            onClick={() => {
+              setActiveTab("preview");
+            }}
+            className={cn(
+              styles["tabBtn"],
+              activeTab === "preview" && styles["tabBtnActive"],
+            )}
           >
-            <Eye style={{ width: "0.875rem", height: "0.875rem", display: "inline-block", verticalAlign: "middle", marginLeft: "0.25rem" }} />
+            <Eye
+              style={{
+                width: "0.875rem",
+                height: "0.875rem",
+                display: "inline-block",
+                verticalAlign: "middle",
+                marginLeft: "0.25rem",
+              }}
+            />
             المعاينة الحية
           </button>
         </div>
@@ -87,7 +108,9 @@ export function TextChapterEditor({
           <div className={styles["textToolbar"]}>
             <button
               type="button"
-              onClick={() => { insertMarkup("## ", "\n"); }}
+              onClick={() => {
+                insertMarkup("## ", "\n");
+              }}
               className={styles["toolbarBtn"]}
               title="عنوان 2"
             >
@@ -96,7 +119,9 @@ export function TextChapterEditor({
             </button>
             <button
               type="button"
-              onClick={() => { insertMarkup("### ", "\n"); }}
+              onClick={() => {
+                insertMarkup("### ", "\n");
+              }}
               className={styles["toolbarBtn"]}
               title="عنوان 3"
             >
@@ -105,7 +130,9 @@ export function TextChapterEditor({
             </button>
             <button
               type="button"
-              onClick={() => { insertMarkup("**", "**"); }}
+              onClick={() => {
+                insertMarkup("**", "**");
+              }}
               className={styles["toolbarBtn"]}
               title="عريض"
             >
@@ -114,7 +141,9 @@ export function TextChapterEditor({
             </button>
             <button
               type="button"
-              onClick={() => { insertMarkup("*", "*"); }}
+              onClick={() => {
+                insertMarkup("*", "*");
+              }}
               className={styles["toolbarBtn"]}
               title="مائل"
             >
@@ -123,7 +152,9 @@ export function TextChapterEditor({
             </button>
             <button
               type="button"
-              onClick={() => { insertMarkup("- ", "\n"); }}
+              onClick={() => {
+                insertMarkup("- ", "\n");
+              }}
               className={styles["toolbarBtn"]}
               title="قائمة نقطية"
             >
@@ -132,7 +163,9 @@ export function TextChapterEditor({
             </button>
             <button
               type="button"
-              onClick={() => { insertMarkup("> ", "\n"); }}
+              onClick={() => {
+                insertMarkup("> ", "\n");
+              }}
               className={styles["toolbarBtn"]}
               title="اقتباس"
             >
@@ -152,7 +185,9 @@ export function TextChapterEditor({
                 fontFamily: "inherit",
               }}
               value={content}
-              onChange={(e) => { onChange(e.target.value); }}
+              onChange={(e) => {
+                onChange(e.target.value);
+              }}
               placeholder="اكتب أو الصق نص الفصل هنا... يمكنك استخدام أزرار التنسيق أعلاه لإضافة عناوين وفقرات واقتباسات."
               aria-label="نص الفصل"
             />
@@ -215,11 +250,19 @@ export function TextChapterEditor({
                   );
                 }
                 if (trimmed.startsWith("- ")) {
-                  const items = trimmed.split("\n").filter((l) => l.startsWith("- "));
+                  const items = trimmed
+                    .split("\n")
+                    .filter((l) => l.startsWith("- "));
                   return (
-                    <ul key={String(i)} style={{ paddingRight: "1.5rem", margin: "0.75rem 0" }}>
+                    <ul
+                      key={String(i)}
+                      style={{ paddingRight: "1.5rem", margin: "0.75rem 0" }}
+                    >
                       {items.map((item, itemIdx) => (
-                        <li key={String(itemIdx)} style={{ marginBottom: "0.25rem" }}>
+                        <li
+                          key={String(itemIdx)}
+                          style={{ marginBottom: "0.25rem" }}
+                        >
                           {item.replace(/^- /, "")}
                         </li>
                       ))}
@@ -242,7 +285,13 @@ export function TextChapterEditor({
               })}
             </div>
           ) : (
-            <p style={{ color: "rgba(255,255,255,0.4)", textAlign: "center", padding: "2rem" }}>
+            <p
+              style={{
+                color: "rgba(255,255,255,0.4)",
+                textAlign: "center",
+                padding: "2rem",
+              }}
+            >
               لا يوجد نص لمعاينته بعد. قم بكتابة نص في تبويب المحرر.
             </p>
           )}

@@ -176,7 +176,7 @@ export function TextChapterReader({
         <FeatureState
           kind="error"
           title="تعذّر عرض الفصل"
-          message="لم يكتمل عرض هذه الحالة. أعد المحاولة لعرض محتوى fixture المحلي."
+          message="تعذّر عرض الفصل. أعد المحاولة بعد قليل."
           onRetry={() => {
             setRenderState("populated");
           }}
@@ -225,9 +225,7 @@ export function TextChapterReader({
         <progress id="chapter-progress" max="100" value={progress}>
           {progress}%
         </progress>
-        <small>
-          عند بلوغ 75% يظهر إكمال محلي لهذه الجلسة، دون حفظ أو نقاط على الخادم.
-        </small>
+        <small>عند بلوغ 75% يظهر إكمال القراءة لهذه الجلسة.</small>
       </div>
 
       <section className={styles["controls"]} aria-label="إعدادات قارئ النص">
@@ -331,7 +329,7 @@ export function TextChapterReader({
         <FeatureState
           kind="empty"
           title="هذا الفصل بلا محتوى"
-          message="لا يوجد نص منشور داخل هذا الفصل في fixture الحالي."
+          message="لا يوجد نص منشور داخل هذا الفصل حاليًا."
           actionHref={`/story/${work.id}`}
           actionLabel="العودة إلى العمل"
         />
@@ -358,8 +356,8 @@ export function TextChapterReader({
 
       <p className={styles["completion"]} role="status">
         {hasReachedCompletionThreshold(progress)
-          ? "بلغت 75% — اكتمل هذا الفصل محليًا في الجلسة الحالية فقط."
-          : "سيظهر تنبيه الإكمال المحلي بعد بلوغ 75% من الصفحة."}
+          ? "بلغت 75% — تم تسجيل هذا الفصل كمكتمل."
+          : "سيتم تسجيل إكمال الفصل بعد بلوغ 75% من الصفحة."}
       </p>
 
       <div className={styles["backLink"]}>

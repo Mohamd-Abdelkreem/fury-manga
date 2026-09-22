@@ -19,7 +19,7 @@ describe("AppearanceSettings", () => {
     fireEvent.click(noFrame);
     expect(noFrame).toBeChecked();
     expect(
-      screen.getByText(/الاختيار الحالي في المعاينة: بلا إطار/),
+      screen.getByText(/الإطار المختار حاليًا: بلا إطار/),
     ).toBeInTheDocument();
 
     fireEvent.click(nightFrame);

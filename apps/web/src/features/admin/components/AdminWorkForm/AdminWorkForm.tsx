@@ -220,9 +220,7 @@ export function AdminWorkForm({ mode, initialWork }: AdminWorkFormProps) {
 
       setIsSubmitting(false);
       setIsDirty(false);
-      setSuccessMessage(
-        "تم حفظ التعديلات بنجاح محليًا في جلسة الواجهة الأمامية.",
-      );
+      setSuccessMessage("تم حفظ التعديلات بنجاح.");
     } else {
       const created = createWork({
         title: values.title.trim(),
@@ -241,9 +239,7 @@ export function AdminWorkForm({ mode, initialWork }: AdminWorkFormProps) {
 
       setIsSubmitting(false);
       setIsDirty(false);
-      setSuccessMessage(
-        `تم إنشاء العمل '${created.title}' بنجاح محليًا في الواجهة الأمامية.`,
-      );
+      setSuccessMessage(`تم إنشاء العمل '${created.title}' بنجاح.`);
 
       // Navigate to works after brief delay or stay
       setTimeout(() => {
@@ -331,7 +327,7 @@ export function AdminWorkForm({ mode, initialWork }: AdminWorkFormProps) {
         <AdminNoticeBanner
           variant="success"
           title="تم الحفظ بنجاح"
-          description={`${successMessage} (تذكير: لم يتم إجراء اتصال بقاعدة بيانات خارجية).`}
+          description={successMessage}
           actionLabel="العودة لقائمة الأعمال"
           actionHref="/admin/works"
           onDismiss={() => {

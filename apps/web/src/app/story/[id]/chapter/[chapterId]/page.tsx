@@ -444,7 +444,7 @@ export default function ChapterReadingPage() {
 
           {/* Comments Section */}
           <div className={styles["commentsWrapper"]}>
-            <CommentsSection />
+            <CommentsSection contextLabel="الفصل" />
           </div>
         </div>
 

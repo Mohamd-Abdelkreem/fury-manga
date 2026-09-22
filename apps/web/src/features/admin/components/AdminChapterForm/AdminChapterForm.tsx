@@ -72,7 +72,8 @@ export function AdminChapterForm({ workId, chapterId }: AdminChapterFormProps) {
     return [];
   });
   const [textContent, setTextContent] = useState<string>(() => {
-    if (isEdit && existingChapter.textContent) return existingChapter.textContent;
+    if (isEdit && existingChapter.textContent)
+      return existingChapter.textContent;
     return "";
   });
 
@@ -106,7 +107,10 @@ export function AdminChapterForm({ workId, chapterId }: AdminChapterFormProps) {
   }
 
   const validate = (): boolean => {
-    const nextErrors: { number?: string | undefined; title?: string | undefined } = {};
+    const nextErrors: {
+      number?: string | undefined;
+      title?: string | undefined;
+    } = {};
     if (isNaN(number) || number < 0) {
       nextErrors.number = "يجب تحديد رقم فصل صحيح (0 أو أكبر).";
     }
@@ -127,7 +131,9 @@ export function AdminChapterForm({ workId, chapterId }: AdminChapterFormProps) {
     }
 
     setIsSubmitting(true);
-    const effectiveStatus: AdminPublishStatus = publishNow ? "published" : status;
+    const effectiveStatus: AdminPublishStatus = publishNow
+      ? "published"
+      : status;
 
     if (isEdit && chapterId !== undefined) {
       updateChapter(workId, chapterId, {
@@ -140,7 +146,7 @@ export function AdminChapterForm({ workId, chapterId }: AdminChapterFormProps) {
       });
       setNotice({
         type: "success",
-        message: "تم تحديث بيانات الفصل بنجاح في الجلسة المحلية.",
+        message: "تم تحديث بيانات الفصل بنجاح.",
       });
     } else {
       createChapter(workId, {
@@ -179,7 +185,8 @@ export function AdminChapterForm({ workId, chapterId }: AdminChapterFormProps) {
           <span className={styles["breadcrumbSeparator"]}>/</span>
           <Link
             href={`/admin/works/${work.id}/chapters` as Route}
-            className={styles["breadcrumbLink"]}>
+            className={styles["breadcrumbLink"]}
+          >
             {work.title}
           </Link>
           <span className={styles["breadcrumbSeparator"]}>/</span>
@@ -196,12 +203,7 @@ export function AdminChapterForm({ workId, chapterId }: AdminChapterFormProps) {
                   ? `تعديل الفصل ${String(number)}: ${existingChapter.title}`
                   : `إضافة فصل جديد إلى "${work.title}"`}
               </h1>
-              {isEdit && (
-                <AdminStatusBadge
-                  kind="publish"
-                  status={status}
-                />
-              )}
+              {isEdit && <AdminStatusBadge kind="publish" status={status} />}
             </div>
             <p className={styles["subtitle"]}>
               {isEdit
@@ -213,7 +215,9 @@ export function AdminChapterForm({ workId, chapterId }: AdminChapterFormProps) {
           <div className={styles["actionsArea"]}>
             <button
               type="button"
-              onClick={() => { setIsPreviewOpen(true); }}
+              onClick={() => {
+                setIsPreviewOpen(true);
+              }}
               className={styles["btnSecondary"]}
             >
               <Eye style={{ width: "1rem", height: "1rem" }} />
@@ -221,7 +225,9 @@ export function AdminChapterForm({ workId, chapterId }: AdminChapterFormProps) {
             </button>
             <button
               type="button"
-              onClick={() => { handleSave(false); }}
+              onClick={() => {
+                handleSave(false);
+              }}
               disabled={isSubmitting}
               className={styles["btnSecondary"]}
             >
@@ -230,7 +236,9 @@ export function AdminChapterForm({ workId, chapterId }: AdminChapterFormProps) {
             </button>
             <button
               type="button"
-              onClick={() => { handleSave(true); }}
+              onClick={() => {
+                handleSave(true);
+              }}
               disabled={isSubmitting}
               className={styles["btnPrimary"]}
             >
@@ -246,7 +254,9 @@ export function AdminChapterForm({ workId, chapterId }: AdminChapterFormProps) {
           title={notice.type === "error" ? "تنبيه" : "تم بنجاح"}
           description={notice.message}
           variant={notice.type === "error" ? "warning" : "success"}
-          onDismiss={() => { setNotice(null); }}
+          onDismiss={() => {
+            setNotice(null);
+          }}
         />
       )}
 
@@ -273,9 +283,14 @@ export function AdminChapterForm({ workId, chapterId }: AdminChapterFormProps) {
                   type="number"
                   step="0.1"
                   min="0"
-                  className={cn(styles["input"], errors.number && styles["inputError"])}
+                  className={cn(
+                    styles["input"],
+                    errors.number && styles["inputError"],
+                  )}
                   value={isNaN(number) ? "" : number}
-                  onChange={(e) => { setNumber(parseFloat(e.target.value)); }}
+                  onChange={(e) => {
+                    setNumber(parseFloat(e.target.value));
+                  }}
                   placeholder="مثال: 44 أو 44.5"
                 />
                 {errors.number && (
@@ -291,9 +306,14 @@ export function AdminChapterForm({ workId, chapterId }: AdminChapterFormProps) {
                 <input
                   id="chapter-title"
                   type="text"
-                  className={cn(styles["input"], errors.title && styles["inputError"])}
+                  className={cn(
+                    styles["input"],
+                    errors.title && styles["inputError"],
+                  )}
                   value={title}
-                  onChange={(e) => { setTitle(e.target.value); }}
+                  onChange={(e) => {
+                    setTitle(e.target.value);
+                  }}
                   placeholder="مثال: استيقاظ السمة النادرة"
                 />
                 {errors.title && (
@@ -309,8 +329,13 @@ export function AdminChapterForm({ workId, chapterId }: AdminChapterFormProps) {
               </label>
               <div className={styles["contentTypeSelector"]}>
                 <div
-                  className={cn(styles["typeOption"], contentType === "illustrated" && styles["typeOptionActive"])}
-                  onClick={() => { setContentType("illustrated"); }}
+                  className={cn(
+                    styles["typeOption"],
+                    contentType === "illustrated" && styles["typeOptionActive"],
+                  )}
+                  onClick={() => {
+                    setContentType("illustrated");
+                  }}
                   role="radio"
                   aria-checked={contentType === "illustrated"}
                   tabIndex={0}
@@ -319,7 +344,10 @@ export function AdminChapterForm({ workId, chapterId }: AdminChapterFormProps) {
                     style={{
                       width: "1.25rem",
                       height: "1.25rem",
-                      color: contentType === "illustrated" ? "var(--primary)" : "rgba(255,255,255,0.5)",
+                      color:
+                        contentType === "illustrated"
+                          ? "var(--primary)"
+                          : "rgba(255,255,255,0.5)",
                     }}
                   />
                   <div className={styles["typeOptionText"]}>
@@ -331,8 +359,13 @@ export function AdminChapterForm({ workId, chapterId }: AdminChapterFormProps) {
                 </div>
 
                 <div
-                  className={cn(styles["typeOption"], contentType === "text" && styles["typeOptionActive"])}
-                  onClick={() => { setContentType("text"); }}
+                  className={cn(
+                    styles["typeOption"],
+                    contentType === "text" && styles["typeOptionActive"],
+                  )}
+                  onClick={() => {
+                    setContentType("text");
+                  }}
                   role="radio"
                   aria-checked={contentType === "text"}
                   tabIndex={0}
@@ -341,7 +374,10 @@ export function AdminChapterForm({ workId, chapterId }: AdminChapterFormProps) {
                     style={{
                       width: "1.25rem",
                       height: "1.25rem",
-                      color: contentType === "text" ? "var(--primary)" : "rgba(255,255,255,0.5)",
+                      color:
+                        contentType === "text"
+                          ? "var(--primary)"
+                          : "rgba(255,255,255,0.5)",
                     }}
                   />
                   <div className={styles["typeOptionText"]}>
@@ -359,7 +395,10 @@ export function AdminChapterForm({ workId, chapterId }: AdminChapterFormProps) {
           {contentType === "illustrated" ? (
             <IllustratedChapterEditor pages={pages} onChange={setPages} />
           ) : (
-            <TextChapterEditor content={textContent} onChange={setTextContent} />
+            <TextChapterEditor
+              content={textContent}
+              onChange={setTextContent}
+            />
           )}
         </div>
 
@@ -368,7 +407,10 @@ export function AdminChapterForm({ workId, chapterId }: AdminChapterFormProps) {
           {/* Work Summary Card */}
           <div className={styles["card"]}>
             <div className={styles["cardHeader"]}>
-              <h3 className={styles["cardTitle"]} style={{ fontSize: "0.9375rem" }}>
+              <h3
+                className={styles["cardTitle"]}
+                style={{ fontSize: "0.9375rem" }}
+              >
                 العمل التابع له
               </h3>
             </div>
@@ -406,7 +448,10 @@ export function AdminChapterForm({ workId, chapterId }: AdminChapterFormProps) {
           {/* Status & Publication Card */}
           <div className={styles["card"]}>
             <div className={styles["cardHeader"]}>
-              <h3 className={styles["cardTitle"]} style={{ fontSize: "0.9375rem" }}>
+              <h3
+                className={styles["cardTitle"]}
+                style={{ fontSize: "0.9375rem" }}
+              >
                 حالة الفصل
               </h3>
             </div>
@@ -419,9 +464,9 @@ export function AdminChapterForm({ workId, chapterId }: AdminChapterFormProps) {
                 id="chapter-status"
                 className={styles["select"]}
                 value={status}
-                onChange={(e) =>
-                  { setStatus(e.target.value as AdminPublishStatus); }
-                }
+                onChange={(e) => {
+                  setStatus(e.target.value as AdminPublishStatus);
+                }}
               >
                 <option value="draft">مسودة (غير ظاهر للقراء)</option>
                 <option value="published">منشور (متاح للقراءة)</option>
@@ -459,7 +504,10 @@ export function AdminChapterForm({ workId, chapterId }: AdminChapterFormProps) {
           {/* Guidelines / Tips Card */}
           <div className={styles["card"]}>
             <div className={styles["cardHeader"]}>
-              <h3 className={styles["cardTitle"]} style={{ fontSize: "0.9375rem" }}>
+              <h3
+                className={styles["cardTitle"]}
+                style={{ fontSize: "0.9375rem" }}
+              >
                 <Info className={styles["cardIcon"]} />
                 إرشادات المحتوى
               </h3>
@@ -468,19 +516,22 @@ export function AdminChapterForm({ workId, chapterId }: AdminChapterFormProps) {
               <div className={styles["sidebarListItem"]}>
                 <span className={styles["sidebarListDot"]}>•</span>
                 <span>
-                  تأكد من تسلسل ترقيم الصفحات بحيث تعكس اتجاه القراءة المعتمد (من اليمين لليسار أو العكس).
+                  تأكد من تسلسل ترقيم الصفحات بحيث تعكس اتجاه القراءة المعتمد
+                  (من اليمين لليسار أو العكس).
                 </span>
               </div>
               <div className={styles["sidebarListItem"]}>
                 <span className={styles["sidebarListDot"]}>•</span>
                 <span>
-                  في الفصول النصية، احرص على استخدام عناوين فرعية (عنوان 2 وعنوان 3) لتقسيم المشاهد الطويلة.
+                  في الفصول النصية، احرص على استخدام عناوين فرعية (عنوان 2
+                  وعنوان 3) لتقسيم المشاهد الطويلة.
                 </span>
               </div>
               <div className={styles["sidebarListItem"]}>
                 <span className={styles["sidebarListDot"]}>•</span>
                 <span>
-                  يمكنك حفظ الفصل كمسودة لتجربة التنسيق في المعاينة قبل إطلاقه رسمياً للقراء.
+                  يمكنك حفظ الفصل كمسودة لتجربة التنسيق في المعاينة قبل إطلاقه
+                  رسمياً للقراء.
                 </span>
               </div>
             </div>
@@ -491,7 +542,9 @@ export function AdminChapterForm({ workId, chapterId }: AdminChapterFormProps) {
       {/* Preview Modal */}
       <ChapterPreviewModal
         isOpen={isPreviewOpen}
-        onClose={() => { setIsPreviewOpen(false); }}
+        onClose={() => {
+          setIsPreviewOpen(false);
+        }}
         workTitle={work.title}
         chapterNumber={number}
         chapterTitle={title}

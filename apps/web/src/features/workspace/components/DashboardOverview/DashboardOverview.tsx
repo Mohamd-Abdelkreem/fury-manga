@@ -6,10 +6,9 @@ import {
   Bookmark,
   Compass,
   Gift,
-  HelpCircle,
   Library,
   Settings,
-  Sparkles,
+  Bell,
 } from "lucide-react";
 import type { Route } from "next";
 import Image from "next/image";
@@ -45,7 +44,6 @@ export function DashboardOverview({
 }: DashboardOverviewProps) {
   const user = useSession().data?.user ?? null;
   const [renderState, setRenderState] = useState(viewState);
-  const [showPointsHelp, setShowPointsHelp] = useState(false);
 
   if (user === null) return null;
 
@@ -100,7 +98,6 @@ export function DashboardOverview({
       className={`workspace-main ${styles["main"] ?? ""}`}
       id="main-content"
     >
-      {/* Welcome Hero Header */}
       <header className={styles["hero"]}>
         <div className={styles["identity"]}>
           <div className={styles["avatarWrap"]}>
@@ -141,41 +138,22 @@ export function DashboardOverview({
         </div>
       </header>
 
-      {/* 4 Summary Metric Cards */}
       <section className={styles["metricsGrid"]} aria-label="إحصائيات الحساب">
-        {/* Points & Ads Card */}
         <div className={styles["metricCard"]}>
           <div className={styles["metricHeader"]}>
             <div className={styles["metricIconWrapPrimary"]}>
-              <Sparkles size={18} aria-hidden="true" />
+              <Bell size={18} aria-hidden="true" />
             </div>
-            <button
-              type="button"
-              className={styles["infoTooltipBtn"]}
-              onClick={() => { setShowPointsHelp((prev) => !prev); }}
-              title="توضيح نظام النقاط والإعلانات"
-              aria-label="توضيح نظام النقاط والإعلانات"
-            >
-              <HelpCircle size={15} />
-            </button>
           </div>
           <div className={styles["metricValue"]}>
-            {summary.points.toLocaleString("ar-EG")} نقطة
+            {summary.unreadNotifications.toLocaleString("ar-EG")}
           </div>
-          <div className={styles["metricLabel"]}>عداد النقاط والإعلانات</div>
+          <div className={styles["metricLabel"]}>إشعارات غير مقروءة</div>
           <p className={styles["metricDescription"]}>
-            قيمة تجريبية لهذه الواجهة لعدّ الإعلانات التي شاهدتها فقط؛ ليست مالًا
-            ولا مكافآت، ولم تُحمّل من الخادم.
+            آخر مستجدات الفصول المحفوظة والهدايا التي منحتها لك الإدارة.
           </p>
-          {showPointsHelp && (
-            <div className={styles["pointsNotice"]}>
-              تكتسب 3 نقاط تلقائياً عند قراءة 75% من الفصل الأول. عند بلوغ عتبة 9
-              نقاط (3 فصول كاملة)، يُطلب إعلان لمتابعة الفصل التالي.
-            </div>
-          )}
         </div>
 
-        {/* Bookmarks Count */}
         <div className={styles["metricCard"]}>
           <div className={styles["metricHeader"]}>
             <div className={styles["metricIconWrap"]}>
@@ -185,13 +163,14 @@ export function DashboardOverview({
           <div className={styles["metricValue"]}>
             {summary.bookmarkCount.toLocaleString("ar-EG")}
           </div>
-          <div className={styles["metricLabel"]}>الأعمال المحفوظة في المكتبة</div>
+          <div className={styles["metricLabel"]}>
+            الأعمال المحفوظة في المكتبة
+          </div>
           <p className={styles["metricDescription"]}>
             القصص والروايات المضافة إلى قائمة القراءة للوصول السريع إليها.
           </p>
         </div>
 
-        {/* In-Progress Reading */}
         <div className={styles["metricCard"]}>
           <div className={styles["metricHeader"]}>
             <div className={styles["metricIconWrap"]}>
@@ -203,11 +182,10 @@ export function DashboardOverview({
           </div>
           <div className={styles["metricLabel"]}>أعمال قيد المتابعة حالياً</div>
           <p className={styles["metricDescription"]}>
-            فصول بدأت بقراءتها ولديك تقدم مسجل ومحفوظ محلياً.
+            فصول بدأت بقراءتها ولديك تقدم محفوظ للمتابعة لاحقًا.
           </p>
         </div>
 
-        {/* Owned Gifts */}
         <div className={styles["metricCard"]}>
           <div className={styles["metricHeader"]}>
             <div className={styles["metricIconWrap"]}>
@@ -224,9 +202,7 @@ export function DashboardOverview({
         </div>
       </section>
 
-      {/* 2-Column Content Grid */}
       <div className={styles["grid"]}>
-        {/* Continue Reading Section */}
         <section className={styles["panel"]} aria-labelledby="continue-title">
           <div className={styles["panelHeading"]}>
             <div>
@@ -285,7 +261,6 @@ export function DashboardOverview({
           )}
         </section>
 
-        {/* Library Preview */}
         <section className={styles["panel"]} aria-labelledby="library-title">
           <div className={styles["panelHeading"]}>
             <div>
@@ -330,7 +305,6 @@ export function DashboardOverview({
           </Link>
         </section>
 
-        {/* Gifts & Appearance Panel */}
         <section className={styles["panel"]} aria-labelledby="gifts-title">
           <div className={styles["panelHeading"]}>
             <div>
@@ -371,7 +345,6 @@ export function DashboardOverview({
           </Link>
         </section>
 
-        {/* Quick Links / Explore Panel */}
         <section className={styles["panel"]} aria-labelledby="explore-title">
           <div className={styles["panelHeading"]}>
             <div>

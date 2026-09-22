@@ -9,6 +9,7 @@ import {
   Bell,
   BookOpen,
   ExternalLink,
+  FolderTree,
   Gift,
   LayoutDashboard,
   LogOut,
@@ -39,7 +40,8 @@ interface NavGroup {
 export function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, metrics, activities, contactMessages, reports } = useAdminData();
+  const { user, metrics, activities, contactMessages, reports } =
+    useAdminData();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -66,8 +68,12 @@ export function AdminLayout({ children }: { children: ReactNode }) {
     };
   }, [sidebarOpen, notifOpen]);
 
-  const unreadContactCount = contactMessages.filter((m) => m.status === "unread").length;
-  const activeReportsCount = reports.filter((r) => r.status === "open" || r.status === "under_review").length;
+  const unreadContactCount = contactMessages.filter(
+    (m) => m.status === "unread",
+  ).length;
+  const activeReportsCount = reports.filter(
+    (r) => r.status === "open" || r.status === "under_review",
+  ).length;
 
   const navGroups: NavGroup[] = [
     {
@@ -88,6 +94,11 @@ export function AdminLayout({ children }: { children: ReactNode }) {
           href: "/admin/works",
           icon: BookOpen,
           count: metrics.publishedWorks + metrics.draftWorks,
+        },
+        {
+          label: "التصنيفات",
+          href: "/admin/categories",
+          icon: FolderTree,
         },
       ],
     },
@@ -148,7 +159,10 @@ export function AdminLayout({ children }: { children: ReactNode }) {
     <div className={styles["shell"]}>
       {/* Mobile backdrop */}
       <div
-        className={cn(styles["backdrop"], sidebarOpen && styles["backdropOpen"])}
+        className={cn(
+          styles["backdrop"],
+          sidebarOpen && styles["backdropOpen"],
+        )}
         onClick={closeNav}
         aria-hidden="true"
       />
@@ -161,10 +175,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
       >
         <div className={styles["sidebarHeader"]}>
           <div className={styles["brandArea"]}>
-            <Link
-              href={"/admin/dashboard"}
-              className={styles["brandWordmark"]}
-            >
+            <Link href={"/admin/dashboard"} className={styles["brandWordmark"]}>
               <span className={styles["brandF"]}>F</span>
               <span className={styles["brandUry"]}>URY</span>
             </Link>
@@ -178,7 +189,8 @@ export function AdminLayout({ children }: { children: ReactNode }) {
               <h2 className={styles["groupTitle"]}>{group.title}</h2>
               {group.items.map((item) => {
                 const isActive =
-                  item.href === "/admin/dashboard" || item.href === "/admin/gifts"
+                  item.href === "/admin/dashboard" ||
+                  item.href === "/admin/gifts"
                     ? pathname === item.href
                     : pathname.startsWith(item.href);
 
@@ -262,7 +274,9 @@ export function AdminLayout({ children }: { children: ReactNode }) {
             >
               {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
-            <span className={styles["headerTitle"]}>منصة Fury — إدارة المحتوى</span>
+            <span className={styles["headerTitle"]}>
+              منصة Fury — إدارة المحتوى
+            </span>
           </div>
 
           <div className={styles["headerLeft"]}>

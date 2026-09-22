@@ -5,7 +5,7 @@ import { SupportPageLayout } from "@/features/support/components/SupportForm/Sup
 
 export const metadata: Metadata = {
   title: "اتصل بنا",
-  description: "نموذج تواصل محلي مع فريق Fury.",
+  description: "تواصل مع فريق Fury.",
 };
 
 export default function ContactPage() {
@@ -13,7 +13,7 @@ export default function ContactPage() {
     <SupportPageLayout
       eyebrow="التواصل"
       title="اتصل بنا"
-      description="اكتب رسالتك بوضوح. هذه المرحلة تنفّذ تجربة النموذج في الواجهة فقط ولا ترسل بريدًا أو طلبًا إلى الخادم."
+      description="اكتب رسالتك بوضوح وأضف التفاصيل التي تساعد على فهم طلبك."
       asideTitle="هل تواجه مشكلة محددة؟"
       asideMessage="استخدم نموذج الإبلاغ لإضافة نوع المشكلة والرابط المرتبط بها."
       asideHref="/report-issue"

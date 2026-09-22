@@ -1,0 +1,182 @@
+.container {
+  display: grid;
+  gap: 1rem;
+}
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.02);
+}
+.search {
+  display: flex;
+  min-height: 2.75rem;
+  flex: 1;
+  align-items: center;
+  gap: 0.5rem;
+  padding-inline: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--popover);
+}
+.search svg,
+.primary svg,
+.actions svg,
+.order svg {
+  width: 1rem;
+}
+.search input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+}
+.primary,
+.actions button,
+.order button,
+.dialog button {
+  display: inline-flex;
+  min-height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding-inline: 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--secondary);
+  color: var(--foreground);
+  font:
+    700 0.875rem "Cairo",
+    sans-serif;
+}
+.primary {
+  border-color: rgba(255, 71, 71, 0.3);
+  background: #b71f2a;
+  color: #fff;
+}
+.tableWrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.02);
+}
+.tableWrap table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.tableWrap th,
+.tableWrap td {
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid var(--border);
+  text-align: right;
+  white-space: nowrap;
+}
+.tableWrap th {
+  color: var(--muted-foreground);
+  font-size: 0.78rem;
+}
+.tableWrap code {
+  color: var(--muted-foreground);
+}
+.enabled,
+.disabled {
+  display: inline-flex;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.enabled {
+  background: rgba(46, 213, 115, 0.12);
+  color: #8be8b2;
+}
+.disabled {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--muted-foreground);
+}
+.order,
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.order button {
+  width: 2rem;
+  min-height: 2rem;
+  padding: 0;
+}
+.order button:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+.empty {
+  display: grid;
+  min-height: 16rem;
+  place-items: center;
+  align-content: center;
+  gap: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  color: var(--muted-foreground);
+  text-align: center;
+}
+.empty h2,
+.empty p {
+  margin: 0;
+}
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.72);
+}
+.dialog {
+  display: grid;
+  width: min(480px, 100%);
+  gap: 1rem;
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: var(--card);
+}
+.dialog h2,
+.dialog p {
+  margin: 0;
+}
+.dialog p {
+  color: var(--muted-foreground);
+  font-size: 0.8rem;
+}
+.dialog label {
+  display: grid;
+  gap: 0.4rem;
+  font-weight: 700;
+}
+.dialog input {
+  min-height: 2.75rem;
+  padding-inline: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--popover);
+  color: var(--foreground);
+}
+.dialog > div {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+@media (max-width: 640px) {
+  .toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

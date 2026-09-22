@@ -10,7 +10,11 @@
   border-radius: 1.15rem;
   padding: clamp(1.25rem, 3.5vw, 2.25rem);
   background:
-    radial-gradient(circle at 10% 20%, rgba(255, 71, 71, 0.12), transparent 35%),
+    radial-gradient(
+      circle at 10% 20%,
+      rgba(255, 71, 71, 0.12),
+      transparent 35%
+    ),
     linear-gradient(145deg, #171717, #101010);
 }
 

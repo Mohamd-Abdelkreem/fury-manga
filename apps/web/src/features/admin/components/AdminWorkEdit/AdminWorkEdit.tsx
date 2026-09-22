@@ -43,7 +43,14 @@ export function AdminWorkEdit({ workId }: AdminWorkEditProps) {
           role="alert"
         >
           <AlertCircle size={48} color="var(--primary)" aria-hidden="true" />
-          <h2 style={{ fontSize: "1.25rem", fontWeight: 800, color: "#fff", margin: 0 }}>
+          <h2
+            style={{
+              fontSize: "1.25rem",
+              fontWeight: 800,
+              color: "#fff",
+              margin: 0,
+            }}
+          >
             تعذّر العثور على العمل المطلوب
           </h2>
           <p
@@ -55,13 +62,17 @@ export function AdminWorkEdit({ workId }: AdminWorkEditProps) {
               lineHeight: 1.6,
             }}
           >
-            لم نتمكن من العثور على عمل بالمعرّف &ldquo;{workId}&rdquo;. قد يكون تم حذفه
-            أو أن المعرّف في الرابط غير صحيح.
+            لم نتمكن من العثور على عمل بالمعرّف &ldquo;{workId}&rdquo;. قد يكون
+            تم حذفه أو أن المعرّف في الرابط غير صحيح.
           </p>
           <Link
             href={"/admin/works"}
             className="button button--small"
-            style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.5rem",
+            }}
           >
             <ArrowLeft size={14} aria-hidden="true" />
             <span>العودة لقائمة الأعمال</span>

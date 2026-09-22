@@ -26,7 +26,8 @@ describe("DashboardOverview", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("salma@example.com")).toBeInTheDocument();
     expect(screen.getByText("الحساب نشط")).toBeInTheDocument();
-    expect(screen.getByText(/ليست مالًا ولا مكافآت/)).toBeInTheDocument();
+    expect(screen.getByText("إشعارات غير مقروءة")).toBeInTheDocument();
+    expect(screen.queryByText(/نقاط/)).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: /أكمل القراءة/ })).toHaveAttribute(
       "href",
       "/story/trait-hoarder/chapter/43",

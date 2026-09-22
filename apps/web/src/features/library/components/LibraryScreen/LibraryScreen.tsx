@@ -208,9 +208,6 @@ export function LibraryScreen({
           ))}
         </section>
       )}
-      <p className={styles["localNotice"]}>
-        تغييرات المكتبة في هذه المرحلة محلية لهذه الجلسة، ولا تُحفظ على الخادم.
-      </p>
     </main>
   );
 }

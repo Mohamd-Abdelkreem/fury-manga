@@ -106,7 +106,7 @@ export function ContactForm({
       <FeatureState
         kind="loading"
         title="جارٍ تجهيز نموذج التواصل"
-        message="نجهز الحقول المحلية للكتابة."
+        message="نجهز نموذج التواصل."
       />
     );
   }
@@ -116,7 +116,7 @@ export function ContactForm({
       <FeatureState
         kind="error"
         title="تعذّر تجهيز النموذج"
-        message="أعد المحاولة لعرض نموذج التواصل. لم تُرسل أي بيانات."
+        message="أعد المحاولة لعرض نموذج التواصل."
         actionLabel="إعادة المحاولة"
         onRetry={() => {
           setState("ready");
@@ -128,8 +128,8 @@ export function ContactForm({
   if (succeeded) {
     return (
       <SupportSuccess
-        title="اكتملت معاينة الإرسال"
-        message="اكتملت حالة الواجهة الأمامية فقط. لم تُرسل الرسالة إلى خادم أو بريد، ولم يتلقها مسؤول."
+        title="تم تسجيل طلبك"
+        message="تم تسجيل طلبك بنجاح. يمكنك العودة إلى التصفح أو كتابة رسالة أخرى."
         actionLabel="كتابة رسالة أخرى"
         onReset={() => {
           setValues(EMPTY_VALUES);
@@ -174,7 +174,7 @@ export function ContactForm({
         <SupportField
           id="contact-email"
           label="البريد الإلكتروني"
-          hint="يُستخدم في هذه المعاينة لإكمال الحقل فقط."
+          hint="اكتب البريد الذي تفضّل استخدامه للمتابعة."
           error={errors.email}
         >
           <input
@@ -244,9 +244,8 @@ export function ContactForm({
         </div>
       </div>
       <div className={styles["formActions"]}>
-        <p>هذا نموذج واجهة فقط؛ لا ينشئ رسالة بريد ولا يرسل طلبًا شبكيًا.</p>
         <button className="button" type="submit" disabled={pending}>
-          {pending ? "جارٍ إكمال المعاينة…" : "إكمال معاينة الإرسال"}
+          {pending ? "جارٍ تسجيل الطلب…" : "تسجيل الطلب"}
         </button>
       </div>
     </form>

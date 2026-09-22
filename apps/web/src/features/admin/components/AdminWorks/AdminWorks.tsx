@@ -511,7 +511,7 @@ export function AdminWorks() {
           confirmDialog.action === "unpublish"
             ? `هل أنت متأكد من إلغاء نشر '${confirmDialog.workTitle}'؟ سيتحول إلى مسودة ولن يظهر للزوار في واجهة الموقع العام.`
             : confirmDialog.action === "archive"
-              ? `هل تريد نقل '${confirmDialog.workTitle}' إلى الأرشيف؟ سيتم إيقاف ظهوره للجمهور مع حفظ بياناته محلياً.`
+              ? `هل تريد نقل '${confirmDialog.workTitle}' إلى الأرشيف؟ سيتم إيقاف ظهوره للجمهور مع الاحتفاظ ببياناته.`
               : `هل تريد استعادة '${confirmDialog.workTitle}' من الأرشيف وتحويله إلى مسودة قابلة للنشر؟`
         }
         confirmLabel={

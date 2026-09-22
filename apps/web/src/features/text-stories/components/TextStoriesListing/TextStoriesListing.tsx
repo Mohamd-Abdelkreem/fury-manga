@@ -5,6 +5,7 @@ import Link from "next/link";
 import { FeatureState } from "@/components/ui/FeatureState/FeatureState";
 import { CATEGORIES } from "@/features/categories/data/categories";
 import { DiscoverHero } from "@/features/discover/components/DiscoverHero/DiscoverHero";
+import { AdvertisementSlot } from "@/features/advertising/components/AdvertisementSlot/AdvertisementSlot";
 
 import { TEXT_WORKS, type TextWork } from "../../data/textStories";
 import {
@@ -141,6 +142,8 @@ export function TextStoriesListing({
           <span>البحث</span>
         </button>
       </form>
+
+      <AdvertisementSlot placement="catalog-banner" />
 
       {viewState === "loading" ? (
         <FeatureState

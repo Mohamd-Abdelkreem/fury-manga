@@ -52,9 +52,13 @@ describe("AdminLayout Component", () => {
 
     // Verify other nav items exist
     expect(screen.getByRole("link", { name: /الأعمال/ })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /المستخدمون/ })).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /المستخدمون/ }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /البلاغات/ })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /رسائل التواصل/ })).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /رسائل التواصل/ }),
+    ).toBeInTheDocument();
 
     // Verify public site link
     expect(

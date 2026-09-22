@@ -5,7 +5,7 @@ import { SupportPageLayout } from "@/features/support/components/SupportForm/Sup
 
 export const metadata: Metadata = {
   title: "الإبلاغ عن مشكلة",
-  description: "نموذج محلي لمعاينة الإبلاغ عن مشكلة في Fury.",
+  description: "الإبلاغ عن مشكلة في Fury.",
 };
 
 export default async function ReportIssuePage({
@@ -19,7 +19,7 @@ export default async function ReportIssuePage({
     <SupportPageLayout
       eyebrow="مساعدة Fury"
       title="الإبلاغ عن مشكلة"
-      description="حدّد موضع المشكلة وأضف وصفًا واضحًا. هذه المرحلة تعرض دورة النموذج كاملة في الواجهة من دون إنشاء تذكرة أو إرسال بيانات."
+      description="حدّد موضع المشكلة وأضف وصفًا واضحًا يساعد على إعادة حدوثها وفهم أثرها."
       asideTitle="هل تريد إرسال رسالة عامة؟"
       asideMessage="استخدم صفحة التواصل للأسئلة والرسائل التي لا ترتبط بعطل محدد."
       asideHref="/contact"

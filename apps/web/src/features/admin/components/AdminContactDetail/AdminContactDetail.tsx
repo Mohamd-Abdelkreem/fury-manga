@@ -18,12 +18,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAdminData } from "../../context/admin-context";
-import type {
-  AdminContactStatus,
-} from "../../types/admin.types";
-import {
-  ADMIN_CONTACT_SENDER_LABELS,
-} from "../../types/admin.types";
+import type { AdminContactStatus } from "../../types/admin.types";
+import { ADMIN_CONTACT_SENDER_LABELS } from "../../types/admin.types";
 import { AdminPageHeader } from "../AdminPageHeader/AdminPageHeader";
 import styles from "./AdminContactDetail.module.css";
 
@@ -58,9 +54,7 @@ export function AdminContactDetail({ messageId }: AdminContactDetailProps) {
   }, [message, markContactRead]);
 
   // Internal notes state
-  const [internalNote, setInternalNote] = useState(
-    message?.internalNote ?? "",
-  );
+  const [internalNote, setInternalNote] = useState(message?.internalNote ?? "");
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [prevMessageId, setPrevMessageId] = useState(messageId);
 
@@ -84,7 +78,8 @@ export function AdminContactDetail({ messageId }: AdminContactDetailProps) {
               margin: 0,
             }}
           >
-            لم نتمكن من العثور على الرسالة المطلوبة، ربما تم حذفها أو أن الرابط غير صحيح.
+            لم نتمكن من العثور على الرسالة المطلوبة، ربما تم حذفها أو أن الرابط
+            غير صحيح.
           </p>
           <Link
             href="/admin/contact"
@@ -117,7 +112,9 @@ export function AdminContactDetail({ messageId }: AdminContactDetailProps) {
   const handleSaveNote = () => {
     updateContactInternalNote(message.id, internalNote);
     setSavedSuccess(true);
-    setTimeout(() => { setSavedSuccess(false); }, 2500);
+    setTimeout(() => {
+      setSavedSuccess(false);
+    }, 2500);
   };
 
   const replyMailto = `mailto:${message.email}?subject=${encodeURIComponent(
@@ -146,9 +143,7 @@ export function AdminContactDetail({ messageId }: AdminContactDetailProps) {
               <span>السابقة</span>
             </Link>
           ) : (
-            <span
-              className={cn(styles["flipBtn"], styles["flipBtnDisabled"])}
-            >
+            <span className={cn(styles["flipBtn"], styles["flipBtnDisabled"])}>
               <ChevronRight size={16} />
               <span>السابقة</span>
             </span>
@@ -164,9 +159,7 @@ export function AdminContactDetail({ messageId }: AdminContactDetailProps) {
               <ChevronLeft size={16} />
             </Link>
           ) : (
-            <span
-              className={cn(styles["flipBtn"], styles["flipBtnDisabled"])}
-            >
+            <span className={cn(styles["flipBtn"], styles["flipBtnDisabled"])}>
               <span>التالية</span>
               <ChevronLeft size={16} />
             </span>
@@ -191,13 +184,9 @@ export function AdminContactDetail({ messageId }: AdminContactDetailProps) {
           {/* Sender & Metadata Card */}
           <div className={styles["card"]}>
             <div className={styles["senderHeader"]}>
-              <div className={styles["avatar"]}>
-                {message.name.charAt(0)}
-              </div>
+              <div className={styles["avatar"]}>{message.name.charAt(0)}</div>
               <div className={styles["senderMeta"]}>
-                <div className={styles["senderName"]}>
-                  {message.name}
-                </div>
+                <div className={styles["senderName"]}>{message.name}</div>
                 <div className={styles["senderEmailRow"]}>
                   <span>البريد الإلكتروني:</span>
                   <a
@@ -261,9 +250,9 @@ export function AdminContactDetail({ messageId }: AdminContactDetailProps) {
               <select
                 className={styles["fieldSelect"]}
                 value={message.status}
-                onChange={(e) =>
-                  { handleStatusChange(e.target.value as AdminContactStatus); }
-                }
+                onChange={(e) => {
+                  handleStatusChange(e.target.value as AdminContactStatus);
+                }}
                 aria-label="تغيير حالة الرسالة"
               >
                 <option value="unread">غير مقروءة (Unread)</option>
@@ -295,7 +284,9 @@ export function AdminContactDetail({ messageId }: AdminContactDetailProps) {
               className={styles["textareaInput"]}
               placeholder="اكتب ملاحظات حول متابعة هذه الرسالة..."
               value={internalNote}
-              onChange={(e) => { setInternalNote(e.target.value); }}
+              onChange={(e) => {
+                setInternalNote(e.target.value);
+              }}
               aria-label="ملاحظات المشرف الداخلية"
             />
 
@@ -327,7 +318,8 @@ export function AdminContactDetail({ messageId }: AdminContactDetailProps) {
             </a>
 
             <div className={styles["replyDisclaimer"]}>
-              سيؤدي النقر إلى فتح برنامج البريد الإلكتروني المفضل لديك مع تعبئة عنوان المستلم والموضوع تلقائياً.
+              سيؤدي النقر إلى فتح برنامج البريد الإلكتروني المفضل لديك مع تعبئة
+              عنوان المستلم والموضوع تلقائياً.
             </div>
           </div>
         </div>

@@ -12,7 +12,8 @@ export async function generateMetadata({
   const { userId } = await params;
   return {
     title: `تفاصيل المستخدم (${userId})`,
-    description: "استعراض تفاصيل حساب المستخدم وسجل القراءة والملاحظات الإشرافية",
+    description:
+      "استعراض تفاصيل حساب المستخدم وسجل القراءة والملاحظات الإشرافية",
   };
 }
 
@@ -28,7 +29,7 @@ export default async function UserDetailPage({ params }: PageProps) {
           { label: "تفاصيل المستخدم" },
         ]}
         title="ملف المستخدم"
-        description="استعراض النشاط الكامل، عداد نقاط المشاهدة، سجل القراءة، والهدايا التقديرية الممنوحة."
+        description="استعراض حالة الحساب، سجل القراءة، الأعمال المحفوظة، والهدايا التقديرية الممنوحة."
       />
 
       <AdminUserDetail userId={userId} />

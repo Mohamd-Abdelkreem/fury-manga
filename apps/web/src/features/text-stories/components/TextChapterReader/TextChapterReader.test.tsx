@@ -79,6 +79,18 @@ describe("TextChapterReader", () => {
     );
   });
 
+  it("does not render advertisement placements inside the reader", () => {
+    const work = getTextWorkById("city-of-amber");
+    const chapter = work?.chapters[0];
+    if (work === undefined || chapter === undefined)
+      throw new Error("Fixture missing");
+    const { container } = render(
+      <TextChapterReader work={work} chapter={chapter} />,
+    );
+
+    expect(container.querySelector("[data-ad-placement]")).toBeNull();
+  });
+
   it.each([
     [74, false],
     [75, true],

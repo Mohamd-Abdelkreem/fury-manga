@@ -39,13 +39,13 @@ export function TextDiscussion({
             {
               id: `local-${String(current.length + 1)}`,
               author: "قارئ Fury",
-              date: "الآن — محلي",
+              date: "الآن",
               body,
             },
             ...current,
           ]);
           setDraft("");
-          setFeedback("أُضيف تعليقك إلى هذه الجلسة فقط.");
+          setFeedback("تم تسجيل تعليقك في هذه الجلسة.");
         }}
       >
         <label htmlFor={fieldId}>أضف تعليقًا</label>
@@ -59,10 +59,9 @@ export function TextDiscussion({
           placeholder="شارك انطباعك عن العمل"
         />
         <div className={styles["formFooter"]}>
-          <small>التعليقات المضافة هنا لا تُحفظ على الخادم.</small>
           <button className="button button--small" type="submit">
             <Send aria-hidden="true" />
-            إضافة محلية
+            إضافة تعليق
           </button>
         </div>
       </form>

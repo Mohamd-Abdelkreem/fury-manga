@@ -87,43 +87,6 @@
   flex-wrap: wrap;
 }
 
-.pointsDisclaimerCard {
-  background: rgba(255, 179, 0, 0.05);
-  border: 1px solid rgba(255, 179, 0, 0.2);
-  border-radius: 0.75rem;
-  padding: 1rem 1.25rem;
-  display: flex;
-  align-items: flex-start;
-  gap: 0.875rem;
-}
-
-.pointsValueArea {
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-  min-width: 120px;
-  border-left: 1px solid rgba(255, 179, 0, 0.2);
-  padding-left: 1rem;
-}
-
-.pointsNumber {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: #ffb300;
-}
-
-.pointsLabel {
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.pointsText {
-  font-size: 0.8125rem;
-  color: rgba(255, 255, 255, 0.75);
-  line-height: 1.6;
-  margin: 0;
-}
-
 .grid2 {
   display: grid;
   grid-template-columns: 1fr;

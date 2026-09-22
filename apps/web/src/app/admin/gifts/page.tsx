@@ -4,7 +4,8 @@ import { AdminGifts } from "@/features/admin/components/AdminGifts/AdminGifts";
 
 export const metadata: Metadata = {
   title: "تصاميم الهدايا",
-  description: "إدارة وتصميم إطارات الصور الشخصية وزخارف التعليقات في منصة Fury",
+  description:
+    "إدارة وتصميم إطارات الصور الشخصية وزخارف التعليقات في منصة Fury",
 };
 
 export default function GiftsManagementPage() {

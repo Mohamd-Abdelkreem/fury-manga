@@ -9,7 +9,13 @@ export const metadata: Metadata = {
 
 export default function AdminContactPage() {
   return (
-    <Suspense fallback={<div style={{ padding: "2rem", color: "rgba(255,255,255,0.6)" }}>جاري تحميل رسائل التواصل...</div>}>
+    <Suspense
+      fallback={
+        <div style={{ padding: "2rem", color: "rgba(255,255,255,0.6)" }}>
+          جاري تحميل رسائل التواصل...
+        </div>
+      }
+    >
       <AdminContact />
     </Suspense>
   );

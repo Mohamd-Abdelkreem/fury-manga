@@ -203,7 +203,6 @@ export function AdminUsers() {
           >
             <option value="all">كل الأدوار</option>
             <option value="user">مستخدم عادي</option>
-            <option value="moderator">مشرف</option>
             <option value="admin">مدير</option>
           </select>
 
@@ -260,7 +259,6 @@ export function AdminUsers() {
                   <th className={styles["th"]}>المستخدم</th>
                   <th className={styles["th"]}>الدور</th>
                   <th className={styles["th"]}>الحالة</th>
-                  <th className={styles["th"]}>نقاط المشاهدة</th>
                   <th className={styles["th"]}>الهدايا</th>
                   <th className={styles["th"]}>تاريخ الانضمام</th>
                   <th className={styles["th"]}>آخر نشاط</th>
@@ -305,7 +303,6 @@ export function AdminUsers() {
                           className={cn(
                             styles["roleBadge"],
                             u.role === "admin" && styles["roleAdmin"],
-                            u.role === "moderator" && styles["roleModerator"],
                             u.role === "user" && styles["roleUser"],
                           )}
                         >
@@ -332,15 +329,6 @@ export function AdminUsers() {
                             />
                           )}
                           {ADMIN_USER_STATUS_LABELS[u.status]}
-                        </span>
-                      </td>
-
-                      <td className={styles["td"]}>
-                        <span
-                          className={styles["pointsBadge"]}
-                          title="نقاط المشاهدة (ناتجة عن مشاهدة إعلانات المكافأة)"
-                        >
-                          {String(u.points)} نقطة
                         </span>
                       </td>
 

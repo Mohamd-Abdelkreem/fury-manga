@@ -196,12 +196,6 @@
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
-.roleModerator {
-  background: rgba(59, 130, 246, 0.15);
-  color: #60a5fa;
-  border: 1px solid rgba(59, 130, 246, 0.3);
-}
-
 .roleUser {
   background: rgba(255, 255, 255, 0.05);
   color: rgba(255, 255, 255, 0.75);
@@ -228,18 +222,6 @@
   background: rgba(239, 68, 68, 0.15);
   color: #f87171;
   border: 1px solid rgba(239, 68, 68, 0.3);
-}
-
-.pointsBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.25rem 0.6rem;
-  border-radius: 0.375rem;
-  background: rgba(255, 179, 0, 0.1);
-  color: #ffb300;
-  font-size: 0.8125rem;
-  font-weight: 700;
 }
 
 .giftsBadge {
