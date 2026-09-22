@@ -59,4 +59,48 @@ describe("LibraryScreen", () => {
       screen.getByRole("link", { name: "استكشاف المحتوى" }),
     ).toHaveAttribute("href", "/discover");
   });
+
+  it("filters by status and clears search input via clear button", () => {
+    render(<LibraryScreen />);
+
+    // Filter by status "completed"
+    fireEvent.change(screen.getByLabelText("تصفية بحسب حالة العمل"), {
+      target: { value: "completed" },
+    });
+    expect(
+      screen.getByRole("heading", { name: "قمر من ورق" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "Trait Hoarder" }),
+    ).not.toBeInTheDocument();
+
+    // Reset status filter
+    fireEvent.change(screen.getByLabelText("تصفية بحسب حالة العمل"), {
+      target: { value: "all" },
+    });
+
+    // Type in search box and clear
+    const searchInput = screen.getByRole("searchbox", {
+      name: "ابحث داخل المكتبة",
+    });
+    fireEvent.change(searchInput, { target: { value: "الكهرمان" } });
+    expect(searchInput).toHaveValue("الكهرمان");
+
+    const clearBtn = screen.getByRole("button", { name: "مسح حقل البحث" });
+    fireEvent.click(clearBtn);
+    expect(searchInput).toHaveValue("");
+  });
+
+  it("toggles view mode between grid and list", () => {
+    render(<LibraryScreen />);
+
+    const listBtn = screen.getByRole("button", { name: "عرض قائمة" });
+    fireEvent.click(listBtn);
+    expect(listBtn).toHaveAttribute("aria-pressed", "true");
+
+    const gridBtn = screen.getByRole("button", { name: "عرض شبكي" });
+    fireEvent.click(gridBtn);
+    expect(gridBtn).toHaveAttribute("aria-pressed", "true");
+    expect(listBtn).toHaveAttribute("aria-pressed", "false");
+  });
 });

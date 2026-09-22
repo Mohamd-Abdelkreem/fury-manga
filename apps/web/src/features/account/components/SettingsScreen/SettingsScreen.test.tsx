@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SettingsScreen } from "./SettingsScreen";
 
@@ -28,6 +28,11 @@ vi.mock("../session-controls", () => ({
 }));
 
 describe("SettingsScreen", () => {
+  beforeEach(() => {
+    window.history.replaceState({}, "", "/settings");
+    Element.prototype.scrollIntoView = vi.fn();
+  });
+
   it("exposes keyboard-native deep links and keeps account security controls mounted", () => {
     render(<SettingsScreen />);
 
@@ -51,5 +56,17 @@ describe("SettingsScreen", () => {
     expect(
       screen.getByText("تسجيل خروج هذه الجلسة وكل الجلسات"),
     ).toBeInTheDocument();
+  });
+
+  it("handles deep-linking query param on mount", () => {
+    const scrollIntoViewMock = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoViewMock;
+    window.history.replaceState({}, "", "/settings?section=avatar-frames");
+    render(<SettingsScreen />);
+
+    expect(scrollIntoViewMock).toHaveBeenCalledWith({
+      behavior: "smooth",
+      block: "start",
+    });
   });
 });

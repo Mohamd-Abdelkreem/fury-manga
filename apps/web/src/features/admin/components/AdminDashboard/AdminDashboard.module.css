@@ -1,0 +1,309 @@
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+}
+
+@media (min-width: 1200px) {
+  .statsGrid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+.mainGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .mainGrid {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+.panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 0.875rem;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 0.875rem;
+}
+
+.panelTitle {
+  font-size: 1.0625rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.panelTitleIcon {
+  color: var(--primary);
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.viewAllLink {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--primary);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: opacity 150ms ease;
+}
+
+.viewAllLink:hover {
+  opacity: 0.85;
+  text-decoration: underline;
+}
+
+/* Recent Works List */
+.worksList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.workRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem;
+  border-radius: 0.625rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+
+.workRow:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.workInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  min-width: 0;
+}
+
+.workCover {
+  width: 2.75rem;
+  height: 3.75rem;
+  border-radius: 0.375rem;
+  object-fit: cover;
+  background: #1a1a1a;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.workMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.workTitle {
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.workBadges {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex-wrap: wrap;
+}
+
+.workStats {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+.workActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.actionBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--foreground);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+
+.actionBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.editBtn {
+  background: rgba(255, 71, 71, 0.1);
+  border-color: rgba(255, 71, 71, 0.25);
+  color: #ff9e9e;
+}
+
+.editBtn:hover {
+  background: rgba(255, 71, 71, 0.18);
+  border-color: rgba(255, 71, 71, 0.4);
+  color: #ffffff;
+}
+
+/* Activity List */
+.activityList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.activityItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding-bottom: 0.875rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.activityItem:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.activityDot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--primary);
+  margin-top: 0.45rem;
+  flex-shrink: 0;
+  box-shadow: 0 0 8px var(--primary);
+}
+
+.activityContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.activityTitle {
+  font-size: 0.8125rem;
+  font-weight: 750;
+  color: #ffffff;
+  margin: 0;
+}
+
+.activityDesc {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.activityMeta {
+  font-size: 0.6875rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Trending Works List */
+.trendingList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.trendingItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.625rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.trendingRank {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 0.25rem;
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 0.75rem;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  color: var(--muted-foreground);
+  font-family: "Poppins", sans-serif;
+  flex-shrink: 0;
+}
+
+.trendingRank1 {
+  background: rgba(255, 179, 0, 0.15);
+  color: #ffd166;
+}
+
+.trendingTitle {
+  font-size: 0.8125rem;
+  font-weight: 750;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.trendingViews {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--muted-foreground);
+  font-family: "Poppins", sans-serif;
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .workRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .workActions {
+    justify-content: flex-end;
+  }
+}

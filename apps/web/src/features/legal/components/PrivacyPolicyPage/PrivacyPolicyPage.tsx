@@ -5,6 +5,8 @@ import { Footer } from "@/features/home/components/Footer/Footer";
 import { Navbar } from "@/features/home/components/Navbar/Navbar";
 import { PRIVACY_SECTIONS } from "@/features/legal/data/privacySections";
 
+import { LegalSectionsLayout } from "../LegalSectionsLayout";
+
 import styles from "./PrivacyPolicyPage.module.css";
 
 export function PrivacyPolicyPage() {
@@ -47,52 +49,27 @@ export function PrivacyPolicyPage() {
           </div>
         </aside>
 
-        <div className={styles["contentLayout"]}>
-          <nav className={styles["toc"]} aria-label="محتويات سياسة الخصوصية">
-            <h2>في هذه الصفحة</h2>
-            <ol>
-              {PRIVACY_SECTIONS.map((section, index) => (
-                <li key={section.id}>
-                  <a href={`#${section.id}`}>
-                    <span>{(index + 1).toLocaleString("ar-EG")}</span>
-                    {section.title}
-                  </a>
-                </li>
-              ))}
-            </ol>
-          </nav>
-
-          <article className={styles["article"]}>
-            {PRIVACY_SECTIONS.map((section, index) => (
-              <section
-                id={section.id}
-                key={section.id}
-                aria-labelledby={`${section.id}-title`}
-              >
-                <p className={styles["sectionNumber"]}>
-                  {(index + 1).toLocaleString("ar-EG")} /{" "}
-                  {PRIVACY_SECTIONS.length.toLocaleString("ar-EG")}
-                </p>
-                <h2 id={`${section.id}-title`}>{section.title}</h2>
-                {section.paragraphs.map((paragraph) => (
-                  <p key={paragraph}>{paragraph}</p>
-                ))}
-                {section.id === "choices" ? (
-                  <div className={styles["actions"]}>
-                    <Link href="/contact">
-                      اتصل بنا
-                      <ArrowUpLeft aria-hidden="true" />
-                    </Link>
-                    <Link href="/report-issue">
-                      الإبلاغ عن مشكلة
-                      <ArrowUpLeft aria-hidden="true" />
-                    </Link>
-                  </div>
-                ) : null}
-              </section>
-            ))}
-          </article>
-        </div>
+        <LegalSectionsLayout
+          sections={PRIVACY_SECTIONS}
+          tocLabel="محتويات سياسة الخصوصية"
+          styles={styles}
+          renderExtra={(sectionId) => (
+            <>
+              {sectionId === "choices" ? (
+                <div className={styles["actions"]}>
+                  <Link href="/contact">
+                    اتصل بنا
+                    <ArrowUpLeft aria-hidden="true" />
+                  </Link>
+                  <Link href="/report-issue">
+                    الإبلاغ عن مشكلة
+                    <ArrowUpLeft aria-hidden="true" />
+                  </Link>
+                </div>
+              ) : null}
+            </>
+          )}
+        />
       </main>
       <Footer />
     </div>

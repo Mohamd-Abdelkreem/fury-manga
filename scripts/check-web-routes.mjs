@@ -7,7 +7,18 @@ const appDirectory = fileURLToPath(
   new URL("../apps/web/src/app/", import.meta.url),
 );
 const baseUrl = process.argv[2] ?? "http://localhost:3000";
-const examples = { id: "1", chapterId: "01" };
+const examples = {
+  id: "1",
+  workId: "trait-hoarder",
+  userId: "user-1",
+  messageId: "msg-1",
+};
+const getExample = (name, segments) => {
+  if (name === "chapterId") {
+    return segments[0] === "admin" ? "th-43" : "1";
+  }
+  return examples[name];
+};
 
 async function collectRoutes(directory, segments = []) {
   const routes = [];
@@ -18,11 +29,12 @@ async function collectRoutes(directory, segments = []) {
         ? []
         : [
             entry.name.replace(/^\[(\w+)\]$/, (_, name) => {
+              const example = getExample(name, segments);
               assert.ok(
-                examples[name],
+                example,
                 `Add a sample value for route parameter ${name}`,
               );
-              return examples[name];
+              return example;
             }),
           ];
       routes.push(

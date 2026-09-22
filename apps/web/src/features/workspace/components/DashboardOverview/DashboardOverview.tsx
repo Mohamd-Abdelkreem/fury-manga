@@ -4,7 +4,10 @@ import {
   ArrowUpLeft,
   BookOpen,
   Bookmark,
+  Compass,
   Gift,
+  HelpCircle,
+  Library,
   Settings,
   Sparkles,
 } from "lucide-react";
@@ -42,6 +45,7 @@ export function DashboardOverview({
 }: DashboardOverviewProps) {
   const user = useSession().data?.user ?? null;
   const [renderState, setRenderState] = useState(viewState);
+  const [showPointsHelp, setShowPointsHelp] = useState(false);
 
   if (user === null) return null;
 
@@ -81,49 +85,148 @@ export function DashboardOverview({
     (decoration) => decoration.id === summary.activeDecorationId,
   );
 
+  const ownedFrames = AVATAR_FRAMES.filter(
+    (frame) => frame.availability === "granted",
+  );
+  const ownedDecorations = COMMENT_DECORATIONS.filter(
+    (decoration) => decoration.availability === "granted",
+  );
+  const totalOwnedGifts = ownedFrames.length + ownedDecorations.length;
+
+  const latestContinueItem = summary.continueReading[0];
+
   return (
     <main
       className={`workspace-main ${styles["main"] ?? ""}`}
       id="main-content"
     >
+      {/* Welcome Hero Header */}
       <header className={styles["hero"]}>
         <div className={styles["identity"]}>
-          <span className={styles["avatar"]} aria-hidden="true">
-            {user.fullName.slice(0, 1).toLocaleUpperCase("ar")}
-          </span>
+          <div className={styles["avatarWrap"]}>
+            <span className={styles["avatar"]} aria-hidden="true">
+              {user.fullName.slice(0, 1).toLocaleUpperCase("ar")}
+            </span>
+            {activeFrame && (
+              <span
+                className={styles["activeFrameRing"]}
+                style={{ borderColor: activeFrame.accent }}
+                title={`الإطار النشط: ${activeFrame.name}`}
+              />
+            )}
+          </div>
           <div>
-            <p className="eyebrow">لوحة حساب Fury</p>
+            <p className="eyebrow">مساحة القراءة الشخصية</p>
             <h1>مرحبًا، {firstName}</h1>
             <p className={styles["email"]} dir="ltr">
               {user.email}
             </p>
           </div>
         </div>
-        <span className="status-badge">
-          <i aria-hidden="true" />
-          {user.status === "ACTIVE" ? "الحساب نشط" : "الحساب غير متاح"}
-        </span>
+
+        <div className={styles["heroActions"]}>
+          <span className="status-badge">
+            <i aria-hidden="true" />
+            {user.status === "ACTIVE" ? "الحساب نشط" : "الحساب غير متاح"}
+          </span>
+          {latestContinueItem && (
+            <Link
+              href={latestContinueItem.href as Route}
+              className={styles["primaryHeroBtn"]}
+            >
+              <BookOpen size={16} aria-hidden="true" />
+              <span>متابعة القراءة</span>
+            </Link>
+          )}
+        </div>
       </header>
 
-      <section className={styles["points"]} aria-labelledby="points-title">
-        <div>
-          <span className={styles["sectionIcon"]} aria-hidden="true">
-            <Sparkles />
-          </span>
-          <div>
-            <p className="eyebrow">عداد الإعلانات</p>
-            <h2 id="points-title">
-              {summary.points.toLocaleString("ar-EG")} نقطة
-            </h2>
+      {/* 4 Summary Metric Cards */}
+      <section className={styles["metricsGrid"]} aria-label="إحصائيات الحساب">
+        {/* Points & Ads Card */}
+        <div className={styles["metricCard"]}>
+          <div className={styles["metricHeader"]}>
+            <div className={styles["metricIconWrapPrimary"]}>
+              <Sparkles size={18} aria-hidden="true" />
+            </div>
+            <button
+              type="button"
+              className={styles["infoTooltipBtn"]}
+              onClick={() => { setShowPointsHelp((prev) => !prev); }}
+              title="توضيح نظام النقاط والإعلانات"
+              aria-label="توضيح نظام النقاط والإعلانات"
+            >
+              <HelpCircle size={15} />
+            </button>
           </div>
+          <div className={styles["metricValue"]}>
+            {summary.points.toLocaleString("ar-EG")} نقطة
+          </div>
+          <div className={styles["metricLabel"]}>عداد النقاط والإعلانات</div>
+          <p className={styles["metricDescription"]}>
+            قيمة تجريبية لهذه الواجهة لعدّ الإعلانات التي شاهدتها فقط؛ ليست مالًا
+            ولا مكافآت، ولم تُحمّل من الخادم.
+          </p>
+          {showPointsHelp && (
+            <div className={styles["pointsNotice"]}>
+              تكتسب 3 نقاط تلقائياً عند قراءة 75% من الفصل الأول. عند بلوغ عتبة 9
+              نقاط (3 فصول كاملة)، يُطلب إعلان لمتابعة الفصل التالي.
+            </div>
+          )}
         </div>
-        <p>
-          قيمة تجريبية لهذه الواجهة لعدّ الإعلانات التي شاهدتها فقط؛ ليست مالًا
-          ولا مكافآت، ولم تُحمّل من الخادم.
-        </p>
+
+        {/* Bookmarks Count */}
+        <div className={styles["metricCard"]}>
+          <div className={styles["metricHeader"]}>
+            <div className={styles["metricIconWrap"]}>
+              <Bookmark size={18} aria-hidden="true" />
+            </div>
+          </div>
+          <div className={styles["metricValue"]}>
+            {summary.bookmarkCount.toLocaleString("ar-EG")}
+          </div>
+          <div className={styles["metricLabel"]}>الأعمال المحفوظة في المكتبة</div>
+          <p className={styles["metricDescription"]}>
+            القصص والروايات المضافة إلى قائمة القراءة للوصول السريع إليها.
+          </p>
+        </div>
+
+        {/* In-Progress Reading */}
+        <div className={styles["metricCard"]}>
+          <div className={styles["metricHeader"]}>
+            <div className={styles["metricIconWrap"]}>
+              <BookOpen size={18} aria-hidden="true" />
+            </div>
+          </div>
+          <div className={styles["metricValue"]}>
+            {summary.continueReading.length.toLocaleString("ar-EG")}
+          </div>
+          <div className={styles["metricLabel"]}>أعمال قيد المتابعة حالياً</div>
+          <p className={styles["metricDescription"]}>
+            فصول بدأت بقراءتها ولديك تقدم مسجل ومحفوظ محلياً.
+          </p>
+        </div>
+
+        {/* Owned Gifts */}
+        <div className={styles["metricCard"]}>
+          <div className={styles["metricHeader"]}>
+            <div className={styles["metricIconWrap"]}>
+              <Gift size={18} aria-hidden="true" />
+            </div>
+          </div>
+          <div className={styles["metricValue"]}>
+            {totalOwnedGifts.toLocaleString("ar-EG")}
+          </div>
+          <div className={styles["metricLabel"]}>تصاميم وزخارف ممتلكة</div>
+          <p className={styles["metricDescription"]}>
+            إطارات الصور وزخارف التعليقات الممنوحة لحسابك من الإدارة.
+          </p>
+        </div>
       </section>
 
+      {/* 2-Column Content Grid */}
       <div className={styles["grid"]}>
+        {/* Continue Reading Section */}
         <section className={styles["panel"]} aria-labelledby="continue-title">
           <div className={styles["panelHeading"]}>
             <div>
@@ -132,6 +235,7 @@ export function DashboardOverview({
             </div>
             <BookOpen aria-hidden="true" />
           </div>
+
           {summary.continueReading.length === 0 ? (
             <div className={styles["empty"]}>
               <p>لا يوجد تقدم قراءة محفوظ في هذه الواجهة بعد.</p>
@@ -181,6 +285,7 @@ export function DashboardOverview({
           )}
         </section>
 
+        {/* Library Preview */}
         <section className={styles["panel"]} aria-labelledby="library-title">
           <div className={styles["panelHeading"]}>
             <div>
@@ -192,6 +297,7 @@ export function DashboardOverview({
               {summary.bookmarkCount.toLocaleString("ar-EG")}
             </span>
           </div>
+
           {summary.savedWorks.length === 0 ? (
             <div className={styles["empty"]}>
               <p>مكتبتك فارغة. احفظ عملًا لتراه هنا.</p>
@@ -217,12 +323,14 @@ export function DashboardOverview({
               ))}
             </div>
           )}
+
           <Link className={styles["textAction"]} href="/library">
             عرض المكتبة كاملة
             <ArrowUpLeft aria-hidden="true" />
           </Link>
         </section>
 
+        {/* Gifts & Appearance Panel */}
         <section className={styles["panel"]} aria-labelledby="gifts-title">
           <div className={styles["panelHeading"]}>
             <div>
@@ -231,6 +339,7 @@ export function DashboardOverview({
             </div>
             <Gift aria-hidden="true" />
           </div>
+
           {activeFrame === undefined && activeDecoration === undefined ? (
             <div className={styles["empty"]}>
               <p>لا توجد هدايا مملوكة أو اختيارات نشطة بعد.</p>
@@ -239,19 +348,11 @@ export function DashboardOverview({
             <dl className={styles["giftList"]}>
               <div>
                 <dt>إطارات الصورة المملوكة</dt>
-                <dd>
-                  {AVATAR_FRAMES.filter(
-                    (frame) => frame.availability === "granted",
-                  ).length.toLocaleString("ar-EG")}
-                </dd>
+                <dd>{ownedFrames.length.toLocaleString("ar-EG")}</dd>
               </div>
               <div>
                 <dt>زخارف التعليقات المملوكة</dt>
-                <dd>
-                  {COMMENT_DECORATIONS.filter(
-                    (decoration) => decoration.availability === "granted",
-                  ).length.toLocaleString("ar-EG")}
-                </dd>
+                <dd>{ownedDecorations.length.toLocaleString("ar-EG")}</dd>
               </div>
               <div>
                 <dt>الإطار النشط</dt>
@@ -263,30 +364,46 @@ export function DashboardOverview({
               </div>
             </dl>
           )}
+
           <Link className={styles["textAction"]} href="/settings#avatar-frame">
             إدارة الهدايا
             <ArrowUpLeft aria-hidden="true" />
           </Link>
         </section>
-      </div>
 
-      <nav
-        className={styles["quickActions"]}
-        aria-label="إجراءات الحساب السريعة"
-      >
-        <Link href="/settings">
-          <Settings aria-hidden="true" />
-          فتح الإعدادات
-        </Link>
-        <Link href="/library">
-          <Bookmark aria-hidden="true" />
-          فتح المكتبة
-        </Link>
-        <Link href="/story/trait-hoarder/chapter/43">
-          <BookOpen aria-hidden="true" />
-          متابعة القراءة
-        </Link>
-      </nav>
+        {/* Quick Links / Explore Panel */}
+        <section className={styles["panel"]} aria-labelledby="explore-title">
+          <div className={styles["panelHeading"]}>
+            <div>
+              <span className={styles["marker"]} aria-hidden="true" />
+              <h2 id="explore-title">روابط سريعة واستكشاف</h2>
+            </div>
+            <Compass aria-hidden="true" />
+          </div>
+
+          <nav
+            className={styles["quickActions"]}
+            aria-label="إجراءات الحساب السريعة"
+          >
+            <Link href="/settings">
+              <Settings aria-hidden="true" />
+              فتح الإعدادات
+            </Link>
+            <Link href="/library">
+              <Bookmark aria-hidden="true" />
+              فتح المكتبة
+            </Link>
+            <Link href="/discover">
+              <Compass aria-hidden="true" />
+              استكشاف المانجا
+            </Link>
+            <Link href="/stories">
+              <Library aria-hidden="true" />
+              استكشاف الروايات
+            </Link>
+          </nav>
+        </section>
+      </div>
     </main>
   );
 }

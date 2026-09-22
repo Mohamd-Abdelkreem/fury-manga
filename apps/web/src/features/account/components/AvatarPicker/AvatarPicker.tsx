@@ -42,13 +42,11 @@ export function AvatarPicker() {
       return;
     }
 
-    if (previewUrl !== null) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(URL.createObjectURL(file));
     setFileName(file.name);
   };
 
   const resetAvatar = (): void => {
-    if (previewUrl !== null) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(null);
     setFileName(null);
     setError(null);

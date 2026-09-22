@@ -1,27 +1,22 @@
 "use client";
 
-import {
-  ArrowUpLeft,
-  BookOpen,
-  BookOpenText,
-  BookmarkMinus,
-  Compass,
-  ImageIcon,
-  LibraryBig,
-  Search,
-  Undo2,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
-import type { Route } from "next";
-import Image from "next/image";
-import Link from "next/link";
-import { useState } from "react";
+import { CheckCircle2, Undo2 } from "lucide-react";
+import { useMemo, useState } from "react";
 
 import { FeatureState } from "@/components/ui/FeatureState/FeatureState";
+import { cn } from "@/lib/utils";
 import { LIBRARY_WORKS, type LibraryWork } from "../../data/libraryData";
+import { LibraryCard } from "./LibraryCard";
+import { LibraryHeader } from "./LibraryHeader";
+import { LibraryToolbar } from "./LibraryToolbar";
+import type {
+  ContentTypeFilter,
+  ProgressFilter,
+  SortOption,
+  StatusFilter,
+  ViewMode,
+} from "./library.types";
 import styles from "./LibraryScreen.module.css";
-
-type LibraryFilter = "all" | LibraryWork["contentType"];
 
 type LibraryScreenProps = Readonly<{
   initialWorks?: readonly LibraryWork[];
@@ -33,219 +28,6 @@ type RemovedWork = Readonly<{
   index: number;
 }>;
 
-const STATUS_LABELS: Record<LibraryWork["status"], string> = {
-  ongoing: "مستمر",
-  completed: "مكتمل",
-  archived: "غير متاح حاليًا",
-};
-
-type FilterOption = Readonly<{
-  value: LibraryFilter;
-  label: string;
-  icon?: LucideIcon;
-}>;
-
-const FILTER_OPTIONS: readonly FilterOption[] = [
-  { value: "all", label: "الكل" },
-  { value: "illustrated", label: "مصوّر", icon: ImageIcon },
-  { value: "text", label: "نصي", icon: BookOpenText },
-] as const;
-
-function LibraryHeader({ works }: Readonly<{ works: readonly LibraryWork[] }>) {
-  const illustratedCount = works.filter(
-    (work) => work.contentType === "illustrated",
-  ).length;
-  const textCount = works.length - illustratedCount;
-
-  return (
-    <section className={styles["hero"]} aria-labelledby="library-title">
-      <div className={styles["heroCopy"]}>
-        <span className={styles["eyebrow"]}>
-          <LibraryBig aria-hidden="true" />
-          مساحتك الشخصية
-        </span>
-        <h1 id="library-title">المكتبة والمحفوظات</h1>
-        <p>
-          كل ما حفظته من أعمال مصوّرة وروايات نصية، مرتب وجاهز لتكمل القراءة من
-          حيث توقفت.
-        </p>
-        <div className={styles["discoverLinks"]}>
-          <Link href="/discover">
-            <Compass aria-hidden="true" />
-            استكشف المانجا
-          </Link>
-          <Link href="/stories">
-            <BookOpenText aria-hidden="true" />
-            استكشف الروايات
-          </Link>
-        </div>
-      </div>
-      <div className={styles["stats"]} aria-label="ملخص المكتبة">
-        <div>
-          <strong>{works.length}</strong>
-          <span>إجمالي المحفوظات</span>
-        </div>
-        <div>
-          <strong>{illustratedCount}</strong>
-          <span>أعمال مصوّرة</span>
-        </div>
-        <div>
-          <strong>{textCount}</strong>
-          <span>أعمال نصية</span>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-type LibraryToolbarProps = Readonly<{
-  filter: LibraryFilter;
-  query: string;
-  resultCount: number;
-  onFilterChange: (filter: LibraryFilter) => void;
-  onQueryChange: (query: string) => void;
-}>;
-
-function LibraryToolbar({
-  filter,
-  query,
-  resultCount,
-  onFilterChange,
-  onQueryChange,
-}: LibraryToolbarProps) {
-  return (
-    <section
-      className={styles["toolbar"]}
-      aria-labelledby="library-content-title"
-    >
-      <div className={styles["toolbarHeading"]}>
-        <div>
-          <span className={styles["sectionMark"]} aria-hidden="true" />
-          <h2 id="library-content-title">محتوى مكتبتك</h2>
-        </div>
-        <p role="status">{resultCount} أعمال ظاهرة</p>
-      </div>
-      <div className={styles["toolbarControls"]}>
-        <label className={styles["searchField"]}>
-          <span>ابحث داخل المكتبة</span>
-          <span className={styles["searchWrap"]}>
-            <Search aria-hidden="true" />
-            <input
-              type="search"
-              value={query}
-              onChange={(event) => {
-                onQueryChange(event.target.value);
-              }}
-              placeholder="اكتب عنوان العمل"
-            />
-          </span>
-        </label>
-        <div
-          className={styles["filters"]}
-          role="group"
-          aria-label="نوع المحتوى"
-        >
-          {FILTER_OPTIONS.map((option) => {
-            const Icon = option.icon;
-            return (
-              <button
-                key={option.value}
-                type="button"
-                aria-pressed={filter === option.value}
-                onClick={() => {
-                  onFilterChange(option.value);
-                }}
-              >
-                {Icon === undefined ? null : <Icon aria-hidden="true" />}
-                {option.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-type LibraryCardProps = Readonly<{
-  work: LibraryWork;
-  onRemove: (work: LibraryWork) => void;
-}>;
-
-function LibraryCard({ work, onRemove }: LibraryCardProps) {
-  const archived = work.status === "archived";
-  const TypeIcon =
-    work.contentType === "illustrated" ? ImageIcon : BookOpenText;
-  const typeLabel =
-    work.contentType === "illustrated" ? "عمل مصوّر" : "عمل نصي";
-
-  return (
-    <article className={styles["card"]}>
-      <Link
-        href={work.detailsHref as Route}
-        className={styles["cover"]}
-        aria-label={`فتح تفاصيل ${work.title}`}
-      >
-        <Image
-          src={work.cover}
-          alt=""
-          fill
-          sizes="(max-width: 639px) 96px, (max-width: 1099px) 128px, 148px"
-        />
-        <span className={styles["typeBadge"]}>
-          <TypeIcon aria-hidden="true" />
-          {typeLabel}
-        </span>
-      </Link>
-      <div className={styles["cardBody"]}>
-        <div className={styles["cardHeading"]}>
-          <span className={styles["status"]} data-status={work.status}>
-            {STATUS_LABELS[work.status]}
-          </span>
-          <h3>
-            <Link href={work.detailsHref as Route}>{work.title}</Link>
-          </h3>
-          <p>{work.latestChapter}</p>
-        </div>
-        <div className={styles["actions"]}>
-          {work.continueHref === undefined || archived ? (
-            <button type="button" disabled className={styles["primaryAction"]}>
-              <BookOpen aria-hidden="true" />
-              {archived ? "القراءة غير متاحة" : "لا يوجد تقدم محفوظ"}
-            </button>
-          ) : (
-            <Link
-              className={styles["primaryAction"]}
-              href={work.continueHref as Route}
-            >
-              <BookOpen aria-hidden="true" />
-              متابعة القراءة
-            </Link>
-          )}
-          <Link
-            className={styles["secondaryAction"]}
-            href={work.detailsHref as Route}
-          >
-            <ArrowUpLeft aria-hidden="true" />
-            التفاصيل
-          </Link>
-          <button
-            type="button"
-            className={styles["removeAction"]}
-            aria-label={`إزالة ${work.title} من المكتبة`}
-            onClick={() => {
-              onRemove(work);
-            }}
-          >
-            <BookmarkMinus aria-hidden="true" />
-            إزالة
-          </button>
-        </div>
-      </div>
-    </article>
-  );
-}
-
 export function LibraryScreen({
   initialWorks = LIBRARY_WORKS,
   viewState = "populated",
@@ -253,16 +35,60 @@ export function LibraryScreen({
   const [renderState, setRenderState] = useState(viewState);
   const [works, setWorks] = useState<readonly LibraryWork[]>(initialWorks);
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<LibraryFilter>("all");
+  const [contentType, setContentType] = useState<ContentTypeFilter>("all");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [progressFilter, setProgressFilter] = useState<ProgressFilter>("all");
+  const [sortOption, setSortOption] = useState<SortOption>("default");
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [removed, setRemoved] = useState<RemovedWork | null>(null);
 
-  const normalizedQuery = query.trim().toLocaleLowerCase("ar");
-  const filteredWorks = works.filter(
-    (work) =>
-      (filter === "all" || work.contentType === filter) &&
-      (normalizedQuery.length === 0 ||
-        work.title.toLocaleLowerCase("ar").includes(normalizedQuery)),
-  );
+  const resetAllFilters = () => {
+    setQuery("");
+    setContentType("all");
+    setStatusFilter("all");
+    setProgressFilter("all");
+    setSortOption("default");
+  };
+
+  const filteredWorks = useMemo(() => {
+    const normalizedQuery = query.trim().toLocaleLowerCase("ar");
+    let result = works.filter((work) => {
+      // Content type filter
+      if (contentType !== "all" && work.contentType !== contentType) {
+        return false;
+      }
+      // Status filter
+      if (statusFilter !== "all" && work.status !== statusFilter) {
+        return false;
+      }
+      // Progress filter
+      if (progressFilter === "in_progress") {
+        if (!work.continueHref || work.status === "archived") return false;
+      } else if (progressFilter === "not_started") {
+        if (work.continueHref !== undefined && work.status !== "archived")
+          return false;
+      }
+      // Query search
+      if (
+        normalizedQuery.length > 0 &&
+        !work.title.toLocaleLowerCase("ar").includes(normalizedQuery)
+      ) {
+        return false;
+      }
+      return true;
+    });
+
+    // Sort
+    if (sortOption === "title-asc") {
+      result = [...result].sort((a, b) => a.title.localeCompare(b.title, "ar"));
+    } else if (sortOption === "title-desc") {
+      result = [...result].sort((a, b) => b.title.localeCompare(a.title, "ar"));
+    } else if (sortOption === "status") {
+      result = [...result].sort((a, b) => a.status.localeCompare(b.status));
+    }
+
+    return result;
+  }, [works, query, contentType, statusFilter, progressFilter, sortOption]);
 
   const removeWork = (work: LibraryWork): void => {
     const index = works.findIndex((candidate) => candidate.id === work.id);
@@ -289,7 +115,7 @@ export function LibraryScreen({
 
   if (renderState === "loading") {
     return (
-      <main className="workspace-main">
+      <main className="workspace-main" id="main-content">
         <FeatureState
           kind="loading"
           title="جارٍ تحميل مكتبتك"
@@ -301,7 +127,7 @@ export function LibraryScreen({
 
   if (renderState === "error") {
     return (
-      <main className="workspace-main">
+      <main className="workspace-main" id="main-content">
         <FeatureState
           kind="error"
           title="تعذّر عرض المكتبة"
@@ -316,21 +142,33 @@ export function LibraryScreen({
   }
 
   return (
-    <main
-      className={`workspace-main ${styles["main"] ?? ""}`}
-      id="main-content"
-    >
+    <main className={cn("workspace-main", styles["main"])} id="main-content">
       <LibraryHeader works={works} />
       <LibraryToolbar
-        filter={filter}
+        contentType={contentType}
+        statusFilter={statusFilter}
+        progressFilter={progressFilter}
+        sortOption={sortOption}
+        viewMode={viewMode}
         query={query}
         resultCount={filteredWorks.length}
-        onFilterChange={setFilter}
+        onContentTypeChange={setContentType}
+        onStatusFilterChange={setStatusFilter}
+        onProgressFilterChange={setProgressFilter}
+        onSortChange={setSortOption}
+        onViewModeChange={setViewMode}
         onQueryChange={setQuery}
+        onResetFilters={resetAllFilters}
       />
       {removed === null ? null : (
         <div className={styles["undo"]} role="status" aria-live="polite">
-          <span>أُزيل «{removed.work.title}» من هذه الجلسة.</span>
+          <div className={styles["undoText"]}>
+            <CheckCircle2 aria-hidden="true" />
+            <span>
+              أُزيل «{removed.work.title}» من المحفوظات لهذه الجلسة (سجل القراءة
+              محفوظ).
+            </span>
+          </div>
           <button type="button" onClick={restoreRemovedWork}>
             <Undo2 aria-hidden="true" />
             تراجع
@@ -350,16 +188,23 @@ export function LibraryScreen({
           kind="filtered-empty"
           title="لا توجد أعمال مطابقة"
           message="غيّر نوع المحتوى أو ابحث بعنوان آخر؛ محفوظاتك لم تُحذف."
-          onRetry={() => {
-            setQuery("");
-            setFilter("all");
-          }}
+          onRetry={resetAllFilters}
           actionLabel="مسح البحث والفلاتر"
         />
       ) : (
-        <section className={styles["grid"]} aria-label="الأعمال المحفوظة">
+        <section
+          className={
+            viewMode === "list" ? styles["listContainer"] : styles["grid"]
+          }
+          aria-label="الأعمال المحفوظة"
+        >
           {filteredWorks.map((work) => (
-            <LibraryCard key={work.id} work={work} onRemove={removeWork} />
+            <LibraryCard
+              key={work.id}
+              work={work}
+              viewMode={viewMode}
+              onRemove={removeWork}
+            />
           ))}
         </section>
       )}

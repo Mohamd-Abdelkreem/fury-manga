@@ -24,6 +24,8 @@ const supportLinks = [
   ["اتصل بنا", "/contact"],
   ["الإبلاغ عن مشكلة", "/report-issue"],
   ["سياسة الخصوصية", "/privacy"],
+  ["الشروط والأحكام", "/terms"],
+  ["حقوق النشر", "/copyright"],
 ] as const;
 const communities = ["ديسكورد", "تيك توك", "إنستغرام", "يوتيوب", "تويتر"];
 
