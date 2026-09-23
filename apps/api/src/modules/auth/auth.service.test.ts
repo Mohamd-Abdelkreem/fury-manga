@@ -23,7 +23,6 @@ describe("AuthService registration delivery", () => {
           email: "user@example.com",
           passwordHash: "not-returned",
           fullName: "Fury Test User",
-          phone: null,
           role: "USER",
           status: "PENDING_VERIFICATION",
           emailVerifiedAt: null,
@@ -46,7 +45,6 @@ describe("AuthService registration delivery", () => {
     const registration = service.register({
       fullName: "Fury Test User",
       email: "user@example.com",
-      phone: null,
       password: "a-secure-test-password",
     });
     await expect(registration).rejects.toBeInstanceOf(
@@ -87,7 +85,6 @@ const activatedUser = {
   id: verificationCandidate.id,
   fullName: "Fury Test User",
   email: "user@example.com",
-  phone: null,
   role: "USER",
   status: UserStatus.ACTIVE,
   emailVerifiedAt: new Date("2026-08-18T00:00:00.000Z"),

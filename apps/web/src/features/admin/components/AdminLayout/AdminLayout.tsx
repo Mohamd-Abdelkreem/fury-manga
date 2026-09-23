@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAdminData } from "../../context/admin-context";
+import { AdminNoticeBanner } from "../AdminNoticeBanner/AdminNoticeBanner";
 import styles from "./AdminLayout.module.css";
 
 interface NavGroupItem {
@@ -335,6 +336,11 @@ export function AdminLayout({ children }: { children: ReactNode }) {
 
         {/* Content Area */}
         <main className={styles["contentArea"]} id="main-admin-content">
+          <AdminNoticeBanner
+            variant="info"
+            title="بيانات الإدارة للمعاينة"
+            description="الأعمال والمستخدمون والإعلانات والإجراءات المعروضة هنا بيانات محلية للتجربة؛ التغييرات لا تُحفظ على الخادم ولا تؤثر في الحسابات الحقيقية."
+          />
           {children}
         </main>
       </div>

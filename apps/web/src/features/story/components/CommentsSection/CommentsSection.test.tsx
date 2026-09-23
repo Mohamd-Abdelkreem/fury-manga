@@ -45,7 +45,7 @@ describe("CommentsSection", () => {
     fireEvent.click(screen.getByRole("button", { name: "إرسال تعليق" }));
 
     expect(screen.getByText("تعليق جديد")).toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent("تم نشر تعليقك");
+    expect(screen.getByRole("status")).toHaveTextContent("لم يُنشر أو يُحفظ");
   });
 
   it("toggles a comment like", () => {
@@ -63,7 +63,10 @@ describe("CommentsSection", () => {
     const comment = within(commentCardFor("تعليق عام"));
 
     fireEvent.click(comment.getByRole("button", { name: "إبلاغ" }));
-    expect(comment.getByRole("button", { name: "تم الإبلاغ" })).toBeDisabled();
+    expect(comment.getByRole("button", { name: "وُسم محليًا" })).toBeDisabled();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "لم يُرسل بلاغ للمراجعة",
+    );
   });
 
   it("edits an owned comment inline", () => {
@@ -84,7 +87,7 @@ describe("CommentsSection", () => {
 
     fireEvent.click(comment.getByRole("button", { name: "حذف" }));
     expect(
-      screen.getByText("تم حذف هذا التعليق بواسطة صاحبه."),
+      screen.getByText("أُخفي هذا التعليق في المعاينة فقط."),
     ).toBeInTheDocument();
   });
 });

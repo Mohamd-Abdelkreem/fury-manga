@@ -138,8 +138,8 @@ export function AdminGiftGrants() {
 
     setNotice({
       type: "success",
-      title: "تم منح الهدية بنجاح",
-      description: `تم منح "${selectedGift.name}" للمستخدم (${selectedUser.name}) وتم إرسال الإشعار لمركزه التنبيهي.`,
+      title: "معاينة محلية للمنح",
+      description: `ظهرت هدية "${selectedGift.name}" للمستخدم (${selectedUser.name}) في هذه المعاينة فقط؛ لم تُحفظ ولم يُرسل إشعار.`,
     });
   };
 
@@ -154,8 +154,8 @@ export function AdminGiftGrants() {
 
     setNotice({
       type: "success",
-      title: "تم المنح الجماعي بنجاح",
-      description: `تم منح "${selectedGift.name}" بنجاح لعدد ${String(res.grantedCount)} مستخدم نشط مؤهل.`,
+      title: "معاينة محلية للمنح الجماعي",
+      description: `ظهر منح "${selectedGift.name}" لعدد ${String(res.grantedCount)} مستخدم في هذه المعاينة فقط؛ لم يُحفظ ولم تُرسل إشعارات.`,
     });
     setBulkConfirmOpen(false);
   };
@@ -529,7 +529,7 @@ export function AdminGiftGrants() {
       <AdminConfirmDialog
         isOpen={bulkConfirmOpen}
         title="تأكيد المنح الجماعي للهدايا"
-        description={`هل أنت متأكد من رغبتك في منح هدية "${selectedGift?.name ?? ""}" لعدد (${String(bulkStats.finalRecipientsCount)}) مستخدم مؤهل دفعة واحدة؟ سيتم إنشاء إشعار لكل مستخدم في حسابه.`}
+        description={`هل تريد معاينة منح هدية "${selectedGift?.name ?? ""}" لعدد (${String(bulkStats.finalRecipientsCount)}) مستخدم؟ لن تُحفظ الهدايا أو تُرسل إشعارات.`}
         confirmLabel="تأكيد المنح للجميع"
         cancelLabel="إلغاء"
         onConfirm={handleConfirmBulkGrant}

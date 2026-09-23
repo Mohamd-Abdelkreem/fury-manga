@@ -9,6 +9,7 @@ import { describe, expect, it } from "vitest";
 const execFileAsync = promisify(execFile);
 const initialMigration = "20260818000000_init_authentication";
 const contentMigration = "20260922010000_content_domain_foundation";
+const phoneRemovalMigration = "20260923000000_remove_obsolete_phone";
 
 const databaseUrl = (): string => {
   const value = process.env["DATABASE_URL"];
@@ -24,17 +25,37 @@ const deployFrom = async (
 ): Promise<string> => {
   const pnpmScript = process.env["npm_execpath"];
   if (pnpmScript === undefined) throw new Error("npm_execpath is required.");
-  const execution = await execFileAsync(
-    process.execPath,
-    [pnpmScript, "exec", "prisma", "migrate", "deploy", "--config", configPath],
-    {
-      cwd: process.cwd(),
-      env: { ...process.env, DATABASE_URL: connectionString },
-      timeout: 120_000,
-      windowsHide: true,
-    },
-  );
-  return execution.stdout + execution.stderr;
+  try {
+    const execution = await execFileAsync(
+      process.execPath,
+      [
+        pnpmScript,
+        "exec",
+        "prisma",
+        "migrate",
+        "deploy",
+        "--config",
+        configPath,
+      ],
+      {
+        cwd: process.cwd(),
+        env: { ...process.env, DATABASE_URL: connectionString },
+        timeout: 120_000,
+        windowsHide: true,
+      },
+    );
+    return execution.stdout + execution.stderr;
+  } catch (error) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "stderr" in error &&
+      typeof error.stderr === "string"
+    ) {
+      throw new Error(error.stderr);
+    }
+    throw error;
+  }
 };
 
 describe("fresh post-P01 migration chain", () => {
@@ -81,7 +102,6 @@ describe("fresh post-P01 migration chain", () => {
         "email",
         "password_hash",
         "full_name",
-        "phone",
         "role",
         "status",
         "email_verified_at",
@@ -188,7 +208,7 @@ describe("fresh post-P01 migration chain", () => {
     }
   });
 
-  it("upgrades populated P00 state to P01 and leaves no pending migration", async () => {
+  it("retires legacy phone after a populated P01 upgrade without losing account or session data", async () => {
     const sourcePrisma = resolve(process.cwd(), "prisma");
     const cacheRoot = resolve(process.cwd(), "node_modules", ".cache");
     await mkdir(cacheRoot, { recursive: true });
@@ -236,8 +256,14 @@ export default defineConfig({
       const userId = "99999999-9999-4999-8999-999999999999";
       const tokenId = "88888888-8888-4888-8888-888888888888";
       await stagedPool.query(
-        "INSERT INTO users (id, email, password_hash, full_name, status, email_verified_at, updated_at) VALUES ($1, $2, $3, $4, 'ACTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
-        [userId, "staged-upgrade@example.com", "hash", "Staged User"],
+        "INSERT INTO users (id, email, password_hash, full_name, phone, status, email_verified_at, updated_at) VALUES ($1, $2, $3, $4, $5, 'ACTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+        [
+          userId,
+          "staged-upgrade@example.com",
+          "hash",
+          "Staged User",
+          "+201000000000",
+        ],
       );
       await stagedPool.query(
         "INSERT INTO refresh_tokens (id, user_id, token_hash, expires_at) VALUES ($1, $2, $3, CURRENT_TIMESTAMP + INTERVAL '1 day')",
@@ -268,6 +294,32 @@ export default defineConfig({
           token_hash: "b".repeat(64),
         },
       ]);
+      await cp(
+        join(sourcePrisma, "migrations", phoneRemovalMigration),
+        join(temporaryMigrations, phoneRemovalMigration),
+        { recursive: true },
+      );
+      await deployFrom(
+        stagedUrl.toString(),
+        join(temporaryRoot, "prisma.config.ts"),
+      );
+      const retiredPhone = await stagedPool.query<{ column_name: string }>(
+        `SELECT column_name
+           FROM information_schema.columns
+          WHERE table_schema = 'public'
+            AND table_name = 'users'
+            AND column_name = 'phone'`,
+      );
+      expect(retiredPhone.rows).toEqual([]);
+      const retainedAccount = await stagedPool.query<{
+        email: string;
+        full_name: string;
+        token_hash: string;
+      }>(
+        "SELECT u.email, u.full_name, r.token_hash FROM users u JOIN refresh_tokens r ON r.user_id = u.id WHERE u.id = $1",
+        [userId],
+      );
+      expect(retainedAccount.rows).toEqual(preserved.rows);
       const redeployOutput = await deployFrom(
         stagedUrl.toString(),
         join(temporaryRoot, "prisma.config.ts"),

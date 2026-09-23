@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
+import { positiveIntegerSchema } from "@fury/contracts";
 import {
   ArrowRight,
   BookOpen,
@@ -111,8 +112,8 @@ export function AdminChapterForm({ workId, chapterId }: AdminChapterFormProps) {
       number?: string | undefined;
       title?: string | undefined;
     } = {};
-    if (isNaN(number) || number < 0) {
-      nextErrors.number = "يجب تحديد رقم فصل صحيح (0 أو أكبر).";
+    if (!positiveIntegerSchema.safeParse(number).success) {
+      nextErrors.number = "يجب إدخال رقم فصل صحيح أكبر من صفر.";
     }
     if (!title.trim()) {
       nextErrors.title = "يرجى كتابة عنوان للفصل.";
@@ -146,7 +147,7 @@ export function AdminChapterForm({ workId, chapterId }: AdminChapterFormProps) {
       });
       setNotice({
         type: "success",
-        message: "تم تحديث بيانات الفصل بنجاح.",
+        message: "تم تحديث الفصل في المعاينة المحلية فقط؛ لم يُحفظ على الخادم.",
       });
     } else {
       createChapter(workId, {
@@ -159,7 +160,8 @@ export function AdminChapterForm({ workId, chapterId }: AdminChapterFormProps) {
       });
       setNotice({
         type: "success",
-        message: "تم إنشاء الفصل بنجاح وإضافته لقائمة الفصول.",
+        message:
+          "تمت إضافة الفصل إلى المعاينة المحلية فقط؛ لم يُحفظ على الخادم.",
       });
     }
 
@@ -251,7 +253,7 @@ export function AdminChapterForm({ workId, chapterId }: AdminChapterFormProps) {
 
       {notice && (
         <AdminNoticeBanner
-          title={notice.type === "error" ? "تنبيه" : "تم بنجاح"}
+          title={notice.type === "error" ? "تنبيه" : "معاينة محلية"}
           description={notice.message}
           variant={notice.type === "error" ? "warning" : "success"}
           onDismiss={() => {
@@ -281,8 +283,13 @@ export function AdminChapterForm({ workId, chapterId }: AdminChapterFormProps) {
                 <input
                   id="chapter-number"
                   type="number"
-                  step="0.1"
-                  min="0"
+                  step="1"
+                  min="1"
+                  max="2147483647"
+                  aria-invalid={errors.number !== undefined}
+                  aria-describedby={
+                    errors.number ? "chapter-number-error" : undefined
+                  }
                   className={cn(
                     styles["input"],
                     errors.number && styles["inputError"],
@@ -291,10 +298,15 @@ export function AdminChapterForm({ workId, chapterId }: AdminChapterFormProps) {
                   onChange={(e) => {
                     setNumber(parseFloat(e.target.value));
                   }}
-                  placeholder="مثال: 44 أو 44.5"
+                  placeholder="مثال: 44"
                 />
                 {errors.number && (
-                  <span className={styles["errorText"]}>{errors.number}</span>
+                  <span
+                    id="chapter-number-error"
+                    className={styles["errorText"]}
+                  >
+                    {errors.number}
+                  </span>
                 )}
               </div>
 

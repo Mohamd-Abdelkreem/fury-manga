@@ -11,7 +11,6 @@ vi.mock("@/features/auth/hooks/auth.hooks", () => ({
       user: {
         fullName: "سلمى القارئة",
         email: "salma@example.com",
-        phone: "+201000000000",
       },
     },
   }),

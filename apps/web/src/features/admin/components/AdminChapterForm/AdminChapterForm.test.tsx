@@ -153,10 +153,30 @@ describe("AdminChapterForm Component", () => {
     const submitBtn = screen.getByRole("button", { name: /حفظ ونشر/ });
     fireEvent.click(submitBtn);
 
-    expect(
-      screen.getByText("تم إنشاء الفصل بنجاح وإضافته لقائمة الفصول."),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/المعاينة المحلية فقط/)).toBeInTheDocument();
   });
+
+  it.each(["", "0", "-1", "44.5"])(
+    "rejects chapter number %s without losing the title draft",
+    (invalidNumber) => {
+      render(
+        <AdminDataProvider>
+          <AdminChapterForm workId="trait-hoarder" />
+        </AdminDataProvider>,
+      );
+      const numberInput = screen.getByLabelText(/رقم الفصل/);
+      const titleInput = screen.getByLabelText(/عنوان الفصل/);
+      fireEvent.change(numberInput, { target: { value: invalidNumber } });
+      fireEvent.change(titleInput, { target: { value: "مسودة لم تحفظ" } });
+      fireEvent.click(screen.getByRole("button", { name: /حفظ ونشر/ }));
+
+      expect(
+        screen.getByText("يجب إدخال رقم فصل صحيح أكبر من صفر."),
+      ).toBeInTheDocument();
+      expect(titleInput).toHaveValue("مسودة لم تحفظ");
+      expect(mockPush).not.toHaveBeenCalled();
+    },
+  );
 
   it("renders not found state when workId does not exist", () => {
     render(

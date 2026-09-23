@@ -38,7 +38,6 @@ const app = createApp({
 const registration = {
   fullName: "HTTP Integration User",
   email: "HTTP.User@Example.com",
-  phone: null,
   password: "initial-secure-password",
 };
 
@@ -271,6 +270,7 @@ describe("real HTTP authentication boundary", () => {
       .set("Authorization", `Bearer ${session.accessToken}`);
     expect(me.status).toBe(200);
     expect(me.body.data.user.email).toBe("http.user@example.com");
+    expect(me.body.data.user).not.toHaveProperty("phone");
 
     await agent
       .patch("/api/v1/users/me")
@@ -287,9 +287,16 @@ describe("real HTTP authentication boundary", () => {
       .patch("/api/v1/users/me")
       .set("Authorization", `Bearer ${session.accessToken}`)
       .set("x-csrf-token", session.csrfToken)
-      .send({ fullName: "Updated User", phone: "+1 555 0100" });
+      .send({ fullName: "Updated User" });
     expect(updated.status).toBe(200);
     expect(updated.body.data.user.fullName).toBe("Updated User");
+    expect(updated.body.data.user).not.toHaveProperty("phone");
+    await agent
+      .patch("/api/v1/users/me")
+      .set("Authorization", `Bearer ${session.accessToken}`)
+      .set("x-csrf-token", session.csrfToken)
+      .send({ phone: "+1 555 0100" })
+      .expect(400);
   });
 
   it("rotates refresh tokens once and rejects replay or a missing cookie", async () => {

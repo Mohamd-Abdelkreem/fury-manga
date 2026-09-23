@@ -220,7 +220,9 @@ export function AdminWorkForm({ mode, initialWork }: AdminWorkFormProps) {
 
       setIsSubmitting(false);
       setIsDirty(false);
-      setSuccessMessage("تم حفظ التعديلات بنجاح.");
+      setSuccessMessage(
+        "ظهرت التعديلات في المعاينة المحلية فقط؛ لم تُحفظ على الخادم.",
+      );
     } else {
       const created = createWork({
         title: values.title.trim(),
@@ -239,7 +241,9 @@ export function AdminWorkForm({ mode, initialWork }: AdminWorkFormProps) {
 
       setIsSubmitting(false);
       setIsDirty(false);
-      setSuccessMessage(`تم إنشاء العمل '${created.title}' بنجاح.`);
+      setSuccessMessage(
+        `ظهر العمل '${created.title}' في المعاينة المحلية فقط؛ لم يُحفظ على الخادم.`,
+      );
 
       // Navigate to works after brief delay or stay
       setTimeout(() => {
@@ -326,7 +330,7 @@ export function AdminWorkForm({ mode, initialWork }: AdminWorkFormProps) {
       {successMessage ? (
         <AdminNoticeBanner
           variant="success"
-          title="تم الحفظ بنجاح"
+          title="معاينة محلية"
           description={successMessage}
           actionLabel="العودة لقائمة الأعمال"
           actionHref="/admin/works"

@@ -31,8 +31,24 @@ describe("AdminAds", () => {
     const dialog = screen.getByRole("dialog");
     fireEvent.click(within(dialog).getByRole("button", { name: "تعطيل الآن" }));
     expect(
-      screen.getByText("معطلة مؤقتًا في جميع الصفحات المؤهلة."),
+      screen.getByText("معطلة في هذه المعاينة وعلى صفحات الموقع."),
     ).toBeInTheDocument();
+  });
+
+  it("keeps the approved placement preview visible without provider delivery", () => {
+    render(
+      <AdminDataProvider>
+        <AdminAds />
+      </AdminDataProvider>,
+    );
+
+    const [previewButton] = screen.getAllByRole("button", {
+      name: "معاينة الموضع",
+    });
+    if (previewButton === undefined)
+      throw new Error("Placement preview missing");
+    fireEvent.click(previewButton);
+    expect(screen.getByText("معاينة غير منشورة")).toBeInTheDocument();
   });
 
   it("previews the shared non-blocking ad-block message", () => {

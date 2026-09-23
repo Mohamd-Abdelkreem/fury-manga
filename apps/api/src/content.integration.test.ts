@@ -1069,7 +1069,6 @@ describe("real HTTP content boundary", () => {
     const registration = {
       fullName: "P01 Acceptance Admin",
       email: "p01.acceptance@example.com",
-      phone: null,
       password: "p01-acceptance-password",
     };
     const registered = await agent

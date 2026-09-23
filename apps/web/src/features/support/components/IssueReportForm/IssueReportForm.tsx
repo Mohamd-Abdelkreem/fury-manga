@@ -78,7 +78,6 @@ export function IssueReportForm({
   }));
   const [errors, setErrors] = useState<IssueErrors>({});
   const [state, setState] = useState(viewState);
-  const [pending, setPending] = useState(false);
   const [succeeded, setSucceeded] = useState(false);
 
   const updateIssueField = (field: IssueField, fieldValue: string): void => {
@@ -91,17 +90,14 @@ export function IssueReportForm({
     setErrors((current) => ({ ...current, [field]: nextError }));
   };
 
-  const submit = async (
+  const submit = (
     event: SyntheticEvent<HTMLFormElement, SubmitEvent>,
-  ): Promise<void> => {
+  ): void => {
     event.preventDefault();
     const nextErrors = validateIssue(values);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
-    setPending(true);
-    await new Promise((resolve) => setTimeout(resolve, 250));
-    setPending(false);
     setSucceeded(true);
   };
 
@@ -132,8 +128,8 @@ export function IssueReportForm({
   if (succeeded) {
     return (
       <SupportSuccess
-        title="تم تسجيل البلاغ"
-        message="تم تسجيل بلاغك بنجاح. يمكنك العودة إلى التصفح أو إضافة بلاغ آخر."
+        title="معاينة محلية للبلاغ"
+        message="اكتمل التحقق من الحقول في هذه الصفحة فقط. لم يُرسل البلاغ ولم يُحفظ."
         actionLabel="كتابة بلاغ آخر"
         onReset={() => {
           setValues({ type: "", url: initialUrl, description: "", email: "" });
@@ -145,13 +141,7 @@ export function IssueReportForm({
   }
 
   return (
-    <form
-      className={styles["form"]}
-      noValidate
-      onSubmit={(event) => {
-        void submit(event);
-      }}
-    >
+    <form className={styles["form"]} noValidate onSubmit={submit}>
       <div className={styles["formGrid"]}>
         <SupportField
           id="issue-type"
@@ -258,8 +248,8 @@ export function IssueReportForm({
         </div>
       </div>
       <div className={styles["formActions"]}>
-        <button className="button" type="submit" disabled={pending}>
-          {pending ? "جارٍ تسجيل البلاغ…" : "تسجيل البلاغ"}
+        <button className="button" type="submit">
+          معاينة البلاغ
         </button>
       </div>
     </form>

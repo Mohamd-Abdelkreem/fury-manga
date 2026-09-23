@@ -91,6 +91,16 @@ describe("TextChapterReader", () => {
     expect(container.querySelector("[data-ad-placement]")).toBeNull();
   });
 
+  it("describes completion as local to the current reading session", () => {
+    const work = getTextWorkById("city-of-amber");
+    const chapter = work?.chapters[0];
+    if (work === undefined || chapter === undefined)
+      throw new Error("Fixture missing");
+    render(<TextChapterReader work={work} chapter={chapter} />);
+    expect(screen.getByRole("status")).toHaveTextContent("هذه الجلسة");
+    expect(screen.getByRole("status")).not.toHaveTextContent("تم تسجيل");
+  });
+
   it.each([
     [74, false],
     [75, true],

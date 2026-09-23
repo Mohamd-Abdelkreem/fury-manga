@@ -114,7 +114,7 @@ describe("AdminGifts Component", () => {
     fireEvent.click(submitBtn);
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(screen.getByText("تصميم جديد")).toBeInTheDocument();
+    expect(screen.getByText("معاينة محلية للتصميم")).toBeInTheDocument();
     expect(screen.getByText("تاج التنين الأسود")).toBeInTheDocument();
   });
 

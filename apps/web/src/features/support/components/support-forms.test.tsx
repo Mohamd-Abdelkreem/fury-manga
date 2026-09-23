@@ -9,9 +9,9 @@ vi.mock("@/features/auth/hooks/auth.hooks", () => ({
 }));
 
 describe("public support forms", () => {
-  it("shows field-level contact validation then reaches a safe success state", async () => {
+  it("shows field-level contact validation then states the request was not delivered", async () => {
     render(<ContactForm />);
-    fireEvent.click(screen.getByRole("button", { name: "تسجيل الطلب" }));
+    fireEvent.click(screen.getByRole("button", { name: "معاينة الطلب" }));
     expect(screen.getAllByRole("alert").length).toBeGreaterThanOrEqual(4);
 
     fireEvent.change(screen.getByLabelText("الاسم"), {
@@ -26,15 +26,15 @@ describe("public support forms", () => {
     fireEvent.change(screen.getByLabelText("الرسالة"), {
       target: { value: "هذه رسالة واضحة تتجاوز الحد الأدنى المطلوب للاختبار." },
     });
-    fireEvent.click(screen.getByRole("button", { name: "تسجيل الطلب" }));
+    fireEvent.click(screen.getByRole("button", { name: "معاينة الطلب" }));
 
     expect(
-      await screen.findByRole("heading", { name: "تم تسجيل طلبك" }),
+      await screen.findByRole("heading", { name: "معاينة محلية للطلب" }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/تم تسجيل طلبك بنجاح/)).toBeInTheDocument();
+    expect(screen.getByText(/لم يُرسل طلبك ولم يُحفظ/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "كتابة رسالة أخرى" }));
     expect(
-      screen.getByRole("button", { name: "تسجيل الطلب" }),
+      screen.getByRole("button", { name: "معاينة الطلب" }),
     ).toBeInTheDocument();
   });
 
@@ -44,7 +44,7 @@ describe("public support forms", () => {
       screen.getByLabelText("رابط الصفحة أو العمل أو الفصل أو التعليق"),
     ).toHaveValue("/story/trait-hoarder/chapter/43");
 
-    fireEvent.click(screen.getByRole("button", { name: "تسجيل البلاغ" }));
+    fireEvent.click(screen.getByRole("button", { name: "معاينة البلاغ" }));
     expect(screen.getByText("اختر نوع المشكلة.")).toBeInTheDocument();
     expect(screen.getByText(/اكتب وصفًا من 30 حرفًا/)).toBeInTheDocument();
 
@@ -57,12 +57,12 @@ describe("public support forms", () => {
           "الصورة الثالثة في الفصل لا تظهر بينما بقية الصور تعمل بصورة طبيعية.",
       },
     });
-    fireEvent.click(screen.getByRole("button", { name: "تسجيل البلاغ" }));
+    fireEvent.click(screen.getByRole("button", { name: "معاينة البلاغ" }));
 
     expect(
-      await screen.findByRole("heading", { name: "تم تسجيل البلاغ" }),
+      await screen.findByRole("heading", { name: "معاينة محلية للبلاغ" }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/تم تسجيل بلاغك بنجاح/)).toBeInTheDocument();
+    expect(screen.getByText(/لم يُرسل البلاغ ولم يُحفظ/)).toBeInTheDocument();
     expect(screen.queryByText(/رقم تذكرة:/)).not.toBeInTheDocument();
   });
 });

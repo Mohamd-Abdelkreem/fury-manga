@@ -8,11 +8,32 @@ import { STORY_DETAIL } from "./data/storyData";
 const navigation = vi.hoisted(() => ({
   params: { id: "1", chapterId: "1" },
   push: vi.fn(),
+  replace: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
   useParams: () => navigation.params,
-  useRouter: () => ({ push: navigation.push }),
+  usePathname: () =>
+    `/story/${navigation.params.id}/chapter/${navigation.params.chapterId}`,
+  useRouter: () => ({ push: navigation.push, replace: navigation.replace }),
+}));
+vi.mock("@/features/auth/hooks/auth.hooks", () => ({
+  useSession: () => ({
+    data: {
+      user: {
+        id: "1b3d904e-a46c-4dd8-9cb7-d0767546ea95",
+        fullName: "Reader",
+        email: "reader@example.com",
+        role: "USER",
+        status: "ACTIVE",
+        emailVerifiedAt: "2026-08-18T00:00:00.000Z",
+      },
+    },
+    error: null,
+    isPending: false,
+    isFetched: true,
+    isError: false,
+  }),
 }));
 vi.mock("@/features/home/components/Navbar/Navbar", () => ({
   Navbar: () => null,

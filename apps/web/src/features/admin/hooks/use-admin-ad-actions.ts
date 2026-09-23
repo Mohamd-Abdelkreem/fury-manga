@@ -30,10 +30,10 @@ export function useAdminAdActions({
       {
         id: `act-${String(Date.now())}`,
         type: "chapter_published",
-        title: next ? "تفعيل الإعلانات العامة" : "تعطيل الإعلانات العامة",
+        title: next ? "معاينة تفعيل الإعلانات" : "معاينة تعطيل الإعلانات",
         description: next
-          ? "تم تفعيل الإعلانات العامة على مستوى المنصة."
-          : "تم تعطيل الإعلانات العامة مؤقتاً عبر مفتاح الطوارئ.",
+          ? "تغير المفتاح في هذه المعاينة فقط؛ لا توجد إعلانات عامة مفعلة."
+          : "تغير المفتاح في هذه المعاينة فقط؛ لا توجد إعدادات محفوظة.",
         timestamp: "الآن",
         actor: actorName,
       },
@@ -68,7 +68,7 @@ export function useAdminAdActions({
           id: `act-${String(Date.now())}`,
           type: "work_created",
           title: "تحديث مساحة إعلانية",
-          description: `تم تحديث المساحة الإعلانية '${updatedPlacement.name}'.`,
+          description: `تغيرت المساحة الإعلانية '${updatedPlacement.name}' في هذه المعاينة فقط؛ لم تُحفظ.`,
           timestamp: "الآن",
           actor: actorName,
         },

@@ -67,7 +67,6 @@ export class AuthService {
         data: {
           email,
           fullName: data.fullName.trim(),
-          phone: data.phone,
           passwordHash,
           status: UserStatus.PENDING_VERIFICATION,
           verificationTokenHash,

@@ -88,7 +88,7 @@ describe("AdminContactDetail Component", () => {
     const saveBtn = screen.getByRole("button", { name: "حفظ الملاحظة" });
     fireEvent.click(saveBtn);
 
-    expect(screen.getByText("تم الحفظ بنجاح ✓")).toBeInTheDocument();
+    expect(screen.getByText("ظهرت الملاحظة محليًا فقط")).toBeInTheDocument();
   });
 
   it("renders not found state for invalid messageId", () => {

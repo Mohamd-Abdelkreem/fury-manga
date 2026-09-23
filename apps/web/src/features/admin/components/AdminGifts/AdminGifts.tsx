@@ -80,15 +80,15 @@ export function AdminGifts() {
       updateGift(dialogState.gift.id, data);
       setNotice({
         type: "success",
-        title: "تم تحديث التصميم",
-        description: `تم تحديث بيانات تصميم الهدية (${data.name}) بنجاح.`,
+        title: "معاينة محلية للتصميم",
+        description: `تغير تصميم الهدية (${data.name}) في هذه المعاينة فقط؛ لم يُحفظ.`,
       });
     } else {
       createGift(data);
       setNotice({
         type: "success",
-        title: "تصميم جديد",
-        description: `تمت إضافة تصميم الهدية (${data.name}) وإتاحته للاستخدام.`,
+        title: "معاينة محلية للتصميم",
+        description: `ظهر تصميم الهدية (${data.name}) في هذه المعاينة فقط؛ لم يُحفظ أو يُتح للاستخدام.`,
       });
     }
   };
@@ -99,7 +99,7 @@ export function AdminGifts() {
     setNotice({
       type: "info",
       title: "تغيير حالة الهدية",
-      description: `تم تغيير حالة (${g.name}) لتصبح ${nextStatus}.`,
+      description: `تغيرت حالة (${g.name}) إلى ${nextStatus} في هذه المعاينة فقط؛ لم تُحفظ.`,
     });
   };
 

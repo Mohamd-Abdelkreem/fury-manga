@@ -35,7 +35,6 @@ const account: AuthUserData = {
     id: "1b3d904e-a46c-4dd8-9cb7-d0767546ea95",
     fullName: "Fury Test User",
     email: "user@example.com",
-    phone: null,
     role: "USER",
     status: "ACTIVE",
     emailVerifiedAt: "2026-08-18T00:00:00.000Z",

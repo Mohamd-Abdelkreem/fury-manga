@@ -80,7 +80,8 @@ describe("AdminGiftGrants Component", () => {
 
     fireEvent.click(submitBtn);
 
-    expect(screen.getByText("تم منح الهدية بنجاح")).toBeInTheDocument();
+    expect(screen.getByText("معاينة محلية للمنح")).toBeInTheDocument();
+    expect(screen.getByText(/لم تُحفظ ولم يُرسل إشعار/)).toBeInTheDocument();
   });
 
   it("switches to bulk grant tab, renders live breakdown, and opens confirmation dialog", () => {
@@ -111,6 +112,6 @@ describe("AdminGiftGrants Component", () => {
     fireEvent.click(confirmBtn);
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(screen.getByText("تم المنح الجماعي بنجاح")).toBeInTheDocument();
+    expect(screen.getByText("معاينة محلية للمنح الجماعي")).toBeInTheDocument();
   });
 });

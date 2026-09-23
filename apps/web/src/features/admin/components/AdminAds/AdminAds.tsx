@@ -28,7 +28,7 @@ export function AdminAds() {
           { label: "إعدادات الإعلانات" },
         ]}
         title="إعدادات الإعلانات"
-        description="إدارة موضعي البانر المعتمدين ومعاينة تجربتهما قبل ربط إعدادات المزود."
+        description="معاينة محلية لموضعي البانر المعتمدين؛ لا تغيّر هذه الإعدادات إعلانات الموقع ولا تُحفظ."
       />
 
       <section className={styles["statusCard"]}>
@@ -39,8 +39,8 @@ export function AdminAds() {
           <h2>حالة الإعلانات العامة</h2>
           <p>
             {globalAdsEnabled
-              ? "مفعلة للمواضع التي جرى تمكينها أدناه."
-              : "معطلة مؤقتًا في جميع الصفحات المؤهلة."}
+              ? "مفعلة في هذه المعاينة فقط؛ إعلانات الموقع معطلة."
+              : "معطلة في هذه المعاينة وعلى صفحات الموقع."}
           </p>
         </div>
         <button
@@ -160,7 +160,7 @@ export function AdminAds() {
               إغلاق المعاينة
             </button>
           </div>
-          <AdvertisementSlot placement={previewPlacement} />
+          <AdvertisementSlot placement={previewPlacement} preview />
         </div>
       )}
 
@@ -177,7 +177,7 @@ export function AdminAds() {
             ? "تأكيد تعطيل الإعلانات العامة"
             : "تأكيد تفعيل الإعلانات العامة"
         }
-        description="سيؤثر هذا التغيير على مواضع البانر المؤهلة فقط."
+        description="سيغير هذا المفتاح المعاينة المحلية فقط؛ لن تظهر إعلانات على صفحات الموقع."
         confirmLabel={globalAdsEnabled ? "تعطيل الآن" : "تفعيل الآن"}
         cancelLabel="إلغاء"
         onConfirm={() => {

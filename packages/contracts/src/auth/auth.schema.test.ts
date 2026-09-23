@@ -5,18 +5,25 @@ import {
   loginBodySchema,
   registerBodySchema,
   resetPasswordBodySchema,
+  updateProfileBodySchema,
 } from "./auth.schema.ts";
 
 describe("authentication request contracts", () => {
-  it("normalizes email, whitespace, and optional phone input", () => {
+  it("normalizes supported registration fields and rejects obsolete phone input", () => {
     const result = registerBodySchema.parse({
       fullName: "Fury Test User",
       email: "  USER@Example.COM ",
-      phone: " ",
       password: "a-secure-password",
     });
     expect(result.email).toBe("user@example.com");
-    expect(result.phone).toBeNull();
+    expect(result).not.toHaveProperty("phone");
+    expect(
+      registerBodySchema.safeParse({ ...result, phone: "+201000000000" })
+        .success,
+    ).toBe(false);
+    expect(
+      updateProfileBodySchema.safeParse({ phone: "+201000000000" }).success,
+    ).toBe(false);
   });
 
   it("requires explicit remember-me and rejects unknown login fields", () => {

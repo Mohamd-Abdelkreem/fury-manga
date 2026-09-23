@@ -45,7 +45,7 @@ export function TextDiscussion({
             ...current,
           ]);
           setDraft("");
-          setFeedback("تم تسجيل تعليقك في هذه الجلسة.");
+          setFeedback("ظهر تعليقك في هذه الجلسة فقط؛ لم يُنشر أو يُحفظ.");
         }}
       >
         <label htmlFor={fieldId}>أضف تعليقًا</label>

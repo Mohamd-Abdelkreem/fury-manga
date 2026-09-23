@@ -40,13 +40,11 @@ describe("useUpdateProfile", () => {
     await act(async () => {
       await result.current.mutateAsync({
         fullName: "Updated User",
-        phone: null,
       });
     });
 
     expect(mocks.updateMe).toHaveBeenCalledWith({
       fullName: "Updated User",
-      phone: null,
     });
     expect(queryClient.getQueryData(sessionKey)).toEqual(updatedAccount);
   });

@@ -75,7 +75,7 @@ describe("AdminUserDetail Component", () => {
     fireEvent.click(confirmBtn);
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(screen.getByText("تم سحب الهدية")).toBeInTheDocument();
+    expect(screen.getByText("معاينة محلية لسحب الهدية")).toBeInTheDocument();
   });
 
   it("allows suspending an active regular user", () => {
@@ -94,7 +94,7 @@ describe("AdminUserDetail Component", () => {
     const confirmBtn = screen.getByRole("button", { name: "تأكيد التعليق" });
     fireEvent.click(confirmBtn);
 
-    expect(screen.getByText("تم تعليق الحساب")).toBeInTheDocument();
+    expect(screen.getByText("معاينة محلية لتعليق الحساب")).toBeInTheDocument();
   });
 
   it("handles non-existent user with not found state", () => {

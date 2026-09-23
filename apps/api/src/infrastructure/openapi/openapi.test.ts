@@ -147,6 +147,10 @@ const responseCodeEnum = (
 };
 
 describe("OpenAPI document", () => {
+  it("does not advertise the retired account phone field", () => {
+    expect(JSON.stringify(buildOpenApiDocument())).not.toContain('"phone"');
+  });
+
   it("documents every public route and authentication scheme", () => {
     const document = buildOpenApiDocument();
     expect(Object.keys(document.paths ?? {}).sort()).toEqual(

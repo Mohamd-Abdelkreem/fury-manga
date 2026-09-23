@@ -295,7 +295,7 @@ export function AdminContactDetail({ messageId }: AdminContactDetailProps) {
               className={styles["saveNoteBtn"]}
               onClick={handleSaveNote}
             >
-              {savedSuccess ? "تم الحفظ بنجاح ✓" : "حفظ الملاحظة"}
+              {savedSuccess ? "ظهرت الملاحظة محليًا فقط" : "حفظ الملاحظة"}
             </button>
           </div>
 

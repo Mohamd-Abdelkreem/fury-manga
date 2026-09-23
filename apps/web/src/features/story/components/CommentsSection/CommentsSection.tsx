@@ -66,7 +66,7 @@ export function CommentsSection({
       ...current,
     ]);
     setCommentText("");
-    setFeedback("تم نشر تعليقك.");
+    setFeedback("ظهر تعليقك في هذه المعاينة فقط؛ لم يُنشر أو يُحفظ.");
   };
 
   return (
@@ -75,6 +75,9 @@ export function CommentsSection({
         <div className={styles["accentBar"]} />
         <h2 className={styles["title"]}>تعليقات {contextLabel}</h2>
       </div>
+      <p className={styles["previewNote"]}>
+        التعليقات والتفاعلات هنا للمعاينة المحلية فقط؛ لا تُنشر أو تُحفظ.
+      </p>
 
       <form onSubmit={submitComment} className={styles["commentForm"]}>
         <textarea
@@ -116,7 +119,7 @@ export function CommentsSection({
                       content,
                     }));
                     setEditingId(null);
-                    setFeedback("تم تعديل التعليق.");
+                    setFeedback("تغير التعليق في هذه المعاينة فقط؛ لم يُحفظ.");
                   }}
                 >
                   <textarea
@@ -133,7 +136,7 @@ export function CommentsSection({
               ) : (
                 <p className={styles["text"]}>
                   {comment.deleted
-                    ? "تم حذف هذا التعليق بواسطة صاحبه."
+                    ? "أُخفي هذا التعليق في المعاينة فقط."
                     : comment.content}
                 </p>
               )}
@@ -190,11 +193,13 @@ export function CommentsSection({
                           ...current,
                           reported: true,
                         }));
-                        setFeedback("تم تسجيل البلاغ للمراجعة.");
+                        setFeedback(
+                          "وُسم التعليق في هذه المعاينة فقط؛ لم يُرسل بلاغ للمراجعة.",
+                        );
                       }}
                     >
                       <Flag aria-hidden="true" />
-                      {comment.reported ? "تم الإبلاغ" : "إبلاغ"}
+                      {comment.reported ? "وُسم محليًا" : "إبلاغ"}
                     </button>
                   )}
                 </div>
