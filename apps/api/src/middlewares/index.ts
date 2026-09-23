@@ -4,7 +4,7 @@ export {
 } from "./error-handler.middleware.js";
 export { notFound, notFoundMiddleware } from "./not-found.middleware.js";
 export {
-  apiRateLimitMiddleware,
+  createApiRateLimitMiddleware,
   createKeyedAuthRateLimiter,
   createSourceRateLimiter,
 } from "./rate-limit.middleware.js";

@@ -22,6 +22,41 @@ enum UserStatus {
   @@map("user_status")
 }
 
+enum WorkType {
+  MANGA      @map("manga")
+  MANHWA     @map("manhwa")
+  MANHUA     @map("manhua")
+  COMICS     @map("comics")
+  NOVEL      @map("novel")
+  TEXT_STORY @map("text-story")
+
+  @@map("work_type")
+}
+
+enum StoryStatus {
+  ONGOING   @map("ongoing")
+  COMPLETED @map("completed")
+  HIATUS    @map("hiatus")
+  CANCELLED @map("cancelled")
+
+  @@map("story_status")
+}
+
+enum PublicationStatus {
+  DRAFT     @map("draft")
+  PUBLISHED @map("published")
+  ARCHIVED  @map("archived")
+
+  @@map("publication_status")
+}
+
+enum ChapterContentType {
+  ILLUSTRATED @map("illustrated")
+  TEXT        @map("text")
+
+  @@map("chapter_content_type")
+}
+
 model User {
   id                         String     @id @default(uuid()) @db.Uuid
   email                      String     @unique @db.VarChar(320)
@@ -56,4 +91,102 @@ model RefreshToken {
   @@index([userId], map: "refresh_tokens_user_idx")
   @@index([expiresAt], map: "refresh_tokens_expiry_idx")
   @@map("refresh_tokens")
+}
+
+model Work {
+  id                        String            @id @default(uuid()) @db.Uuid
+  title                     String            @db.VarChar(200)
+  slug                      String            @unique @db.VarChar(120)
+  type                      WorkType
+  storyStatus               StoryStatus       @map("story_status")
+  publicationStatus         PublicationStatus @default(DRAFT) @map("publication_status")
+  publishedAt               DateTime?         @map("published_at") @db.Timestamptz(6)
+  currentPublicationEventId String?           @unique @map("current_publication_event_id") @db.Uuid
+  version                   Int               @default(0)
+  createdAt                 DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                 DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  categories        WorkCategory[]
+  chapters          Chapter[]
+  publicationEvents PublicationEvent[]
+
+  @@index([publicationStatus, publishedAt(sort: Desc), id], map: "works_publication_idx")
+  @@index([createdAt(sort: Desc), id], map: "works_created_idx")
+  @@map("works")
+}
+
+model Category {
+  id          String   @id @default(uuid()) @db.Uuid
+  displayName String   @map("display_name") @db.VarChar(100)
+  slug        String   @unique @db.VarChar(120)
+  version     Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  works WorkCategory[]
+
+  @@index([createdAt(sort: Desc), id], map: "categories_created_idx")
+  @@map("categories")
+}
+
+model WorkCategory {
+  workId     String   @map("work_id") @db.Uuid
+  categoryId String   @map("category_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  work     Work     @relation(fields: [workId], references: [id], onDelete: Restrict)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@id([workId, categoryId])
+  @@index([categoryId, workId], map: "work_categories_category_work_idx")
+  @@map("work_categories")
+}
+
+model Chapter {
+  id                        String             @id @default(uuid()) @db.Uuid
+  workId                    String             @map("work_id") @db.Uuid
+  number                    Int
+  contentType               ChapterContentType @map("content_type")
+  textContent               Json?              @map("text_content") @db.JsonB
+  publicationStatus         PublicationStatus  @default(DRAFT) @map("publication_status")
+  publishedAt               DateTime?          @map("published_at") @db.Timestamptz(6)
+  currentPublicationEventId String?            @unique @map("current_publication_event_id") @db.Uuid
+  version                   Int                @default(0)
+  createdAt                 DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                 DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  work              Work               @relation(fields: [workId], references: [id], onDelete: Restrict)
+  pages             ChapterPage[]
+  publicationEvents PublicationEvent[]
+
+  @@unique([workId, number])
+  @@index([workId, publicationStatus, number, id], map: "chapters_work_publication_number_idx")
+  @@map("chapters")
+}
+
+model ChapterPage {
+  id        String   @id @default(uuid()) @db.Uuid
+  chapterId String   @map("chapter_id") @db.Uuid
+  position  Int
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  chapter Chapter @relation(fields: [chapterId], references: [id], onDelete: Restrict)
+
+  @@unique([chapterId, position])
+  @@index([chapterId, position, id], map: "chapter_pages_order_idx")
+  @@map("chapter_pages")
+}
+
+model PublicationEvent {
+  id         String   @id @default(uuid()) @db.Uuid
+  workId     String?  @map("work_id") @db.Uuid
+  chapterId  String?  @map("chapter_id") @db.Uuid
+  occurredAt DateTime @default(now()) @map("occurred_at") @db.Timestamptz(6)
+
+  work    Work?    @relation(fields: [workId], references: [id], onDelete: Restrict)
+  chapter Chapter? @relation(fields: [chapterId], references: [id], onDelete: Restrict)
+
+  @@index([workId, occurredAt(sort: Desc), id], map: "publication_events_work_idx")
+  @@index([chapterId, occurredAt(sort: Desc), id], map: "publication_events_chapter_idx")
+  @@map("publication_events")
 }

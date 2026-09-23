@@ -1,7 +1,7 @@
 # Project reference
 
-This is the implemented architecture and operations reference for the generic
-authentication foundation.
+This is the implemented architecture and operations reference for the
+authentication foundation and P01 content-domain boundary.
 
 ## Boundaries
 
@@ -14,8 +14,8 @@ Next.js UI
   -> PostgreSQL
 ```
 
-- `@fury/contracts` owns request bodies, safe user output, field errors,
-  pagination metadata, and success/error envelopes.
+- `@fury/contracts` owns account/content request and output schemas, canonical
+  content enums, structured text, field errors, pagination, and envelopes.
 - `@fury/database` owns Prisma schema, migrations, generated types, seed
   behavior, and the client factory.
 - `@fury/api` owns HTTP security, account rules, delivery adapters, and
@@ -93,9 +93,10 @@ The response helper uses `@fury/contracts` types directly. Success always
 has `data`; valid nested pagination is promoted to `paginationMeta`. Error
 envelopes never contain `data: null`.
 
-The Prisma mapper exposes only stable generic errors. Approved check-constraint
-names are limited to the two User constraints. Raw messages, SQL, metadata,
-database URLs, and provider secrets are never returned.
+The Prisma mapper exposes stable generic account errors and allowlisted content
+conflicts for named uniqueness, immutability, representation, and publication
+constraints. Raw messages, SQL, constraint metadata, database URLs, and provider
+secrets are never returned.
 
 Request logging sanitizes credential values in `req.url`,
 `req.originalUrl`, and query objects while retaining non-sensitive query
@@ -111,6 +112,57 @@ filesystem modes where supported, and logs only each preview path. Open the
 newest `.html` file and click its verification or reset button. A failed
 registration delivery triggers a guarded compensating delete of the newly
 created pending user so the address can retry.
+
+## Content module
+
+`src/modules/content` owns feature-local rules, bounded queries, explicit
+administrative/public mappers, a management service, a public read service,
+thin controllers, and route wiring. `src/router.ts` constructs those owners with
+the injected Prisma client. No browser/API implementation import or generic
+repository crosses package boundaries.
+
+The 19 operations documented in OpenAPI are:
+
+- public `GET`: `/content/works`, `/content/works/{workSlug}`,
+  `/content/works/{workSlug}/chapters`, and
+  `/content/works/{workSlug}/chapters/{chapterNumber}`;
+- ADMIN Category: list/create at `/content/admin/categories` and read/update at
+  `/content/admin/categories/{categoryId}`;
+- ADMIN Work: list/create at `/content/admin/works`, read/update at
+  `/content/admin/works/{workId}`, category replacement at
+  `/content/admin/works/{workId}/categories`, and publication at
+  `/content/admin/works/{workId}/publication`;
+- ADMIN Chapter: list/create at `/content/admin/works/{workId}/chapters`,
+  read/update at `/content/admin/works/{workId}/chapters/{chapterId}`, and
+  publication at
+  `/content/admin/works/{workId}/chapters/{chapterId}/publication`.
+
+Public operations use shared validation and no auth/CSRF middleware. ADMIN
+operations authenticate an active verified account and authorize `ADMIN` before
+lookup; unsafe operations then enforce CSRF before shared validation. All routes
+remain behind global request IDs, safe logging/errors, and rate limiting.
+
+Shared content schemas normalize bounded titles/display names/slugs; cap list
+limits at 100 and chapter/page integers at PostgreSQL `INTEGER` maximum; and
+define canonical `comics`/`text-story` values. Structured text is a strict
+version-1 document with at most 500 blocks, 200 inline nodes or list items,
+4,000 characters per leaf, 2,048 characters per root-relative link, and 512 KiB
+of serialized UTF-8 JSON. Raw HTML, quote/image/embed/script nodes, external or
+protocol-relative links, controls, unknown fields, and malformed nesting fail
+validation.
+
+Mutable content aggregates use integer expected-version compare-and-set writes.
+Relationship/page replacements and publication transitions are transactional.
+Every real transition to published appends one immutable publication event and
+links it as the aggregate's current event; unpublish/archive clears only current
+publication fields. Same-state retries reuse authoritative state, stale losers
+cannot overwrite the winner, and failed dependent writes roll back fully.
+
+`20260922010000_content_domain_foundation` is a forward-only additive migration
+after `20260818000000_init_authentication`. Existing web content fixtures are
+not migrated or seeded. Application rollback may ignore the additive tables;
+schema correction requires a later forward migration or verified backup restore,
+not editing applied history.
 
 ## Generic utilities
 
@@ -158,9 +210,9 @@ Contracts production builds exclude test/spec TypeScript and TSX sources. The
 root build-output assertion verifies required entry artifacts and rejects any
 emitted test/spec JavaScript, declaration, or source-map artifact.
 
-Database integration starts PostgreSQL 18, deploys the real migration, tests
-constraints with direct SQL, validates schema inventory/cascade, and deploys a
-second time.
+Database integration starts PostgreSQL 18, deploys the real migration chain,
+tests account and content constraints with direct SQL, validates upgrade/schema
+inventory and reconnect persistence, and deploys a second time.
 
 API integration starts another disposable PostgreSQL 18 instance, deploys the
 real migration, builds the actual Express app with fake email delivery, and
@@ -172,6 +224,14 @@ Verification coverage also proves that concurrent service and HTTP requests
 produce exactly one success, reused/replaced tokens fail, and suspended users
 remain suspended.
 
+Content integration additionally uses the real Express middleware stack and
+PostgreSQL for ADMIN authority/CSRF, strict contracts, duplicate and stale
+outcomes, transaction rollback, concurrent publication, hidden-state privacy,
+allowlisted public metadata, and the registration-to-public text-story journey.
+The web contribution is type-only: admin Work and lowercase role types derive
+from `@fury/contracts`; rendered fixtures, Arabic labels, controls, routes, and
+mock actions remain unchanged and non-authoritative.
+
 Logout, logout-all, password change, and password reset revoke refresh records,
 not already-issued stateless access JWTs. An access JWT can therefore remain
 usable until its short configured expiry (15 minutes by default); no blacklist
@@ -180,7 +240,7 @@ or other immediate-revocation store is included.
 ## Extension rules
 
 1. Add cross-package contracts only when API and web both consume them.
-2. Add a new migration after this initial baseline is released; do not rewrite
+2. Add each new migration after the latest released migration; do not rewrite
    applied production history.
 3. Keep route/controller/service responsibilities within one API module.
 4. Inject external services from the composition boundary.

@@ -40,6 +40,36 @@ describe("mapPrismaError", () => {
     ).toBe(400);
   });
 
+  it.each([
+    ["ck_works_identity_immutable", "CONTENT_IMMUTABLE"],
+    ["ck_chapters_parent_content_type", "CONTENT_TYPE_CONFLICT"],
+    [
+      "ck_chapters_illustrated_publication_ready",
+      "CONTENT_TRANSITION_CONFLICT",
+    ],
+    ["ck_chapters_number_positive", "CONTENT_CONFLICT"],
+  ])("maps allowlisted content check %s to %s", (constraint, code) => {
+    expect(
+      mapPrismaError(
+        prismaError({ code: "P2004", meta: { database_error: constraint } }),
+      ).code,
+    ).toBe(code);
+  });
+
+  it("maps only allowlisted content uniqueness to the stable content code", () => {
+    expect(
+      mapPrismaError(
+        prismaError({
+          code: "P2002",
+          meta: { constraint: "works_slug_key" },
+        }),
+      ).code,
+    ).toBe("CONTENT_CONFLICT");
+    expect(mapPrismaError(prismaError({ code: "P2002" })).code).toBe(
+      "CONFLICT",
+    );
+  });
+
   it("rejects unapproved check names and never leaks provider details", () => {
     const mapped = mapPrismaError(
       prismaError({

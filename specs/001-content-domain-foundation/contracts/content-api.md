@@ -301,11 +301,12 @@ database metadata, and anything related to media/provider storage.
 ## Error Contract and Privacy
 
 All failures use the existing strict `ErrorEnvelope` with request ID and no `data`.
-Production responses contain no stack.
+Responses contain no stack or raw server diagnostics in any environment.
 
 | Code                        | Status | Observable rule                                                                  |
 | --------------------------- | -----: | -------------------------------------------------------------------------------- |
 | VALIDATION_ERROR            |    400 | Field errors use `body.*`, `params.*`, or `query.*` paths                        |
+| BAD_REQUEST                 |    400 | Parsed pagination would require unsafe database arithmetic                       |
 | UNAUTHORIZED                |    401 | Missing/invalid/stale/suspended/unverified auth; occurs before management lookup |
 | FORBIDDEN                   |    403 | Active verified non-admin or CSRF; target existence is not disclosed             |
 | NOT_FOUND                   |    404 | ADMIN missing target; public missing/draft/archived share this exact code/status |
@@ -314,8 +315,8 @@ Production responses contain no stack.
 | CONTENT_TYPE_CONFLICT       |    409 | Chapter representation conflicts with parent-derived type                        |
 | CONTENT_TRANSITION_CONFLICT |    409 | Target is disallowed by lifecycle state or illustrated-publication readiness     |
 | CONTENT_STALE_WRITE         |    409 | Expected version lost and requested target is not authoritative                  |
-| TOO_MANY_REQUESTS           |    429 | Existing global limit                                                            |
-| INTERNAL_ERROR              |    500 | Safe unknown failure; committed state remains authoritative                      |
+| RATE_LIMIT_EXCEEDED         |    429 | Existing global limit                                                            |
+| INTERNAL_SERVER_ERROR       |    500 | Safe unknown failure; committed state remains authoritative                      |
 | SERVICE_UNAVAILABLE         |    503 | Safe database/connectivity failure                                               |
 
 A duplicate target-state command is 200 with `transitioned: false`, not a conflict.

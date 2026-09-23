@@ -1,5 +1,15 @@
 export { AuthController, authRoutes, AuthService } from "./auth/index.js";
 export {
+  CategoryManagementService,
+  ChapterManagementService,
+  ContentManagementController,
+  contentRoutes,
+  PublicationManagementService,
+  PublicContentController,
+  PublicContentService,
+  WorkManagementService,
+} from "./content/index.js";
+export {
   HealthController,
   healthRoutes,
   HealthService,

@@ -3,8 +3,50 @@ import { createDocument } from "zod-openapi";
 
 import {
   accountResponseSchemas,
+  adminCategoryDataSchema,
+  adminCategoryListDataSchema,
+  adminCategorySchema,
+  adminChapterDataSchema,
+  adminChapterListDataSchema,
+  adminChapterSchema,
+  adminWorkDataSchema,
+  adminWorkListDataSchema,
+  adminWorkSchema,
+  categoryIdParamsSchema,
+  chapterContentTypeSchema,
+  contentErrorCodeSchema,
+  contentOperationErrorCodeSchema,
+  type ContentErrorCode,
+  type ContentOperationErrorCode,
+  commonHttpErrorCodeSchema,
+  createCategoryBodySchema,
+  createChapterBodySchema,
+  createWorkBodySchema,
   errorEnvelopeSchema,
+  paginationQuerySchema,
+  publicationCommandBodySchema,
+  publicationStatusSchema,
+  publicationTransitionDataSchema,
+  publicationTransitionSchema,
+  publicCategorySchema,
+  publicChapterDataSchema,
+  publicChapterListDataSchema,
+  publicChapterParamsSchema,
+  publicChapterSchema,
+  publicWorkDataSchema,
+  publicWorkListDataSchema,
+  publicWorkSchema,
+  replaceWorkCategoriesBodySchema,
+  storyStatusSchema,
+  structuredTextDocumentSchema,
   successEnvelopeSchema,
+  updateCategoryBodySchema,
+  updateChapterBodySchema,
+  updateWorkBodySchema,
+  workChapterParamsSchema,
+  workIdParamsSchema,
+  workSlugParamsSchema,
+  workTypeSchema,
 } from "@fury/contracts";
 
 import { appConfig } from "../../core/config/app.config.js";
@@ -45,6 +87,17 @@ const errorResponse = (description: string) => ({
   content: { "application/json": { schema: errorEnvelopeSchema } },
 });
 
+const contentErrorResponse = (
+  codes: readonly [ContentOperationErrorCode, ...ContentOperationErrorCode[]],
+) => ({
+  description: codes.join(", "),
+  content: {
+    "application/json": {
+      schema: errorEnvelopeSchema.safeExtend({ code: z.enum(codes) }),
+    },
+  },
+});
+
 const commonErrors = {
   "400": errorResponse("Invalid request"),
   "401": errorResponse("Authentication failed"),
@@ -52,6 +105,27 @@ const commonErrors = {
   "429": errorResponse("Rate limit exceeded"),
   "500": errorResponse("Unexpected server error"),
 };
+
+const contentCommonErrors = {
+  "400": contentErrorResponse(["VALIDATION_ERROR", "BAD_REQUEST"]),
+  "429": contentErrorResponse(["RATE_LIMIT_EXCEEDED"]),
+  "500": contentErrorResponse(["INTERNAL_SERVER_ERROR"]),
+  "503": contentErrorResponse(["SERVICE_UNAVAILABLE"]),
+};
+
+const adminContentErrors = {
+  ...contentCommonErrors,
+  "401": contentErrorResponse(["UNAUTHORIZED"]),
+  "403": contentErrorResponse(["FORBIDDEN"]),
+};
+
+const contentNotFound = contentErrorResponse(["NOT_FOUND"]);
+const contentConflict = (
+  codes: readonly [ContentErrorCode, ...ContentErrorCode[]],
+) => contentErrorResponse(codes);
+
+const adminReadSecurity = [{ BearerAuth: [] }];
+const adminWriteSecurity = [{ BearerAuth: [], CsrfHeader: [] }];
 
 const emptyObjectSchema = z.object({}).strict();
 const messageSchema = z.object({ message: z.string() }).strict();
@@ -72,7 +146,7 @@ export const buildOpenApiDocument = () =>
       title: `${appConfig.name} OpenAPI`,
       version: "1.0.0",
       description:
-        "Authentication-ready REST API with access tokens, rotating refresh cookies, CSRF protection, and current-user profile management.",
+        "Authentication and content-domain REST API with rotating refresh cookies, CSRF-protected ADMIN commands, and credential-free published metadata.",
     },
     servers: [{ url: appConfig.apiPrefix, description: "Configured API" }],
     components: {
@@ -94,6 +168,21 @@ export const buildOpenApiDocument = () =>
         AuthUserData: accountResponseSchemas.authUserData,
         AuthSessionData: accountResponseSchemas.authSessionData,
         ErrorEnvelope: errorEnvelopeSchema,
+        CommonHttpErrorCode: commonHttpErrorCodeSchema,
+        WorkType: workTypeSchema,
+        StoryStatus: storyStatusSchema,
+        PublicationStatus: publicationStatusSchema,
+        ChapterContentType: chapterContentTypeSchema,
+        ContentErrorCode: contentErrorCodeSchema,
+        ContentOperationErrorCode: contentOperationErrorCodeSchema,
+        StructuredTextDocument: structuredTextDocumentSchema,
+        PublicCategory: publicCategorySchema,
+        PublicWork: publicWorkSchema,
+        PublicChapter: publicChapterSchema,
+        AdminCategory: adminCategorySchema,
+        AdminWork: adminWorkSchema,
+        AdminChapter: adminChapterSchema,
+        PublicationTransition: publicationTransitionSchema,
       },
     },
     paths: {
@@ -257,6 +346,309 @@ export const buildOpenApiDocument = () =>
               accountResponseSchemas.authUserData,
             ),
             ...commonErrors,
+          },
+        },
+      },
+      "/content/works": {
+        get: {
+          summary: "List published Works",
+          description:
+            "Credential-free metadata only; ambient credentials do not widen visibility.",
+          requestParams: { query: paginationQuerySchema },
+          responses: {
+            "200": successResponse(
+              "Published Work metadata",
+              publicWorkListDataSchema,
+            ),
+            ...contentCommonErrors,
+          },
+        },
+      },
+      "/content/works/{workSlug}": {
+        get: {
+          summary: "Read one published Work",
+          description:
+            "Missing, draft, and archived Works share the same NOT_FOUND outcome.",
+          requestParams: { path: workSlugParamsSchema },
+          responses: {
+            "200": successResponse("Published Work", publicWorkDataSchema),
+            "404": contentNotFound,
+            ...contentCommonErrors,
+          },
+        },
+      },
+      "/content/works/{workSlug}/chapters": {
+        get: {
+          summary: "List published Chapters for a published Work",
+          description:
+            "Chapter bodies and illustrated page metadata are excluded.",
+          requestParams: {
+            path: workSlugParamsSchema,
+            query: paginationQuerySchema,
+          },
+          responses: {
+            "200": successResponse(
+              "Published Chapter metadata",
+              publicChapterListDataSchema,
+            ),
+            "404": contentNotFound,
+            ...contentCommonErrors,
+          },
+        },
+      },
+      "/content/works/{workSlug}/chapters/{chapterNumber}": {
+        get: {
+          summary: "Read one published Chapter",
+          description:
+            "Both the parent Work and Chapter must be published; no body or page metadata is returned.",
+          requestParams: { path: publicChapterParamsSchema },
+          responses: {
+            "200": successResponse(
+              "Published Chapter metadata",
+              publicChapterDataSchema,
+            ),
+            "404": contentNotFound,
+            ...contentCommonErrors,
+          },
+        },
+      },
+      "/content/admin/categories": {
+        get: {
+          summary: "List Categories for content management",
+          security: adminReadSecurity,
+          requestParams: { query: paginationQuerySchema },
+          responses: {
+            "200": successResponse(
+              "Administrative Category list",
+              adminCategoryListDataSchema,
+            ),
+            ...adminContentErrors,
+          },
+        },
+        post: {
+          summary: "Create a Category",
+          security: adminWriteSecurity,
+          requestBody: jsonBody(createCategoryBodySchema),
+          responses: {
+            "201": successResponse("Category created", adminCategoryDataSchema),
+            "409": contentConflict(["CONTENT_CONFLICT"]),
+            ...adminContentErrors,
+          },
+        },
+      },
+      "/content/admin/categories/{categoryId}": {
+        get: {
+          summary: "Read one Category for content management",
+          security: adminReadSecurity,
+          requestParams: { path: categoryIdParamsSchema },
+          responses: {
+            "200": successResponse(
+              "Administrative Category",
+              adminCategoryDataSchema,
+            ),
+            "404": contentNotFound,
+            ...adminContentErrors,
+          },
+        },
+        patch: {
+          summary: "Update a Category",
+          description:
+            "Uses expectedVersion; slug is immutable and conflicts if changed.",
+          security: adminWriteSecurity,
+          requestParams: { path: categoryIdParamsSchema },
+          requestBody: jsonBody(updateCategoryBodySchema),
+          responses: {
+            "200": successResponse("Category updated", adminCategoryDataSchema),
+            "404": contentNotFound,
+            "409": contentConflict([
+              "CONTENT_IMMUTABLE",
+              "CONTENT_STALE_WRITE",
+            ]),
+            ...adminContentErrors,
+          },
+        },
+      },
+      "/content/admin/works": {
+        get: {
+          summary: "List Works for content management",
+          security: adminReadSecurity,
+          requestParams: { query: paginationQuerySchema },
+          responses: {
+            "200": successResponse(
+              "Administrative Work list",
+              adminWorkListDataSchema,
+            ),
+            ...adminContentErrors,
+          },
+        },
+        post: {
+          summary: "Create a Work",
+          security: adminWriteSecurity,
+          requestBody: jsonBody(createWorkBodySchema),
+          responses: {
+            "201": successResponse("Work created", adminWorkDataSchema),
+            "409": contentConflict(["CONTENT_CONFLICT"]),
+            ...adminContentErrors,
+          },
+        },
+      },
+      "/content/admin/works/{workId}": {
+        get: {
+          summary: "Read one Work for content management",
+          security: adminReadSecurity,
+          requestParams: { path: workIdParamsSchema },
+          responses: {
+            "200": successResponse("Administrative Work", adminWorkDataSchema),
+            "404": contentNotFound,
+            ...adminContentErrors,
+          },
+        },
+        patch: {
+          summary: "Update a Work",
+          description:
+            "Uses expectedVersion; slug and canonical Work type are immutable.",
+          security: adminWriteSecurity,
+          requestParams: { path: workIdParamsSchema },
+          requestBody: jsonBody(updateWorkBodySchema),
+          responses: {
+            "200": successResponse("Work updated", adminWorkDataSchema),
+            "404": contentNotFound,
+            "409": contentConflict([
+              "CONTENT_IMMUTABLE",
+              "CONTENT_STALE_WRITE",
+            ]),
+            ...adminContentErrors,
+          },
+        },
+      },
+      "/content/admin/works/{workId}/categories": {
+        put: {
+          summary: "Replace a Work's authoritative Category set",
+          description:
+            "An identical set is an unchanged idempotent success; duplicate IDs fail validation.",
+          security: adminWriteSecurity,
+          requestParams: { path: workIdParamsSchema },
+          requestBody: jsonBody(replaceWorkCategoriesBodySchema),
+          responses: {
+            "200": successResponse(
+              "Authoritative Category set",
+              adminWorkDataSchema,
+            ),
+            "404": contentNotFound,
+            "409": contentConflict(["CONTENT_STALE_WRITE"]),
+            ...adminContentErrors,
+          },
+        },
+      },
+      "/content/admin/works/{workId}/chapters": {
+        get: {
+          summary: "List Chapters for content management",
+          security: adminReadSecurity,
+          requestParams: {
+            path: workIdParamsSchema,
+            query: paginationQuerySchema,
+          },
+          responses: {
+            "200": successResponse(
+              "Administrative Chapter list",
+              adminChapterListDataSchema,
+            ),
+            "404": contentNotFound,
+            ...adminContentErrors,
+          },
+        },
+        post: {
+          summary: "Create a Chapter",
+          description:
+            "Content type is derived from the immutable parent Work type.",
+          security: adminWriteSecurity,
+          requestParams: { path: workIdParamsSchema },
+          requestBody: jsonBody(createChapterBodySchema),
+          responses: {
+            "201": successResponse("Chapter created", adminChapterDataSchema),
+            "404": contentNotFound,
+            "409": contentConflict([
+              "CONTENT_CONFLICT",
+              "CONTENT_TYPE_CONFLICT",
+            ]),
+            ...adminContentErrors,
+          },
+        },
+      },
+      "/content/admin/works/{workId}/chapters/{chapterId}": {
+        get: {
+          summary: "Read one Chapter for content management",
+          security: adminReadSecurity,
+          requestParams: { path: workChapterParamsSchema },
+          responses: {
+            "200": successResponse(
+              "Administrative Chapter",
+              adminChapterDataSchema,
+            ),
+            "404": contentNotFound,
+            ...adminContentErrors,
+          },
+        },
+        patch: {
+          summary: "Update Chapter content or numbering",
+          description:
+            "Uses expectedVersion and atomically replaces any submitted non-empty illustrated page sequence.",
+          security: adminWriteSecurity,
+          requestParams: { path: workChapterParamsSchema },
+          requestBody: jsonBody(updateChapterBodySchema),
+          responses: {
+            "200": successResponse("Chapter updated", adminChapterDataSchema),
+            "404": contentNotFound,
+            "409": contentConflict([
+              "CONTENT_CONFLICT",
+              "CONTENT_TYPE_CONFLICT",
+              "CONTENT_STALE_WRITE",
+            ]),
+            ...adminContentErrors,
+          },
+        },
+      },
+      "/content/admin/works/{workId}/publication": {
+        put: {
+          summary: "Set a Work publication state",
+          description:
+            "Same-state retries are idempotent; stale or disallowed transitions conflict.",
+          security: adminWriteSecurity,
+          requestParams: { path: workIdParamsSchema },
+          requestBody: jsonBody(publicationCommandBodySchema),
+          responses: {
+            "200": successResponse(
+              "Work publication result",
+              publicationTransitionDataSchema,
+            ),
+            "404": contentNotFound,
+            "409": contentConflict([
+              "CONTENT_TRANSITION_CONFLICT",
+              "CONTENT_STALE_WRITE",
+            ]),
+            ...adminContentErrors,
+          },
+        },
+      },
+      "/content/admin/works/{workId}/chapters/{chapterId}/publication": {
+        put: {
+          summary: "Set a Chapter publication state",
+          description:
+            "Illustrated Chapters require at least one committed page before publishing; same-state retries are idempotent.",
+          security: adminWriteSecurity,
+          requestParams: { path: workChapterParamsSchema },
+          requestBody: jsonBody(publicationCommandBodySchema),
+          responses: {
+            "200": successResponse(
+              "Chapter publication result",
+              publicationTransitionDataSchema,
+            ),
+            "404": contentNotFound,
+            "409": contentConflict([
+              "CONTENT_TRANSITION_CONFLICT",
+              "CONTENT_STALE_WRITE",
+            ]),
+            ...adminContentErrors,
           },
         },
       },

@@ -11,21 +11,39 @@ const schema = readFileSync(
   "utf8",
 );
 
-describe("authentication-only Prisma schema", () => {
-  it("contains exactly the required application models and enums", () => {
+describe("post-P01 Prisma schema", () => {
+  it("contains exactly the accepted account and content models and enums", () => {
     const models = [...schema.matchAll(/^model\s+(\w+)/gmu)].map(
       (match) => match[1],
     );
     const enums = [...schema.matchAll(/^enum\s+(\w+)/gmu)].map(
       (match) => match[1],
     );
-    expect(models).toEqual(["User", "RefreshToken"]);
-    expect(enums).toEqual(["UserRole", "UserStatus"]);
+    expect(models).toEqual([
+      "User",
+      "RefreshToken",
+      "Work",
+      "Category",
+      "WorkCategory",
+      "Chapter",
+      "ChapterPage",
+      "PublicationEvent",
+    ]);
+    expect(enums).toEqual([
+      "UserRole",
+      "UserStatus",
+      "WorkType",
+      "StoryStatus",
+      "PublicationStatus",
+      "ChapterContentType",
+    ]);
   });
 
-  it("contains no demo or business-specific model inventory", () => {
+  it("keeps account/session ownership and excludes later product domains", () => {
+    expect(schema).toContain("model User");
+    expect(schema).toContain("model RefreshToken");
     expect(schema).not.toMatch(
-      /DemoMessage|Organization|Project|Quotation|Payment/u,
+      /Bookmark|Rating|Comment|Notification|Gift|Advertisement|MediaAsset/u,
     );
   });
 });

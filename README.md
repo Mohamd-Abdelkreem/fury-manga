@@ -1,8 +1,9 @@
 # Fury Turbo
 
-A generic Next.js 16, Express 5, PostgreSQL, and Prisma 7 foundation with a
-complete email/password account lifecycle. It contains no product domain,
-organization, tenant, payment, or demo data model.
+A Next.js 16, Express 5, PostgreSQL, and Prisma 7 foundation with a complete
+email/password account lifecycle and the P01 authoritative content-domain
+boundary. Existing content screens remain fixture/local-state presentations;
+P01 does not connect them to the server.
 
 ## What is included
 
@@ -15,6 +16,8 @@ organization, tenant, payment, or demo data model.
 - HttpOnly refresh cookie plus readable double-submit CSRF cookie
 - console, Resend, and SMTP email delivery
 - request IDs, URL credential sanitization, rate limits, and safe errors
+- shared Category, Work, Chapter, publication, and pagination contracts
+- durable content records with ADMIN management and credential-free published metadata
 - unit tests and disposable PostgreSQL Testcontainers integration tests
 
 ## Local setup
@@ -128,6 +131,34 @@ delivery fails. Provider failure logs contain only safe classifications such as
 provider, attempt, error name, and status code; raw provider messages are not
 logged.
 
+## Content-domain foundation
+
+P01 persists Categories, Works, Work–Category associations, Chapters, ordered
+illustrated page metadata, and immutable publication events. It deliberately
+contains no media upload/storage fields, reader output, personalization, or
+screen integration.
+
+The API exposes four credential-free metadata reads beneath
+`/api/v1/content/works`. Public Work and Chapter visibility requires the Work
+and Chapter to be published, and public Chapter responses exclude structured
+text and page metadata. Missing, draft, and archived direct reads use the same
+safe `404 NOT_FOUND` result.
+
+Fifteen `/api/v1/content/admin/*` operations provide bounded list/create/read/
+update behavior, whole-set Work–Category replacement, and target-state Work/
+Chapter publication commands. They require an authenticated active, verified
+`ADMIN`; unsafe operations additionally require the established CSRF cookie and
+header pair. Updates use expected versions. Same-state publication retries and
+identical category sets are idempotent; stale or incompatible changes return
+stable conflicts without partial state.
+
+Text Chapters store a strict version-1 JSON document containing only H2/H3
+headings, paragraphs with bounded inline emphasis/internal links, and ordered
+or unordered lists. Illustrated Chapters store ordered positive page positions
+only; media ownership and delivery are later-phase work. Existing Arabic RTL
+admin, discovery, and text-story screens remain fixture-backed and do not prove
+server persistence.
+
 ## Optional seed accounts
 
 Both groups are disabled unless all three values in that group are present:
@@ -171,15 +202,20 @@ does not provide or claim a verified one-command production Compose stack.
 
 ## Database invariants
 
-The single initial migration creates only `users` and `refresh_tokens`. It
-also enforces:
+The migration chain contains the initial account/session migration and the
+additive `20260922010000_content_domain_foundation` migration. The initial
+migration enforces:
 
 - `ck_users_email_normalized`
 - `ck_users_status_timestamps_consistent`
 
-Migration integration tests inspect both constraints, reject invalid direct
-inserts, accept valid pending/active users, verify cascade behavior, and deploy
-the migration a second time.
+The content migration adds six entity types with normalized unique slugs,
+positive/unique chapter and page positions, restrictive relationships,
+publication-state consistency, derived chapter representation, immutable
+identity/history, and deferred illustrated-publication readiness. Migration
+integration tests cover fresh installation, populated account/session upgrade,
+constraint failures, reconnect persistence, and idempotent redeployment against
+disposable PostgreSQL 18.
 
 ## Verification
 

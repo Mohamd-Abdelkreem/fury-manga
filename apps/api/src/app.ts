@@ -17,7 +17,7 @@ import {
   type EmailDelivery,
 } from "./infrastructure/email/index.js";
 import {
-  apiRateLimitMiddleware,
+  createApiRateLimitMiddleware,
   createRequestLoggerMiddleware,
   errorHandler,
   notFound,
@@ -73,7 +73,7 @@ export const createApp = ({
   // API routes
   app.use(
     appConfig.apiPrefix,
-    apiRateLimitMiddleware,
+    createApiRateLimitMiddleware(),
     createApiRouter(database, new EmailService(emailDelivery)),
   );
 

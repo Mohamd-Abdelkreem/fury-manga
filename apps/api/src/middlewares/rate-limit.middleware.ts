@@ -13,13 +13,14 @@ const rateLimitHandler = (
   next(new TooManyRequestsException());
 };
 
-export const apiRateLimitMiddleware = rateLimit({
-  windowMs: rateLimitConfig.windowMs,
-  limit: rateLimitConfig.maxRequests,
-  standardHeaders: "draft-8",
-  legacyHeaders: false,
-  handler: rateLimitHandler,
-});
+export const createApiRateLimitMiddleware = () =>
+  rateLimit({
+    windowMs: rateLimitConfig.windowMs,
+    limit: rateLimitConfig.maxRequests,
+    standardHeaders: "draft-8",
+    legacyHeaders: false,
+    handler: rateLimitHandler,
+  });
 
 export const createSourceRateLimiter = (config: AuthRouteLimit) =>
   rateLimit({

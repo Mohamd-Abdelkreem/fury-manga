@@ -32,7 +32,41 @@ describe("errorHandlerMiddleware", () => {
         code: "INTERNAL_SERVER_ERROR",
       }),
     );
+    expect(JSON.stringify(json.mock.calls)).not.toContain('"stack"');
     expect(requestLog.error).toHaveBeenCalledOnce();
     expect(requestLog.warn).not.toHaveBeenCalled();
+  });
+
+  it("logs only allowlisted diagnostics for unknown errors", () => {
+    const sentinel = "nested-private-sentinel";
+    const unknownError = Object.assign(new Error("Failure " + sentinel), {
+      config: {
+        headers: { authorization: sentinel },
+        url: "/callback?token=" + sentinel,
+        data: { password: sentinel },
+      },
+    });
+    const requestLog = { error: vi.fn(), warn: vi.fn() };
+    const request = {
+      log: requestLog,
+      path: "/internal-error",
+      requestId: "request-id",
+    } as unknown as Request;
+    const json = vi.fn();
+    const status = vi.fn();
+    const response = { status, json } as unknown as Response;
+    status.mockReturnValue(response);
+
+    errorHandlerMiddleware(unknownError, request, response, vi.fn());
+
+    expect(JSON.stringify(requestLog.error.mock.calls)).not.toContain(sentinel);
+    expect(JSON.stringify(json.mock.calls)).not.toContain(sentinel);
+    expect(requestLog.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        error: { kind: "Error", name: "Error" },
+        requestId: "request-id",
+      }),
+      "An unexpected error occurred.",
+    );
   });
 });

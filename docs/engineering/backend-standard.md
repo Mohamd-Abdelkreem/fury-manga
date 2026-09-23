@@ -9,12 +9,21 @@ guides. A known old pattern is not an exception to an explicit standard.
 authenticated context, call the service, then return the established envelope with
 path/request ID. No business decisions, Prisma or transactions. Assign awaited
 results and response values to named constants before invoking response helpers.
-Do not hide a service call in a nested await inside a response expression.
+Pass prepared values, not nested function calls, to response helpers. Do not hide
+a service call in a nested await inside a response expression. Keep controller
+classes focused on HTTP handlers; class-specific helpers are private methods.
 
 **B02 — Business services.** Services own invariants and sequence queries,
 transactions, security, mapping and audit where required. A use case should explain
 the business operation, not merely rename Prisma methods. Split growing services
 by real responsibilities, not by an arbitrary size or a universal base class.
+When returning the result of a function or method call, assign it to a named
+constant first, then return that constant. This applies to service delegation,
+database calls and transactions, not only long transaction callbacks. A short,
+single-argument mapper call may be returned directly when it stays clear.
+In particular, do not write `return await this.database.$transaction(...)`;
+await the transaction into a named result, then return that result. Keep the
+transaction's work inside its callback so its atomicity is unchanged.
 
 **B03 — Query ownership.** Move complex Prisma queries into feature-local
 `*.queries.ts`; extract query builders when complex or reusable. Simple focused
@@ -146,7 +155,15 @@ requirements so the response actually tests route resolution.
 
 **B33 — Cohesive files.** Put constants, types, queries, mappers, services, controllers
 and route composition in their responsible owners as complexity warrants. No God
-files; no empty folder/class matrix for a five-line operation.
+files; no empty folder/class matrix for a five-line operation. In `*.service.ts`
+and `*.controller.ts`, the only top-level code is imports and the exported class
+declaration: no top-level types, interfaces, constants, variables, functions or
+executable statements. Put their module-local types in a feature-local `*.types.ts`
+file. Shared HTTP types remain in shared contracts; query- and mapper-specific
+persistence types stay with their owning query or mapper. Helpers used only by a
+service or controller belong inside that class as private methods, grouped after
+its public methods under a `// Helper methods` comment. Independently owned pure
+mappers and query helpers stay in their feature-local files as in B03 and B04.
 
 **B34 — Dependency injection.** Composition supplies database/providers and relevant
 clock, identifier, audit or encryption dependencies. Avoid hidden mutable singletons.
@@ -236,6 +253,14 @@ authority, safe output/errors, meaningful unit/integration/cross-layer tests and
 lint/type/build checks must agree. Green units cannot excuse broken integration or
 architecture. Record applicable concurrency/rollback evidence, unresolved warnings
 and actual limitations using the [handoff/review policy](../workflow/operating-policy.md).
+Fix lint findings at their cause; do not reach for a rule disable to make a check
+pass. A narrowly scoped `eslint-disable-next-line` is a last resort only after
+checking that a lint-compliant solution would be incorrect, documenting the exact
+reason and verifying the affected boundary. For input-safety assertions, trace the
+actual route/schema validation and cover the call path with a test. A comment
+claiming that route schemas parsed a value is not proof by itself, and must not
+justify suppressing `@typescript-eslint/no-unnecessary-type-parameters` around an
+unchecked generic cast. Never use a file-wide disable for this workaround.
 
 ## Worked module: a conditional title update
 
@@ -336,6 +361,11 @@ export const updateItemIfCurrent = (
 ### Service: business outcome and one transaction owner
 
 ```ts
+// apps/api/src/modules/items/items.types.ts
+export type Actor = Readonly<{ id: string }>;
+```
+
+```ts
 // apps/api/src/modules/items/items.service.ts
 import type { ItemDto, UpdateItemBody } from "@workspace/contracts";
 import type { DatabaseClient } from "@workspace/database";
@@ -343,8 +373,7 @@ import type { DatabaseClient } from "@workspace/database";
 import { AppError } from "../../core/errors/app.error.js";
 import { mapItem } from "./items.mapper.js";
 import { findOwnedItem, updateItemIfCurrent } from "./items.queries.js";
-
-type Actor = Readonly<{ id: string }>;
+import type { Actor } from "./items.types.js";
 
 export class ItemsService {
   constructor(private readonly database: DatabaseClient) {}
@@ -354,7 +383,7 @@ export class ItemsService {
     itemId: string,
     input: UpdateItemBody,
   ): Promise<ItemDto> {
-    return this.database.$transaction(async (tx) => {
+    const item = await this.database.$transaction(async (tx) => {
       const existing = await findOwnedItem(tx, itemId, actor.id);
       if (existing === null) {
         throw new AppError("Resource not found.", 404, "NOT_FOUND");
@@ -380,6 +409,7 @@ export class ItemsService {
       }
       return mapItem(updated);
     });
+    return item;
   }
 }
 ```
@@ -418,14 +448,10 @@ export class ItemsController {
     );
     const result = await this.service.update(actor, params.itemId, body);
     const message = "Resource updated.";
+    const path = request.path;
+    const requestId = request.requestId;
 
-    return ResponseHelper.ok(
-      response,
-      result,
-      message,
-      request.path,
-      request.requestId,
-    );
+    return ResponseHelper.ok(response, result, message, path, requestId);
   };
 }
 ```

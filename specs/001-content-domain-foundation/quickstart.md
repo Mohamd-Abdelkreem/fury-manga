@@ -56,7 +56,7 @@ Any failure is a P01 gate failure. Do not use `db push` or `migrate reset` to by
 ## 3. Run the smallest real HTTP journey
 
 ```powershell
-pnpm --filter @fury/api exec vitest run --config vitest.integration.config.ts src/content.integration.test.ts
+pnpm --filter @fury/api exec vitest run --config vitest.integration.config.ts ./src/content.integration.test.ts
 ```
 
 The test must perform this sequence through `createApp` and Supertest:

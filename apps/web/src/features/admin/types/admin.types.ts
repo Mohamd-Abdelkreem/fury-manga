@@ -1,7 +1,8 @@
+import type { UserRole, WorkType } from "@fury/contracts";
+
 import type { TextBlock } from "../../text-stories/data/textStories";
 
-export type AdminWorkType =
-  "manga" | "manhwa" | "manhua" | "comics" | "novel" | "text-story";
+export type AdminWorkType = WorkType;
 
 export type AdminStoryStatus = "ongoing" | "completed" | "hiatus" | "cancelled";
 
@@ -119,7 +120,7 @@ export const AVAILABLE_GENRES: readonly string[] = [
   "عوالم أخرى",
 ];
 
-export type AdminUserRole = "user" | "admin";
+export type AdminUserRole = Lowercase<UserRole>;
 export type AdminUserStatus = "active" | "suspended";
 
 export interface AdminUser {
