@@ -3,6 +3,7 @@
 import React, { useState, type SyntheticEvent } from "react";
 import { Sparkles, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AdminMediaCandidatePicker } from "@/features/media/components/AdminMediaCandidatePicker";
 import type {
   AdminGiftDesign,
   AdminGiftStatus,
@@ -199,6 +200,19 @@ function GiftFormInner({ gift, onClose, onSave }: InnerFormProps) {
               <option value="archived">مؤرشفة</option>
             </select>
           </div>
+        </div>
+
+        <div className={styles["field"]}>
+          <AdminMediaCandidatePicker
+            mediaClass={
+              type === "avatar_frame" ? "avatar_frame" : "comment_decoration"
+            }
+            label={
+              type === "avatar_frame"
+                ? "رفع صورة إطار مرشحة"
+                : "رفع صورة زخرفة مرشحة"
+            }
+          />
         </div>
 
         {/* Accent Color Preset Selector */}

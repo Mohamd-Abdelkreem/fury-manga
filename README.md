@@ -2,8 +2,8 @@
 
 A Next.js 16, Express 5, PostgreSQL, and Prisma 7 foundation with a complete
 email/password account lifecycle and the P01 authoritative content-domain
-boundary. Existing content screens remain fixture/local-state presentations;
-P01 does not connect them to the server.
+boundary plus the private P02 media platform. Existing parent editing screens
+remain fixture/local-state presentations and do not prove server persistence.
 
 ## What is included
 
@@ -18,6 +18,7 @@ P01 does not connect them to the server.
 - request IDs, URL credential sanitization, rate limits, and safe errors
 - shared Category, Work, Chapter, publication, and pagination contracts
 - durable content records with ADMIN management and credential-free published metadata
+- private persistent image assets, actor-scoped upload attempts, narrow P01 media references, and operator reconciliation
 - unit tests and disposable PostgreSQL Testcontainers integration tests
 
 ## Local setup
@@ -49,6 +50,10 @@ workspace-root, Git-ignored `.local-emails` directory, requesting owner-only
 filesystem modes where the platform supports them, without making a provider
 network call. Open the newest `.html` file and click its verification or reset
 button. The API log reports the preview file path, not the link or token.
+
+Create a private writable media directory outside this checkout and set its
+absolute path as `MEDIA_STORAGE_ROOT` in `.env`. The API fails startup rather
+than falling back to a release or public directory.
 
 Start the database, deploy the migration, and run both applications:
 
@@ -159,6 +164,36 @@ only; media ownership and delivery are later-phase work. Existing Arabic RTL
 admin, discovery, and text-story screens remain fixture-backed and do not prove
 server persistence.
 
+## Private media platform
+
+P02 stores validated JPEG, PNG, and WebP assets beneath the configured private
+media root. Five media classes require an active verified `ADMIN`; an active
+verified user may upload and remove only their own unbound avatar candidates.
+Every metadata and binary read is authenticated, binaries use private no-store
+headers, and no public media route exists.
+
+Uploads use an actor-scoped UUID idempotency key, bounded multipart parsing,
+class-specific byte, dimension, and transparency checks, canonical re-encoding,
+and atomic staging and publish. Work cover/background and illustrated
+ChapterPage references use versioned compare-and-set replacement and
+retirement. A live reference blocks physical removal with `MEDIA_IN_USE`.
+
+Run reconciliation manually and in bounded batches:
+
+```bash
+pnpm --filter @fury/api media:reconcile --limit=100
+```
+
+The command settles interrupted uploads and removals, marks missing or corrupt
+bytes unavailable, and accepts restored bytes only when the stored length and
+SHA-256 match. Follow [the media backup and restore runbook](./docs/operations/media-backup-restore.md)
+for coordinated database and filesystem recovery.
+
+P02 does not persist the current fixture-backed Work/Chapter forms, bind an
+avatar to a profile, expose reader/public images, or implement category media,
+personalization, gifts/grants, publication workflows, or automatic garbage
+collection. Those remain P03/P04/P05/P07/P10 scope.
+
 ## Optional seed accounts
 
 Both groups are disabled unless all three values in that group are present:
@@ -202,8 +237,9 @@ does not provide or claim a verified one-command production Compose stack.
 
 ## Database invariants
 
-The migration chain contains the initial account/session migration and the
-additive `20260922010000_content_domain_foundation` migration. The initial
+The migration chain contains the initial account/session migration, the
+additive `20260922010000_content_domain_foundation` migration, and the
+forward-only `20260923010000_persistent_vps_media` migration. The initial
 migration enforces:
 
 - `ck_users_email_normalized`

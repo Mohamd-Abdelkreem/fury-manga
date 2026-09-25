@@ -1,6 +1,6 @@
 # P00 implementation evidence (2026-09-23)
 
-**Disposition: open.** P00 code changes are in place, but the exact `pnpm verify` exit gate has not passed and independent phase acceptance has not occurred. Do not mark P00 accepted or treat P01/P02 as unblocked on this record alone.
+**Disposition: open.** P00 code changes and the exact repository verification gate now pass, but independent phase acceptance has not occurred. Do not mark P00 accepted or treat P01/P02 as unblocked on this record alone.
 
 ## Delivered against the P00 gate
 
@@ -28,10 +28,8 @@
 
 The built web app was opened locally with Playwright. With the API at `localhost:4200` unavailable, a direct chapter visit showed only the protected-route retry state and no chapter text/images. A browser-only 401 response shaped like the existing auth error contract then made the same direct visit navigate to `/auth/login` without chapter content. The login document reported `lang=ar` and `dir=rtl`; Tab reached the named Fury home link. The settled public home rendered Arabic navigation and no advertising slot or ad-block appeal. The stubbed browser navigation is not a real authenticated API journey; active-account behavior is covered by route/component tests, and physical-device behavior remains unverified. The unavailable-API browser state also showed an English network-error sentence in the existing auth guard, so FUR-10 stays open.
 
-## Remaining acceptance work
+## Verification update — 2026-09-24
 
-1. Resolve the root format gate without modifying unrelated tool-owned assets or weakening the project check without explicit approval. An attempted `.prettierignore` exclusion for external skill/worktree/screenshot directories was rejected by automatic approval review because it persistently narrows the format gate. No such exclusion was applied.
-2. Rerun `pnpm verify` to a zero exit status after that resolution. Recheck the final diff after any further edits.
-3. Obtain an independent P00 phase review. Production migration/backup and physical-device evidence remain separate release concerns, not claimed by disposable tests.
+The repository formatting exclusions were subsequently limited to generated/local tool artifacts while retaining source, feature artifacts, application code, and operations documentation in the check. A fresh `pnpm verify` on the final P02 technical tree exited 0: Prisma format/validation/generation, repository formatting, all package lint/type/unit checks, 75 API integration tests, 15 database integration tests, all builds, six required build entry artifacts across 366 emitted files with no test artifacts, and the final `git diff --check` passed. Docker Engine was 29.1.3 and the disposable integration image reported PostgreSQL 18.4.
 
-Until these items are settled, tasks T011–T012 and the P00 phase gate remain open.
+T011 is complete. T012 and the P00 phase gate remain open for the required independent disposition. Production migration/backup and physical-device evidence remain release concerns and are not claimed by the disposable checks.

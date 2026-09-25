@@ -1,7 +1,8 @@
 # Project reference
 
 This is the implemented architecture and operations reference for the
-authentication foundation and P01 content-domain boundary.
+authentication foundation, P01 content-domain boundary, and P02 private media
+platform.
 
 ## Boundaries
 
@@ -14,7 +15,7 @@ Next.js UI
   -> PostgreSQL
 ```
 
-- `@fury/contracts` owns account/content request and output schemas, canonical
+- `@fury/contracts` owns account/content/media request and output schemas, canonical
   content enums, structured text, field errors, pagination, and envelopes.
 - `@fury/database` owns Prisma schema, migrations, generated types, seed
   behavior, and the client factory.
@@ -163,6 +164,40 @@ after `20260818000000_init_authentication`. Existing web content fixtures are
 not migrated or seeded. Application rollback may ignore the additive tables;
 schema correction requires a later forward migration or verified backup restore,
 not editing applied history.
+
+## Media module
+
+`src/modules/media` owns actor and class authority, upload-attempt idempotency,
+private asset projections, reference compare-and-set transitions, removal, and
+thin HTTP handlers. `src/infrastructure/media` owns the validated filesystem
+root, atomic staging and publish, image decoding and canonical re-encoding, and
+bounded operator reconciliation. The storage adapter accepts server-owned UUID
+keys only and never derives paths from source filenames.
+
+The shared media contract exposes six classes. Five use ADMIN scope; a
+`user_avatar` candidate is scoped to its active verified owner. ADMIN role does
+not grant access to another user's avatar. All media JSON and binary routes are
+authenticated, unsafe routes preserve CSRF, outputs omit owner/uploader/path/hash
+data, and the binary response is private and no-store. React Query keys include
+the real actor and resource scope; components do not call Axios directly.
+
+`MediaReference` binds only existing P01 Work cover/background slots or an
+existing illustrated ChapterPage to an available class-matching asset. One
+active target slot is enforced by partial unique indexes. Replacement and
+retirement use expected asset identity plus integer version, append immutable
+events, and preserve retired history. A live reference prevents asset removal.
+
+`20260923010000_persistent_vps_media` is a forward-only additive migration.
+Recovery requires a coordinated PostgreSQL and private-filesystem snapshot.
+The manual `media:reconcile` command accepts a bounded limit, settles provable
+pending uploads or rejects incomplete ones, completes interrupted removal,
+marks damaged assets unavailable, and restores availability only for exact
+stored length/hash matches. See `docs/operations/media-backup-restore.md`.
+
+Current Work and Chapter admin screens still use fixture identities rather than
+P01 UUIDs, so they upload private candidates without claiming persistent parent
+binding. P02 does not bind profile avatars, expose public/reader media, persist
+later parent workflows, or implement automatic garbage collection.
 
 ## Generic utilities
 

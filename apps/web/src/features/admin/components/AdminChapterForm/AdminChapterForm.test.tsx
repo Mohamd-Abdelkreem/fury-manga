@@ -26,6 +26,12 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
 }));
 
+vi.mock("@/features/media/components/AdminMediaCandidatePicker", () => ({
+  AdminMediaCandidatePicker: ({ label }: { label: string }) => (
+    <input aria-label={label} type="file" />
+  ),
+}));
+
 describe("AdminChapterForm Component", () => {
   it("renders create chapter form with breadcrumbs and work title", () => {
     render(
@@ -61,33 +67,28 @@ describe("AdminChapterForm Component", () => {
     );
 
     expect(screen.getByText("صفحات الفصل المصور")).toBeInTheDocument();
-    expect(screen.getByText("إضافة صفحة تجريبية")).toBeInTheDocument();
+    expect(screen.getByLabelText("رفع صفحة مصورة مرشحة")).toBeInTheDocument();
+    screen.getByLabelText("رفع صفحة مصورة مرشحة").focus();
+    expect(screen.getByLabelText("رفع صفحة مصورة مرشحة")).toHaveFocus();
     expect(screen.getByText("حذف الكل")).toBeInTheDocument();
   });
 
-  it("adds, reorders, and deletes pages in illustrated mode", () => {
+  it("reorders and deletes fixture pages without claiming the uploaded candidate is saved", () => {
     render(
       <AdminDataProvider>
         <AdminChapterForm workId="trait-hoarder" />
       </AdminDataProvider>,
     );
 
-    const addPageBtn = screen.getByText("إضافة صفحة تجريبية");
-    fireEvent.click(addPageBtn);
-
-    // Initial dummy pages were 2, now should be 3
-    expect(screen.getByText("3 صفحات")).toBeInTheDocument();
-
-    // Delete a page
     const deleteButtons = screen.getAllByTitle("حذف الصفحة");
-    expect(deleteButtons.length).toBe(3);
+    expect(deleteButtons.length).toBe(2);
     const firstDeleteBtn = deleteButtons[0];
     expect(firstDeleteBtn).toBeDefined();
     if (firstDeleteBtn) {
       fireEvent.click(firstDeleteBtn);
     }
 
-    expect(screen.getByText("2 صفحات")).toBeInTheDocument();
+    expect(screen.getByText("1 صفحة")).toBeInTheDocument();
   });
 
   it("renders text novel editor when work is a novel", () => {
@@ -186,5 +187,16 @@ describe("AdminChapterForm Component", () => {
     );
 
     expect(screen.getByText("العمل غير موجود")).toBeInTheDocument();
+  });
+
+  it("does not offer persistent page binding for fixture chapter identities", () => {
+    render(
+      <AdminDataProvider>
+        <AdminChapterForm workId="trait-hoarder" chapterId="th-43" />
+      </AdminDataProvider>,
+    );
+    expect(
+      screen.queryByRole("button", { name: /bind page|ربط الصفحة/iu }),
+    ).not.toBeInTheDocument();
   });
 });

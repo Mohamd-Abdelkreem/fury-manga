@@ -31,6 +31,12 @@ const expectedPaths = [
   "/content/admin/works/{workId}/chapters/{chapterId}",
   "/content/admin/works/{workId}/publication",
   "/content/admin/works/{workId}/chapters/{chapterId}/publication",
+  "/media/assets",
+  "/media/assets/{assetId}",
+  "/media/assets/{assetId}/content",
+  "/media/uploads/{attemptId}",
+  "/media/references",
+  "/media/references/{referenceId}",
 ] as const;
 
 const contentOperations = [
@@ -147,6 +153,76 @@ const responseCodeEnum = (
 };
 
 describe("OpenAPI document", () => {
+  it("documents private media upload and binary read with bearer authority", () => {
+    const document = buildOpenApiDocument();
+    const upload = document.paths?.["/media/assets"]?.post;
+    const content = document.paths?.["/media/assets/{assetId}/content"]?.get;
+    const removal = document.paths?.["/media/assets/{assetId}"]?.delete;
+    expect(upload?.security).toEqual([{ BearerAuth: [], CsrfHeader: [] }]);
+    expect(upload?.requestBody).toMatchObject({
+      content: { "multipart/form-data": {} },
+    });
+    expect(upload?.responses).toHaveProperty("201");
+    expect(
+      responseCodeEnum(document.paths, "/media/assets", "post", "409"),
+    ).toEqual(["UPLOAD_IN_PROGRESS", "UPLOAD_ATTEMPT_CONFLICT"]);
+    expect(
+      responseCodeEnum(document.paths, "/media/assets", "post", "413"),
+    ).toEqual(["MEDIA_LIMIT_EXCEEDED"]);
+    expect(content?.security).toEqual([{ BearerAuth: [] }]);
+    expect(content?.responses?.["200"]).toHaveProperty("content.image/jpeg");
+    expect(content?.responses).not.toHaveProperty("409");
+    expect(content?.responses).not.toHaveProperty("413");
+    expect(content?.responses).not.toHaveProperty("415");
+    expect(removal?.security).toEqual([{ BearerAuth: [], CsrfHeader: [] }]);
+    expect(removal?.responses).toHaveProperty("200");
+    expect(
+      responseCodeEnum(
+        document.paths,
+        "/media/assets/{assetId}/content",
+        "get",
+        "503",
+      ),
+    ).toEqual(["MEDIA_UNAVAILABLE", "SERVICE_UNAVAILABLE"]);
+    expect(
+      responseCodeEnum(
+        document.paths,
+        "/media/assets/{assetId}",
+        "delete",
+        "409",
+      ),
+    ).toEqual(["MEDIA_IN_USE"]);
+    const bind = document.paths?.["/media/references"]?.post;
+    const replace = document.paths?.["/media/references/{referenceId}"]?.put;
+    const retire = document.paths?.["/media/references/{referenceId}"]?.delete;
+    expect(bind?.security).toEqual([{ BearerAuth: [], CsrfHeader: [] }]);
+    expect(bind?.responses).toHaveProperty("201");
+    expect(replace?.security).toEqual([{ BearerAuth: [], CsrfHeader: [] }]);
+    expect(retire?.security).toEqual([{ BearerAuth: [], CsrfHeader: [] }]);
+    expect(
+      responseCodeEnum(
+        document.paths,
+        "/media/references/{referenceId}",
+        "put",
+        "409",
+      ),
+    ).toEqual(["MEDIA_TARGET_CONFLICT", "VERSION_CONFLICT"]);
+  });
+
+  it("describes degraded readiness as a success envelope", () => {
+    const response: unknown =
+      buildOpenApiDocument().paths?.["/health/ready"]?.get?.responses?.["503"];
+    expect(response).toMatchObject({
+      content: {
+        "application/json": {
+          schema: {
+            properties: { success: { const: true }, data: {} },
+          },
+        },
+      },
+    });
+  });
+
   it("does not advertise the retired account phone field", () => {
     expect(JSON.stringify(buildOpenApiDocument())).not.toContain('"phone"');
   });

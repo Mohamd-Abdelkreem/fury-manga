@@ -1,22 +1,14 @@
 import Image from "next/image";
-import { ImageIcon, Trash2 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import type { FormValues, WorkFieldChange } from "./form.types";
+import { ImageIcon } from "lucide-react";
+import { AdminMediaCandidatePicker } from "@/features/media/components/AdminMediaCandidatePicker";
+import type { FormValues } from "./form.types";
 import styles from "./AdminWorkForm.module.css";
 
 type Props = Readonly<{
   values: FormValues;
-  onChange: WorkFieldChange;
-  onCycleCover: () => void;
-  onCycleBanner: () => void;
 }>;
 
-export function AdminWorkMediaFields({
-  values,
-  onChange,
-  onCycleCover,
-  onCycleBanner,
-}: Props) {
+export function AdminWorkMediaFields({ values }: Props) {
   return (
     <>
       {/* Section 2: Media */}
@@ -46,27 +38,10 @@ export function AdminWorkMediaFields({
                 <ImageIcon size={32} color="var(--muted-foreground)" />
               )}
             </div>
-            <div className={styles["mediaControls"]}>
-              <button
-                type="button"
-                onClick={onCycleCover}
-                className={styles["mediaBtn"]}
-              >
-                تبديل الغلاف
-              </button>
-              {values.coverImage ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    onChange("coverImage", "");
-                  }}
-                  className={cn(styles["mediaBtn"], styles["removeBtn"])}
-                  aria-label="حذف الغلاف"
-                >
-                  <Trash2 size={13} aria-hidden="true" />
-                </button>
-              ) : null}
-            </div>
+            <AdminMediaCandidatePicker
+              mediaClass="work_cover"
+              label="رفع غلاف جديد"
+            />
             <p className={styles["hint"]}>
               الصيغ المقبولة: JPG, PNG, WebP بنسبة 3:4.
             </p>
@@ -89,27 +64,10 @@ export function AdminWorkMediaFields({
                 <ImageIcon size={32} color="var(--muted-foreground)" />
               )}
             </div>
-            <div className={styles["mediaControls"]}>
-              <button
-                type="button"
-                onClick={onCycleBanner}
-                className={styles["mediaBtn"]}
-              >
-                تبديل البانر
-              </button>
-              {values.bannerImage ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    onChange("bannerImage", "");
-                  }}
-                  className={cn(styles["mediaBtn"], styles["removeBtn"])}
-                  aria-label="حذف البانر"
-                >
-                  <Trash2 size={13} aria-hidden="true" />
-                </button>
-              ) : null}
-            </div>
+            <AdminMediaCandidatePicker
+              mediaClass="work_background"
+              label="رفع خلفية جديدة"
+            />
             <p className={styles["hint"]}>
               صورة بانر خلفية اختيارية تعرض في صفحة تفاصيل العمل.
             </p>

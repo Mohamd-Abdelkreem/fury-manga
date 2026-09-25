@@ -22,7 +22,7 @@ const insertWork = async (
 describe("content-domain PostgreSQL invariants", () => {
   beforeEach(async () => {
     await pool.query(
-      "TRUNCATE publication_events, chapter_pages, chapters, work_categories, categories, works",
+      "TRUNCATE media_reference_events, media_references, upload_attempts, media_assets, publication_events, chapter_pages, chapters, work_categories, categories, works",
     );
   });
 

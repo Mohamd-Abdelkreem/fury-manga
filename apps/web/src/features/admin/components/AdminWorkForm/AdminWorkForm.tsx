@@ -28,23 +28,6 @@ import styles from "./AdminWorkForm.module.css";
 const DEFAULT_COVER = "/anime/01.jpg";
 const DEFAULT_BANNER = "/anime/02.jpg";
 
-const SAMPLE_COVERS = [
-  "/anime/341452.jpg",
-  "/anime/366722.jpg",
-  "/anime/384226.jpg",
-  "/anime/411246.jpg",
-  "/anime/463379.jpg",
-  "/anime/463592.jpg",
-  "/anime/472451.jpg",
-  "/anime/473048.jpg",
-];
-
-const SAMPLE_BANNERS = [
-  "/anime/603242.jpg",
-  "/anime/604271.jpg",
-  "/anime/484571.jpg",
-];
-
 interface AdminWorkFormProps {
   mode: "create" | "edit";
   initialWork?: AdminWork | undefined;
@@ -137,20 +120,6 @@ export function AdminWorkForm({ mode, initialWork }: AdminWorkFormProps) {
       return { ...prev, genres: nextGenres };
     });
     setIsDirty(true);
-  };
-
-  // Cycle cover image from sample set
-  const handleCycleCover = () => {
-    const currentIndex = SAMPLE_COVERS.indexOf(values.coverImage);
-    const nextIndex = (currentIndex + 1) % SAMPLE_COVERS.length;
-    handleChange("coverImage", SAMPLE_COVERS[nextIndex] ?? DEFAULT_COVER);
-  };
-
-  // Cycle banner image
-  const handleCycleBanner = () => {
-    const currentIndex = SAMPLE_BANNERS.indexOf(values.bannerImage);
-    const nextIndex = (currentIndex + 1) % SAMPLE_BANNERS.length;
-    handleChange("bannerImage", SAMPLE_BANNERS[nextIndex] ?? DEFAULT_BANNER);
   };
 
   // Validate form
@@ -350,12 +319,7 @@ export function AdminWorkForm({ mode, initialWork }: AdminWorkFormProps) {
         onChange={handleChange}
         onToggleGenre={handleToggleGenre}
       />
-      <AdminWorkMediaFields
-        values={values}
-        onChange={handleChange}
-        onCycleCover={handleCycleCover}
-        onCycleBanner={handleCycleBanner}
-      />
+      <AdminWorkMediaFields values={values} />
       <AdminWorkSeoPreview values={values} slug={slug} />
 
       {/* Actions Bar */}

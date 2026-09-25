@@ -12,5 +12,5 @@
 - [x] T008 Disable public ad placeholders and detection until P13 while retaining the approved design and ADMIN guard (FR-008–FR-009; AE-005).
 - [x] T009 Check in the fixture/local-status inventory; re-run and classify the historical design audit; confirm obsolete concepts remain absent and documentation matches source (FR-001–FR-002, FR-010–FR-011; AE-006).
 - [x] T010 Run focused contract/database/API/web tests and real-browser reader/RTL checks; record actual results and limits (FR-012; AE-001–AE-006).
-- [ ] T011 Run relevant lint, type, build, format, `pnpm verify`, and `git diff --check` without weakening gates; record every failure or unverified boundary (FR-012; SC-006).
+- [x] T011 Run relevant lint, type, build, format, `pnpm verify`, and `git diff --check` without weakening gates; record every failure or unverified boundary (FR-012; SC-006).
 - [ ] T012 Reconcile the final diff against every P00 exit criterion, obtain independent phase disposition, and mark P00 complete only if each applicable gate truly passes (FR-001–FR-012; SC-001–SC-006).

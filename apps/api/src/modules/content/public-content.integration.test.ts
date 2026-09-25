@@ -27,7 +27,7 @@ const pagination = { page: 1, limit: 25, skip: 0, take: 25 };
 describe("PublicContentService with PostgreSQL", () => {
   beforeEach(async () => {
     await database.$executeRawUnsafe(
-      "TRUNCATE publication_events, chapter_pages, chapters, work_categories, categories, works",
+      "TRUNCATE media_reference_events, media_references, upload_attempts, media_assets, publication_events, chapter_pages, chapters, work_categories, categories, works",
     );
   });
 
@@ -63,8 +63,11 @@ describe("PublicContentService with PostgreSQL", () => {
     const visibleWork = await publicContent.getWork(work.slug);
     const visibleChapter = await publicContent.getChapter(work.slug, 1);
     expect(visibleWork).not.toHaveProperty("publicationStatus");
+    expect(visibleWork).not.toHaveProperty("mediaReferences");
+    expect(visibleWork).not.toHaveProperty("coverAssetId");
     expect(visibleChapter).not.toHaveProperty("pages");
     expect(visibleChapter).not.toHaveProperty("textContent");
+    expect(visibleChapter).not.toHaveProperty("mediaReferences");
 
     await publications.publishWork(work.id, {
       expectedVersion: publishedWork.version,

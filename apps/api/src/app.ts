@@ -9,6 +9,10 @@ import type { Logger } from "pino";
 import type { DatabaseClient } from "@fury/database";
 
 import { appConfig } from "./core/config/app.config.js";
+import {
+  getMediaConfig,
+  type MediaConfig,
+} from "./core/config/media.config.js";
 import { corsConfig } from "./core/config/cors.config.js";
 import { ForbiddenException } from "./core/errors/forbidden.error.js";
 import {
@@ -16,6 +20,7 @@ import {
   EmailService,
   type EmailDelivery,
 } from "./infrastructure/email/index.js";
+import { MediaStorage } from "./infrastructure/media/media-storage.js";
 import {
   createApiRateLimitMiddleware,
   createRequestLoggerMiddleware,
@@ -29,6 +34,7 @@ type AppDependencies = Readonly<{
   database: DatabaseClient;
   logger: Logger;
   emailDelivery?: EmailDelivery;
+  mediaConfig?: MediaConfig;
 }>;
 
 const buildCorsOriginValidator = (): CorsOptions["origin"] => {
@@ -48,7 +54,9 @@ export const createApp = ({
   database,
   logger,
   emailDelivery = createEmailDelivery(),
+  mediaConfig = getMediaConfig(),
 }: AppDependencies): Application => {
+  const mediaStorage = new MediaStorage(mediaConfig);
   const app = express();
 
   app.disable("x-powered-by");
@@ -74,7 +82,7 @@ export const createApp = ({
   app.use(
     appConfig.apiPrefix,
     createApiRateLimitMiddleware(),
-    createApiRouter(database, new EmailService(emailDelivery)),
+    createApiRouter(database, new EmailService(emailDelivery), mediaStorage),
   );
 
   // Final middleware

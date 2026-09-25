@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import type { DatabaseClient } from "@fury/database";
 
 import { openApiRoutes } from "./infrastructure/openapi/openapi.routes.js";
+import type { MediaStorage } from "./infrastructure/media/media-storage.js";
 import type { EmailService } from "./infrastructure/email/email.service.js";
 import { createAuthenticationMiddleware } from "./middlewares/auth.middleware.js";
 import {
@@ -17,6 +18,9 @@ import {
   HealthController,
   healthRoutes,
   HealthService,
+  MediaController,
+  mediaRoutes,
+  MediaService,
   UsersController,
   usersRoutes,
   UsersService,
@@ -29,11 +33,15 @@ import {
 export const createApiRouter = (
   database: DatabaseClient,
   emailService: EmailService,
+  mediaStorage: MediaStorage,
 ): Router => {
   const router = Router();
 
-  const healthService = new HealthService(database);
+  const healthService = new HealthService(database, mediaStorage);
   const healthController = new HealthController(healthService);
+  const mediaController = new MediaController(
+    new MediaService(database, mediaStorage),
+  );
   const authenticationMiddleware = createAuthenticationMiddleware(database);
   const authController = new AuthController(
     new AuthService(database, emailService),
@@ -65,6 +73,7 @@ export const createApiRouter = (
     ),
   );
   router.use("/health", healthRoutes(healthController));
+  router.use("/media", mediaRoutes(mediaController, authenticationMiddleware));
 
   return router;
 };

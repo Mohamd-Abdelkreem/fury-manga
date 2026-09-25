@@ -11,8 +11,8 @@ const schema = readFileSync(
   "utf8",
 );
 
-describe("post-P01 Prisma schema", () => {
-  it("contains exactly the accepted account and content models and enums", () => {
+describe("P02 Prisma schema", () => {
+  it("adds private media identities without later product models", () => {
     const models = [...schema.matchAll(/^model\s+(\w+)/gmu)].map(
       (match) => match[1],
     );
@@ -28,6 +28,10 @@ describe("post-P01 Prisma schema", () => {
       "Chapter",
       "ChapterPage",
       "PublicationEvent",
+      "MediaAsset",
+      "UploadAttempt",
+      "MediaReference",
+      "MediaReferenceEvent",
     ]);
     expect(enums).toEqual([
       "UserRole",
@@ -36,6 +40,12 @@ describe("post-P01 Prisma schema", () => {
       "StoryStatus",
       "PublicationStatus",
       "ChapterContentType",
+      "MediaClass",
+      "MediaScope",
+      "MediaAssetStatus",
+      "UploadAttemptState",
+      "MediaReferenceSlot",
+      "MediaReferenceAction",
     ]);
   });
 
@@ -43,7 +53,7 @@ describe("post-P01 Prisma schema", () => {
     expect(schema).toContain("model User");
     expect(schema).toContain("model RefreshToken");
     expect(schema).not.toMatch(
-      /Bookmark|Rating|Comment|Notification|Gift|Advertisement|MediaAsset/u,
+      /Bookmark|Rating|Comment|Notification|Gift|Advertisement/u,
     );
   });
 });

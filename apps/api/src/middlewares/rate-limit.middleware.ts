@@ -22,6 +22,17 @@ export const createApiRateLimitMiddleware = () =>
     handler: rateLimitHandler,
   });
 
+export const createMediaUploadRateLimiter = () =>
+  rateLimit({
+    windowMs: 15 * 60_000,
+    limit: 20,
+    standardHeaders: "draft-8",
+    legacyHeaders: false,
+    keyGenerator: (request) =>
+      `media-upload:${request.user?.id ?? "unauthenticated"}`,
+    handler: rateLimitHandler,
+  });
+
 export const createSourceRateLimiter = (config: AuthRouteLimit) =>
   rateLimit({
     windowMs: config.windowMs,

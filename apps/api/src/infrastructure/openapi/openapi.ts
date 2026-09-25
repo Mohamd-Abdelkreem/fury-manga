@@ -23,6 +23,22 @@ import {
   createChapterBodySchema,
   createWorkBodySchema,
   errorEnvelopeSchema,
+  mediaAssetListDataSchema,
+  mediaAssetParamsSchema,
+  mediaAssetSchema,
+  mediaAttemptParamsSchema,
+  mediaAttemptSchema,
+  mediaClassSchema,
+  mediaListQuerySchema,
+  mediaRemovalSchema,
+  mediaReferenceCreateSchema,
+  mediaReferenceLookupDataSchema,
+  mediaReferenceParamsSchema,
+  mediaReferenceQuerySchema,
+  mediaReferenceReplaceSchema,
+  mediaReferenceRetireSchema,
+  mediaReferenceRetirementSchema,
+  mediaReferenceSchema,
   paginationQuerySchema,
   publicationCommandBodySchema,
   publicationStatusSchema,
@@ -74,6 +90,22 @@ const jsonBody = (schema: z.ZodType) => ({
   content: { "application/json": { schema } },
 });
 
+const mediaMultipartBody = {
+  required: true,
+  content: {
+    "multipart/form-data": {
+      schema: z
+        .object({
+          mediaClass: mediaClassSchema,
+          file: z.string().meta({ format: "binary" }),
+        })
+        .strict(),
+    },
+  },
+};
+
+const mediaAttemptHeader = z.uuid();
+
 const successEnvelope = (data: z.ZodType): z.ZodType =>
   successEnvelopeSchema.safeExtend({ data });
 
@@ -86,6 +118,64 @@ const errorResponse = (description: string) => ({
   description,
   content: { "application/json": { schema: errorEnvelopeSchema } },
 });
+
+const mediaErrorResponse = (
+  description: string,
+  codes: readonly [string, ...string[]],
+) => ({
+  description,
+  content: {
+    "application/json": {
+      schema: errorEnvelopeSchema.safeExtend({ code: z.enum(codes) }),
+    },
+  },
+});
+
+const mediaReadErrors = {
+  "400": mediaErrorResponse("Invalid media request", [
+    "VALIDATION_ERROR",
+    "BAD_REQUEST",
+  ]),
+  "401": mediaErrorResponse("Authentication required", ["UNAUTHORIZED"]),
+  "403": mediaErrorResponse("Media scope is forbidden", ["FORBIDDEN"]),
+  "429": mediaErrorResponse("Rate limit exceeded", ["RATE_LIMIT_EXCEEDED"]),
+  "503": mediaErrorResponse("Media storage unavailable", [
+    "MEDIA_UNAVAILABLE",
+    "SERVICE_UNAVAILABLE",
+  ]),
+};
+
+const mediaIdentityErrors = {
+  ...mediaReadErrors,
+  "404": mediaErrorResponse("Media identity not found", ["NOT_FOUND"]),
+};
+
+const mediaUploadErrors = {
+  ...mediaReadErrors,
+  "400": mediaErrorResponse("Invalid media request or image", [
+    "VALIDATION_ERROR",
+    "BAD_REQUEST",
+    "MEDIA_INVALID_FILE",
+  ]),
+  "409": mediaErrorResponse("Upload attempt conflicts", [
+    "UPLOAD_IN_PROGRESS",
+    "UPLOAD_ATTEMPT_CONFLICT",
+  ]),
+  "413": mediaErrorResponse("Media size limit exceeded", [
+    "MEDIA_LIMIT_EXCEEDED",
+  ]),
+  "415": mediaErrorResponse("Unsupported media type", [
+    "MEDIA_UNSUPPORTED_TYPE",
+  ]),
+};
+
+const mediaReferenceErrors = {
+  ...mediaIdentityErrors,
+  "409": mediaErrorResponse("Media reference conflicts", [
+    "MEDIA_TARGET_CONFLICT",
+    "VERSION_CONFLICT",
+  ]),
+};
 
 const contentErrorResponse = (
   codes: readonly [ContentOperationErrorCode, ...ContentOperationErrorCode[]],
@@ -652,6 +742,152 @@ export const buildOpenApiDocument = () =>
           },
         },
       },
+      "/media/assets": {
+        get: {
+          summary: "List the actor's private managed media assets",
+          security: [{ BearerAuth: [] }],
+          requestParams: { query: mediaListQuerySchema },
+          responses: {
+            "200": successResponse(
+              "Available media assets",
+              mediaAssetListDataSchema,
+            ),
+            ...mediaReadErrors,
+          },
+        },
+        post: {
+          summary: "Upload an authorized private media asset",
+          security: [{ BearerAuth: [], CsrfHeader: [] }],
+          requestParams: {
+            header: z.object({ "Idempotency-Key": mediaAttemptHeader }),
+          },
+          requestBody: mediaMultipartBody,
+          responses: {
+            "200": successResponse("Exact accepted replay", mediaAssetSchema),
+            "201": successResponse("Media asset uploaded", mediaAssetSchema),
+            ...mediaUploadErrors,
+          },
+        },
+      },
+      "/media/uploads/{attemptId}": {
+        get: {
+          summary: "Read the actor's upload attempt",
+          security: [{ BearerAuth: [] }],
+          requestParams: { path: mediaAttemptParamsSchema },
+          responses: {
+            "200": successResponse("Upload attempt", mediaAttemptSchema),
+            ...mediaIdentityErrors,
+          },
+        },
+      },
+      "/media/assets/{assetId}": {
+        get: {
+          summary: "Read private media metadata",
+          security: [{ BearerAuth: [] }],
+          requestParams: { path: mediaAssetParamsSchema },
+          responses: {
+            "200": successResponse("Media asset", mediaAssetSchema),
+            ...mediaIdentityErrors,
+          },
+        },
+        delete: {
+          summary: "Remove an authorized unreferenced private media asset",
+          security: [{ BearerAuth: [], CsrfHeader: [] }],
+          requestParams: { path: mediaAssetParamsSchema },
+          responses: {
+            "200": successResponse("Media asset removed", mediaRemovalSchema),
+            ...mediaIdentityErrors,
+            "409": mediaErrorResponse("Media asset is in use", [
+              "MEDIA_IN_USE",
+            ]),
+          },
+        },
+      },
+      "/media/assets/{assetId}/content": {
+        get: {
+          summary: "Read authenticated private image bytes",
+          security: [{ BearerAuth: [] }],
+          requestParams: { path: mediaAssetParamsSchema },
+          responses: {
+            "200": {
+              description: "Private validated image bytes; no-store",
+              content: {
+                "image/jpeg": { schema: z.string().meta({ format: "binary" }) },
+                "image/png": { schema: z.string().meta({ format: "binary" }) },
+                "image/webp": { schema: z.string().meta({ format: "binary" }) },
+              },
+            },
+            ...mediaIdentityErrors,
+          },
+        },
+      },
+      "/media/references": {
+        get: {
+          summary: "Read the active reference for an authorized P01 target",
+          security: [{ BearerAuth: [] }],
+          requestParams: { query: mediaReferenceQuerySchema },
+          responses: {
+            "200": successResponse(
+              "Active reference or null",
+              mediaReferenceLookupDataSchema,
+            ),
+            ...mediaIdentityErrors,
+          },
+        },
+        post: {
+          summary: "Bind an available private asset to a P01 target",
+          security: [{ BearerAuth: [], CsrfHeader: [] }],
+          requestBody: jsonBody(mediaReferenceCreateSchema),
+          responses: {
+            "200": successResponse(
+              "Equivalent active bind",
+              mediaReferenceSchema,
+            ),
+            "201": successResponse(
+              "Media reference created",
+              mediaReferenceSchema,
+            ),
+            ...mediaReferenceErrors,
+          },
+        },
+      },
+      "/media/references/{referenceId}": {
+        get: {
+          summary: "Read an active private media reference",
+          security: [{ BearerAuth: [] }],
+          requestParams: { path: mediaReferenceParamsSchema },
+          responses: {
+            "200": successResponse("Media reference", mediaReferenceSchema),
+            ...mediaIdentityErrors,
+          },
+        },
+        put: {
+          summary: "Replace an active media reference using compare-and-set",
+          security: [{ BearerAuth: [], CsrfHeader: [] }],
+          requestParams: { path: mediaReferenceParamsSchema },
+          requestBody: jsonBody(mediaReferenceReplaceSchema),
+          responses: {
+            "200": successResponse(
+              "Media reference replaced",
+              mediaReferenceSchema,
+            ),
+            ...mediaReferenceErrors,
+          },
+        },
+        delete: {
+          summary: "Retire an active media reference using compare-and-set",
+          security: [{ BearerAuth: [], CsrfHeader: [] }],
+          requestParams: { path: mediaReferenceParamsSchema },
+          requestBody: jsonBody(mediaReferenceRetireSchema),
+          responses: {
+            "200": successResponse(
+              "Media reference retired",
+              mediaReferenceRetirementSchema,
+            ),
+            ...mediaReferenceErrors,
+          },
+        },
+      },
       "/health/live": {
         get: {
           summary: "Liveness check",
@@ -663,7 +899,10 @@ export const buildOpenApiDocument = () =>
           summary: "Readiness check",
           responses: {
             "200": successResponse("Service ready", healthSchema),
-            "503": errorResponse("Database unavailable"),
+            "503": successResponse(
+              "Database or media storage degraded",
+              healthSchema,
+            ),
           },
         },
       },

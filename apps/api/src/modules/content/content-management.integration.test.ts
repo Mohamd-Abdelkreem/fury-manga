@@ -56,7 +56,7 @@ const secondTextDocument = {
 describe("focused content management services with PostgreSQL", () => {
   beforeEach(async () => {
     await database.$executeRawUnsafe(
-      "TRUNCATE publication_events, chapter_pages, chapters, work_categories, categories, works",
+      "TRUNCATE media_reference_events, media_references, upload_attempts, media_assets, publication_events, chapter_pages, chapters, work_categories, categories, works",
     );
   });
 

@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AdminDataProvider } from "../../context/admin-context";
 import type { AdminWork } from "../../types/admin.types";
 import { AdminWorkForm } from "./AdminWorkForm";
@@ -27,9 +28,55 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
 }));
 
+const mediaCandidateMock = vi.hoisted(() => ({
+  state: {
+    phase: "idle",
+    progress: 0,
+    assetId: null,
+    previewUrl: null,
+    errorCode: null as string | null,
+  },
+  available: true,
+}));
+
+vi.mock("@/features/media/hooks/media.hooks", () => ({
+  useAdminMediaCandidate: () => ({
+    state: mediaCandidateMock.state,
+    select: vi.fn(),
+    cancel: vi.fn(),
+    clear: vi.fn(),
+    load: vi.fn(),
+    checkAttempt: vi.fn(),
+    available: mediaCandidateMock.available,
+  }),
+  useAdminMediaList: () => ({
+    data: { items: [] },
+    isPending: false,
+    isFetching: false,
+    isError: false,
+    refetch: vi.fn(),
+  }),
+}));
+
+const renderWithMedia = (children: ReactNode) =>
+  render(
+    <QueryClientProvider
+      client={
+        new QueryClient({ defaultOptions: { queries: { retry: false } } })
+      }
+    >
+      {children}
+    </QueryClientProvider>,
+  );
+
 describe("AdminWorkForm Component", () => {
+  beforeEach(() => {
+    mediaCandidateMock.state.phase = "idle";
+    mediaCandidateMock.state.errorCode = null;
+    mediaCandidateMock.available = true;
+  });
   it("renders in create mode with empty fields and default genres", () => {
-    render(
+    renderWithMedia(
       <AdminDataProvider>
         <AdminWorkForm mode="create" />
       </AdminDataProvider>,
@@ -43,10 +90,20 @@ describe("AdminWorkForm Component", () => {
     expect(
       screen.getByRole("button", { name: "نشر العمل الآن" }),
     ).toBeInTheDocument();
+    expect(screen.getByLabelText("رفع غلاف جديد")).toHaveAttribute(
+      "type",
+      "file",
+    );
+    expect(screen.getByLabelText("رفع خلفية جديدة")).toHaveAttribute(
+      "type",
+      "file",
+    );
+    screen.getByLabelText("رفع غلاف جديد").focus();
+    expect(screen.getByLabelText("رفع غلاف جديد")).toHaveFocus();
   });
 
   it("validates required fields on submission", async () => {
-    render(
+    renderWithMedia(
       <AdminDataProvider>
         <AdminWorkForm mode="create" />
       </AdminDataProvider>,
@@ -65,7 +122,7 @@ describe("AdminWorkForm Component", () => {
   });
 
   it("updates live SEO preview when title and description are typed", () => {
-    render(
+    renderWithMedia(
       <AdminDataProvider>
         <AdminWorkForm mode="create" />
       </AdminDataProvider>,
@@ -106,7 +163,7 @@ describe("AdminWorkForm Component", () => {
       updatedAt: "2026-02-01",
     };
 
-    render(
+    renderWithMedia(
       <AdminDataProvider>
         <AdminWorkForm mode="edit" initialWork={mockWork} />
       </AdminDataProvider>,
@@ -122,5 +179,49 @@ describe("AdminWorkForm Component", () => {
     expect(
       screen.getByRole("button", { name: "إلغاء النشر" }),
     ).toBeInTheDocument();
+  });
+
+  it("announces media validation and denied states without a saved claim", () => {
+    mediaCandidateMock.state.phase = "error";
+    mediaCandidateMock.state.errorCode = "MEDIA_INVALID_FILE";
+    mediaCandidateMock.available = false;
+    renderWithMedia(
+      <AdminDataProvider>
+        <AdminWorkForm mode="create" />
+      </AdminDataProvider>,
+    );
+
+    expect(screen.getAllByRole("alert")).toHaveLength(2);
+    expect(screen.getAllByRole("status").length).toBeGreaterThanOrEqual(2);
+    expect(
+      screen.queryByText(/حُفظت الصورة في الوسائط فقط/u),
+    ).not.toBeInTheDocument();
+  });
+
+  it("does not offer persistent reference actions for fixture work identities", () => {
+    const mockWork: AdminWork = {
+      id: "fixture-work-id",
+      title: "Fixture Work",
+      type: "manga",
+      storyStatus: "ongoing",
+      publishStatus: "draft",
+      description: "A fixture description long enough for the local form.",
+      author: "Fixture Author",
+      genres: ["Action"],
+      tags: [],
+      coverImage: "/anime/01.jpg",
+      chapterCount: 0,
+      views: 0,
+      createdAt: "2026-01-01",
+      updatedAt: "2026-01-01",
+    };
+    renderWithMedia(
+      <AdminDataProvider>
+        <AdminWorkForm mode="edit" initialWork={mockWork} />
+      </AdminDataProvider>,
+    );
+    expect(
+      screen.queryByRole("button", { name: /bind media|ربط الوسائط/iu }),
+    ).not.toBeInTheDocument();
   });
 });

@@ -16,3 +16,4 @@ export {
   type HealthResult,
 } from "./health/index.js";
 export { UsersController, usersRoutes, UsersService } from "./users/index.js";
+export { MediaController, mediaRoutes, MediaService } from "./media/index.js";

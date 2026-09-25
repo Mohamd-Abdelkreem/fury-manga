@@ -1,4 +1,7 @@
 import { randomUUID } from "node:crypto";
+import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 import pino from "pino";
 import request, { type Response as SupertestResponse } from "supertest";
@@ -22,6 +25,7 @@ import {
 import { createDatabaseClient, UserRole, UserStatus } from "@fury/database";
 
 import { createApp } from "./app.js";
+import { createMediaConfig } from "./core/config/media.config.js";
 import { rateLimitConfig } from "./core/config/rate-limit.config.js";
 import type { EmailDelivery } from "./infrastructure/email/email-delivery.js";
 import type { EmailSendRequest } from "./infrastructure/email/email-delivery.js";
@@ -34,6 +38,10 @@ if (databaseUrl === undefined) {
 }
 
 const database = createDatabaseClient(databaseUrl);
+const mediaFixtureRoot = mkdtempSync(join(tmpdir(), "fury-content-media-"));
+const mediaRoot = join(mediaFixtureRoot, "persistent");
+mkdirSync(mediaRoot);
+const mediaConfig = createMediaConfig(mediaRoot);
 const delivered: EmailSendRequest[] = [];
 const emailDelivery: EmailDelivery = {
   provider: "console",
@@ -46,6 +54,7 @@ const app = createApp({
   database,
   logger: pino({ level: "silent" }),
   emailDelivery,
+  mediaConfig,
 });
 
 const csrfToken = "content-integration-csrf";
@@ -173,12 +182,13 @@ describe("real HTTP content boundary", () => {
   beforeEach(async () => {
     delivered.length = 0;
     await database.$executeRawUnsafe(
-      "TRUNCATE publication_events, chapter_pages, chapters, work_categories, categories, works, refresh_tokens, users",
+      "TRUNCATE media_reference_events, media_references, upload_attempts, media_assets, publication_events, chapter_pages, chapters, work_categories, categories, works, refresh_tokens, users",
     );
   });
 
   afterAll(async () => {
     await database.$disconnect();
+    rmSync(mediaFixtureRoot, { recursive: true, force: true });
   });
 
   it("applies authentication and ADMIN denial before target lookup", async () => {
@@ -393,6 +403,7 @@ describe("real HTTP content boundary", () => {
         database,
         logger: pino({ level: "silent" }),
         emailDelivery,
+        mediaConfig,
       });
       for (const path of protectedTargets) {
         const pendingRequest = request(actorApp).get(path);
@@ -459,6 +470,7 @@ describe("real HTTP content boundary", () => {
       database,
       logger: pino({ level: "silent" }),
       emailDelivery,
+      mediaConfig,
     });
     for (const path of protectedTargets) {
       const response = await request(adminApp)
@@ -505,6 +517,7 @@ describe("real HTTP content boundary", () => {
       database,
       logger: pino({ level: "silent" }),
       emailDelivery,
+      mediaConfig,
     });
     for (let attempt = 0; attempt < rateLimitConfig.maxRequests; attempt += 1) {
       const allowed = await request(isolatedApp).get("/api/v1/content/works");
@@ -533,6 +546,7 @@ describe("real HTTP content boundary", () => {
         },
       }),
       emailDelivery,
+      mediaConfig,
     });
     const sentinel = "P01-SECRET-SENTINEL";
     const rejected = await request(observedApp)

@@ -10,6 +10,7 @@ const execFileAsync = promisify(execFile);
 const initialMigration = "20260818000000_init_authentication";
 const contentMigration = "20260922010000_content_domain_foundation";
 const phoneRemovalMigration = "20260923000000_remove_obsolete_phone";
+const mediaMigration = "20260923010000_persistent_vps_media";
 
 const databaseUrl = (): string => {
   const value = process.env["DATABASE_URL"];
@@ -74,8 +75,12 @@ describe("fresh post-P01 migration chain", () => {
         "categories",
         "chapter_pages",
         "chapters",
+        "media_assets",
+        "media_reference_events",
+        "media_references",
         "publication_events",
         "refresh_tokens",
+        "upload_attempts",
         "users",
         "work_categories",
         "works",
@@ -320,6 +325,36 @@ export default defineConfig({
         [userId],
       );
       expect(retainedAccount.rows).toEqual(preserved.rows);
+      await cp(
+        join(sourcePrisma, "migrations", mediaMigration),
+        join(temporaryMigrations, mediaMigration),
+        { recursive: true },
+      );
+      await deployFrom(
+        stagedUrl.toString(),
+        join(temporaryRoot, "prisma.config.ts"),
+      );
+      const mediaTables = await stagedPool.query<{ table_name: string }>(
+        `SELECT table_name FROM information_schema.tables
+          WHERE table_schema = 'public'
+            AND table_name IN ('media_assets', 'upload_attempts', 'media_references', 'media_reference_events')
+          ORDER BY table_name`,
+      );
+      expect(mediaTables.rows.map(({ table_name }) => table_name)).toEqual([
+        "media_assets",
+        "media_reference_events",
+        "media_references",
+        "upload_attempts",
+      ]);
+      const afterMediaAccount = await stagedPool.query<{
+        email: string;
+        full_name: string;
+        token_hash: string;
+      }>(
+        "SELECT u.email, u.full_name, r.token_hash FROM users u JOIN refresh_tokens r ON r.user_id = u.id WHERE u.id = $1",
+        [userId],
+      );
+      expect(afterMediaAccount.rows).toEqual(preserved.rows);
       const redeployOutput = await deployFrom(
         stagedUrl.toString(),
         join(temporaryRoot, "prisma.config.ts"),
