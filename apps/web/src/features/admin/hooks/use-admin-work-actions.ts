@@ -2,16 +2,14 @@
 
 import { useCallback, type Dispatch, type SetStateAction } from "react";
 import type { TextBlock } from "../../text-stories/data/textStories";
+import { CHAPTER_PRESENTATION_WORKS } from "../data/adminFixtures";
 import type {
   AdminActivityEvent,
   AdminChapter,
   AdminPublishStatus,
-  AdminWork,
 } from "../types/admin.types";
 
 interface AdminWorkActionState {
-  works: AdminWork[];
-  setWorks: Dispatch<SetStateAction<AdminWork[]>>;
   chapters: Record<string, AdminChapter[]>;
   setChapters: Dispatch<SetStateAction<Record<string, AdminChapter[]>>>;
   setActivities: Dispatch<SetStateAction<AdminActivityEvent[]>>;
@@ -19,17 +17,17 @@ interface AdminWorkActionState {
 }
 
 export function useAdminWorkActions({
-  works,
-  setWorks,
   chapters,
   setChapters,
   setActivities,
   actorName,
 }: AdminWorkActionState) {
   const getWork = useCallback(
-    (id: string): AdminWork | undefined =>
-      works.find((w) => w.id.toLowerCase() === id.toLowerCase()),
-    [works],
+    (id: string) =>
+      CHAPTER_PRESENTATION_WORKS.find(
+        (work) => work.id.toLowerCase() === id.toLowerCase(),
+      ),
+    [],
   );
 
   const getChapters = useCallback(
@@ -43,145 +41,6 @@ export function useAdminWorkActions({
       return list.find((c) => c.id === chapterId);
     },
     [chapters],
-  );
-
-  const createWork = useCallback(
-    (
-      workData: Omit<
-        AdminWork,
-        "id" | "createdAt" | "updatedAt" | "chapterCount" | "views"
-      >,
-    ): AdminWork => {
-      const slug =
-        workData.title
-          .trim()
-          .toLowerCase()
-          .replace(/[^\u0621-\u064A\w\s-]/gu, "")
-          .replace(/\s+/g, "-") || `work-${String(Date.now())}`;
-      const uniqueId = `${slug}-${String(Math.floor(Math.random() * 1000))}`;
-      const today = new Date().toISOString().slice(0, 10);
-
-      const newWork: AdminWork = {
-        ...workData,
-        id: uniqueId,
-        chapterCount: 0,
-        views: 0,
-        createdAt: today,
-        updatedAt: today,
-      };
-
-      setWorks((prev) => [newWork, ...prev]);
-      setChapters((prev) => ({ ...prev, [uniqueId]: [] }));
-
-      setActivities((prev) => [
-        {
-          id: `act-${String(Date.now())}`,
-          type: "work_created",
-          title: "إضافة عمل جديد",
-          description: `ظهر العمل '${newWork.title}' في المعاينة المحلية فقط؛ لم يُحفظ.`,
-          timestamp: "الآن",
-          actor: actorName,
-        },
-        ...prev,
-      ]);
-
-      return newWork;
-    },
-    [actorName, setActivities, setChapters, setWorks],
-  );
-
-  const updateWork = useCallback(
-    (
-      id: string,
-      updates: Partial<Omit<AdminWork, "id" | "createdAt">>,
-    ): AdminWork | undefined => {
-      const current = works.find(
-        (work) => work.id.toLowerCase() === id.toLowerCase(),
-      );
-      if (current === undefined) return undefined;
-
-      const today = new Date().toISOString().slice(0, 10);
-      const updated: AdminWork = { ...current, ...updates, updatedAt: today };
-      setWorks((previous) =>
-        previous.map((work) =>
-          work.id.toLowerCase() === id.toLowerCase()
-            ? { ...work, ...updates, updatedAt: today }
-            : work,
-        ),
-      );
-
-      const title = updated.title;
-      setActivities((prev) => [
-        {
-          id: `act-${String(Date.now())}`,
-          type: "work_updated",
-          title: "تعديل بيانات عمل",
-          description: `تغير العمل '${title}' في المعاينة المحلية فقط؛ لم يُحفظ.`,
-          timestamp: "الآن",
-          actor: actorName,
-        },
-        ...prev,
-      ]);
-
-      return updated;
-    },
-    [actorName, works, setActivities, setWorks],
-  );
-
-  const toggleWorkPublish = useCallback(
-    (id: string): void => {
-      setWorks((prev) =>
-        prev.map((work) => {
-          if (work.id.toLowerCase() === id.toLowerCase()) {
-            const nextStatus =
-              work.publishStatus === "published" ? "draft" : "published";
-            return {
-              ...work,
-              publishStatus: nextStatus,
-              updatedAt: new Date().toISOString().slice(0, 10),
-            };
-          }
-          return work;
-        }),
-      );
-    },
-    [setWorks],
-  );
-
-  const archiveWork = useCallback(
-    (id: string): void => {
-      setWorks((prev) =>
-        prev.map((work) => {
-          if (work.id.toLowerCase() === id.toLowerCase()) {
-            return {
-              ...work,
-              publishStatus: "archived",
-              updatedAt: new Date().toISOString().slice(0, 10),
-            };
-          }
-          return work;
-        }),
-      );
-    },
-    [setWorks],
-  );
-
-  const restoreWork = useCallback(
-    (id: string): void => {
-      setWorks((prev) =>
-        prev.map((work) => {
-          if (work.id.toLowerCase() === id.toLowerCase()) {
-            return {
-              ...work,
-              publishStatus: "draft",
-              updatedAt: new Date().toISOString().slice(0, 10),
-            };
-          }
-          return work;
-        }),
-      );
-    },
-    [setWorks],
   );
 
   const createChapter = useCallback(
@@ -216,14 +75,6 @@ export function useAdminWorkActions({
         };
       });
 
-      setWorks((prev) =>
-        prev.map((w) =>
-          w.id.toLowerCase() === workId.toLowerCase()
-            ? { ...w, chapterCount: w.chapterCount + 1, updatedAt: today }
-            : w,
-        ),
-      );
-
       setActivities((prev) => [
         {
           id: `act-${String(Date.now())}`,
@@ -238,7 +89,7 @@ export function useAdminWorkActions({
 
       return newChapter;
     },
-    [actorName, setActivities, setChapters, setWorks],
+    [actorName, setActivities, setChapters],
   );
 
   const updateChapter = useCallback(
@@ -350,11 +201,6 @@ export function useAdminWorkActions({
     getWork,
     getChapters,
     getChapter,
-    createWork,
-    updateWork,
-    toggleWorkPublish,
-    archiveWork,
-    restoreWork,
     createChapter,
     updateChapter,
     toggleChapterPublish,

@@ -1,8 +1,8 @@
 # Project reference
 
 This is the implemented architecture and operations reference for the
-authentication foundation, P01 content-domain boundary, and P02 private media
-platform.
+authentication foundation, P01 content domain, P02 private media, and P03
+category/work administration.
 
 ## Boundaries
 
@@ -122,13 +122,14 @@ thin controllers, and route wiring. `src/router.ts` constructs those owners with
 the injected Prisma client. No browser/API implementation import or generic
 repository crosses package boundaries.
 
-The 19 operations documented in OpenAPI are:
+The 20 content operations documented in OpenAPI are:
 
 - public `GET`: `/content/works`, `/content/works/{workSlug}`,
   `/content/works/{workSlug}/chapters`, and
   `/content/works/{workSlug}/chapters/{chapterNumber}`;
-- ADMIN Category: list/create at `/content/admin/categories` and read/update at
-  `/content/admin/categories/{categoryId}`;
+- ADMIN Category: list/create at `/content/admin/categories`, read/update at
+  `/content/admin/categories/{categoryId}`, and adjacent order move at
+  `/content/admin/categories/{categoryId}/position`;
 - ADMIN Work: list/create at `/content/admin/works`, read/update at
   `/content/admin/works/{workId}`, category replacement at
   `/content/admin/works/{workId}/categories`, and publication at
@@ -152,6 +153,19 @@ of serialized UTF-8 JSON. Raw HTML, quote/image/embed/script nodes, external or
 protocol-relative links, controls, unknown fields, and malformed nesting fail
 validation.
 
+P03 adds category enablement, a database-backed global order and distinct work
+usage counts. Work create/PATCH accepts bounded editorial fields, ordered tags,
+category IDs, optional private cover/background asset IDs, featured preference,
+and an optional atomic publish target. Old minimal P01 draft requests remain
+accepted. Work list filtering, sorting and pagination run in PostgreSQL with
+one consistent filtered total; admin output explicitly maps saved fields.
+Publication and edits to published works require complete metadata, an enabled
+category, and an available associated cover. Public reads expose only eligible
+published metadata and return the same 404 for private and absent slugs. The
+public API does not deliver cover bytes. See the
+[P03 upgrade procedure](docs/operations/p03-content-upgrade.md) for migration
+inventory, remediation, and recovery constraints.
+
 Mutable content aggregates use integer expected-version compare-and-set writes.
 Relationship/page replacements and publication transitions are transactional.
 Every real transition to published appends one immutable publication event and
@@ -159,11 +173,12 @@ links it as the aggregate's current event; unpublish/archive clears only current
 publication fields. Same-state retries reuse authoritative state, stale losers
 cannot overwrite the winner, and failed dependent writes roll back fully.
 
-`20260922010000_content_domain_foundation` is a forward-only additive migration
-after `20260818000000_init_authentication`. Existing web content fixtures are
-not migrated or seeded. Application rollback may ignore the additive tables;
-schema correction requires a later forward migration or verified backup restore,
-not editing applied history.
+The content foundation and both P03 migrations are forward-only. Migration A
+adds editorial/category fields without inventing missing legacy metadata;
+migration B installs published-readiness guards only after an operator inventory
+and remediation. Existing web fixtures are not migrated or seeded. Schema
+correction requires a later forward migration or a verified coordinated backup
+restore, never editing applied history.
 
 ## Media module
 
@@ -194,10 +209,11 @@ pending uploads or rejects incomplete ones, completes interrupted removal,
 marks damaged assets unavailable, and restores availability only for exact
 stored length/hash matches. See `docs/operations/media-backup-restore.md`.
 
-Current Work and Chapter admin screens still use fixture identities rather than
-P01 UUIDs, so they upload private candidates without claiming persistent parent
-binding. P02 does not bind profile avatars, expose public/reader media, persist
-later parent workflows, or implement automatic garbage collection.
+Admin Work screens now use P03 UUIDs and bind accepted P02 cover/background
+candidates only after a confirmed editorial save. Chapter screens still use
+fixture identities and local preview actions. P02 does not bind profile avatars,
+expose public/reader media, persist chapter authoring, or implement automatic
+garbage collection.
 
 ## Generic utilities
 

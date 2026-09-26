@@ -1,9 +1,9 @@
 # Fury Turbo
 
 A Next.js 16, Express 5, PostgreSQL, and Prisma 7 foundation with a complete
-email/password account lifecycle and the P01 authoritative content-domain
-boundary plus the private P02 media platform. Existing parent editing screens
-remain fixture/local-state presentations and do not prove server persistence.
+email/password account lifecycle, P01 content records, private P02 media, and
+P03 saved category and work administration. Chapter editing and unrelated admin
+screens remain local presentations.
 
 ## What is included
 
@@ -19,6 +19,7 @@ remain fixture/local-state presentations and do not prove server persistence.
 - shared Category, Work, Chapter, publication, and pagination contracts
 - durable content records with ADMIN management and credential-free published metadata
 - private persistent image assets, actor-scoped upload attempts, narrow P01 media references, and operator reconciliation
+- saved admin categories and illustrated/text works with P03 editorial media references and publication readiness
 - unit tests and disposable PostgreSQL Testcontainers integration tests
 
 ## Local setup
@@ -136,12 +137,13 @@ delivery fails. Provider failure logs contain only safe classifications such as
 provider, attempt, error name, and status code; raw provider messages are not
 logged.
 
-## Content-domain foundation
+## Content and admin editing
 
 P01 persists Categories, Works, Work–Category associations, Chapters, ordered
-illustrated page metadata, and immutable publication events. It deliberately
-contains no media upload/storage fields, reader output, personalization, or
-screen integration.
+illustrated page metadata, and immutable publication events. P03 adds category
+enablement and global order, work editorial fields and tags, featured preference,
+and private cover/background references through P02. Chapter authoring, reader
+output, public image delivery, and personalization remain outside this workflow.
 
 The API exposes four credential-free metadata reads beneath
 `/api/v1/content/works`. Public Work and Chapter visibility requires the Work
@@ -149,20 +151,25 @@ and Chapter to be published, and public Chapter responses exclude structured
 text and page metadata. Missing, draft, and archived direct reads use the same
 safe `404 NOT_FOUND` result.
 
-Fifteen `/api/v1/content/admin/*` operations provide bounded list/create/read/
-update behavior, whole-set Work–Category replacement, and target-state Work/
-Chapter publication commands. They require an authenticated active, verified
+Admin content operations provide bounded list/create/read/update behavior,
+adjacent category moves, whole-set Work–Category replacement, and target-state
+Work/Chapter publication commands. They require an authenticated active, verified
 `ADMIN`; unsafe operations additionally require the established CSRF cookie and
 header pair. Updates use expected versions. Same-state publication retries and
 identical category sets are idempotent; stale or incompatible changes return
 stable conflicts without partial state.
 
+The four Arabic RTL admin category/work routes use saved API results. Drafts may
+be incomplete; publication and intentional published edits require synopsis,
+author, an enabled category, and an available saved cover. Save-and-publish is
+atomic. The work list searches, filters, sorts, and paginates saved records;
+the dashboard omits fixture work totals and activity. The P03 browser acceptance
+journey remains a separate check in the feature quickstart.
+
 Text Chapters store a strict version-1 JSON document containing only H2/H3
 headings, paragraphs with bounded inline emphasis/internal links, and ordered
 or unordered lists. Illustrated Chapters store ordered positive page positions
-only; media ownership and delivery are later-phase work. Existing Arabic RTL
-admin, discovery, and text-story screens remain fixture-backed and do not prove
-server persistence.
+only; chapter editor and public discovery/text-story screens remain fixture-backed.
 
 ## Private media platform
 
@@ -189,10 +196,9 @@ bytes unavailable, and accepts restored bytes only when the stored length and
 SHA-256 match. Follow [the media backup and restore runbook](./docs/operations/media-backup-restore.md)
 for coordinated database and filesystem recovery.
 
-P02 does not persist the current fixture-backed Work/Chapter forms, bind an
-avatar to a profile, expose reader/public images, or implement category media,
-personalization, gifts/grants, publication workflows, or automatic garbage
-collection. Those remain P03/P04/P05/P07/P10 scope.
+P02 assets can now be bound to saved P03 Works. Chapter forms remain fixtures;
+avatar profile binding, reader/public images, category media, personalization,
+gifts/grants, and automatic garbage collection remain outside P03.
 
 ## Optional seed accounts
 

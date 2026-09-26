@@ -46,8 +46,6 @@ export interface AdminWork {
 }
 
 export interface AdminDashboardMetrics {
-  publishedWorks: number;
-  draftWorks: number;
   publishedChapters: number;
   activeUsers: number;
   openReports: number;

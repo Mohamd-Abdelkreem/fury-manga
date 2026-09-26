@@ -94,7 +94,6 @@ export function AdminLayout({ children }: { children: ReactNode }) {
           label: "الأعمال",
           href: "/admin/works",
           icon: BookOpen,
-          count: metrics.publishedWorks + metrics.draftWorks,
         },
         {
           label: "التصنيفات",
@@ -339,7 +338,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
           <AdminNoticeBanner
             variant="info"
             title="بيانات الإدارة للمعاينة"
-            description="الأعمال والمستخدمون والإعلانات والإجراءات المعروضة هنا بيانات محلية للتجربة؛ التغييرات لا تُحفظ على الخادم ولا تؤثر في الحسابات الحقيقية."
+            description="التصنيفات والأعمال متصلة بالخادم وتُحفظ. بيانات الفصول والمستخدمين والإعلانات والأقسام الأخرى هنا للمعاينة المحلية فقط."
           />
           {children}
         </main>

@@ -20,7 +20,7 @@ export const INITIAL_ADMIN_USER: AdminUserSummary = {
   role: "مدير النظام والمحتوى",
 };
 
-export const INITIAL_ADMIN_WORKS: AdminWork[] = [
+export const CHAPTER_PRESENTATION_WORKS: AdminWork[] = [
   {
     id: "trait-hoarder",
     title: "سمة المكتنز",
@@ -393,8 +393,6 @@ export const INITIAL_ADMIN_CHAPTERS: Record<string, AdminChapter[]> = {
 };
 
 export const INITIAL_ADMIN_METRICS: AdminDashboardMetrics = {
-  publishedWorks: 5,
-  draftWorks: 2,
   publishedChapters: 174,
   activeUsers: 1850,
   openReports: 3,
@@ -417,22 +415,6 @@ export const INITIAL_ADMIN_ACTIVITY: AdminActivityEvent[] = [
     description: "بلاغ بانتظار المراجعة في قسم تعليقات الفصل 42.",
     timestamp: "منذ 4 ساعات",
     actor: "نظام الإشراف",
-  },
-  {
-    id: "act-3",
-    type: "work_created",
-    title: "إضافة عمل كمسودة",
-    description: "تم إنشاء مسودة العمل الجديد 'حدّاد النجوم السماوي'.",
-    timestamp: "منذ يوم واحد",
-    actor: "أحمد المنصور",
-  },
-  {
-    id: "act-4",
-    type: "work_updated",
-    title: "تحديث معلومات عمل",
-    description: "تم تعديل نبذة وتصنيفات 'مدينة الكهرمان'.",
-    timestamp: "منذ يومين",
-    actor: "سارة المحمد",
   },
   {
     id: "act-5",

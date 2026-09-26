@@ -2,6 +2,13 @@
 
 This procedure is for an isolated copy of a populated P01/P02 database and its matching private media directory. It does not authorize a production inventory, repair, migration, or restore. Preserve a coordinated PostgreSQL and media backup using [the P02 procedure](media-backup-restore.md) before staging the upgrade.
 
+Migration `20260925010000_p03_editorial_foundation` (A) adds nullable Work
+editorial fields, Work tags and featured constraints, then backfills category
+positions by `(created_at, id)` without creating missing synopsis, author or
+cover values. Migration `20260925020000_p03_published_readiness` (B) adds
+cross-row published-readiness guards. Rehearse A and the inventory below on an
+isolated populated copy before B; a fresh installation applies both in order.
+
 ## Inventory before the strict guard
 
 Run the following read-only query against the isolated database after migration A. Keep the returned IDs in an operator-only record. A zero-row result is required before migration B. The query deliberately counts only active, available administrative work-cover associations and enabled categories.
@@ -52,8 +59,17 @@ For each listed work, an authorized administrator either completes the missing m
 
 Stop if any invalid published row, unmatched media bytes, or inconsistent active reference remains. Do not install migration B to bypass an invalid row. Its failed transaction rolls back the guard objects. In the isolated rehearsal, verify that rollback, record the failed attempt as rolled back with `prisma migrate resolve --rolled-back 20260925020000_p03_published_readiness`, repair the data, and retry the same forward migration. Never edit an applied migration or mark a failed migration successful. Restore PostgreSQL and media as one set only under the approved recovery procedure.
 
+Coordinate the API, shared contracts and web client when enabling P03 editing.
+The API still accepts minimal P01 Work create/update bodies as drafts, while
+the expanded strict admin response can reject an independently deployed older
+strict client. Keep chapter routes and P02 upload transport on their existing
+contracts. If validation or migration B fails, leave the connected editor
+unavailable until the rows and matching private bytes are repaired; do not
+report an incomplete legacy published Work as publicly eligible. Public
+metadata reads already fail closed for incomplete or unavailable-cover Works.
+
 ## Isolated rehearsal evidence
 
-The migration integration test constructs a populated P01/P02 upgrade with an incomplete legacy published work, observes its inventory result, verifies that the strict guard refuses it, returns it to draft while retaining its publication event, and repeats the inventory before installing migration B. On 2026-09-26, `pnpm --filter @fury/database test:integration` passed all 25 tests, including that isolated populated-upgrade rehearsal and the installed-guard direct-write checks. This local rehearsal is not evidence of any production content or backup.
+The migration integration test constructs a populated P01/P02 upgrade with an incomplete legacy published work, observes its inventory result, verifies that the strict guard refuses it, returns it to draft while retaining its publication event, and repeats the inventory before installing migration B. Its isolated populated-upgrade and installed-guard assertions are automated rehearsal evidence. A fresh test command and its outcome must be recorded at each review gate; this runbook does not certify a production inventory or backup.
 
 After a successful isolated migration, repeat the read-only inventory and direct-write guard tests. Public metadata must fail closed for any later published work whose cover becomes unavailable during reconciliation; verified byte restoration and a fresh readiness check are required before it reappears.

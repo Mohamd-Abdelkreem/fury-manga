@@ -1,8 +1,17 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { AdminDataProvider } from "../../context/admin-context";
+import { AdminDataProvider, useAdminData } from "../../context/admin-context";
 import { AdminChapterForm } from "./AdminChapterForm";
+
+function ChapterCountProbe() {
+  const { getChapters } = useAdminData();
+  return (
+    <output data-testid="chapter-count">
+      {getChapters("trait-hoarder").length}
+    </output>
+  );
+}
 
 vi.mock("next/link", () => ({
   default: ({
@@ -145,7 +154,12 @@ describe("AdminChapterForm Component", () => {
     render(
       <AdminDataProvider>
         <AdminChapterForm workId="trait-hoarder" />
+        <ChapterCountProbe />
       </AdminDataProvider>,
+    );
+
+    const initialCount = Number(
+      screen.getByTestId("chapter-count").textContent,
     );
 
     const titleInput = screen.getByLabelText(/عنوان الفصل/);
@@ -155,6 +169,9 @@ describe("AdminChapterForm Component", () => {
     fireEvent.click(submitBtn);
 
     expect(screen.getByText(/المعاينة المحلية فقط/)).toBeInTheDocument();
+    expect(screen.getByTestId("chapter-count")).toHaveTextContent(
+      String(initialCount + 1),
+    );
   });
 
   it.each(["", "0", "-1", "44.5"])(

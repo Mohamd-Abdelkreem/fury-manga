@@ -1,8 +1,17 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { AdminDataProvider } from "../../context/admin-context";
+import { AdminDataProvider, useAdminData } from "../../context/admin-context";
 import { AdminChapters } from "./AdminChapters";
+
+function ChapterStatusProbe() {
+  const { getChapter } = useAdminData();
+  return (
+    <output data-testid="chapter-status">
+      {getChapter("trait-hoarder", "th-43")?.status}
+    </output>
+  );
+}
 
 vi.mock("next/link", () => ({
   default: ({
@@ -89,6 +98,7 @@ describe("AdminChapters Component", () => {
     render(
       <AdminDataProvider>
         <AdminChapters workId="trait-hoarder" />
+        <ChapterStatusProbe />
       </AdminDataProvider>,
     );
 
@@ -107,6 +117,7 @@ describe("AdminChapters Component", () => {
 
     // Dialog closes
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByTestId("chapter-status")).toHaveTextContent("draft");
   });
 
   it("handles non-existent workId gracefully with an error state", () => {

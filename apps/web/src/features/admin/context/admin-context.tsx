@@ -2,7 +2,6 @@
 
 import React, {
   createContext,
-  useCallback,
   useContext,
   useMemo,
   useState,
@@ -21,7 +20,6 @@ import {
   INITIAL_ADMIN_USER,
   INITIAL_ADMIN_USERS,
   INITIAL_ADMIN_USER_DETAILS,
-  INITIAL_ADMIN_WORKS,
 } from "../data/adminFixtures";
 import type {
   AdminActivityEvent,
@@ -51,7 +49,6 @@ import { useAdminAdActions } from "../hooks/use-admin-ad-actions";
 import { deriveAdminMetrics } from "../model/admin-metrics";
 
 interface AdminContextType {
-  works: AdminWork[];
   chapters: Record<string, AdminChapter[]>;
   metrics: AdminDashboardMetrics;
   activities: AdminActivityEvent[];
@@ -68,20 +65,6 @@ interface AdminContextType {
   getWork: (id: string) => AdminWork | undefined;
   getChapters: (workId: string) => AdminChapter[];
   getChapter: (workId: string, chapterId: string) => AdminChapter | undefined;
-  createWork: (
-    workData: Omit<
-      AdminWork,
-      "id" | "createdAt" | "updatedAt" | "chapterCount" | "views"
-    >,
-  ) => AdminWork;
-  updateWork: (
-    id: string,
-    updates: Partial<Omit<AdminWork, "id" | "createdAt">>,
-  ) => AdminWork | undefined;
-  toggleWorkPublish: (id: string) => void;
-  archiveWork: (id: string) => void;
-  restoreWork: (id: string) => void;
-
   createChapter: (
     workId: string,
     chapterData: Omit<
@@ -160,14 +143,11 @@ interface AdminContextType {
     id: string,
     updates: Partial<AdminAdPlacement>,
   ) => AdminAdPlacement | undefined;
-
-  resetToFixtures: () => void;
 }
 
 const AdminContext = createContext<AdminContextType | null>(null);
 
 export function AdminDataProvider({ children }: { children: ReactNode }) {
-  const [works, setWorks] = useState<AdminWork[]>(INITIAL_ADMIN_WORKS);
   const [chapters, setChapters] = useState<Record<string, AdminChapter[]>>(
     INITIAL_ADMIN_CHAPTERS,
   );
@@ -197,9 +177,8 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
   );
 
   const metrics = useMemo(
-    () =>
-      deriveAdminMetrics({ works, chapters, users, reports, contactMessages }),
-    [works, chapters, users, reports, contactMessages],
+    () => deriveAdminMetrics({ chapters, users, reports, contactMessages }),
+    [chapters, users, reports, contactMessages],
   );
 
   const user = INITIAL_ADMIN_USER;
@@ -208,19 +187,12 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
     getWork,
     getChapters,
     getChapter,
-    createWork,
-    updateWork,
-    toggleWorkPublish,
-    archiveWork,
-    restoreWork,
     createChapter,
     updateChapter,
     toggleChapterPublish,
     archiveChapter,
     restoreChapter,
   } = useAdminWorkActions({
-    works,
-    setWorks,
     chapters,
     setChapters,
     setActivities,
@@ -289,24 +261,8 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
     actorName: user.name,
   });
 
-  const resetToFixtures = useCallback((): void => {
-    setWorks(INITIAL_ADMIN_WORKS);
-    setChapters(INITIAL_ADMIN_CHAPTERS);
-    setActivities(INITIAL_ADMIN_ACTIVITY);
-    setUsers(INITIAL_ADMIN_USERS);
-    setUserDetails(INITIAL_ADMIN_USER_DETAILS);
-    setGifts(INITIAL_ADMIN_GIFTS);
-    setGrantRecords(INITIAL_ADMIN_GIFT_GRANTS);
-    setComments(INITIAL_ADMIN_COMMENTS);
-    setReports(INITIAL_ADMIN_REPORTS);
-    setContactMessages(INITIAL_ADMIN_CONTACT_MESSAGES);
-    setAdPlacements(INITIAL_ADMIN_AD_PLACEMENTS);
-    setGlobalAdsEnabled(INITIAL_ADMIN_GLOBAL_ADS);
-  }, []);
-
   const value = useMemo(
     () => ({
-      works,
       chapters,
       metrics,
       activities,
@@ -322,11 +278,6 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
       getWork,
       getChapters,
       getChapter,
-      createWork,
-      updateWork,
-      toggleWorkPublish,
-      archiveWork,
-      restoreWork,
       createChapter,
       updateChapter,
       toggleChapterPublish,
@@ -356,10 +307,8 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
       updateContactInternalNote,
       toggleGlobalAds,
       updateAdPlacement,
-      resetToFixtures,
     }),
     [
-      works,
       chapters,
       metrics,
       activities,
@@ -375,11 +324,6 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
       getWork,
       getChapters,
       getChapter,
-      createWork,
-      updateWork,
-      toggleWorkPublish,
-      archiveWork,
-      restoreWork,
       createChapter,
       updateChapter,
       toggleChapterPublish,
@@ -409,7 +353,6 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
       updateContactInternalNote,
       toggleGlobalAds,
       updateAdPlacement,
-      resetToFixtures,
     ],
   );
 
