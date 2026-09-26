@@ -18,6 +18,8 @@ export {
   getEnvVariable,
 } from "./env.js";
 export { loggerConfig } from "./logger.config.js";
+export { createMediaConfig, getMediaConfig } from "./media.config.js";
+export type { MediaConfig } from "./media.config.js";
 export { getSmtpTransporter } from "./mailer.config.js";
 export type { SmtpTransporter } from "./mailer.config.js";
 export { rateLimitConfig } from "./rate-limit.config.js";

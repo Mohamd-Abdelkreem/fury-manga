@@ -154,7 +154,7 @@ describe("AdminUsers Component", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 
     // Status banner appears
-    expect(screen.getByText("تم تعليق الحساب")).toBeInTheDocument();
+    expect(screen.getByText("معاينة محلية لتعليق الحساب")).toBeInTheDocument();
   });
 
   it("reactivates a suspended user directly", () => {
@@ -170,6 +170,8 @@ describe("AdminUsers Component", () => {
     });
     fireEvent.click(reactivateBtn);
 
-    expect(screen.getByText("استعادة النشاط")).toBeInTheDocument();
+    expect(
+      screen.getByText("معاينة محلية لاستعادة النشاط"),
+    ).toBeInTheDocument();
   });
 });

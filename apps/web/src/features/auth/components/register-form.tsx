@@ -31,7 +31,7 @@ export function RegisterForm() {
     setError,
   } = useForm<RegisterInput, unknown, RegisterBody>({
     resolver: zodResolver(registerBodySchema),
-    defaultValues: { fullName: "", email: "", phone: null, password: "" },
+    defaultValues: { fullName: "", email: "", password: "" },
   });
 
   const onSubmit = handleSubmit(async (values) => {

@@ -4,7 +4,6 @@ import {
   INITIAL_ADMIN_METRICS,
   INITIAL_ADMIN_REPORTS,
   INITIAL_ADMIN_USERS,
-  INITIAL_ADMIN_WORKS,
 } from "../data/adminFixtures";
 import type {
   AdminChapter,
@@ -12,11 +11,9 @@ import type {
   AdminDashboardMetrics,
   AdminReport,
   AdminUser,
-  AdminWork,
 } from "../types/admin.types";
 
 type DashboardRecords = {
-  works: readonly AdminWork[];
   chapters: Readonly<Record<string, AdminChapter[]>>;
   users: readonly AdminUser[];
   reports: readonly AdminReport[];
@@ -47,18 +44,6 @@ export function deriveAdminMetrics(
 ): AdminDashboardMetrics {
   // The dashboard totals include records beyond the interactive fixture sample.
   return {
-    publishedWorks: countDelta(
-      records.works.filter((work) => work.publishStatus === "published").length,
-      INITIAL_ADMIN_WORKS.filter((work) => work.publishStatus === "published")
-        .length,
-      INITIAL_ADMIN_METRICS.publishedWorks,
-    ),
-    draftWorks: countDelta(
-      records.works.filter((work) => work.publishStatus === "draft").length,
-      INITIAL_ADMIN_WORKS.filter((work) => work.publishStatus === "draft")
-        .length,
-      INITIAL_ADMIN_METRICS.draftWorks,
-    ),
     publishedChapters: countDelta(
       publishedChapterCount(records.chapters),
       publishedChapterCount(INITIAL_ADMIN_CHAPTERS),

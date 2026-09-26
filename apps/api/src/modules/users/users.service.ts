@@ -18,21 +18,14 @@ export class UsersService {
     data: UpdateProfileBodyDto,
   ): Promise<SafeUser> {
     const user = await this.findActiveUser(userId);
-    const updates: { fullName?: string; phone?: string | null } = {};
-
-    if (data.fullName !== undefined) updates.fullName = data.fullName.trim();
-    if (data.phone !== undefined) updates.phone = data.phone;
-
-    if (
-      (updates.fullName === undefined || updates.fullName === user.fullName) &&
-      (updates.phone === undefined || updates.phone === user.phone)
-    ) {
+    const fullName = data.fullName?.trim();
+    if (fullName === undefined || fullName === user.fullName) {
       return mapSafeUser(user);
     }
 
     const updated = await this.database.user.update({
       where: { id: userId },
-      data: updates,
+      data: { fullName },
       select: SAFE_USER_SELECT,
     });
     return mapSafeUser(updated);

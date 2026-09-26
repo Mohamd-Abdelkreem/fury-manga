@@ -1,5 +1,36 @@
 import { z } from "zod";
 
+export const PAGINATION_DEFAULT_PAGE = 1;
+export const PAGINATION_DEFAULT_LIMIT = 25;
+export const PAGINATION_MAX_LIMIT = 100;
+
+const decimalQueryInteger = (minimum: number, maximum?: number) =>
+  z.preprocess(
+    (value) => {
+      if (value === undefined) return value;
+      if (typeof value === "number") return value;
+      if (typeof value !== "string") return value;
+
+      const normalized = value.trim();
+      if (!/^\d+$/u.test(normalized)) return value;
+      return Number(normalized);
+    },
+    z
+      .number()
+      .int()
+      .min(minimum)
+      .pipe(maximum === undefined ? z.number() : z.number().max(maximum)),
+  );
+
+export const paginationQuerySchema = z
+  .object({
+    page: decimalQueryInteger(1).default(PAGINATION_DEFAULT_PAGE),
+    limit: decimalQueryInteger(1, PAGINATION_MAX_LIMIT).default(
+      PAGINATION_DEFAULT_LIMIT,
+    ),
+  })
+  .strict();
+
 export const nonEmptyBoundedString = (maximum: number) =>
   z
     .string()
@@ -72,16 +103,31 @@ export const errorEnvelopeSchema = z
     code: nonEmptyBoundedString(80),
     message: nonEmptyBoundedString(500),
     errors: z.array(fieldErrorSchema).optional(),
-    stack: z.string().min(1).optional(),
     requestId: z.string().min(1).max(128),
     timestamp: z.iso.datetime({ offset: true }),
     path: z.string().min(1).max(2_000),
   })
   .strict();
 
+export const commonHttpErrorCodeSchema = z
+  .enum([
+    "VALIDATION_ERROR",
+    "BAD_REQUEST",
+    "UNAUTHORIZED",
+    "FORBIDDEN",
+    "NOT_FOUND",
+    "CONFLICT",
+    "RATE_LIMIT_EXCEEDED",
+    "INTERNAL_SERVER_ERROR",
+    "SERVICE_UNAVAILABLE",
+  ])
+  .meta({ id: "CommonHttpErrorCode" });
+
 export type FieldError = z.infer<typeof fieldErrorSchema>;
+export type PaginationQuery = z.infer<typeof paginationQuerySchema>;
 export type PaginationMeta = z.infer<typeof paginationMetaSchema>;
 export type ErrorEnvelope = z.infer<typeof errorEnvelopeSchema>;
+export type CommonHttpErrorCode = z.infer<typeof commonHttpErrorCodeSchema>;
 export type SuccessEnvelope<T = unknown> = Omit<
   z.infer<typeof successEnvelopeSchema>,
   "data"

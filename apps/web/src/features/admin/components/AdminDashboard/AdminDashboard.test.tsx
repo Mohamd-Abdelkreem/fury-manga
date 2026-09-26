@@ -26,19 +26,17 @@ vi.mock("next/navigation", () => ({
 }));
 
 describe("AdminDashboard Component", () => {
-  it("renders all 6 metric summary cards with Arabic labels", () => {
+  it("labels the four remaining summary cards as demo data", () => {
     render(
       <AdminDataProvider>
         <AdminDashboard />
       </AdminDataProvider>,
     );
 
-    expect(screen.getByText("الأعمال المنشورة")).toBeInTheDocument();
-    expect(screen.getByText("الأعمال المسودة")).toBeInTheDocument();
-    expect(screen.getByText("الفصول المنشورة")).toBeInTheDocument();
-    expect(screen.getByText("المستخدمون النشطون")).toBeInTheDocument();
-    expect(screen.getByText("البلاغات المفتوحة")).toBeInTheDocument();
-    expect(screen.getByText("رسائل التواصل")).toBeInTheDocument();
+    expect(screen.getByText("الفصول المنشورة (تجريبي)")).toBeInTheDocument();
+    expect(screen.getByText("المستخدمون النشطون (تجريبي)")).toBeInTheDocument();
+    expect(screen.getByText("البلاغات المفتوحة (تجريبي)")).toBeInTheDocument();
+    expect(screen.getByText("رسائل التواصل (تجريبي)")).toBeInTheDocument();
     expect(
       screen
         .getAllByRole("link")
@@ -56,7 +54,7 @@ describe("AdminDashboard Component", () => {
     const banner = screen.getByRole("alert");
     expect(banner).toBeInTheDocument();
     expect(
-      screen.getByText("تنبيه إشرافي: بلاغات مفتوحة تحتاج للمراجعة"),
+      screen.getByText("تنبيه تجريبي: بلاغات مفتوحة تحتاج للمراجعة"),
     ).toBeInTheDocument();
 
     // Dismiss banner
@@ -66,25 +64,17 @@ describe("AdminDashboard Component", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
-  it("renders recent works and trending works sections", () => {
+  it("does not present fixture works, counts, or activity as saved content", () => {
     render(
       <AdminDataProvider>
         <AdminDashboard />
       </AdminDataProvider>,
     );
 
-    // Recent works header and titles
-    expect(screen.getByText("أحدث الأعمال")).toBeInTheDocument();
-    expect(screen.getAllByText("سمة المكتنز").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("مدينة الكهرمان").length).toBeGreaterThan(0);
-
-    // Most read / trending section
-    expect(screen.getByText("الأكثر قراءة")).toBeInTheDocument();
-    expect(screen.getAllByText("سيد الظلال الصاعد").length).toBeGreaterThan(0);
-
-    // Primary action link
-    expect(
-      screen.getByRole("link", { name: "إنشاء عمل جديد" }),
-    ).toHaveAttribute("href", "/admin/works/new");
+    expect(screen.queryByText("أحدث الأعمال")).not.toBeInTheDocument();
+    expect(screen.queryByText("الأكثر قراءة")).not.toBeInTheDocument();
+    expect(screen.queryByText("الأعمال المنشورة")).not.toBeInTheDocument();
+    expect(screen.queryByText("الأعمال المسودة")).not.toBeInTheDocument();
+    expect(screen.queryByText("إضافة عمل كمسودة")).not.toBeInTheDocument();
   });
 });

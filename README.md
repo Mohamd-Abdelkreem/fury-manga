@@ -1,8 +1,9 @@
 # Fury Turbo
 
-A generic Next.js 16, Express 5, PostgreSQL, and Prisma 7 foundation with a
-complete email/password account lifecycle. It contains no product domain,
-organization, tenant, payment, or demo data model.
+A Next.js 16, Express 5, PostgreSQL, and Prisma 7 foundation with a complete
+email/password account lifecycle, P01 content records, private P02 media, and
+P03 saved category and work administration. Chapter editing and unrelated admin
+screens remain local presentations.
 
 ## What is included
 
@@ -15,6 +16,10 @@ organization, tenant, payment, or demo data model.
 - HttpOnly refresh cookie plus readable double-submit CSRF cookie
 - console, Resend, and SMTP email delivery
 - request IDs, URL credential sanitization, rate limits, and safe errors
+- shared Category, Work, Chapter, publication, and pagination contracts
+- durable content records with ADMIN management and credential-free published metadata
+- private persistent image assets, actor-scoped upload attempts, narrow P01 media references, and operator reconciliation
+- saved admin categories and illustrated/text works with P03 editorial media references and publication readiness
 - unit tests and disposable PostgreSQL Testcontainers integration tests
 
 ## Local setup
@@ -46,6 +51,10 @@ workspace-root, Git-ignored `.local-emails` directory, requesting owner-only
 filesystem modes where the platform supports them, without making a provider
 network call. Open the newest `.html` file and click its verification or reset
 button. The API log reports the preview file path, not the link or token.
+
+Create a private writable media directory outside this checkout and set its
+absolute path as `MEDIA_STORAGE_ROOT` in `.env`. The API fails startup rather
+than falling back to a release or public directory.
 
 Start the database, deploy the migration, and run both applications:
 
@@ -128,6 +137,69 @@ delivery fails. Provider failure logs contain only safe classifications such as
 provider, attempt, error name, and status code; raw provider messages are not
 logged.
 
+## Content and admin editing
+
+P01 persists Categories, Works, Work–Category associations, Chapters, ordered
+illustrated page metadata, and immutable publication events. P03 adds category
+enablement and global order, work editorial fields and tags, featured preference,
+and private cover/background references through P02. Chapter authoring, reader
+output, public image delivery, and personalization remain outside this workflow.
+
+The API exposes four credential-free metadata reads beneath
+`/api/v1/content/works`. Public Work and Chapter visibility requires the Work
+and Chapter to be published, and public Chapter responses exclude structured
+text and page metadata. Missing, draft, and archived direct reads use the same
+safe `404 NOT_FOUND` result.
+
+Admin content operations provide bounded list/create/read/update behavior,
+adjacent category moves, whole-set Work–Category replacement, and target-state
+Work/Chapter publication commands. They require an authenticated active, verified
+`ADMIN`; unsafe operations additionally require the established CSRF cookie and
+header pair. Updates use expected versions. Same-state publication retries and
+identical category sets are idempotent; stale or incompatible changes return
+stable conflicts without partial state.
+
+The four Arabic RTL admin category/work routes use saved API results. Drafts may
+be incomplete; publication and intentional published edits require synopsis,
+author, an enabled category, and an available saved cover. Save-and-publish is
+atomic. The work list searches, filters, sorts, and paginates saved records;
+the dashboard omits fixture work totals and activity. The P03 browser acceptance
+journey remains a separate check in the feature quickstart.
+
+Text Chapters store a strict version-1 JSON document containing only H2/H3
+headings, paragraphs with bounded inline emphasis/internal links, and ordered
+or unordered lists. Illustrated Chapters store ordered positive page positions
+only; chapter editor and public discovery/text-story screens remain fixture-backed.
+
+## Private media platform
+
+P02 stores validated JPEG, PNG, and WebP assets beneath the configured private
+media root. Five media classes require an active verified `ADMIN`; an active
+verified user may upload and remove only their own unbound avatar candidates.
+Every metadata and binary read is authenticated, binaries use private no-store
+headers, and no public media route exists.
+
+Uploads use an actor-scoped UUID idempotency key, bounded multipart parsing,
+class-specific byte, dimension, and transparency checks, canonical re-encoding,
+and atomic staging and publish. Work cover/background and illustrated
+ChapterPage references use versioned compare-and-set replacement and
+retirement. A live reference blocks physical removal with `MEDIA_IN_USE`.
+
+Run reconciliation manually and in bounded batches:
+
+```bash
+pnpm --filter @fury/api media:reconcile --limit=100
+```
+
+The command settles interrupted uploads and removals, marks missing or corrupt
+bytes unavailable, and accepts restored bytes only when the stored length and
+SHA-256 match. Follow [the media backup and restore runbook](./docs/operations/media-backup-restore.md)
+for coordinated database and filesystem recovery.
+
+P02 assets can now be bound to saved P03 Works. Chapter forms remain fixtures;
+avatar profile binding, reader/public images, category media, personalization,
+gifts/grants, and automatic garbage collection remain outside P03.
+
 ## Optional seed accounts
 
 Both groups are disabled unless all three values in that group are present:
@@ -171,15 +243,23 @@ does not provide or claim a verified one-command production Compose stack.
 
 ## Database invariants
 
-The single initial migration creates only `users` and `refresh_tokens`. It
-also enforces:
+The migration chain contains the initial account/session migration, the
+additive `20260922010000_content_domain_foundation` migration, the
+`20260923000000_remove_obsolete_phone` cleanup, the forward-only
+`20260923010000_persistent_vps_media` migration, and four P03
+migrations: editorial foundation, published readiness, Work Category limit,
+and enabled Category assignment. The initial migration enforces:
 
 - `ck_users_email_normalized`
 - `ck_users_status_timestamps_consistent`
 
-Migration integration tests inspect both constraints, reject invalid direct
-inserts, accept valid pending/active users, verify cascade behavior, and deploy
-the migration a second time.
+The content migration adds six entity types with normalized unique slugs,
+positive/unique chapter and page positions, restrictive relationships,
+publication-state consistency, derived chapter representation, immutable
+identity/history, and deferred illustrated-publication readiness. Migration
+integration tests cover fresh installation, populated account/session upgrade,
+constraint failures, reconnect persistence, and idempotent redeployment against
+disposable PostgreSQL 18.
 
 ## Verification
 

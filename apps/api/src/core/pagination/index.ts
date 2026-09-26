@@ -10,8 +10,4 @@ export {
   parsePagination,
   PaginationValidationError,
 } from "./pagination.js";
-export type {
-  PaginationInput,
-  PaginationQuery,
-  PaginationValue,
-} from "./pagination.js";
+export type { PaginationQuery } from "./pagination.js";

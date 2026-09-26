@@ -1,161 +1,116 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import type { Route } from "next";
 import {
   Archive,
   BookOpen,
   Edit,
-  ExternalLink,
   Eye,
   EyeOff,
   Plus,
   RotateCcw,
   Search,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useAdminData } from "../../context/admin-context";
-import { useAdminPagination } from "../../hooks/use-admin-pagination";
+import { useMemo, useState } from "react";
+import type {
+  AdminWorkListItem,
+  AdminWorkListQuery,
+  PublicationStatus,
+  StoryStatus,
+  WorkType,
+} from "@fury/contracts";
+
+import {
+  useAdminWorkList,
+  useTransitionAdminWork,
+} from "../../hooks/admin-content.hooks";
+import { adminWorkErrorMessage } from "../../model/admin-content.errors";
 import { AdminConfirmDialog } from "../AdminConfirmDialog/AdminConfirmDialog";
 import { AdminPageHeader } from "../AdminPageHeader/AdminPageHeader";
 import { AdminPagination } from "../AdminPagination/AdminPagination";
 import { AdminStatusBadge } from "../AdminStatusBadge/AdminStatusBadge";
 import styles from "./AdminWorks.module.css";
 
-const ITEMS_PER_PAGE = 6;
-
-type SortOption = "updated" | "oldest" | "title" | "chapters";
-
-interface ConfirmState {
-  isOpen: boolean;
-  workId: string;
-  workTitle: string;
-  action: "unpublish" | "archive" | "restore";
-}
+const PAGE_SIZE = 25;
+type Filter<T extends string> = T | "all";
+type PendingAction = Readonly<{
+  work: AdminWorkListItem;
+  targetState: PublicationStatus;
+}>;
 
 export function AdminWorks() {
-  const { works, toggleWorkPublish, archiveWork, restoreWork } = useAdminData();
-
-  // Filters state
   const [search, setSearch] = useState("");
-  const [typeFilter, setTypeFilter] = useState<string>("all");
-  const [storyStatusFilter, setStoryStatusFilter] = useState<string>("all");
-  const [publishStatusFilter, setPublishStatusFilter] = useState<string>("all");
-  const [sortBy, setSortBy] = useState<SortOption>("updated");
+  const [type, setType] = useState<Filter<WorkType>>("all");
+  const [storyStatus, setStoryStatus] = useState<Filter<StoryStatus>>("all");
+  const [publicationStatus, setPublicationStatus] =
+    useState<Filter<PublicationStatus>>("all");
+  const [sort, setSort] = useState<AdminWorkListQuery["sort"]>("updated");
+  const [page, setPage] = useState(1);
+  const [action, setAction] = useState<PendingAction | null>(null);
+  const [actionError, setActionError] = useState<unknown>(null);
+  const query = useMemo<AdminWorkListQuery>(
+    () => ({
+      page,
+      limit: PAGE_SIZE,
+      sort,
+      ...(search.trim() ? { search: search.trim().normalize("NFC") } : {}),
+      ...(type === "all" ? {} : { type }),
+      ...(storyStatus === "all" ? {} : { storyStatus }),
+      ...(publicationStatus === "all" ? {} : { publicationStatus }),
+    }),
+    [page, publicationStatus, search, sort, storyStatus, type],
+  );
+  const works = useAdminWorkList(query);
+  const transition = useTransitionAdminWork();
+  const pagination = works.data?.pagination;
+  const hasFilters =
+    search.trim().length > 0 ||
+    type !== "all" ||
+    storyStatus !== "all" ||
+    publicationStatus !== "all";
 
-  // Confirm dialog state
-  const [confirmDialog, setConfirmDialog] = useState<ConfirmState>({
-    isOpen: false,
-    workId: "",
-    workTitle: "",
-    action: "unpublish",
-  });
-
-  // Filter and sort works
-  const filteredWorks = useMemo(() => {
-    const query = search.trim().toLowerCase();
-
-    return works
-      .filter((work) => {
-        // Search filter
-        if (query.length > 0) {
-          const matchTitle = work.title.toLowerCase().includes(query);
-          const matchAlt =
-            work.alternativeTitle?.toLowerCase().includes(query) ?? false;
-          if (!matchTitle && !matchAlt) return false;
-        }
-
-        // Type filter
-        if (typeFilter !== "all" && work.type !== typeFilter) return false;
-
-        // Story status filter
-        if (
-          storyStatusFilter !== "all" &&
-          work.storyStatus !== storyStatusFilter
-        )
-          return false;
-
-        // Publication status filter
-        if (
-          publishStatusFilter !== "all" &&
-          work.publishStatus !== publishStatusFilter
-        )
-          return false;
-
-        return true;
-      })
-      .sort((a, b) => {
-        if (sortBy === "updated") {
-          return (
-            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-          );
-        }
-        if (sortBy === "oldest") {
-          return (
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-          );
-        }
-        if (sortBy === "title") {
-          return a.title.localeCompare(b.title, "ar");
-        }
-        return b.chapterCount - a.chapterCount;
-      });
-  }, [
-    works,
-    search,
-    typeFilter,
-    storyStatusFilter,
-    publishStatusFilter,
-    sortBy,
-  ]);
-
-  const {
-    currentPage,
-    totalPages,
-    pageItems: currentWorks,
-    setCurrentPage,
-  } = useAdminPagination(filteredWorks, ITEMS_PER_PAGE);
-
-  const handleResetFilters = () => {
+  const resetFilters = () => {
     setSearch("");
-    setTypeFilter("all");
-    setStoryStatusFilter("all");
-    setPublishStatusFilter("all");
-    setSortBy("updated");
-    setCurrentPage(1);
+    setType("all");
+    setStoryStatus("all");
+    setPublicationStatus("all");
+    setSort("updated");
+    setPage(1);
   };
-
-  const handleExecuteAction = () => {
-    const { action, workId } = confirmDialog;
-    if (action === "unpublish") {
-      toggleWorkPublish(workId);
-    } else if (action === "archive") {
-      archiveWork(workId);
-    } else {
-      restoreWork(workId);
+  const confirmTransition = async () => {
+    if (action === null || transition.isPending) return;
+    setActionError(null);
+    try {
+      await transition.mutateAsync({
+        workId: action.work.id,
+        body: {
+          expectedVersion: action.work.version,
+          targetState: action.targetState,
+        },
+      });
+      setAction(null);
+    } catch (error: unknown) {
+      setActionError(error);
+      setAction(null);
     }
-    setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
   };
 
   return (
-    <div>
+    <div dir="rtl">
       <AdminPageHeader
         breadcrumbs={[
           { label: "لوحة الإدارة", href: "/admin/dashboard" },
           { label: "إدارة الأعمال" },
         ]}
         title="إدارة الأعمال"
-        description="استعراض وتصفية وتعديل المانجا والروايات والقصص المصورة، وإدارة الفصول وحالات النشر والأرشفة."
+        description="استعرض الأعمال المحفوظة وابحث فيها حسب النوع والحالة."
         primaryAction={{
           label: "إنشاء عمل جديد",
           href: "/admin/works/new",
           icon: Plus,
         }}
       />
-
-      {/* Toolbar: Search, Filters & Sorting */}
       <section aria-label="أدوات تصفية الأعمال" className={styles["toolbar"]}>
         <div className={styles["searchAndSortRow"]}>
           <div className={styles["searchBox"]}>
@@ -163,49 +118,48 @@ export function AdminWorks() {
             <input
               type="search"
               className={styles["searchInput"]}
-              placeholder="ابحث بالعنوان العربي أو الإنجليزي..."
               value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setCurrentPage(1);
-              }}
+              maxLength={200}
+              placeholder="ابحث بالعنوان أو العنوان البديل"
               aria-label="البحث عن عمل"
+              onChange={(event) => {
+                setSearch(event.target.value);
+                setPage(1);
+              }}
             />
           </div>
-
           <div className={styles["filterGroup"]}>
-            <label htmlFor="sort-select" className={styles["filterLabel"]}>
+            <label htmlFor="work-sort" className={styles["filterLabel"]}>
               الترتيب:
             </label>
             <select
-              id="sort-select"
+              id="work-sort"
               className={styles["filterSelect"]}
-              value={sortBy}
-              onChange={(e) => {
-                setSortBy(e.target.value as SortOption);
+              value={sort}
+              onChange={(event) => {
+                setSort(event.target.value as AdminWorkListQuery["sort"]);
+                setPage(1);
               }}
             >
               <option value="updated">الأحدث تحديثًا</option>
               <option value="oldest">الأقدم تاريخًا</option>
               <option value="title">أبجديًا بالعنوان</option>
-              <option value="chapters">الأكثر فصولاً</option>
+              <option value="chapters">الأكثر فصولًا</option>
             </select>
           </div>
         </div>
-
         <div className={styles["filtersRow"]}>
-          {/* Work Type Filter */}
           <div className={styles["filterGroup"]}>
-            <label htmlFor="type-filter" className={styles["filterLabel"]}>
+            <label htmlFor="work-type" className={styles["filterLabel"]}>
               نوع العمل:
             </label>
             <select
-              id="type-filter"
+              id="work-type"
               className={styles["filterSelect"]}
-              value={typeFilter}
-              onChange={(e) => {
-                setTypeFilter(e.target.value);
-                setCurrentPage(1);
+              value={type}
+              onChange={(event) => {
+                setType(event.target.value as Filter<WorkType>);
+                setPage(1);
               }}
             >
               <option value="all">كل الأنواع</option>
@@ -217,22 +171,17 @@ export function AdminWorks() {
               <option value="text-story">قصة نصية</option>
             </select>
           </div>
-
-          {/* Story Status Filter */}
           <div className={styles["filterGroup"]}>
-            <label
-              htmlFor="story-status-filter"
-              className={styles["filterLabel"]}
-            >
+            <label htmlFor="story-status" className={styles["filterLabel"]}>
               حالة القصة:
             </label>
             <select
-              id="story-status-filter"
+              id="story-status"
               className={styles["filterSelect"]}
-              value={storyStatusFilter}
-              onChange={(e) => {
-                setStoryStatusFilter(e.target.value);
-                setCurrentPage(1);
+              value={storyStatus}
+              onChange={(event) => {
+                setStoryStatus(event.target.value as Filter<StoryStatus>);
+                setPage(1);
               }}
             >
               <option value="all">كل الحالات</option>
@@ -242,22 +191,22 @@ export function AdminWorks() {
               <option value="cancelled">ملغاة</option>
             </select>
           </div>
-
-          {/* Publication Status Filter */}
           <div className={styles["filterGroup"]}>
             <label
-              htmlFor="publish-status-filter"
+              htmlFor="publication-status"
               className={styles["filterLabel"]}
             >
               حالة النشر:
             </label>
             <select
-              id="publish-status-filter"
+              id="publication-status"
               className={styles["filterSelect"]}
-              value={publishStatusFilter}
-              onChange={(e) => {
-                setPublishStatusFilter(e.target.value);
-                setCurrentPage(1);
+              value={publicationStatus}
+              onChange={(event) => {
+                setPublicationStatus(
+                  event.target.value as Filter<PublicationStatus>,
+                );
+                setPage(1);
               }}
             >
               <option value="all">الكل</option>
@@ -266,264 +215,232 @@ export function AdminWorks() {
               <option value="archived">مؤرشف</option>
             </select>
           </div>
-
-          {(search.length > 0 ||
-            typeFilter !== "all" ||
-            storyStatusFilter !== "all" ||
-            publishStatusFilter !== "all") && (
+          {hasFilters && (
             <button
               type="button"
-              onClick={handleResetFilters}
               className={styles["resetBtn"]}
+              onClick={resetFilters}
             >
               إعادة ضبط التصفية
             </button>
           )}
         </div>
       </section>
-
-      {/* Works Table */}
-      <div className={styles["tableCard"]}>
-        {currentWorks.length === 0 ? (
-          <div className={styles["emptyBox"]}>
-            <BookOpen size={48} color="var(--primary)" aria-hidden="true" />
-            <h3 className={styles["emptyTitle"]}>لا توجد أعمال مطابقة</h3>
-            <p className={styles["emptyText"]}>
-              لم نتمكن من العثور على أي عمل يطابق معايير البحث والتصفية المحددة.
-            </p>
-            <button
-              type="button"
-              onClick={handleResetFilters}
-              className="button button--small"
-            >
-              إعادة تعيين البحث والتصفية
-            </button>
-          </div>
-        ) : (
-          <div className={styles["tableWrapper"]}>
-            <table className={styles["table"]}>
-              <thead className={styles["thead"]}>
-                <tr>
-                  <th className={styles["th"]}>العمل</th>
-                  <th className={styles["th"]}>النوع</th>
-                  <th className={styles["th"]}>حالة القصة</th>
-                  <th className={styles["th"]}>حالة النشر</th>
-                  <th className={styles["th"]}>الفصول</th>
-                  <th className={styles["th"]}>آخر تحديث</th>
-                  <th className={styles["th"]}>الإجراءات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentWorks.map((work) => (
-                  <tr key={work.id} className={styles["tr"]}>
-                    <td className={styles["td"]}>
-                      <div className={styles["workCell"]}>
-                        <Image
-                          src={work.coverImage}
-                          alt=""
-                          width={40}
-                          height={56}
-                          className={styles["coverThumb"]}
-                          unoptimized
-                        />
-                        <div className={styles["titleGroup"]}>
-                          <span className={styles["workName"]}>
-                            {work.title}
-                          </span>
-                          {work.alternativeTitle ? (
-                            <span className={styles["altTitle"]}>
-                              {work.alternativeTitle}
-                            </span>
-                          ) : null}
-                        </div>
-                      </div>
-                    </td>
-
-                    <td className={styles["td"]}>
-                      <AdminStatusBadge kind="workType" status={work.type} />
-                    </td>
-
-                    <td className={styles["td"]}>
-                      <AdminStatusBadge
-                        kind="story"
-                        status={work.storyStatus}
-                      />
-                    </td>
-
-                    <td className={styles["td"]}>
-                      <AdminStatusBadge
-                        kind="publish"
-                        status={work.publishStatus}
-                      />
-                    </td>
-
-                    <td className={styles["td"]}>
-                      <span className={styles["countCell"]}>
-                        {work.chapterCount.toLocaleString("ar-EG")}
-                      </span>
-                    </td>
-
-                    <td className={styles["td"]}>
-                      <span className={styles["dateCell"]}>
-                        {work.updatedAt}
-                      </span>
-                    </td>
-
-                    <td className={styles["td"]}>
-                      <div className={styles["rowActions"]}>
-                        {/* Manage Chapters */}
-                        <Link
-                          href={`/admin/works/${work.id}/chapters` as Route}
-                          className={styles["manageBtn"]}
-                          title="إدارة فصول هذا العمل"
-                        >
-                          <BookOpen size={13} aria-hidden="true" />
-                          <span>الفصول</span>
-                        </Link>
-
-                        {/* Edit Work */}
-                        <Link
-                          href={`/admin/works/${work.id}/edit` as Route}
-                          className={styles["iconActionBtn"]}
-                          aria-label={`تعديل بيانات ${work.title}`}
-                          title="تعديل العمل"
-                        >
-                          <Edit size={14} aria-hidden="true" />
-                        </Link>
-
-                        {/* View Public Page */}
-                        <Link
-                          href={`/story/${work.id}` as Route}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={styles["iconActionBtn"]}
-                          aria-label={`عرض ${work.title} في الموقع العام`}
-                          title="عرض في الموقع العام"
-                        >
-                          <ExternalLink size={14} aria-hidden="true" />
-                        </Link>
-
-                        {/* Publish / Unpublish Toggle */}
-                        {work.publishStatus === "published" ? (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setConfirmDialog({
-                                isOpen: true,
-                                workId: work.id,
-                                workTitle: work.title,
-                                action: "unpublish",
-                              });
-                            }}
-                            className={styles["iconActionBtn"]}
-                            aria-label={`إلغاء نشر ${work.title}`}
-                            title="إلغاء النشر وتحويله لمسودة"
-                          >
-                            <EyeOff size={14} aria-hidden="true" />
-                          </button>
-                        ) : work.publishStatus === "draft" ? (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              toggleWorkPublish(work.id);
-                            }}
-                            className={styles["iconActionBtn"]}
-                            aria-label={`نشر ${work.title}`}
-                            title="نشر العمل للجمهور"
-                          >
-                            <Eye size={14} aria-hidden="true" />
-                          </button>
-                        ) : null}
-
-                        {/* Archive / Restore */}
-                        {work.publishStatus !== "archived" ? (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setConfirmDialog({
-                                isOpen: true,
-                                workId: work.id,
-                                workTitle: work.title,
-                                action: "archive",
-                              });
-                            }}
-                            className={cn(
-                              styles["iconActionBtn"],
-                              styles["archiveBtn"],
-                            )}
-                            aria-label={`أرشفة ${work.title}`}
-                            title="أرشفة العمل"
-                          >
-                            <Archive size={14} aria-hidden="true" />
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setConfirmDialog({
-                                isOpen: true,
-                                workId: work.id,
-                                workTitle: work.title,
-                                action: "restore",
-                              });
-                            }}
-                            className={cn(
-                              styles["iconActionBtn"],
-                              styles["restoreBtn"],
-                            )}
-                            aria-label={`استعادة ${work.title} من الأرشيف`}
-                            title="استعادة العمل"
-                          >
-                            <RotateCcw size={14} aria-hidden="true" />
-                          </button>
-                        )}
-                      </div>
-                    </td>
+      {!works.sessionReady ? (
+        <p role="status">جارٍ تحميل الأعمال المحفوظة…</p>
+      ) : !works.available ? (
+        <p role="alert">يلزم حساب مدير نشط وموثق لعرض الأعمال.</p>
+      ) : works.denied ? (
+        <section role="alert">
+          <p>تعذّر التحقق من صلاحية الإدارة.</p>
+          <button type="button" onClick={() => void works.retryAccess()}>
+            إعادة التحقق
+          </button>
+        </section>
+      ) : works.isPending ? (
+        <p role="status">جارٍ تحميل الأعمال المحفوظة…</p>
+      ) : works.isError && works.data === undefined ? (
+        <section role="alert">
+          <p>{adminWorkErrorMessage(works.error)}</p>
+          <button type="button" onClick={() => void works.refetch()}>
+            إعادة المحاولة
+          </button>
+        </section>
+      ) : (
+        <div className={styles["tableCard"]}>
+          {works.isFetching && (
+            <p role="status">جارٍ تحديث النتائج المحفوظة…</p>
+          )}
+          {works.isError && (
+            <div role="alert">
+              <p>تعذّر تحديث النتائج. المعروض آخر بيانات مؤكدة.</p>
+              <button type="button" onClick={() => void works.refetch()}>
+                إعادة المحاولة
+              </button>
+            </div>
+          )}
+          {works.data.items.length === 0 ? (
+            <div className={styles["emptyBox"]}>
+              <BookOpen size={48} aria-hidden="true" />
+              <h2 className={styles["emptyTitle"]}>
+                {hasFilters ? "لا توجد أعمال مطابقة" : "لا توجد أعمال محفوظة"}
+              </h2>
+              <p className={styles["emptyText"]}>
+                {hasFilters
+                  ? "غيّر البحث أو التصفية لعرض أعمال أخرى."
+                  : "أنشئ أول عمل لتظهر بياناته المحفوظة هنا."}
+              </p>
+              {hasFilters && (
+                <button
+                  type="button"
+                  className="button button--small"
+                  onClick={resetFilters}
+                >
+                  إعادة تعيين البحث والتصفية
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className={styles["tableWrapper"]}>
+              <table className={styles["table"]}>
+                <thead className={styles["thead"]}>
+                  <tr>
+                    <th className={styles["th"]}>العمل</th>
+                    <th className={styles["th"]}>النوع</th>
+                    <th className={styles["th"]}>حالة القصة</th>
+                    <th className={styles["th"]}>حالة النشر</th>
+                    <th className={styles["th"]}>الفصول</th>
+                    <th className={styles["th"]}>آخر تحديث</th>
+                    <th className={styles["th"]}>الإجراءات</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Pagination */}
-        <AdminPagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={filteredWorks.length}
-          itemsPerPage={ITEMS_PER_PAGE}
-          onPageChange={setCurrentPage}
-          itemName="عمل"
-        />
-      </div>
-
-      {/* Confirmation Dialog for local mutations */}
+                </thead>
+                <tbody>
+                  {works.data.items.map((work) => (
+                    <tr key={work.id} className={styles["tr"]}>
+                      <td className={styles["td"]}>
+                        <div className={styles["workCell"]}>
+                          <div className={styles["titleGroup"]}>
+                            <span className={styles["workName"]} dir="auto">
+                              {work.title}
+                            </span>
+                            {work.alternativeTitle && (
+                              <span className={styles["altTitle"]} dir="auto">
+                                {work.alternativeTitle}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className={styles["td"]}>
+                        <AdminStatusBadge kind="workType" status={work.type} />
+                      </td>
+                      <td className={styles["td"]}>
+                        <AdminStatusBadge
+                          kind="story"
+                          status={work.storyStatus}
+                        />
+                      </td>
+                      <td className={styles["td"]}>
+                        <AdminStatusBadge
+                          kind="publish"
+                          status={work.publicationStatus}
+                        />
+                      </td>
+                      <td className={styles["td"]}>
+                        <span className={styles["countCell"]}>
+                          {work.chapterCount.toLocaleString("ar-EG")}
+                        </span>
+                      </td>
+                      <td className={styles["td"]}>
+                        <time
+                          className={styles["dateCell"]}
+                          dateTime={work.updatedAt}
+                        >
+                          {new Date(work.updatedAt).toLocaleDateString("ar-EG")}
+                        </time>
+                      </td>
+                      <td className={styles["td"]}>
+                        <div className={styles["rowActions"]}>
+                          <Link
+                            href={`/admin/works/${work.id}/edit` as Route}
+                            className={styles["iconActionBtn"]}
+                            aria-label={`فتح بيانات ${work.title}`}
+                            title="فتح العمل المحفوظ"
+                          >
+                            <Edit size={16} aria-hidden="true" />
+                          </Link>
+                          {work.publicationStatus === "published" && (
+                            <button
+                              type="button"
+                              className={styles["iconActionBtn"]}
+                              aria-label={`إلغاء نشر ${work.title}`}
+                              onClick={() => {
+                                setAction({ work, targetState: "draft" });
+                              }}
+                            >
+                              <EyeOff size={16} aria-hidden="true" />
+                            </button>
+                          )}
+                          {work.publicationStatus === "draft" && (
+                            <button
+                              type="button"
+                              className={styles["iconActionBtn"]}
+                              aria-label={`نشر ${work.title}`}
+                              onClick={() => {
+                                setAction({ work, targetState: "published" });
+                              }}
+                            >
+                              <Eye size={16} aria-hidden="true" />
+                            </button>
+                          )}
+                          {work.publicationStatus !== "archived" ? (
+                            <button
+                              type="button"
+                              className={styles["iconActionBtn"]}
+                              aria-label={`أرشفة ${work.title}`}
+                              onClick={() => {
+                                setAction({ work, targetState: "archived" });
+                              }}
+                            >
+                              <Archive size={16} aria-hidden="true" />
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              className={styles["iconActionBtn"]}
+                              aria-label={`استعادة ${work.title}`}
+                              onClick={() => {
+                                setAction({ work, targetState: "draft" });
+                              }}
+                            >
+                              <RotateCcw size={16} aria-hidden="true" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {pagination && (
+            <AdminPagination
+              currentPage={pagination.page}
+              totalPages={pagination.totalPages}
+              totalItems={pagination.total}
+              itemsPerPage={pagination.limit}
+              onPageChange={setPage}
+              itemName="عمل"
+            />
+          )}
+        </div>
+      )}
+      {actionError !== null && (
+        <div role="alert">
+          <p>{adminWorkErrorMessage(actionError)}</p>
+          <button
+            type="button"
+            onClick={() => {
+              setActionError(null);
+              void works.refetch();
+            }}
+          >
+            تحديث القائمة
+          </button>
+        </div>
+      )}
       <AdminConfirmDialog
-        isOpen={confirmDialog.isOpen}
-        title={
-          confirmDialog.action === "unpublish"
-            ? "تأكيد إلغاء نشر العمل"
-            : confirmDialog.action === "archive"
-              ? "تأكيد أرشفة العمل"
-              : "استعادة العمل من الأرشيف"
-        }
+        isOpen={action !== null}
+        title="تأكيد تغيير حالة العمل"
         description={
-          confirmDialog.action === "unpublish"
-            ? `هل أنت متأكد من إلغاء نشر '${confirmDialog.workTitle}'؟ سيتحول إلى مسودة ولن يظهر للزوار في واجهة الموقع العام.`
-            : confirmDialog.action === "archive"
-              ? `هل تريد نقل '${confirmDialog.workTitle}' إلى الأرشيف؟ سيتم إيقاف ظهوره للجمهور مع الاحتفاظ ببياناته.`
-              : `هل تريد استعادة '${confirmDialog.workTitle}' من الأرشيف وتحويله إلى مسودة قابلة للنشر؟`
+          action === null ? "" : `هل تريد تغيير حالة ${action.work.title}؟`
         }
-        confirmLabel={
-          confirmDialog.action === "unpublish"
-            ? "إلغاء النشر"
-            : confirmDialog.action === "archive"
-              ? "أرشفة العمل"
-              : "استعادة"
-        }
-        onConfirm={handleExecuteAction}
+        confirmLabel="تأكيد"
+        cancelLabel="إلغاء"
+        onConfirm={() => void confirmTransition()}
         onCancel={() => {
-          setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
+          if (!transition.isPending) setAction(null);
         }}
       />
     </div>

@@ -1,11 +1,15 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access -- Supertest intentionally exposes response.body as any; boundary assertions validate every consumed field. */
 import pino from "pino";
+import { mkdirSync, mkdtempSync, renameSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import request, { type Response as SupertestResponse } from "supertest";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 
 import { createDatabaseClient } from "@fury/database";
 
 import { createApp } from "./app.js";
+import { createMediaConfig } from "./core/config/media.config.js";
 import type {
   EmailDelivery,
   EmailSendRequest,
@@ -17,6 +21,9 @@ if (databaseUrl === undefined) {
 }
 
 const database = createDatabaseClient(databaseUrl);
+const mediaFixtureRoot = mkdtempSync(join(tmpdir(), "fury-app-media-"));
+const mediaRoot = join(mediaFixtureRoot, "persistent");
+mkdirSync(mediaRoot);
 const delivered: EmailSendRequest[] = [];
 let deliveryFailure: Error | undefined;
 const delivery: EmailDelivery = {
@@ -33,12 +40,12 @@ const app = createApp({
   database,
   logger: pino({ level: "silent" }),
   emailDelivery: delivery,
+  mediaConfig: createMediaConfig(mediaRoot),
 });
 
 const registration = {
   fullName: "HTTP Integration User",
   email: "HTTP.User@Example.com",
-  phone: null,
   password: "initial-secure-password",
 };
 
@@ -118,6 +125,41 @@ describe("real HTTP authentication boundary", () => {
 
   afterAll(async () => {
     await database.$disconnect();
+    rmSync(mediaFixtureRoot, { recursive: true, force: true });
+  });
+
+  it("fails startup for an unsafe media root", () => {
+    expect(() =>
+      createApp({
+        database,
+        logger: pino({ level: "silent" }),
+        emailDelivery: delivery,
+        mediaConfig: { ...createMediaConfig(mediaRoot), root: "relative" },
+      }),
+    ).toThrow();
+  });
+
+  it("keeps liveness while readiness degrades after media storage loss", async () => {
+    const isolatedRoot = join(mediaFixtureRoot, "runtime-loss");
+    mkdirSync(isolatedRoot);
+    const isolatedApp = createApp({
+      database,
+      logger: pino({ level: "silent" }),
+      emailDelivery: delivery,
+      mediaConfig: createMediaConfig(isolatedRoot),
+    });
+    renameSync(isolatedRoot, `${isolatedRoot}-moved`);
+    mkdirSync(isolatedRoot);
+
+    const live = await request(isolatedApp).get("/api/v1/health/live");
+    const ready = await request(isolatedApp).get("/api/v1/health/ready");
+    expect(live.status).toBe(200);
+    expect(ready.status).toBe(503);
+    expect(ready.body).toMatchObject({
+      success: true,
+      data: { status: "degraded", database: "ok" },
+    });
+    expect(JSON.stringify(ready.body)).not.toContain(isolatedRoot);
   });
 
   it("allows credentialed CORS preflight headers and rejects unknown origins", async () => {
@@ -271,6 +313,7 @@ describe("real HTTP authentication boundary", () => {
       .set("Authorization", `Bearer ${session.accessToken}`);
     expect(me.status).toBe(200);
     expect(me.body.data.user.email).toBe("http.user@example.com");
+    expect(me.body.data.user).not.toHaveProperty("phone");
 
     await agent
       .patch("/api/v1/users/me")
@@ -287,9 +330,16 @@ describe("real HTTP authentication boundary", () => {
       .patch("/api/v1/users/me")
       .set("Authorization", `Bearer ${session.accessToken}`)
       .set("x-csrf-token", session.csrfToken)
-      .send({ fullName: "Updated User", phone: "+1 555 0100" });
+      .send({ fullName: "Updated User" });
     expect(updated.status).toBe(200);
     expect(updated.body.data.user.fullName).toBe("Updated User");
+    expect(updated.body.data.user).not.toHaveProperty("phone");
+    await agent
+      .patch("/api/v1/users/me")
+      .set("Authorization", `Bearer ${session.accessToken}`)
+      .set("x-csrf-token", session.csrfToken)
+      .send({ phone: "+1 555 0100" })
+      .expect(400);
   });
 
   it("rotates refresh tokens once and rejects replay or a missing cookie", async () => {
@@ -447,5 +497,20 @@ describe("real HTTP authentication boundary", () => {
         rememberMe: false,
       })
       .expect(200);
+  });
+
+  it("keeps every media route behind the existing authentication boundary", async () => {
+    const assetId = "43afae94-0e94-45e9-ab76-100f889d0777";
+    const referenceId = "55aec196-95e6-4763-a5a7-d43fb6cc9553";
+    for (const path of [
+      "/api/v1/media/assets?scope=admin",
+      `/api/v1/media/assets/${assetId}`,
+      `/api/v1/media/assets/${assetId}/content`,
+      `/api/v1/media/references/${referenceId}`,
+    ]) {
+      const response = await request(app).get(path);
+      expect(response.status, path).toBe(401);
+      expect(response.body).toMatchObject({ code: "UNAUTHORIZED" });
+    }
   });
 });

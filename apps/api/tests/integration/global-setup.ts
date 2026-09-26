@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import { promisify } from "node:util";
 
 import { PostgreSqlContainer } from "@testcontainers/postgresql";
@@ -7,12 +7,9 @@ import { PostgreSqlContainer } from "@testcontainers/postgresql";
 const execFileAsync = promisify(execFile);
 
 const deployMigrations = async (databaseUrl: string): Promise<void> => {
-  const pnpmScript = process.env["npm_execpath"];
-  if (pnpmScript === undefined) {
-    throw new Error(
-      "npm_execpath is required to deploy integration migrations.",
-    );
-  }
+  const pnpmScript =
+    process.env["npm_execpath"] ??
+    resolve(dirname(process.execPath), "node_modules/corepack/dist/pnpm.js");
   await execFileAsync(
     process.execPath,
     [pnpmScript, "exec", "prisma", "migrate", "deploy"],

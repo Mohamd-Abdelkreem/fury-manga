@@ -1,38 +1,52 @@
 import { Globe } from "lucide-react";
-import type { FormValues } from "./form.types";
+
+import type { AdminWork } from "@fury/contracts";
+
+import type { FormValues } from "../../model/admin-work-form";
 import styles from "./AdminWorkForm.module.css";
 
-type Props = Readonly<{ values: FormValues; slug: string }>;
+type Props = Readonly<{
+  values: FormValues;
+  savedWork: AdminWork | null;
+  dirty: boolean;
+}>;
 
-export function AdminWorkSeoPreview({ values, slug }: Props) {
+export function AdminWorkSeoPreview({ values, savedWork, dirty }: Props) {
   return (
-    <>
-      {/* Section 3: SEO Preview */}
-      <section className={styles["formCard"]}>
-        <div className={styles["sectionHeader"]}>
-          <h2 className={styles["sectionTitle"]}>
-            <Globe className={styles["sectionIcon"]} aria-hidden="true" />
-            <span>معاينة محرك البحث وشبكات التواصل (SEO Preview)</span>
-          </h2>
-        </div>
-
-        <div className={styles["seoPreviewCard"]}>
-          <span className={styles["seoUrl"]}>
-            https://fury.local › story › {slug}
-          </span>
-          <h3 className={styles["seoTitle"]}>
-            {values.title
-              ? `${values.title} | منصة Fury`
-              : "عنوان العمل | منصة Fury"}
-          </h3>
-          <p className={styles["seoDescription"]}>
-            {values.description
-              ? values.description.slice(0, 160) +
-                (values.description.length > 160 ? "..." : "")
-              : "وصف العمل وموجز القصة كما سيظهر في نتائج محركات البحث مثل Google وشبكات التواصل..."}
+    <section
+      className={styles["formCard"]}
+      aria-label="معاينة البيانات المحفوظة"
+    >
+      <div className={styles["sectionHeader"]}>
+        <h2 className={styles["sectionTitle"]}>
+          <Globe className={styles["sectionIcon"]} aria-hidden="true" />
+          معاينة البيانات المحفوظة
+        </h2>
+      </div>
+      <div className={styles["seoPreviewCard"]}>
+        {savedWork === null ? (
+          <p className={styles["hint"]} role="status">
+            لا يوجد رابط محفوظ بعد؛ سيظهر بعد حفظ المسودة. لا تُشتق الهوية من
+            العنوان. هذه معاينة غير محفوظة ولا توجد صفحة عامة بعد.
           </p>
-        </div>
-      </section>
-    </>
+        ) : (
+          <span className={styles["seoUrl"]} dir="ltr">
+            {savedWork.slug}
+          </span>
+        )}
+        {dirty && savedWork !== null ? (
+          <p className={styles["hint"]}>
+            تغييرات غير محفوظة؛ المعاينة تعرض نسخة الخادم.
+          </p>
+        ) : null}
+        <h3 className={styles["seoTitle"]}>
+          {savedWork === null ? values.title || "عنوان العمل" : savedWork.title}
+        </h3>
+        <p className={styles["seoDescription"]}>
+          {(savedWork === null ? values.synopsis : savedWork.synopsis) ||
+            "لا توجد نبذة محفوظة في هذه المسودة."}
+        </p>
+      </div>
+    </section>
   );
 }

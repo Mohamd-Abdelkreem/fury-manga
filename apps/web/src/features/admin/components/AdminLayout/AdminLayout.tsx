@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAdminData } from "../../context/admin-context";
+import { AdminNoticeBanner } from "../AdminNoticeBanner/AdminNoticeBanner";
 import styles from "./AdminLayout.module.css";
 
 interface NavGroupItem {
@@ -93,7 +94,6 @@ export function AdminLayout({ children }: { children: ReactNode }) {
           label: "الأعمال",
           href: "/admin/works",
           icon: BookOpen,
-          count: metrics.publishedWorks + metrics.draftWorks,
         },
         {
           label: "التصنيفات",
@@ -335,6 +335,11 @@ export function AdminLayout({ children }: { children: ReactNode }) {
 
         {/* Content Area */}
         <main className={styles["contentArea"]} id="main-admin-content">
+          <AdminNoticeBanner
+            variant="info"
+            title="بيانات الإدارة للمعاينة"
+            description="التصنيفات والأعمال متصلة بالخادم وتُحفظ. بيانات الفصول والمستخدمين والإعلانات والأقسام الأخرى هنا للمعاينة المحلية فقط."
+          />
           {children}
         </main>
       </div>

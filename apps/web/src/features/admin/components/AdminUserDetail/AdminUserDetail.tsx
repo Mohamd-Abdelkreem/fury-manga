@@ -89,8 +89,8 @@ export function AdminUserDetail({ userId }: AdminUserDetailProps) {
     suspendUser(user.id, "إجراء إداري من صفحة تفاصيل المستخدم");
     setNotice({
       type: "warning",
-      title: "تم تعليق الحساب",
-      description: `تم تعليق حساب المستخدم (${user.name}) بنجاح.`,
+      title: "معاينة محلية لتعليق الحساب",
+      description: `ظهر حساب (${user.name}) معلقًا في هذه المعاينة فقط؛ لم تتغير حالة الحساب الحقيقية.`,
     });
     setSuspendDialog(false);
   };
@@ -99,8 +99,8 @@ export function AdminUserDetail({ userId }: AdminUserDetailProps) {
     reactivateUser(user.id);
     setNotice({
       type: "success",
-      title: "استعادة النشاط",
-      description: `تم إلغاء تعليق حساب (${user.name}) واستعادة النشاط بنجاح.`,
+      title: "معاينة محلية لاستعادة النشاط",
+      description: `ظهر حساب (${user.name}) نشطًا في هذه المعاينة فقط؛ لم تتغير حالة الحساب الحقيقية.`,
     });
   };
 
@@ -109,8 +109,8 @@ export function AdminUserDetail({ userId }: AdminUserDetailProps) {
     revokeGiftFromUser(user.id, revokeDialog.giftId);
     setNotice({
       type: "warning",
-      title: "تم سحب الهدية",
-      description: `تم سحب الهدية (${revokeDialog.giftName}) من المستخدم بنجاح.`,
+      title: "معاينة محلية لسحب الهدية",
+      description: `اختفت الهدية (${revokeDialog.giftName}) من هذه المعاينة فقط؛ لم تتغير هدايا الحساب الحقيقية.`,
     });
     setRevokeDialog({ isOpen: false, giftId: "", giftName: "" });
   };
@@ -444,7 +444,7 @@ export function AdminUserDetail({ userId }: AdminUserDetailProps) {
       <AdminConfirmDialog
         isOpen={suspendDialog}
         title="تأكيد تعليق حساب المستخدم"
-        description={`هل أنت متأكد من رغبتك في تعليق حساب (${user.name})؟ سيتم منع المستخدم من التفاعل أو إضافة تعليقات جديدة.`}
+        description={`هل تريد معاينة تعليق حساب (${user.name})؟ لن تتغير حالة الحساب الحقيقية.`}
         confirmLabel="تأكيد التعليق"
         cancelLabel="إلغاء"
         onConfirm={handleConfirmSuspend}

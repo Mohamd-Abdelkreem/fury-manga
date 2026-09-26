@@ -100,8 +100,8 @@ export function AdminUsers() {
     suspendUser(suspendDialog.user.id, suspendDialog.reason || "مخالفة الشروط");
     setNotice({
       type: "warning",
-      title: "تم تعليق الحساب",
-      description: `تم تعليق حساب المستخدم (${suspendDialog.user.name}) بنجاح.`,
+      title: "معاينة محلية لتعليق الحساب",
+      description: `ظهر حساب (${suspendDialog.user.name}) معلقًا في هذه المعاينة فقط؛ لم تتغير حالة الحساب الحقيقية.`,
     });
     setSuspendDialog({ isOpen: false, user: null, reason: "" });
   };
@@ -110,8 +110,8 @@ export function AdminUsers() {
     reactivateUser(u.id);
     setNotice({
       type: "success",
-      title: "استعادة النشاط",
-      description: `تمت استعادة نشاط حساب المستخدم (${u.name}).`,
+      title: "معاينة محلية لاستعادة النشاط",
+      description: `ظهر حساب (${u.name}) نشطًا في هذه المعاينة فقط؛ لم تتغير حالة الحساب الحقيقية.`,
     });
   };
 
@@ -479,7 +479,7 @@ export function AdminUsers() {
       <AdminConfirmDialog
         isOpen={suspendDialog.isOpen}
         title="تأكيد تعليق حساب المستخدم"
-        description={`هل أنت متأكد من رغبتك في تعليق حساب (${suspendDialog.user?.name ?? ""})؟ سيتم حرمان المستخدم من نشر التعليقات أو الوصول للامتيازات الخاصة.`}
+        description={`هل تريد معاينة تعليق حساب (${suspendDialog.user?.name ?? ""})؟ لن تتغير حالة الحساب الحقيقية.`}
         confirmLabel="تأكيد التعليق"
         cancelLabel="إلغاء"
         onConfirm={handleConfirmSuspend}

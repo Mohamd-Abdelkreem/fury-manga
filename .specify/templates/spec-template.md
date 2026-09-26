@@ -8,7 +8,18 @@
 
 **Input**: User description: "$ARGUMENTS"
 
-## User Scenarios & Testing *(mandatory)*
+**PLAN.md Phase**: [P00-P14 and title]
+
+## Scope and Current Reality _(mandatory)_
+
+- **Dependencies and accepted gates**: [prior phases or N/A]
+- **Executable baseline**: [what is implemented and verified now]
+- **Behavior and user changes to preserve**: [specific current behavior/paths]
+- **Fixture, local-only, or placeholder sources affected**: [paths and truthful status]
+- **Explicit exclusions**: [requirements and later phases not included]
+- **Phase exit gate**: [the applicable PLAN.md acceptance boundary]
+
+## User Scenarios & Testing _(mandatory)_
 
 <!--
   IMPORTANT: User stories should be PRIORITIZED as user journeys ordered by importance.
@@ -77,8 +88,10 @@
 
 - What happens when [boundary condition]?
 - How does system handle [error scenario]?
+- What happens for duplicate, stale, concurrent, denied, partial-failure, and retry
+  outcomes where those capabilities apply?
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 <!--
   ACTION REQUIRED: The content in this section represents placeholders.
@@ -93,17 +106,37 @@
 - **FR-004**: System MUST [data requirement, e.g., "persist user preferences"]
 - **FR-005**: System MUST [behavior, e.g., "log all security events"]
 
-*Example of marking unclear requirements:*
+_Example of marking unclear requirements:_
 
 - **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]
 - **FR-007**: System MUST retain user data for [NEEDS CLARIFICATION: retention period not specified]
 
-### Key Entities *(include if feature involves data)*
+### Key Entities _(include if feature involves data)_
 
 - **[Entity 1]**: [What it represents, key attributes without implementation]
 - **[Entity 2]**: [What it represents, relationships to other entities]
 
-## Success Criteria *(mandatory)*
+### Authority, Privacy, and State Truth _(mandatory when applicable)_
+
+- **Actors and server authority**: [public/user/owner/admin/narrow credential; active and
+  verified status; ownership/publication rules]
+- **Sensitive data and public projection**: [allowlisted fields and prohibited data]
+- **State semantics**: [loading/empty/error/pending/success/conflict/denied/stale and
+  duplicate/retry/rollback/history behavior]
+
+## Acceptance Evidence _(mandatory)_
+
+List meaningful automated evidence for every changed behavior. Cover positive,
+negative, boundary, validation, authorization, privacy, state-transition, failure, and
+regression behavior as applicable. Database/transaction claims require real PostgreSQL;
+HTTP security requires the real Express middleware stack; browser-only claims require
+real-browser evidence. Mark genuinely inapplicable evidence with a reason.
+
+- **AE-001**: [requirement/risk -> evidence boundary and observable outcome]
+- **AE-002**: [requirement/risk -> evidence boundary and observable outcome]
+- **Unverified external/browser/device boundary**: [explicit limitation or N/A]
+
+## Success Criteria _(mandatory)_
 
 <!--
   ACTION REQUIRED: Define measurable success criteria.

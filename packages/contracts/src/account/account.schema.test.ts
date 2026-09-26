@@ -9,7 +9,6 @@ const safeUser = {
   id: "11111111-1111-4111-8111-111111111111",
   fullName: "Fury Test User",
   email: "user@example.com",
-  phone: null,
   role: "USER",
   status: "ACTIVE",
   emailVerifiedAt: "2026-08-18T00:00:00.000Z",
@@ -26,6 +25,9 @@ describe("safe account contracts", () => {
   });
 
   it("rejects password and token storage fields", () => {
+    expect(safeUserSchema.safeParse({ ...safeUser, phone: null }).success).toBe(
+      false,
+    );
     expect(
       safeUserSchema.safeParse({ ...safeUser, passwordHash: "secret" }).success,
     ).toBe(false);

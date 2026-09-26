@@ -10,12 +10,6 @@ export const emailSchema = z.preprocess(
   z.email().max(320),
 );
 
-export const phoneSchema = z.preprocess((value) => {
-  if (typeof value !== "string") return value;
-  const trimmed = value.trim();
-  return trimmed.length === 0 ? null : trimmed;
-}, z.string().max(30).nullable());
-
 export const passwordSchema = z
   .string()
   .min(PASSWORD_MIN_LENGTH)
@@ -25,7 +19,6 @@ export const registerBodySchema = z
   .object({
     fullName: nonEmptyBoundedString(150),
     email: emailSchema,
-    phone: phoneSchema.optional().default(null),
     password: passwordSchema,
   })
   .strict();
@@ -72,16 +65,12 @@ export const changePasswordBodySchema = z
 export const updateProfileBodySchema = z
   .object({
     fullName: nonEmptyBoundedString(150).optional(),
-    phone: phoneSchema.optional(),
   })
   .strict()
-  .refine(
-    (value) => value.fullName !== undefined || value.phone !== undefined,
-    {
-      message: "At least one supported field must be provided.",
-      path: ["body"],
-    },
-  );
+  .refine((value) => value.fullName !== undefined, {
+    message: "At least one supported field must be provided.",
+    path: ["body"],
+  });
 
 export type RegisterBody = z.infer<typeof registerBodySchema>;
 export type LoginBody = z.infer<typeof loginBodySchema>;

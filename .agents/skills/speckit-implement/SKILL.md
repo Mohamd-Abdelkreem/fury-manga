@@ -173,6 +173,10 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Check that implemented features match the original specification
    - Validate that tests pass and coverage meets requirements
    - Confirm the implementation follows the technical plan
+   - Review changed production files against `docs/engineering/code-style.md`,
+     relevant B/F file-owner rules, and applicable installed skills. Record concrete
+     file/rule findings and fixes or a clean pass; confirm fresh type/lint/format
+     outcomes before marking review tasks complete.
 
 Note: This command assumes a complete task breakdown exists in tasks.md. If tasks are incomplete or missing, suggest running `/speckit-tasks` first to regenerate the task list.
 

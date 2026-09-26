@@ -1,7 +1,8 @@
 # Project reference
 
-This is the implemented architecture and operations reference for the generic
-authentication foundation.
+This is the implemented architecture and operations reference for the
+authentication foundation, P01 content domain, P02 private media, and P03
+category/work administration.
 
 ## Boundaries
 
@@ -14,8 +15,8 @@ Next.js UI
   -> PostgreSQL
 ```
 
-- `@fury/contracts` owns request bodies, safe user output, field errors,
-  pagination metadata, and success/error envelopes.
+- `@fury/contracts` owns account/content/media request and output schemas, canonical
+  content enums, structured text, field errors, pagination, and envelopes.
 - `@fury/database` owns Prisma schema, migrations, generated types, seed
   behavior, and the client factory.
 - `@fury/api` owns HTTP security, account rules, delivery adapters, and
@@ -93,9 +94,10 @@ The response helper uses `@fury/contracts` types directly. Success always
 has `data`; valid nested pagination is promoted to `paginationMeta`. Error
 envelopes never contain `data: null`.
 
-The Prisma mapper exposes only stable generic errors. Approved check-constraint
-names are limited to the two User constraints. Raw messages, SQL, metadata,
-database URLs, and provider secrets are never returned.
+The Prisma mapper exposes stable generic account errors and allowlisted content
+conflicts for named uniqueness, immutability, representation, and publication
+constraints. Raw messages, SQL, constraint metadata, database URLs, and provider
+secrets are never returned.
 
 Request logging sanitizes credential values in `req.url`,
 `req.originalUrl`, and query objects while retaining non-sensitive query
@@ -111,6 +113,109 @@ filesystem modes where supported, and logs only each preview path. Open the
 newest `.html` file and click its verification or reset button. A failed
 registration delivery triggers a guarded compensating delete of the newly
 created pending user so the address can retry.
+
+## Content module
+
+`src/modules/content` owns feature-local rules, bounded queries, explicit
+administrative/public mappers, a management service, a public read service,
+thin controllers, and route wiring. `src/router.ts` constructs those owners with
+the injected Prisma client. No browser/API implementation import or generic
+repository crosses package boundaries.
+
+The 20 content operations documented in OpenAPI are:
+
+- public `GET`: `/content/works`, `/content/works/{workSlug}`,
+  `/content/works/{workSlug}/chapters`, and
+  `/content/works/{workSlug}/chapters/{chapterNumber}`;
+- ADMIN Category: list/create at `/content/admin/categories`, read/update at
+  `/content/admin/categories/{categoryId}`, and adjacent order move at
+  `/content/admin/categories/{categoryId}/position`;
+- ADMIN Work: list/create at `/content/admin/works`, read/update at
+  `/content/admin/works/{workId}`, category replacement at
+  `/content/admin/works/{workId}/categories`, and publication at
+  `/content/admin/works/{workId}/publication`;
+- ADMIN Chapter: list/create at `/content/admin/works/{workId}/chapters`,
+  read/update at `/content/admin/works/{workId}/chapters/{chapterId}`, and
+  publication at
+  `/content/admin/works/{workId}/chapters/{chapterId}/publication`.
+
+Public operations use shared validation and no auth/CSRF middleware. ADMIN
+operations authenticate an active verified account and authorize `ADMIN` before
+lookup; unsafe operations then enforce CSRF before shared validation. All routes
+remain behind global request IDs, safe logging/errors, and rate limiting.
+
+Shared content schemas normalize bounded titles/display names/slugs; cap list
+limits at 100 and chapter/page integers at PostgreSQL `INTEGER` maximum; and
+define canonical `comics`/`text-story` values. Structured text is a strict
+version-1 document with at most 500 blocks, 200 inline nodes or list items,
+4,000 characters per leaf, 2,048 characters per root-relative link, and 512 KiB
+of serialized UTF-8 JSON. Raw HTML, quote/image/embed/script nodes, external or
+protocol-relative links, controls, unknown fields, and malformed nesting fail
+validation.
+
+P03 adds category enablement, a database-backed global order and distinct work
+usage counts. Work create/PATCH accepts bounded editorial fields, ordered tags,
+category IDs, optional private cover/background asset IDs, featured preference,
+and an optional atomic publish target. Old minimal P01 draft requests remain
+accepted. Work list filtering, sorting and pagination run in PostgreSQL with
+one consistent filtered total; admin output explicitly maps saved fields.
+Publication and edits to published works require complete metadata, an enabled
+category, and an available associated cover. Public reads expose only eligible
+published metadata and return the same 404 for private and absent slugs. The
+public API does not deliver cover bytes. See the
+[P03 upgrade procedure](docs/operations/p03-content-upgrade.md) for migration
+inventory, remediation, and recovery constraints.
+
+Mutable content aggregates use integer expected-version compare-and-set writes.
+Relationship/page replacements and publication transitions are transactional.
+Every real transition to published appends one immutable publication event and
+links it as the aggregate's current event; unpublish/archive clears only current
+publication fields. Same-state retries reuse authoritative state, stale losers
+cannot overwrite the winner, and failed dependent writes roll back fully.
+
+The content foundation and four P03 migrations are forward-only. Migration A
+adds editorial/category fields without inventing missing legacy metadata;
+migration B installs published-readiness guards only after an operator inventory
+and remediation. Migrations C and D guard the 100 Category links per Work limit
+and newly assigned disabled Categories at the database boundary. Existing web
+fixtures are not migrated or seeded. Schema
+correction requires a later forward migration or a verified coordinated backup
+restore, never editing applied history.
+
+## Media module
+
+`src/modules/media` owns actor and class authority, upload-attempt idempotency,
+private asset projections, reference compare-and-set transitions, removal, and
+thin HTTP handlers. `src/infrastructure/media` owns the validated filesystem
+root, atomic staging and publish, image decoding and canonical re-encoding, and
+bounded operator reconciliation. The storage adapter accepts server-owned UUID
+keys only and never derives paths from source filenames.
+
+The shared media contract exposes six classes. Five use ADMIN scope; a
+`user_avatar` candidate is scoped to its active verified owner. ADMIN role does
+not grant access to another user's avatar. All media JSON and binary routes are
+authenticated, unsafe routes preserve CSRF, outputs omit owner/uploader/path/hash
+data, and the binary response is private and no-store. React Query keys include
+the real actor and resource scope; components do not call Axios directly.
+
+`MediaReference` binds only existing P01 Work cover/background slots or an
+existing illustrated ChapterPage to an available class-matching asset. One
+active target slot is enforced by partial unique indexes. Replacement and
+retirement use expected asset identity plus integer version, append immutable
+events, and preserve retired history. A live reference prevents asset removal.
+
+`20260923010000_persistent_vps_media` is a forward-only additive migration.
+Recovery requires a coordinated PostgreSQL and private-filesystem snapshot.
+The manual `media:reconcile` command accepts a bounded limit, settles provable
+pending uploads or rejects incomplete ones, completes interrupted removal,
+marks damaged assets unavailable, and restores availability only for exact
+stored length/hash matches. See `docs/operations/media-backup-restore.md`.
+
+Admin Work screens now use P03 UUIDs and bind accepted P02 cover/background
+candidates only after a confirmed editorial save. Chapter screens still use
+fixture identities and local preview actions. P02 does not bind profile avatars,
+expose public/reader media, persist chapter authoring, or implement automatic
+garbage collection.
 
 ## Generic utilities
 
@@ -158,9 +263,9 @@ Contracts production builds exclude test/spec TypeScript and TSX sources. The
 root build-output assertion verifies required entry artifacts and rejects any
 emitted test/spec JavaScript, declaration, or source-map artifact.
 
-Database integration starts PostgreSQL 18, deploys the real migration, tests
-constraints with direct SQL, validates schema inventory/cascade, and deploys a
-second time.
+Database integration starts PostgreSQL 18, deploys the real migration chain,
+tests account and content constraints with direct SQL, validates upgrade/schema
+inventory and reconnect persistence, and deploys a second time.
 
 API integration starts another disposable PostgreSQL 18 instance, deploys the
 real migration, builds the actual Express app with fake email delivery, and
@@ -172,6 +277,14 @@ Verification coverage also proves that concurrent service and HTTP requests
 produce exactly one success, reused/replaced tokens fail, and suspended users
 remain suspended.
 
+Content integration additionally uses the real Express middleware stack and
+PostgreSQL for ADMIN authority/CSRF, strict contracts, duplicate and stale
+outcomes, transaction rollback, concurrent publication, hidden-state privacy,
+allowlisted public metadata, and the registration-to-public text-story journey.
+The web contribution is type-only: admin Work and lowercase role types derive
+from `@fury/contracts`; rendered fixtures, Arabic labels, controls, routes, and
+mock actions remain unchanged and non-authoritative.
+
 Logout, logout-all, password change, and password reset revoke refresh records,
 not already-issued stateless access JWTs. An access JWT can therefore remain
 usable until its short configured expiry (15 minutes by default); no blacklist
@@ -180,7 +293,7 @@ or other immediate-revocation store is included.
 ## Extension rules
 
 1. Add cross-package contracts only when API and web both consume them.
-2. Add a new migration after this initial baseline is released; do not rewrite
+2. Add each new migration after the latest released migration; do not rewrite
    applied production history.
 3. Keep route/controller/service responsibilities within one API module.
 4. Inject external services from the composition boundary.

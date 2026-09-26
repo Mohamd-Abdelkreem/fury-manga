@@ -2,10 +2,20 @@ import type { ErrorRequestHandler } from "express";
 
 import type { ErrorEnvelope } from "@fury/contracts";
 
-import { appConfig } from "../core/config/app.config.js";
 import { AppError } from "../core/errors/app.error.js";
-import { InternalServerError } from "../core/errors/internal-server.error.js";
 import { mapPrismaError } from "../infrastructure/database/prisma-error.mapper.js";
+
+type SafeErrorDiagnostic = Readonly<
+  { kind: "Error"; name: string } | { kind: "Unknown" }
+>;
+
+const SAFE_ERROR_NAME = /^[A-Za-z][A-Za-z0-9_.-]{0,63}$/u;
+
+const safeErrorDiagnostic = (error: unknown): SafeErrorDiagnostic => {
+  if (!(error instanceof Error)) return { kind: "Unknown" };
+  const name = SAFE_ERROR_NAME.test(error.name) ? error.name : "Error";
+  return { kind: "Error", name };
+};
 
 const createErrorResponse = (
   error: AppError,
@@ -17,7 +27,6 @@ const createErrorResponse = (
   code: error.code,
   message: error.message,
   errors: error.errors?.length === 0 ? undefined : error.errors,
-  ...(appConfig.isDevelopment ? { stack: error.stack } : {}),
   requestId,
   timestamp: error.timestamp,
   path,
@@ -35,20 +44,13 @@ export const errorHandlerMiddleware: ErrorRequestHandler = (
     appError = error;
   } else {
     appError = mapPrismaError(error);
-    if (appError instanceof InternalServerError) {
-      const fallback = new InternalServerError();
-      if (error instanceof Error && error.stack !== undefined) {
-        fallback.stack = error.stack;
-      }
-      appError = fallback;
-    }
   }
 
   const logContext = {
     code: appError.code,
     requestId: request.requestId,
     statusCode: appError.statusCode,
-    ...(appError.isOperational ? {} : { err: error }),
+    ...(appError.isOperational ? {} : { error: safeErrorDiagnostic(error) }),
   };
 
   if (appError.isOperational) {

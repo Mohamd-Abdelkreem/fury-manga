@@ -6,27 +6,15 @@ import {
   ChevronDown,
   ChevronUp,
   Image as ImageIcon,
-  Plus,
-  RefreshCw,
   Trash2,
 } from "lucide-react";
+import { AdminMediaCandidatePicker } from "@/features/media/components/AdminMediaCandidatePicker";
 import styles from "./AdminChapterForm.module.css";
 
 interface IllustratedChapterEditorProps {
   pages: string[];
   onChange: (pages: string[]) => void;
 }
-
-const SAMPLE_PAGES = [
-  "/anime/341452.jpg",
-  "/anime/603242.jpg",
-  "/anime/384226.jpg",
-  "/anime/411246.jpg",
-  "/anime/463379.jpg",
-  "/anime/463592.jpg",
-  "/anime/472451.jpg",
-  "/anime/473048.jpg",
-];
 
 export function IllustratedChapterEditor({
   pages,
@@ -61,22 +49,6 @@ export function IllustratedChapterEditor({
     onChange(next);
   };
 
-  const handleAddSample = () => {
-    const randomImg =
-      SAMPLE_PAGES[Math.floor(Math.random() * SAMPLE_PAGES.length)] ??
-      "/anime/341452.jpg";
-    onChange([...pages, randomImg]);
-  };
-
-  const handleReplace = (index: number) => {
-    const randomImg =
-      SAMPLE_PAGES[Math.floor(Math.random() * SAMPLE_PAGES.length)] ??
-      "/anime/341452.jpg";
-    const next = [...pages];
-    next[index] = randomImg;
-    onChange(next);
-  };
-
   const handleClearAll = () => {
     onChange([]);
   };
@@ -106,17 +78,13 @@ export function IllustratedChapterEditor({
               حذف الكل
             </button>
           )}
-          <button
-            type="button"
-            onClick={handleAddSample}
-            className={styles["btnSecondary"]}
-            style={{ fontSize: "0.8125rem", padding: "0.35rem 0.75rem" }}
-          >
-            <Plus style={{ width: "0.875rem", height: "0.875rem" }} />
-            إضافة صفحة تجريبية
-          </button>
         </div>
       </div>
+
+      <AdminMediaCandidatePicker
+        mediaClass="chapter_page"
+        label="رفع صفحة مصورة مرشحة"
+      />
 
       <div className={styles["illustratedToolbar"]}>
         <span style={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)" }}>
@@ -132,17 +100,9 @@ export function IllustratedChapterEditor({
           <ImageIcon className={styles["emptyStateIcon"]} />
           <p className={styles["emptyStateTitle"]}>لا توجد صفحات مرفوعة بعد</p>
           <p className={styles["emptyStateText"]}>
-            أضف صفحات تجريبية لتجهيز الفصل المصور ومعاينته كما سيظهر للقراء.
+            ارفع صفحة مرشحة أعلاه. ستبقى في الوسائط منفصلة عن الفصل حتى تُربط به
+            في مرحلة لاحقة.
           </p>
-          <button
-            type="button"
-            onClick={handleAddSample}
-            className={styles["btnPrimary"]}
-            style={{ marginTop: "0.5rem" }}
-          >
-            <Plus style={{ width: "1rem", height: "1rem" }} />
-            إضافة أول صفحة
-          </button>
         </div>
       ) : (
         <div className={styles["pagesGrid"]}>
@@ -197,19 +157,6 @@ export function IllustratedChapterEditor({
                   >
                     <ChevronDown
                       style={{ width: "0.875rem", height: "0.875rem" }}
-                    />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleReplace(idx);
-                    }}
-                    className={styles["pageBtn"]}
-                    aria-label={`استبدال صورة الصفحة ${String(idx + 1)}`}
-                    title="استبدال الصورة"
-                  >
-                    <RefreshCw
-                      style={{ width: "0.75rem", height: "0.75rem" }}
                     />
                   </button>
                 </div>

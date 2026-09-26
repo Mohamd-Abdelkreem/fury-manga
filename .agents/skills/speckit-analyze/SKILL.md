@@ -105,6 +105,10 @@ Load only the minimal necessary context from each artifact:
 **From constitution:**
 
 - Load `.specify/memory/constitution.md` for principle validation
+- Follow its engineering intake rule: read `docs/engineering/*.md`, then use
+  `docs/engineering/code-style.md` and applicable B/F rules to check whether the
+  plan and tasks require a concrete code-quality and file-owner review. This
+  command remains read-only and does not review implementation code.
 
 ### 3. Build Semantic Models
 
@@ -139,6 +143,9 @@ Focus on high-signal findings. Limit to 50 findings total; aggregate remainder i
 
 - Any requirement or plan element conflicting with a MUST principle
 - Missing mandated sections or quality gates from constitution
+- Missing task coverage for the scoped code-style/file-owner review, matching
+  installed skill guard passes, and type/lint/format evidence. Name the missing
+  gate and artifact; do not infer a source-code defect without inspecting code.
 
 #### E. Coverage Gaps
 

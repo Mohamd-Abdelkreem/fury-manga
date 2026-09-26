@@ -16,6 +16,7 @@ import { CommentsSection } from "@/features/story/components/CommentsSection/Com
 import { getIllustratedStoryById } from "@/features/story/data/storyData";
 import { FeatureState } from "@/components/ui/FeatureState/FeatureState";
 import { TextChapterReader } from "@/features/text-stories/components/TextChapterReader/TextChapterReader";
+import { ProtectedRoute } from "@/components/auth/protected-route";
 import {
   getTextChapterById,
   getTextWorkById,
@@ -107,7 +108,7 @@ const MOCK_PAGES = [
   "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&auto=format&fit=crop&q=80",
 ];
 
-export default function ChapterReadingPage() {
+function ChapterReadingContent() {
   const params = useParams<{ id: string; chapterId: string }>();
   const router = useRouter();
 
@@ -452,5 +453,13 @@ export default function ChapterReadingPage() {
         <Footer />
       </div>
     </div>
+  );
+}
+
+export default function ChapterReadingPage() {
+  return (
+    <ProtectedRoute>
+      <ChapterReadingContent />
+    </ProtectedRoute>
   );
 }

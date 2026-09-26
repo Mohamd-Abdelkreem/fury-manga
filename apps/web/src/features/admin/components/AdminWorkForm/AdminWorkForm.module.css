@@ -445,3 +445,19 @@
   background: rgba(255, 255, 255, 0.07);
   border-color: rgba(255, 255, 255, 0.2);
 }
+
+.conflictBanner {
+  border: 1px solid #e7a943;
+  border-radius: 0.75rem;
+  background: rgba(231, 169, 67, 0.08);
+  padding: 1rem 1.25rem;
+  color: var(--foreground);
+}
+
+.successMessage {
+  border: 1px solid #4cae78;
+  border-radius: 0.625rem;
+  background: rgba(76, 174, 120, 0.1);
+  color: #b7f0ce;
+  padding: 0.75rem 1rem;
+}

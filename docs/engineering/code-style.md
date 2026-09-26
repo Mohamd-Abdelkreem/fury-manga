@@ -85,3 +85,33 @@ already owns normalization.
 Can the next maintainer see the operation and failure boundary? Is each abstraction
 justified by an actual responsibility? Did the change preserve configuration and
 avoid unrelated refactors? Are optional/unknown values handled truthfully?
+
+## Review gate for changed production code
+
+Inspect the changed code and its immediate callers, not just formatter output.
+Record a file and line for each actionable finding, its owning rule, the behavior
+or maintenance cost, and the smallest correction. Check:
+
+- **Placement:** each error, type, rule, query, mapper, adapter, hook and component
+  behavior is in its responsible owner; dependencies point toward contracts and
+  model rules, not from a model into UI components. Apply B12/B33 or F01 where
+  relevant. A class-private helper is not an owner for a reusable domain error.
+- **Clarity:** names describe intent; functions have one coherent job; parameters,
+  nesting and branching stay understandable. Extract only at a real responsibility
+  boundary, not to meet an arbitrary line count.
+- **Clean code:** use SOLID, DRY, KISS and YAGNI to find mixed responsibilities,
+  duplicated knowledge, unnecessary indirection, speculative options and dead code.
+  Do not turn small, independent duplication into a shared cross-feature dependency.
+- **Correctness:** preserve input/output and failure behavior during refactors;
+  validate untrusted boundaries; keep null, missing and empty semantics distinct;
+  await consequential work; do not swallow errors or report false success.
+- **Verification:** check actual package type/lint/format results and behavior tests
+  appropriate to the change. A passing tool is evidence for its own check, not a
+  substitute for reviewing responsibility and failure paths. Do not weaken or skip
+  checks to make a change appear complete.
+
+Apply the installed `clean-code-guard` skill to nontrivial production-code changes
+and `vercel-react-best-practices` to React/Next.js code. Use `test-guard` and
+`docs-guard` when test code or technical documentation changes. Record concrete
+findings and fixes; if there are none, record a clean pass. Do not create tasks
+for style preferences without a specific risk or violated rule.

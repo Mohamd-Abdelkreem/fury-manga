@@ -1,307 +1,420 @@
-import type { RefObject } from "react";
-import { Check, Info, Sparkles } from "lucide-react";
+import { useState } from "react";
+import { useFormContext } from "react-hook-form";
+
+import type { AdminCategory } from "@fury/contracts";
+
+import { useAdminCategoryPicker } from "../../hooks/admin-content.hooks";
+import { adminContentErrorMessage } from "../../model/admin-content.errors";
 import { cn } from "@/lib/utils";
-import {
-  AVAILABLE_GENRES,
-  type AdminPublishStatus,
-  type AdminStoryStatus,
-  type AdminWorkType,
-} from "../../types/admin.types";
-import type { FormErrors, FormValues, WorkFieldChange } from "./form.types";
+import type { FormValues } from "../../model/admin-work-form";
 import styles from "./AdminWorkForm.module.css";
 
 type Props = Readonly<{
-  values: FormValues;
-  errors: FormErrors;
   isEdit: boolean;
-  titleRef: RefObject<HTMLInputElement | null>;
-  descRef: RefObject<HTMLTextAreaElement | null>;
-  authorRef: RefObject<HTMLInputElement | null>;
-  onChange: WorkFieldChange;
-  onToggleGenre: (genre: string) => void;
+  retainedCategories: readonly AdminCategory[];
 }>;
 
-export function AdminWorkBasicFields({
-  values,
-  errors,
-  isEdit,
-  titleRef,
-  descRef,
-  authorRef,
-  onChange,
-  onToggleGenre,
-}: Props) {
+export function AdminWorkBasicFields({ isEdit, retainedCategories }: Props) {
+  const {
+    register,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useFormContext<FormValues>();
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [chosenCategories, setChosenCategories] = useState<
+    ReadonlyMap<string, AdminCategory>
+  >(() => new Map());
+  const picker = useAdminCategoryPicker(page, search);
+  const values = watch();
+  const selected = new Set(values.categoryIds);
+  const categoriesById = new Map<string, AdminCategory>();
+  for (const category of chosenCategories.values()) {
+    if (selected.has(category.id)) categoriesById.set(category.id, category);
+  }
+  for (const category of retainedCategories) {
+    if (selected.has(category.id)) categoriesById.set(category.id, category);
+  }
+  for (const category of picker.data?.items ?? []) {
+    categoriesById.set(category.id, category);
+  }
+  const pickerCategories = [...categoriesById.values()].toSorted(
+    (left, right) => left.displayPosition - right.displayPosition,
+  );
+  const toggleCategory = (categoryId: string, checked: boolean) => {
+    const next = new Set(values.categoryIds);
+    if (checked) next.add(categoryId);
+    else next.delete(categoryId);
+    setChosenCategories((current) => {
+      const updated = new Map(current);
+      if (checked) {
+        const category = categoriesById.get(categoryId);
+        if (category !== undefined) updated.set(categoryId, category);
+      } else updated.delete(categoryId);
+      return updated;
+    });
+    setValue("categoryIds", [...next], {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+  };
+
   return (
-    <>
-      {/* Section 1: Basic Info */}
-      <section className={styles["formCard"]}>
-        <div className={styles["sectionHeader"]}>
-          <h2 className={styles["sectionTitle"]}>
-            <Info className={styles["sectionIcon"]} aria-hidden="true" />
-            <span>المعلومات الأساسية</span>
-          </h2>
-        </div>
+    <section className={styles["formCard"]}>
+      <div className={styles["sectionHeader"]}>
+        <h2 className={styles["sectionTitle"]}>بيانات المسودة</h2>
+      </div>
 
-        <div className={styles["fieldsGrid2"]}>
-          {/* Arabic Title */}
-          <div className={styles["field"]}>
-            <label htmlFor="work-title" className={styles["label"]}>
-              <span>عنوان العمل بالعربية</span>
-              <span className={styles["requiredMark"]}>*</span>
-            </label>
-            <input
-              ref={titleRef}
-              id="work-title"
-              type="text"
-              className={cn(
-                styles["input"],
-                errors.title && styles["inputError"],
-              )}
-              placeholder="مثال: سمة المكتنز"
-              value={values.title}
-              onChange={(e) => {
-                onChange("title", e.target.value);
-              }}
-              aria-invalid={errors.title ? true : undefined}
-              aria-describedby={errors.title ? "title-error" : undefined}
-            />
-            {errors.title ? (
-              <p
-                id="title-error"
-                className={styles["errorMessage"]}
-                role="alert"
-              >
-                {errors.title}
-              </p>
-            ) : null}
-          </div>
-
-          {/* Alternative Title */}
-          <div className={styles["field"]}>
-            <label htmlFor="work-alt-title" className={styles["label"]}>
-              <span>العنوان البديل أو الإنجليزي</span>
-            </label>
-            <input
-              id="work-alt-title"
-              type="text"
-              className={styles["input"]}
-              placeholder="مثال: Trait Hoarder"
-              value={values.alternativeTitle}
-              onChange={(e) => {
-                onChange("alternativeTitle", e.target.value);
-              }}
-            />
-          </div>
-        </div>
-
-        <div className={styles["fieldsGrid3"]}>
-          {/* Work Type */}
-          <div className={styles["field"]}>
-            <label htmlFor="work-type" className={styles["label"]}>
-              <span>نوع العمل</span>
-              <span className={styles["requiredMark"]}>*</span>
-            </label>
-            <select
-              id="work-type"
-              className={styles["select"]}
-              value={values.type}
-              onChange={(e) => {
-                onChange("type", e.target.value as AdminWorkType);
-              }}
-            >
-              <option value="manga">مانغا (Manga)</option>
-              <option value="manhwa">مانهوا (Manhwa)</option>
-              <option value="manhua">مانهوا صينية (Manhua)</option>
-              <option value="comics">كوميكس (Comics)</option>
-              <option value="novel">رواية (Novel)</option>
-              <option value="text-story">قصة نصية (Text Story)</option>
-            </select>
-          </div>
-
-          {/* Story Status */}
-          <div className={styles["field"]}>
-            <label htmlFor="work-story-status" className={styles["label"]}>
-              <span>حالة القصة</span>
-              <span className={styles["requiredMark"]}>*</span>
-            </label>
-            <select
-              id="work-story-status"
-              className={styles["select"]}
-              value={values.storyStatus}
-              onChange={(e) => {
-                onChange("storyStatus", e.target.value as AdminStoryStatus);
-              }}
-            >
-              <option value="ongoing">مستمرة</option>
-              <option value="completed">مكتملة</option>
-              <option value="hiatus">متوقفة مؤقتًا</option>
-              <option value="cancelled">ملغاة</option>
-            </select>
-          </div>
-
-          {/* Publication Status */}
-          <div className={styles["field"]}>
-            <label htmlFor="work-publish-status" className={styles["label"]}>
-              <span>حالة النشر</span>
-            </label>
-            <select
-              id="work-publish-status"
-              className={styles["select"]}
-              value={values.publishStatus}
-              onChange={(e) => {
-                onChange("publishStatus", e.target.value as AdminPublishStatus);
-              }}
-            >
-              <option value="draft">مسودة (Draft)</option>
-              <option value="published">منشور (Published)</option>
-              {isEdit ? (
-                <option value="archived">مؤرشف (Archived)</option>
-              ) : null}
-            </select>
-          </div>
-        </div>
-
-        <div className={styles["fieldsGrid2"]}>
-          {/* Author */}
-          <div className={styles["field"]}>
-            <label htmlFor="work-author" className={styles["label"]}>
-              <span>المؤلف</span>
-              <span className={styles["requiredMark"]}>*</span>
-            </label>
-            <input
-              ref={authorRef}
-              id="work-author"
-              type="text"
-              className={cn(
-                styles["input"],
-                errors.author && styles["inputError"],
-              )}
-              placeholder="اسم المؤلف أو الكاتب"
-              value={values.author}
-              onChange={(e) => {
-                onChange("author", e.target.value);
-              }}
-              aria-invalid={errors.author ? true : undefined}
-              aria-describedby={errors.author ? "author-error" : undefined}
-            />
-            {errors.author ? (
-              <p
-                id="author-error"
-                className={styles["errorMessage"]}
-                role="alert"
-              >
-                {errors.author}
-              </p>
-            ) : null}
-          </div>
-
-          {/* Artist */}
-          <div className={styles["field"]}>
-            <label htmlFor="work-artist" className={styles["label"]}>
-              <span>الرسام (إن وجد)</span>
-            </label>
-            <input
-              id="work-artist"
-              type="text"
-              className={styles["input"]}
-              placeholder="اسم الرسام أو استوديو الرسم"
-              value={values.artist}
-              onChange={(e) => {
-                onChange("artist", e.target.value);
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Description */}
+      <div className={styles["fieldsGrid2"]}>
         <div className={styles["field"]}>
-          <label htmlFor="work-desc" className={styles["label"]}>
-            <span>نبذة / قصة العمل</span>
+          <label htmlFor="work-title" className={styles["label"]}>
+            عنوان العمل
             <span className={styles["requiredMark"]}>*</span>
           </label>
-          <textarea
-            ref={descRef}
-            id="work-desc"
+          <input
+            id="work-title"
             className={cn(
-              styles["textarea"],
-              errors.description && styles["inputError"],
+              styles["input"],
+              errors.title && styles["inputError"],
             )}
-            placeholder="اكتب نبذة مشوقة ومختصرة عن حبكة العمل والشخصيات الرئيسية..."
-            value={values.description}
-            onChange={(e) => {
-              onChange("description", e.target.value);
-            }}
-            aria-invalid={errors.description ? true : undefined}
-            aria-describedby={errors.description ? "desc-error" : undefined}
+            autoComplete="off"
+            {...register("title")}
+            aria-invalid={errors.title ? true : undefined}
+            aria-describedby={errors.title ? "work-title-error" : undefined}
           />
-          {errors.description ? (
-            <p id="desc-error" className={styles["errorMessage"]} role="alert">
-              {errors.description}
-            </p>
-          ) : (
-            <p className={styles["hint"]}>
-              {values.description.length.toLocaleString("ar-EG")} حرفًا (الموصى
-              به 50 حرفًا على الأقل).
-            </p>
-          )}
-        </div>
-
-        {/* Genres Multi-select */}
-        <div className={styles["field"]}>
-          <span className={styles["label"]}>
-            <span>التصنيفات والأنواع</span>
-            <span className={styles["requiredMark"]}>*</span>
-          </span>
-          <div className={styles["genresWrapper"]}>
-            {AVAILABLE_GENRES.map((genre) => {
-              const isSelected = values.genres.includes(genre);
-              return (
-                <button
-                  key={genre}
-                  type="button"
-                  onClick={() => {
-                    onToggleGenre(genre);
-                  }}
-                  className={cn(
-                    styles["genreChip"],
-                    isSelected && styles["genreChipSelected"],
-                  )}
-                  aria-pressed={isSelected}
-                >
-                  {isSelected ? (
-                    <Check size={13} aria-hidden="true" />
-                  ) : (
-                    <Sparkles size={13} aria-hidden="true" />
-                  )}
-                  <span>{genre}</span>
-                </button>
-              );
-            })}
-          </div>
-          {errors.genres ? (
-            <p className={styles["errorMessage"]} role="alert">
-              {errors.genres}
+          {errors.title?.message ? (
+            <p
+              id="work-title-error"
+              className={styles["errorMessage"]}
+              role="alert"
+            >
+              {errors.title.message}
             </p>
           ) : null}
         </div>
 
-        {/* Tags */}
         <div className={styles["field"]}>
-          <label htmlFor="work-tags" className={styles["label"]}>
-            <span>الوسوم الإضافية (مفصولة بفواصل)</span>
+          <label htmlFor="work-alt-title" className={styles["label"]}>
+            العنوان البديل
           </label>
           <input
-            id="work-tags"
-            type="text"
-            className={styles["input"]}
-            placeholder="مثال: نظام، تطور سريع، ذكاء، قتال سيوف"
-            value={values.tags}
-            onChange={(e) => {
-              onChange("tags", e.target.value);
-            }}
+            id="work-alt-title"
+            className={cn(
+              styles["input"],
+              errors.alternativeTitle && styles["inputError"],
+            )}
+            {...register("alternativeTitle")}
+            aria-invalid={errors.alternativeTitle ? true : undefined}
+            aria-describedby={
+              errors.alternativeTitle ? "work-alt-title-error" : undefined
+            }
           />
+          {errors.alternativeTitle?.message ? (
+            <p
+              id="work-alt-title-error"
+              className={styles["errorMessage"]}
+              role="alert"
+            >
+              {errors.alternativeTitle.message}
+            </p>
+          ) : null}
         </div>
-      </section>
-    </>
+      </div>
+
+      <div className={styles["fieldsGrid3"]}>
+        <div className={styles["field"]}>
+          <label htmlFor="work-slug" className={styles["label"]}>
+            الرابط المختصر
+          </label>
+          {isEdit ? <input type="hidden" {...register("slug")} /> : null}
+          <input
+            id="work-slug"
+            className={cn(styles["input"], errors.slug && styles["inputError"])}
+            autoComplete="off"
+            dir="ltr"
+            disabled={isEdit}
+            {...(isEdit ? {} : register("slug"))}
+            value={isEdit ? values.slug : undefined}
+            aria-invalid={errors.slug ? true : undefined}
+            aria-describedby={errors.slug ? "work-slug-error" : undefined}
+          />
+          {errors.slug?.message ? (
+            <p
+              id="work-slug-error"
+              className={styles["errorMessage"]}
+              role="alert"
+            >
+              {errors.slug.message}
+            </p>
+          ) : null}
+        </div>
+
+        <div className={styles["field"]}>
+          <label htmlFor="work-type" className={styles["label"]}>
+            نوع العمل
+          </label>
+          {isEdit ? <input type="hidden" {...register("type")} /> : null}
+          <select
+            id="work-type"
+            className={styles["select"]}
+            disabled={isEdit}
+            {...(isEdit ? {} : register("type"))}
+            value={values.type}
+          >
+            <option value="manga">مانغا</option>
+            <option value="manhwa">مانهوا</option>
+            <option value="manhua">مانهوا صينية</option>
+            <option value="comics">كوميكس</option>
+            <option value="novel">رواية</option>
+            <option value="text-story">قصة نصية</option>
+          </select>
+        </div>
+
+        <div className={styles["field"]}>
+          <label htmlFor="work-story-status" className={styles["label"]}>
+            حالة القصة
+          </label>
+          <select
+            id="work-story-status"
+            className={styles["select"]}
+            {...register("storyStatus")}
+          >
+            <option value="ongoing">مستمرة</option>
+            <option value="completed">مكتملة</option>
+            <option value="hiatus">متوقفة مؤقتًا</option>
+            <option value="cancelled">ملغاة</option>
+          </select>
+        </div>
+      </div>
+
+      <div className={styles["fieldsGrid2"]}>
+        <div className={styles["field"]}>
+          <label htmlFor="work-author" className={styles["label"]}>
+            المؤلف
+          </label>
+          <input
+            id="work-author"
+            className={cn(
+              styles["input"],
+              errors.author && styles["inputError"],
+            )}
+            {...register("author")}
+            aria-invalid={errors.author ? true : undefined}
+          />
+          {errors.author?.message ? (
+            <p className={styles["errorMessage"]} role="alert">
+              {errors.author.message}
+            </p>
+          ) : null}
+        </div>
+        <div className={styles["field"]}>
+          <label htmlFor="work-artist" className={styles["label"]}>
+            الرسام
+          </label>
+          <input
+            id="work-artist"
+            className={cn(
+              styles["input"],
+              errors.artist && styles["inputError"],
+            )}
+            {...register("artist")}
+            aria-invalid={errors.artist ? true : undefined}
+          />
+          {errors.artist?.message ? (
+            <p className={styles["errorMessage"]} role="alert">
+              {errors.artist.message}
+            </p>
+          ) : null}
+        </div>
+      </div>
+
+      <div className={styles["field"]}>
+        <label htmlFor="work-synopsis" className={styles["label"]}>
+          نبذة العمل
+        </label>
+        <textarea
+          id="work-synopsis"
+          className={cn(
+            styles["textarea"],
+            errors.synopsis && styles["inputError"],
+          )}
+          {...register("synopsis")}
+          aria-invalid={errors.synopsis ? true : undefined}
+          aria-describedby={errors.synopsis ? "work-synopsis-error" : undefined}
+        />
+        {errors.synopsis?.message ? (
+          <p
+            id="work-synopsis-error"
+            className={styles["errorMessage"]}
+            role="alert"
+          >
+            {errors.synopsis.message}
+          </p>
+        ) : (
+          <p className={styles["hint"]}>يمكن حفظ المسودة دون نبذة مكتملة.</p>
+        )}
+      </div>
+
+      <fieldset className={styles["field"]}>
+        <legend className={styles["label"]}>التصنيفات المحفوظة</legend>
+        <label htmlFor="work-category-search" className={styles["label"]}>
+          ابحث عن تصنيف مفعّل
+        </label>
+        <input
+          id="work-category-search"
+          className={styles["input"]}
+          value={search}
+          maxLength={100}
+          onChange={(event) => {
+            setSearch(event.currentTarget.value);
+            setPage(1);
+          }}
+        />
+        {picker.isPending ? (
+          <p role="status">جارٍ تحميل التصنيفات المفعّلة…</p>
+        ) : null}
+        {picker.isError ? (
+          <div role="alert">
+            <p>{adminContentErrorMessage(picker.error)}</p>
+            <button
+              type="button"
+              onClick={() => {
+                void picker.refetch();
+              }}
+            >
+              إعادة محاولة تحميل التصنيفات
+            </button>
+          </div>
+        ) : null}
+        {picker.denied ? (
+          <p role="alert">
+            انتهت صلاحية الوصول إلى التصنيفات. سجّل الدخول مجددًا.
+          </p>
+        ) : null}
+        {!picker.available ? (
+          <p role="status">يلزم حساب مدير نشط وموثق لاختيار التصنيفات.</p>
+        ) : null}
+        {pickerCategories.length === 0 &&
+        !picker.isPending &&
+        !picker.isError ? (
+          <p className={styles["hint"]}>لا توجد تصنيفات محفوظة للاختيار.</p>
+        ) : null}
+        <div className={styles["genresWrapper"]}>
+          {pickerCategories.map((category) => {
+            const checked = selected.has(category.id);
+            const label = category.enabled
+              ? category.displayName
+              : `${category.displayName} (معطل)`;
+            return (
+              <label key={category.id} className={styles["genreChip"]}>
+                <input
+                  type="checkbox"
+                  aria-label={label}
+                  checked={checked}
+                  disabled={!checked && values.categoryIds.length >= 100}
+                  onChange={(event) => {
+                    toggleCategory(category.id, event.currentTarget.checked);
+                  }}
+                />
+                <span>{label}</span>
+              </label>
+            );
+          })}
+        </div>
+        {picker.data !== undefined && picker.data.pagination.totalPages > 1 ? (
+          <div className={styles["actionButtonsGroup"]}>
+            <button
+              type="button"
+              disabled={page <= 1}
+              onClick={() => {
+                setPage(page - 1);
+              }}
+            >
+              التصنيفات السابقة
+            </button>
+            <span role="status">
+              صفحة {page} من {picker.data.pagination.totalPages}
+            </span>
+            <button
+              type="button"
+              disabled={!picker.data.pagination.hasNextPage}
+              onClick={() => {
+                setPage(page + 1);
+              }}
+            >
+              التصنيفات التالية
+            </button>
+          </div>
+        ) : null}
+        {errors.categoryIds?.message ? (
+          <p className={styles["errorMessage"]} role="alert">
+            {errors.categoryIds.message}
+          </p>
+        ) : null}
+        {pickerCategories.some(
+          (category) => !category.enabled && selected.has(category.id),
+        ) ? (
+          <p className={styles["hint"]}>
+            التصنيفات المعطلة المرتبطة مسبقًا محفوظة؛ يمكن إزالتها ولا يمكن
+            إسنادها من جديد.
+          </p>
+        ) : null}
+      </fieldset>
+
+      <div className={styles["field"]}>
+        <label htmlFor="work-tags" className={styles["label"]}>
+          الوسوم (افصل بينها بفاصلة)
+        </label>
+        <input
+          id="work-tags"
+          className={cn(
+            styles["input"],
+            errors.tagsText && styles["inputError"],
+          )}
+          {...register("tagsText")}
+          aria-invalid={errors.tagsText ? true : undefined}
+          aria-describedby={errors.tagsText ? "work-tags-error" : undefined}
+        />
+        {errors.tagsText?.message ? (
+          <p
+            id="work-tags-error"
+            className={styles["errorMessage"]}
+            role="alert"
+          >
+            {errors.tagsText.message}
+          </p>
+        ) : null}
+      </div>
+
+      <fieldset className={styles["field"]}>
+        <legend className={styles["label"]}>تفضيل العرض المميز</legend>
+        <label>
+          <input type="checkbox" {...register("featuredHome")} />
+          إضافة إلى العرض المميز (تفضيل غير منشور)
+        </label>
+        {values.featuredHome ? (
+          <label htmlFor="work-featured-order" className={styles["label"]}>
+            موضع العرض المميز
+            <input
+              id="work-featured-order"
+              inputMode="numeric"
+              className={cn(
+                styles["input"],
+                errors.featuredOrderText && styles["inputError"],
+              )}
+              {...register("featuredOrderText")}
+              aria-invalid={errors.featuredOrderText ? true : undefined}
+            />
+          </label>
+        ) : null}
+        {errors.featuredOrderText?.message ? (
+          <p className={styles["errorMessage"]} role="alert">
+            {errors.featuredOrderText.message}
+          </p>
+        ) : null}
+      </fieldset>
+    </section>
   );
 }

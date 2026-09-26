@@ -31,10 +31,11 @@ describe("pagination", () => {
     expect(() => parsePaginationQuery({ limit: "101" })).toThrow();
     expect(() =>
       parsePagination({
-        page: { kind: "value", value: Number.MAX_SAFE_INTEGER },
-        limit: { kind: "value", value: 100 },
+        page: Number.MAX_SAFE_INTEGER,
+        limit: 100,
       }),
     ).toThrow(/safe integer/iu);
+    expect(() => parsePaginationQuery({ page: "1", include: "all" })).toThrow();
   });
 
   it("calculates validated metadata", () => {

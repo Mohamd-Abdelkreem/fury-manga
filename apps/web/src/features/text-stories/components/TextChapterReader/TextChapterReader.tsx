@@ -356,8 +356,8 @@ export function TextChapterReader({
 
       <p className={styles["completion"]} role="status">
         {hasReachedCompletionThreshold(progress)
-          ? "بلغت 75% — تم تسجيل هذا الفصل كمكتمل."
-          : "سيتم تسجيل إكمال الفصل بعد بلوغ 75% من الصفحة."}
+          ? "بلغت 75% — اكتملت القراءة في هذه الجلسة فقط، ولم تُحفظ في الحساب."
+          : "عند بلوغ 75% سيظهر إكمال القراءة لهذه الجلسة فقط، دون حفظه في الحساب."}
       </p>
 
       <div className={styles["backLink"]}>

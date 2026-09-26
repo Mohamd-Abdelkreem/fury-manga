@@ -5,6 +5,7 @@
   display: flex;
   position: relative;
   direction: rtl;
+  overflow-x: clip;
 }
 
 /* ── Sidebar ── */
@@ -438,10 +439,14 @@
   .sidebar {
     transform: translateX(100%);
     box-shadow: -10px 0 30px rgba(0, 0, 0, 0.6);
+    visibility: hidden;
+    pointer-events: none;
   }
 
   .sidebarOpen {
     transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
   }
 
   .backdropOpen {

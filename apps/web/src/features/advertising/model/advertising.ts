@@ -29,7 +29,8 @@ export const ADVERTISEMENT_PLACEMENTS: Record<
   },
 };
 
-export const GLOBAL_ADVERTISEMENTS_ENABLED: boolean = true;
+// P13 owns provider-backed enablement; presentation placeholders stay dormant.
+export const GLOBAL_ADVERTISEMENTS_ENABLED: boolean = false;
 
 export function isAdvertisementPlacementEnabled(
   placement: AdvertisementPlacement,

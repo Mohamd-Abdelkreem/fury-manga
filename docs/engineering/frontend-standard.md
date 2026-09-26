@@ -15,7 +15,12 @@ as applicable. Existing implementation is not automatic proof of compliance.
 Organize feature responsibilities as features/<domain>/{api,hooks,model,components}.
 Create the folders needed by real responsibilities; preserve established paths
 during unrelated changes. model owns pure feature types/state/rules, not a second
-server-state store.
+server-state store. Form schemas, normalization, command shaping, conflict decisions,
+and safe error classification are model responsibilities. The feature API owns
+transport and safe error projection; hooks own query/mutation lifecycle and cache
+effects; components own rendering and transient interaction. Model files must not
+import components. Put reusable pure logic in model files even if a single form
+currently calls it; keep UI-only types and callbacks with their component.
 
 The live flow is Component -> React Query hook -> feature API -> central apiClient
 -> backend. Components must not call the HTTP client directly. No ad hoc fetch,

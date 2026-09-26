@@ -40,6 +40,12 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
 }));
 
+vi.mock("@/features/media/components/AdminMediaCandidatePicker", () => ({
+  AdminMediaCandidatePicker: ({ label }: { label: string }) => (
+    <input aria-label={label} type="file" />
+  ),
+}));
+
 describe("AdminGifts Component", () => {
   it("renders gifts catalog header, stat cards, and gift cards", () => {
     render(
@@ -100,6 +106,12 @@ describe("AdminGifts Component", () => {
 
     expect(screen.getByRole("dialog")).toBeInTheDocument();
     expect(screen.getByText("إضافة تصميم هدية جديد")).toBeInTheDocument();
+    expect(screen.getByLabelText("رفع صورة إطار مرشحة")).toHaveAttribute(
+      "type",
+      "file",
+    );
+    screen.getByLabelText("رفع صورة إطار مرشحة").focus();
+    expect(screen.getByLabelText("رفع صورة إطار مرشحة")).toHaveFocus();
 
     // Fill form
     const nameInput = screen.getByLabelText("اسم الهدية");
@@ -114,7 +126,7 @@ describe("AdminGifts Component", () => {
     fireEvent.click(submitBtn);
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(screen.getByText("تصميم جديد")).toBeInTheDocument();
+    expect(screen.getByText("معاينة محلية للتصميم")).toBeInTheDocument();
     expect(screen.getByText("تاج التنين الأسود")).toBeInTheDocument();
   });
 

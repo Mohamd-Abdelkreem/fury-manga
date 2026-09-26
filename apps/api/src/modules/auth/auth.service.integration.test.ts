@@ -57,7 +57,6 @@ describe("AuthService with PostgreSQL", () => {
     const registered = await service.register({
       fullName: "Fury Test User",
       email: "USER@example.com",
-      phone: null,
       password: "initial-secure-password",
     });
     expect(registered.user).not.toHaveProperty("passwordHash");
@@ -118,7 +117,6 @@ describe("AuthService with PostgreSQL", () => {
     const registration = {
       fullName: "Retry User",
       email: "retry@example.com",
-      phone: null,
       password: "initial-secure-password",
     };
 
@@ -137,7 +135,6 @@ describe("AuthService with PostgreSQL", () => {
     await service.register({
       fullName: "Concurrent Verification User",
       email: "concurrent@example.com",
-      phone: null,
       password: "initial-secure-password",
     });
     const token = tokenFromLastEmail();
@@ -171,7 +168,6 @@ describe("AuthService with PostgreSQL", () => {
     await service.register({
       fullName: "Resend Verification User",
       email: "resend@example.com",
-      phone: null,
       password: "initial-secure-password",
     });
     const oldToken = tokenFromLastEmail();
@@ -199,7 +195,6 @@ describe("AuthService with PostgreSQL", () => {
     await service.register({
       fullName: "Suspended Verification User",
       email: "suspended@example.com",
-      phone: null,
       password: "initial-secure-password",
     });
     const token = tokenFromLastEmail();
@@ -228,7 +223,6 @@ describe("AuthService with PostgreSQL", () => {
     await service.register({
       fullName: "Fury Test User",
       email: "user@example.com",
-      phone: null,
       password: "initial-secure-password",
     });
     await service.verifyEmail(tokenFromLastEmail());

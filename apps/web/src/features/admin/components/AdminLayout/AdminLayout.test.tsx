@@ -111,4 +111,16 @@ describe("AdminLayout Component", () => {
     fireEvent.keyDown(window, { key: "Escape" });
     expect(screen.queryByText("التنبيهات الإدارية")).not.toBeInTheDocument();
   });
+
+  it("keeps work navigation free of fixture totals", () => {
+    render(
+      <AdminDataProvider>
+        <AdminLayout>Content</AdminLayout>
+      </AdminDataProvider>,
+    );
+
+    const workLink = screen.getByRole("link", { name: "الأعمال" });
+    expect(workLink).toHaveAttribute("href", "/admin/works");
+    expect(workLink).not.toHaveTextContent(/[٠-٩0-9]/u);
+  });
 });

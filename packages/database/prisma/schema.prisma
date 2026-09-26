@@ -22,12 +22,98 @@ enum UserStatus {
   @@map("user_status")
 }
 
+enum WorkType {
+  MANGA      @map("manga")
+  MANHWA     @map("manhwa")
+  MANHUA     @map("manhua")
+  COMICS     @map("comics")
+  NOVEL      @map("novel")
+  TEXT_STORY @map("text-story")
+
+  @@map("work_type")
+}
+
+enum StoryStatus {
+  ONGOING   @map("ongoing")
+  COMPLETED @map("completed")
+  HIATUS    @map("hiatus")
+  CANCELLED @map("cancelled")
+
+  @@map("story_status")
+}
+
+enum PublicationStatus {
+  DRAFT     @map("draft")
+  PUBLISHED @map("published")
+  ARCHIVED  @map("archived")
+
+  @@map("publication_status")
+}
+
+enum ChapterContentType {
+  ILLUSTRATED @map("illustrated")
+  TEXT        @map("text")
+
+  @@map("chapter_content_type")
+}
+
+enum MediaClass {
+  WORK_COVER         @map("work_cover")
+  WORK_BACKGROUND    @map("work_background")
+  CHAPTER_PAGE       @map("chapter_page")
+  USER_AVATAR        @map("user_avatar")
+  AVATAR_FRAME       @map("avatar_frame")
+  COMMENT_DECORATION @map("comment_decoration")
+
+  @@map("media_class")
+}
+
+enum MediaScope {
+  ADMIN @map("admin")
+  USER  @map("user")
+
+  @@map("media_scope")
+}
+
+enum MediaAssetStatus {
+  PENDING     @map("pending")
+  AVAILABLE   @map("available")
+  REMOVING    @map("removing")
+  UNAVAILABLE @map("unavailable")
+  REMOVED     @map("removed")
+
+  @@map("media_asset_status")
+}
+
+enum UploadAttemptState {
+  PENDING  @map("pending")
+  ACCEPTED @map("accepted")
+  REJECTED @map("rejected")
+
+  @@map("upload_attempt_state")
+}
+
+enum MediaReferenceSlot {
+  WORK_COVER      @map("work_cover")
+  WORK_BACKGROUND @map("work_background")
+  CHAPTER_PAGE    @map("chapter_page")
+
+  @@map("media_reference_slot")
+}
+
+enum MediaReferenceAction {
+  BOUND    @map("bound")
+  REPLACED @map("replaced")
+  RETIRED  @map("retired")
+
+  @@map("media_reference_action")
+}
+
 model User {
   id                         String     @id @default(uuid()) @db.Uuid
   email                      String     @unique @db.VarChar(320)
   passwordHash               String     @map("password_hash") @db.VarChar(255)
   fullName                   String     @map("full_name") @db.VarChar(150)
-  phone                      String?    @db.VarChar(30)
   role                       UserRole   @default(USER)
   status                     UserStatus @default(PENDING_VERIFICATION)
   emailVerifiedAt            DateTime?  @map("email_verified_at") @db.Timestamptz(6)
@@ -38,7 +124,11 @@ model User {
   createdAt                  DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt                  DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  refreshTokens RefreshToken[]
+  refreshTokens        RefreshToken[]
+  ownedMediaAssets     MediaAsset[]          @relation("MediaOwner")
+  uploadedMediaAssets  MediaAsset[]          @relation("MediaUploader")
+  mediaUploadAttempts  UploadAttempt[]
+  mediaReferenceEvents MediaReferenceEvent[]
 
   @@index([status, role], map: "users_status_role_idx")
   @@map("users")
@@ -56,4 +146,214 @@ model RefreshToken {
   @@index([userId], map: "refresh_tokens_user_idx")
   @@index([expiresAt], map: "refresh_tokens_expiry_idx")
   @@map("refresh_tokens")
+}
+
+model Work {
+  id                        String            @id @default(uuid()) @db.Uuid
+  title                     String            @db.VarChar(200)
+  alternativeTitle          String?           @map("alternative_title") @db.VarChar(200)
+  synopsis                  String?           @db.VarChar(5000)
+  author                    String?           @db.VarChar(150)
+  artist                    String?           @db.VarChar(150)
+  slug                      String            @unique @db.VarChar(120)
+  type                      WorkType
+  storyStatus               StoryStatus       @map("story_status")
+  publicationStatus         PublicationStatus @default(DRAFT) @map("publication_status")
+  publishedAt               DateTime?         @map("published_at") @db.Timestamptz(6)
+  currentPublicationEventId String?           @unique @map("current_publication_event_id") @db.Uuid
+  featuredHome              Boolean           @default(false) @map("featured_home")
+  featuredOrder             Int?              @map("featured_order")
+  version                   Int               @default(0)
+  createdAt                 DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                 DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  categories        WorkCategory[]
+  tags              WorkTag[]
+  chapters          Chapter[]
+  publicationEvents PublicationEvent[]
+  mediaReferences   MediaReference[]
+
+  @@index([publicationStatus, publishedAt(sort: Desc), id], map: "works_publication_idx")
+  @@index([createdAt(sort: Desc), id], map: "works_created_idx")
+  @@map("works")
+}
+
+model Category {
+  id              String   @id @default(uuid()) @db.Uuid
+  displayName     String   @map("display_name") @db.VarChar(100)
+  slug            String   @unique @db.VarChar(120)
+  enabled         Boolean  @default(true)
+  displayPosition Int      @default(dbgenerated("next_category_display_position()")) @map("display_position")
+  version         Int      @default(0)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  works WorkCategory[]
+
+  @@unique([displayPosition], map: "categories_display_position_key")
+  @@index([enabled, displayPosition, id], map: "categories_enabled_position_idx")
+  @@index([createdAt(sort: Desc), id], map: "categories_created_idx")
+  @@map("categories")
+}
+
+model WorkCategory {
+  workId     String   @map("work_id") @db.Uuid
+  categoryId String   @map("category_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  work     Work     @relation(fields: [workId], references: [id], onDelete: Restrict)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@id([workId, categoryId])
+  @@index([categoryId, workId], map: "work_categories_category_work_idx")
+  @@map("work_categories")
+}
+
+model WorkTag {
+  workId        String @map("work_id") @db.Uuid
+  normalizedTag String @map("normalized_tag") @db.VarChar(40)
+  position      Int
+
+  work Work @relation(fields: [workId], references: [id], onDelete: Restrict)
+
+  @@id([workId, normalizedTag])
+  @@unique([workId, position], map: "work_tags_work_id_position_key")
+  @@map("work_tags")
+}
+
+model Chapter {
+  id                        String             @id @default(uuid()) @db.Uuid
+  workId                    String             @map("work_id") @db.Uuid
+  number                    Int
+  contentType               ChapterContentType @map("content_type")
+  textContent               Json?              @map("text_content") @db.JsonB
+  publicationStatus         PublicationStatus  @default(DRAFT) @map("publication_status")
+  publishedAt               DateTime?          @map("published_at") @db.Timestamptz(6)
+  currentPublicationEventId String?            @unique @map("current_publication_event_id") @db.Uuid
+  version                   Int                @default(0)
+  createdAt                 DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                 DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  work              Work               @relation(fields: [workId], references: [id], onDelete: Restrict)
+  pages             ChapterPage[]
+  publicationEvents PublicationEvent[]
+
+  @@unique([workId, number])
+  @@index([workId, publicationStatus, number, id], map: "chapters_work_publication_number_idx")
+  @@map("chapters")
+}
+
+model ChapterPage {
+  id        String   @id @default(uuid()) @db.Uuid
+  chapterId String   @map("chapter_id") @db.Uuid
+  position  Int
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  chapter         Chapter          @relation(fields: [chapterId], references: [id], onDelete: Restrict)
+  mediaReferences MediaReference[]
+
+  @@unique([chapterId, position])
+  @@index([chapterId, position, id], map: "chapter_pages_order_idx")
+  @@map("chapter_pages")
+}
+
+model PublicationEvent {
+  id         String   @id @default(uuid()) @db.Uuid
+  workId     String?  @map("work_id") @db.Uuid
+  chapterId  String?  @map("chapter_id") @db.Uuid
+  occurredAt DateTime @default(now()) @map("occurred_at") @db.Timestamptz(6)
+
+  work    Work?    @relation(fields: [workId], references: [id], onDelete: Restrict)
+  chapter Chapter? @relation(fields: [chapterId], references: [id], onDelete: Restrict)
+
+  @@index([workId, occurredAt(sort: Desc), id], map: "publication_events_work_idx")
+  @@index([chapterId, occurredAt(sort: Desc), id], map: "publication_events_chapter_idx")
+  @@map("publication_events")
+}
+
+model MediaAsset {
+  id               String           @id @default(uuid()) @db.Uuid
+  mediaClass       MediaClass       @map("media_class")
+  scope            MediaScope
+  ownerUserId      String?          @map("owner_user_id") @db.Uuid
+  uploadedByUserId String           @map("uploaded_by_user_id") @db.Uuid
+  relativeKey      String           @unique @map("relative_key") @db.VarChar(100)
+  contentType      String?          @map("content_type") @db.VarChar(32)
+  byteLength       Int?             @map("byte_length")
+  width            Int?
+  height           Int?
+  sha256           String?          @db.Char(64)
+  status           MediaAssetStatus @default(PENDING)
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  availableAt      DateTime?        @map("available_at") @db.Timestamptz(6)
+  removedAt        DateTime?        @map("removed_at") @db.Timestamptz(6)
+
+  ownerUser      User?                 @relation("MediaOwner", fields: [ownerUserId], references: [id], onDelete: Restrict)
+  uploadedByUser User                  @relation("MediaUploader", fields: [uploadedByUserId], references: [id], onDelete: Restrict)
+  uploadAttempt  UploadAttempt?
+  references     MediaReference[]
+  fromEvents     MediaReferenceEvent[] @relation("MediaEventFrom")
+  toEvents       MediaReferenceEvent[] @relation("MediaEventTo")
+
+  @@index([scope, ownerUserId, createdAt(sort: Desc), id(sort: Desc)], map: "media_assets_scope_owner_order_idx")
+  @@index([mediaClass, createdAt(sort: Desc), id(sort: Desc)], map: "media_assets_class_order_idx")
+  @@map("media_assets")
+}
+
+model UploadAttempt {
+  id              String             @db.Uuid
+  actorUserId     String             @map("actor_user_id") @db.Uuid
+  mediaClass      MediaClass         @map("media_class")
+  sourceSha256    String?            @map("source_sha256") @db.Char(64)
+  state           UploadAttemptState @default(PENDING)
+  assetId         String?            @unique @map("asset_id") @db.Uuid
+  safeFailureCode String?            @map("safe_failure_code") @db.VarChar(80)
+  createdAt       DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  completedAt     DateTime?          @map("completed_at") @db.Timestamptz(6)
+
+  actorUser User        @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
+  asset     MediaAsset? @relation(fields: [assetId], references: [id], onDelete: Restrict)
+
+  @@id([actorUserId, id])
+  @@index([state, createdAt, actorUserId, id], map: "upload_attempts_state_order_idx")
+  @@map("upload_attempts")
+}
+
+model MediaReference {
+  id            String             @id @default(uuid()) @db.Uuid
+  assetId       String             @map("asset_id") @db.Uuid
+  workId        String?            @map("work_id") @db.Uuid
+  chapterPageId String?            @map("chapter_page_id") @db.Uuid
+  slot          MediaReferenceSlot
+  version       Int                @default(0)
+  createdAt     DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+  retiredAt     DateTime?          @map("retired_at") @db.Timestamptz(6)
+
+  asset       MediaAsset            @relation(fields: [assetId], references: [id], onDelete: Restrict)
+  work        Work?                 @relation(fields: [workId], references: [id], onDelete: Restrict)
+  chapterPage ChapterPage?          @relation(fields: [chapterPageId], references: [id], onDelete: Restrict)
+  events      MediaReferenceEvent[]
+
+  @@index([assetId, retiredAt], map: "media_references_asset_active_idx")
+  @@map("media_references")
+}
+
+model MediaReferenceEvent {
+  id            String               @id @default(uuid()) @db.Uuid
+  referenceId   String               @map("reference_id") @db.Uuid
+  actorUserId   String               @map("actor_user_id") @db.Uuid
+  action        MediaReferenceAction
+  fromAssetId   String?              @map("from_asset_id") @db.Uuid
+  toAssetId     String?              @map("to_asset_id") @db.Uuid
+  resultVersion Int                  @map("result_version")
+  occurredAt    DateTime             @default(now()) @map("occurred_at") @db.Timestamptz(6)
+
+  reference MediaReference @relation(fields: [referenceId], references: [id], onDelete: Restrict)
+  actorUser User           @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
+  fromAsset MediaAsset?    @relation("MediaEventFrom", fields: [fromAssetId], references: [id], onDelete: Restrict)
+  toAsset   MediaAsset?    @relation("MediaEventTo", fields: [toAssetId], references: [id], onDelete: Restrict)
+
+  @@unique([referenceId, resultVersion])
+  @@map("media_reference_events")
 }

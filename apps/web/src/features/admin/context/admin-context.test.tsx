@@ -3,36 +3,6 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { AdminDataProvider, useAdminData } from "./admin-context";
 
-function AdminStateProbe() {
-  const { metrics, updateWork, toggleWorkPublish } = useAdminData();
-  const [savedTitle, setSavedTitle] = useState("");
-
-  return (
-    <>
-      <button
-        onClick={() => {
-          setSavedTitle(
-            updateWork("trait-hoarder", { title: "Updated title" })?.title ??
-              "missing",
-          );
-        }}
-      >
-        Save work
-      </button>
-      <button
-        onClick={() => {
-          toggleWorkPublish("trait-hoarder");
-        }}
-      >
-        Unpublish work
-      </button>
-      <output>{savedTitle}</output>
-      <span data-testid="published-count">{metrics.publishedWorks}</span>
-      <span data-testid="draft-count">{metrics.draftWorks}</span>
-    </>
-  );
-}
-
 function GiftGrantProbe() {
   const { bulkGrantGift, grantRecords, getUser } = useAdminData();
   const [grantedIds, setGrantedIds] = useState<string[]>([]);
@@ -69,30 +39,37 @@ function GiftGrantProbe() {
   );
 }
 
+function FixtureBoundaryProbe() {
+  const context = useAdminData();
+  return (
+    <>
+      <output data-testid="chapter-count">
+        {context.getChapters("trait-hoarder").length}
+      </output>
+      <output data-testid="work-state-present">
+        {String("works" in context)}
+      </output>
+      <output data-testid="work-actions-present">
+        {String("createWork" in context || "resetToFixtures" in context)}
+      </output>
+    </>
+  );
+}
+
 describe("admin fixture state", () => {
-  it("returns the edited work during the action", () => {
+  it("keeps chapter presentation fixtures without exposing replacement work state", () => {
     render(
       <AdminDataProvider>
-        <AdminStateProbe />
+        <FixtureBoundaryProbe />
       </AdminDataProvider>,
     );
-
-    fireEvent.click(screen.getByRole("button", { name: "Save work" }));
-
-    expect(screen.getByText("Updated title")).toBeInTheDocument();
-  });
-
-  it("updates dashboard totals when publication changes", () => {
-    render(
-      <AdminDataProvider>
-        <AdminStateProbe />
-      </AdminDataProvider>,
+    expect(
+      Number(screen.getByTestId("chapter-count").textContent),
+    ).toBeGreaterThan(0);
+    expect(screen.getByTestId("work-state-present")).toHaveTextContent("false");
+    expect(screen.getByTestId("work-actions-present")).toHaveTextContent(
+      "false",
     );
-
-    fireEvent.click(screen.getByRole("button", { name: "Unpublish work" }));
-
-    expect(screen.getByTestId("published-count")).toHaveTextContent("4");
-    expect(screen.getByTestId("draft-count")).toHaveTextContent("3");
   });
   it("keeps bulk grant records linked to owned gifts", () => {
     render(

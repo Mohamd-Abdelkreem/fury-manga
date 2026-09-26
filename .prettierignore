@@ -10,3 +10,14 @@ apps/web/next-env.d.ts
 apps/web/AGENTS.md
 tas3er-pro/
 fury-turbo/
+
+# Local agent, workflow-template, browser, and auxiliary-worktree artifacts
+.agents/
+.codex/
+.kilo/
+.playwright-cli/
+.specify/init-options.json
+.specify/integration.json
+.specify/templates/
+.specify/workflows/workflow-registry.json
+screenshots/manifest.json

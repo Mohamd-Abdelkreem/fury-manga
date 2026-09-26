@@ -1,810 +1,749 @@
-# Fury MVP — Product and Implementation Plan
+# Fury MVP — Codebase-Aligned Spec Kit Roadmap
 
-- **Status:** Approved planning baseline for the MVP
-- **Last updated:** 2026-09-22
-- **Product language:** Arabic
+- **Status:** Proposed execution roadmap derived from the approved product baseline and the current repository
+- **Repository assessed:** `D:/MINE/Software Engineering/Projects/Mostaql/fury-manga`
+- **Assessment date:** 2026-09-22
+- **Product UI language:** Arabic
 - **Layout direction:** Right-to-left (RTL)
-- **Primary visual references:** `DESIGN-SYSTEM.md`, `DESIGN-SYSTEM-INCONSISTENCIES.md`, and the implemented frontend screens
+- **Roadmap language:** English
+- **Execution model:** One independently accepted Spec Kit feature per delivery phase
+
+## 1. Purpose and authority
+
+This document converts the approved `PLAN.md` product scope into an implementation sequence grounded in the code that exists now. It is intentionally more specific than the delivery section in `PLAN.md`: it identifies what must be preserved, what is only fixture-backed presentation, what conflicts with the approved product decisions, and which repository surfaces each phase must change.
+
+Source priority remains:
+
+1. Approved product decisions in `PLAN.md`.
+2. Current executable behavior and database/API contracts.
+3. Approved visual behavior in the current frontend and `DESIGN-SYSTEM.md`.
+4. Historical audit findings in `DESIGN-SYSTEM-INCONSISTENCIES.md` after re-verifying them against current code.
+5. Fixture content, placeholder copy, local-only actions, and obsolete controls.
+
+The current UI is a design asset, not a source of product truth. Existing local actions must be replaced, not promoted into production behavior without contracts, authorization, persistence, and tests.
+
+## 2. Assessment scope and evidence
+
+The assessment covered:
+
+- Root workspace configuration, package manifests, Turbo tasks, Caddy routing, and PostgreSQL Compose configuration.
+- The complete frontend route inventory and feature/component/data organization under `apps/web/src`.
+- Frontend transport, session restoration, route guards, forms, local fixture stores, readers, public discovery, workspace, admin, support, gifts, notifications, and advertising implementation.
+- The Express application composition, middleware, security infrastructure, auth/users/health modules, OpenAPI document, configuration, and existing tests under `apps/api/src`.
+- Shared schemas under `packages/contracts/src`.
+- Prisma schema, initial migration, client, optional seed flow, and database tests under `packages/database`.
+- Current Spec Kit templates and configuration under `.specify`.
+- `README.md`, `PROJECT_REFERENCE.md`, `DESIGN-SYSTEM.md`, `DESIGN-SYSTEM-INCONSISTENCIES.md`, and the available engineering guides.
+- The repository route smoke script. During this assessment, `pnpm test:web-routes` completed successfully against the already running local web server and verified 40 concrete URLs plus the 404 fallback. That script verifies HTTP status after redirects; it does not prove authentication, persistence, or domain integration.
+
+The assessment did not treat `.env`, credentials, generated Prisma output, dependency source, screenshots, or generated aggregate code files as product implementation sources.
+
+## 3. Verified current repository baseline
+
+### 3.1 Architecture
+
+The repository is a pnpm 11/Turborepo TypeScript monorepo requiring Node.js 24.
+
+| Surface              | Verified current implementation                                                                                      |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Web                  | `@fury/web`: Next.js 16.2.12, React 19.2.8, React Query, React Hook Form, Zod, Axios, CSS Modules, Lucide, and Embla |
+| API                  | `@fury/api`: Express 5.2.1, Zod/OpenAPI, Pino, JWT, Argon2id, CSRF, rate limiting, email adapters, and Prisma access |
+| Contracts            | `@fury/contracts`: authentication, safe-account, HTTP envelope, field-error, and pagination schemas only             |
+| Database             | `@fury/database`: Prisma 7.9.1 with PostgreSQL; current schema has exactly `User` and `RefreshToken`                 |
+| Production topology  | Caddy routes `/api/*` to the API and other traffic to Next.js on one origin                                          |
+| Local infrastructure | `compose.yaml` provisions PostgreSQL only; it is not a complete production stack                                     |
+
+### 3.2 Implemented and API-connected behavior
+
+The following behavior is real and persistent now:
+
+- Registration with email/password and verification-email delivery.
+- Verification-token consumption and verification resend.
+- Login, rotating refresh sessions, logout, and logout-all.
+- Forgot-password, reset-token validation, password reset, and password change.
+- Current-user read and profile update.
+- Active/verified-account checks on protected API requests.
+- Suspended-account rejection during protected API authentication.
+- In-memory browser access token, HttpOnly refresh cookie, readable CSRF cookie, single-flight refresh, request retry, and safe login return paths.
+- Health liveness/readiness and generated OpenAPI JSON.
+- Request IDs, safe error envelopes, input validation, logging redaction, CORS, CSRF, rate limiting, and email-provider abstraction.
+
+The actual API module inventory is limited to `auth`, `users`, and `health`. No content, media, library, progress, rating, community, notification, gift, support, admin-domain, or advertising API module exists.
+
+### 3.3 Frontend scale and implementation state
+
+The current frontend contains:
+
+- 37 physical App Router `page.tsx` files.
+- 193 TSX files, 61 TS files, 65 CSS files, and 52 frontend test files under `apps/web/src`.
+- Complete visual route families for public, authentication, workspace, and admin experiences.
+- A client-side `ProtectedRoute` for workspace pages and an `ADMIN`-role client guard around the admin layout.
+- A global search that correctly routes to `/discover?q=...`.
+- The `/admin/categories` route and local UI already exist.
+
+Except for auth/current-profile flows, product-domain screens use fixtures or local component/context state. The largest fixture sources are `features/admin/data/adminFixtures.ts`, text-story fixtures, illustrated-story fixtures, and discovery fixtures.
+
+### 3.4 Important code/product mismatches
+
+| Current code reality                                                                                        | Approved product requirement                                                  | Roadmap treatment                                                                                                        |
+| ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `User.phone`, phone contracts, mapping, service updates, and tests still exist                              | Phone is removed from the MVP                                                 | Remove through a forward migration and coordinated contract/API/test update in P00                                       |
+| Reader route is not inside a protected layout and renders fixture content                                   | Active verified account is required before chapter content is returned        | Block fixture reader access in P00; implement API-enforced reader access in P07                                          |
+| Admin pages use an `ADMIN` client guard, but no admin-domain APIs exist                                     | Every admin endpoint must authorize `ADMIN`                                   | Preserve client guard; add API authorization to every admin slice in its owning phase                                    |
+| `/admin/categories` is already implemented with `ADMIN_CATEGORY_FIXTURES` and local state                   | Category management must be persistent                                        | Reuse its visual UI and connect it in P03; do not create another route shell                                             |
+| Admin records and mutations live in `AdminDataProvider` and reset to fixtures                               | Admin behavior must survive sessions and be auditable                         | Replace each context capability with React Query and API mutations in the owning phase; delete the replaced fixture path |
+| Illustrated chapter form accepts `step="0.1"`, `min="0"`, and example `44.5`                                | Chapter number is a positive integer                                          | Correct immediately in P00 and enforce in database/contracts in P01/P04                                                  |
+| Illustrated editor inserts random sample image paths                                                        | Chapter pages must use validated VPS uploads                                  | Preserve reorder/preview UI; replace sample actions with P02 media uploads in P04                                        |
+| Text editor uses a Markdown-like string and supports quotes; public fixture renderer uses structured blocks | Approved text blocks are paragraphs, headings, bold, italic, lists, and links | Define one structured format and one shared renderer in P04; remove unsupported quote behavior                           |
+| Public home, discover, stories, categories, and work details read different fixture sources                 | One published catalog is the source of truth                                  | Create canonical read models and connect all public routes in P05                                                        |
+| Dashboard, library, ratings/bookmarks, and appearance use fixtures/local state                              | Personal data must persist per user                                           | Replace by vertical slice in P06, P07, and P10                                                                           |
+| Text reader calculates 75% locally and claims completion was recorded                                       | Progress/completion must persist                                              | Correct copy during P00 if necessary; persist progress in P07                                                            |
+| Illustrated reader uses eight remote mock images                                                            | Reader pages must come from protected chapter data                            | Replace in P07 after P02/P04                                                                                             |
+| `CommentsSection` and `TextDiscussion` maintain separate local comment state                                | Work/chapter comments share one persistent community model                    | Consolidate around one API feature in P08                                                                                |
+| Navbar and workspace implement separate notification fixture stores                                         | One notification source and read state are required                           | Consolidate into one query/component model in P09                                                                        |
+| Gifts are color/tone fixture records without uploaded asset identifiers                                     | Gifts are static transparent PNG/WebP designs granted by admins               | Replace with P02 media-backed entities in P10                                                                            |
+| Contact/issue forms wait 250 ms and show success without sending data                                       | Submissions must reach a persistent admin inbox                               | Connect public and admin sides together in P11                                                                           |
+| Admin dashboard adds local deltas to hard-coded baseline metrics                                            | Metrics must be derived from authoritative data                               | Replace in P12                                                                                                           |
+| Public ad slots and ad-block detection use static constants with global enablement hard-coded `true`        | Operational enablement must control the two placements safely                 | Disable fake production assumptions in P00; connect safe settings/provider configuration in P13                          |
+| Admin ad state is stored in `AdminDataProvider`, separate from public ad constants                          | Admin changes must control public behavior                                    | Replace both sources with one operational configuration in P13                                                           |
+| Database tests assert that only two application models exist                                                | MVP needs domain records                                                      | Update the authentication-only schema inventory tests as each approved migration is added                                |
+| `README.md` and `PROJECT_REFERENCE.md` describe a generic auth-only foundation                              | Repository will become the Fury product                                       | Update documentation alongside each implemented slice; perform final integrated rewrite in P14                           |
+| Root `AGENTS.md` links to missing engineering index/testing/security/workflow files                         | Repository instructions contain broken references                             | Repair references or restore the intended files in P00                                                                   |
+| `.specify/memory/constitution.md` is an untouched placeholder and no `specs/` directory exists              | The team intends to use Spec Kit for these phases                             | Ratify project rules and initialize the first feature in P00                                                             |
+
+### 3.5 What should be preserved
+
+The following existing foundations should be extended rather than replaced:
+
+- Authentication/session/CSRF architecture and account lifecycle.
+- `@fury/contracts` as the web/API contract owner.
+- Express module/controller/service/DTO structure.
+- Prisma forward migrations and database integration-test pattern.
+- API response envelopes, request validation, request IDs, error handling, logging redaction, rate limiting, and OpenAPI generation.
+- React Query for server state and the existing authenticated session query.
+- Safe return-path handling and route-state tests.
+- Current Arabic RTL visual design, route map, feature folder organization, error/empty state primitives, and tested interaction patterns.
+- Existing admin confirmation, pagination, dialog-focus, and visual workflow components where their product behavior remains valid.
+
+## 4. Spec Kit operating contract
+
+Each delivery phase below becomes one Spec Kit feature. Let Spec Kit assign the actual sequential feature number; use the suggested slug for the feature name.
+
+Before implementation, every feature must contain:
+
+- `spec.md` with prioritized, independently testable user stories and explicit exclusions.
+- `plan.md` with exact repository paths, data flow, authorization, migration, rollout, and rollback decisions.
+- `research.md` only for unresolved technical choices that require evidence.
+- `data-model.md` when the phase adds or changes persistence.
+- `contracts/` describing request, response, error, state-transition, pagination, and authorization behavior.
+- `quickstart.md` with the smallest real end-to-end verification journey.
+- `tasks.md` grouped by user story and ordered contracts → migration → service → route → frontend → tests → documentation.
+
+The repository constitution must not retain placeholders. P00 owns ratification before dependent feature planning.
+
+## 5. Phase map
+
+| Phase | Suggested feature slug         | Primary deliverable                                                           | Depends on       |
+| ----- | ------------------------------ | ----------------------------------------------------------------------------- | ---------------- |
+| P00   | `repository-product-alignment` | Trustworthy Spec Kit/repository baseline and removal of active contradictions | Current checkout |
+| P01   | `content-domain-foundation`    | Canonical content schema, contracts, authorization, and state rules           | P00              |
+| P02   | `persistent-vps-media`         | Secure persistent media storage and delivery                                  | P01              |
+| P03   | `admin-categories-works`       | Persistent category and work administration                                   | P01, P02         |
+| P04   | `admin-chapter-publishing`     | Persistent illustrated/text chapter authoring and publication                 | P02, P03         |
+| P05   | `public-catalog-discovery-seo` | Live home, catalogs, categories, work details, and SEO                        | P03, P04         |
+| P06   | `bookmarks-ratings-library`    | Persistent bookmarks, ratings, library, and dashboard basics                  | P05              |
+| P07   | `protected-readers-progress`   | Secure readers, progress, completion, resume, and opens                       | P04, P06         |
+| P08   | `community-moderation`         | Persistent comments, likes, reports, and moderation                           | P05, P07         |
+| P09   | `in-site-notifications`        | One persistent notification system for new chapters and gifts                 | P04, P06         |
+| P10   | `gifts-appearance-avatar`      | Media-backed gifts, grants, appearance selection, and avatar upload           | P02, P06, P09    |
+| P11   | `support-inbox-legal`          | Persistent contact/issue flows, admin inbox, and final legal surfaces         | P01              |
+| P12   | `admin-users-dashboard`        | User operations, suspension, notes, metrics, and activity                     | P06–P11          |
+| P13   | `display-advertising`          | Safe operational advertising for only two approved placements                 | P05, P12         |
+| P14   | `launch-readiness`             | Integrated release evidence, accessibility/security/operations hardening      | P00–P13          |
 
-## 1. Purpose and decision authority
+P11 may be developed in parallel with P03–P10 after its P01 prerequisites exist. P08 and P09 may run in parallel. All other dependencies are sequential gates, not suggestions.
+
+## 6. Detailed phase definitions
 
-This file defines what Fury must deliver as a coherent MVP and how the current frontend designs map to production behavior. It is the working source of truth for product scope, implementation order, acceptance criteria, and the removal of superseded concepts.
+## P00 — Repository and Product Alignment
 
-When sources disagree, use this order:
+**Suggested feature slug:** `repository-product-alignment`
 
-1. The latest explicit product decisions recorded in this plan.
-2. This plan's final requirements and acceptance criteria.
-3. The current frontend design and interaction patterns.
-4. Older plans, fixture data, placeholder copy, and unfinished controls.
+**Objective:** Remove contradictions that would pollute later specs and establish an honest, testable baseline.
 
-An existing screen proves that a visual direction exists; it does not prove that its fixture data, actions, permissions, or old product rules are still valid.
+**Preserve:** Existing auth behavior, transport security, account screens, route designs, client admin/workspace guards, approved ad UI design, and existing tests that still describe approved behavior.
 
-## 2. Product summary
+**Implement or correct:**
 
-Fury is an Arabic platform for discovering and reading illustrated and text-based works. Supported work types are manga, manhwa, manhua, comics, novels, and text stories.
+- Ratify `.specify/memory/constitution.md` for this monorepo. Include product-source precedence, Arabic/RTL rules, API authorization, forward-only migrations, contract ownership, testing expectations, fixture replacement, and phase stop gates.
+- Create the first Spec Kit feature using the repository's sequential numbering; do not hand-create conflicting numbers.
+- Repair the broken references in root `AGENTS.md` or restore the intended referenced documents. Do not leave nonexistent guidance as mandatory instructions.
+- Add a checked-in implementation-status inventory that maps each fixture/local-state source to its owning roadmap phase.
+- Remove `phone` from `User`, the safe-user schema, registration/update schemas, API DTO/service/mapper code, seed/test fixtures, and documentation through a new forward Prisma migration. Do not edit the applied initial migration.
+- Keep registration UI phone-free and update contract tests that currently require optional phone normalization.
+- Change chapter-number UI to positive integers only; remove the `44.5` example and fractional input step.
+- Prevent anonymous access to the existing fixture reader immediately by applying the current protected-route behavior to the chapter route. P07 will replace this with real API content authorization.
+- Ensure no fixture reader claims that completion was persisted when it was only calculated locally.
+- Keep the admin layout's `ADMIN` client guard and document the API as the ultimate boundary for future admin mutations.
+- Make current advertisement placeholders/detection explicitly non-production or disabled until P13 connects deployment configuration. Do not advertise fake provider delivery.
+- Confirm obsolete product concepts remain absent: points, reward thresholds, intrusive ad types, Google sign-in, comment replies, role editing, and hard-delete content actions.
+- Re-run the design inconsistency audit against current code and classify each historical item as fixed, still open, or superseded. Do not apply the September 11 report blindly because later commits already changed parts of the frontend.
 
-Visitors can browse the public catalog, categories, work details, ratings, and visible comments. A verified user account is required to read chapter content and use personal or interactive features. Administrators publish content, moderate the community, manage users, grant visual gifts, review support messages, and control the limited advertising placements.
+**Out of scope:** New domain entities other than the phone-removal migration; real content APIs; visual redesign.
 
-The MVP favors direct, maintainable workflows over complex automation. There are no payments, subscriptions, point balances, paid chapters, social profiles, or advanced recommendation systems.
+**Exit gate:**
 
-## 3. Final product decisions
+- Spec Kit constitution contains no placeholders and its gates match the repository.
+- Root instructions contain no broken mandatory documentation links.
+- `phone` is absent from schema, contracts, API responses, UI form values, OpenAPI, tests, seed logic where applicable, and product documentation.
+- Chapter fixture content is not available to an anonymous visitor.
+- Chapter number controls accept only positive integers.
+- No UI claims a local-only completion/submission/action was persisted.
+- Current auth integration tests, contract tests, database tests, web tests, type checks, lint, and build pass after the cleanup.
 
-### 3.1 Included
+## P01 — Content Domain and Contract Foundation
 
-- Email/password registration, email verification, login, logout, password recovery, and password change.
-- Public discovery, categories, filtering, search, work details, ratings, and visible comments.
-- Protected illustrated and text chapter readers.
-- A single personal library based on bookmarks.
-- Simple reading progress and resume-reading behavior.
-- Work-level and chapter-level comments, comment likes, editing, soft deletion, and reporting.
-- Five-star work ratings, one editable rating per user per work.
-- In-site notifications for gifts and new chapters of bookmarked works.
-- Email only for required account workflows such as verification and password recovery.
-- Permanent avatar frames and comment decorations granted by administrators.
-- Public contact and issue-report forms with an admin inbox.
-- Simple admin metrics and management screens.
-- Basic SEO for public pages.
-- A small number of non-intrusive display-banner advertisements.
-- Ad-block detection on ad-supported pages with a clear request to disable the blocker.
-- Media stored on the project's own VPS.
+**Suggested feature slug:** `content-domain-foundation`
 
-### 3.2 Explicitly removed or deferred
+**Objective:** Add only the shared content foundation needed by the first real vertical slices, without creating empty speculative models for later features.
 
-- The points system in all forms.
-- Points earned from chapter completion.
-- Advertising thresholds, point deduction, or point balances.
-- Popunder, popup, interstitial, forced, rewarded, or reader advertisements.
-- Advertising before a chapter, between chapter pages, or while reading.
-- Google sign-in for the MVP.
-- Phone number collection in registration or profile data.
-- Nested comment replies, comment images, and spoiler-hiding controls.
-- Public user profiles, direct messages, followers, or social feeds.
-- Separate follow and bookmark concepts; a bookmark is the single saved-work relationship.
-- Payments, subscriptions, purchases, premium chapters, and stores.
-- Video or anime streaming.
-- Fractional chapter numbers, volumes, seasons, ZIP imports, scraping, and scheduled publishing.
-- A full site builder, theme editor, or advanced analytics platform.
-- Hard deletion of works or chapters from the admin UI.
+**Data ownership:**
 
-### 3.3 Advertising policy
+- Add Work, Category, WorkCategory, Chapter, and ordered ChapterPage records.
+- Define enums for work type, story status, publication status, and chapter content type.
+- Store structured text chapter content in a validated representation chosen in the phase design.
+- Enforce unique work slug, unique chapter number per work, unique work/category relation, and unique page position per illustrated chapter.
+- Enforce positive integer chapter numbers and consistent publication timestamps/state.
+- Define archive/unpublish/restore semantics without hard delete.
 
-The advertising experience must be deliberately quiet:
+**API/contracts:**
 
-- Use display banners only.
-- Show at most one Fury-managed ad slot on an eligible page.
-- Do not automatically refresh, stack, or overlay advertisements.
-- Do not place advertisements on work details, category directory, readers, authentication, user workspace, support, legal, admin, or error pages.
-- Do not interrupt navigation or delay access to content.
-- Do not claim an impression or revenue event unless the provider reports it.
+- Extend `@fury/contracts` with bounded content schemas and shared query primitives.
+- Add content modules following the existing controller/service/DTO pattern.
+- Reuse existing pagination, response, validation, error, logging, and OpenAPI infrastructure.
+- Define reusable query policies so public reads cannot return draft/archived content.
+- Require authenticated `ADMIN` authorization for management operations.
+- Define idempotent publication transitions and a durable publication-event identity that P09 can consume.
 
-Approved placements:
+**Frontend preparation:**
 
-| Placement key    | Route                   | Position                                                                                                                              |
-| ---------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `home-banner`    | `/`                     | Beside or near Latest Releases on desktop and inline between sections on smaller screens; replaces the duplicated vertical video rail |
-| `catalog-banner` | `/discover`, `/stories` | After search/filter controls and before the results grid                                                                              |
+- Replace duplicated frontend-only domain type names with contract-derived types at integration boundaries.
+- Resolve current naming drift such as `short-story` versus approved `text-story`, lowercase fixture roles versus contract roles, and URL-derived slugs versus persistent slugs.
+- Do not connect full screens yet; provide contract fixtures/test builders only where tests require them.
 
-Ad-block behavior:
+**Out of scope:** Media upload, bookmarks, ratings, progress, comments, notifications, gifts, support, ads, and full admin/public screen integration.
 
-- Run detection only when advertising is globally enabled and the current page has an enabled placement.
-- If blocking is detected, show an accessible, non-modal message asking the visitor to disable the blocker to support Fury.
-- Include a **Retry check** action and allow the visitor to continue browsing.
-- Dismissal may be remembered for the browser session so the message does not repeat on every route.
-- Detection failure or a false positive must never block public content, login, or chapter reading.
-- Chapter reader routes must not load the ad provider script or run the ad-block check.
+**Exit gate:**
 
-The initial provider is Adsterra, using display-banner units only. Provider scripts and zone identifiers are deployment configuration, not arbitrary JavaScript edited through the browser admin panel.
+- Fresh migration and upgrade migration tests pass without rewriting authentication history.
+- Constraints reject duplicate slugs, duplicate chapter numbers, duplicate page positions, fractional/non-positive chapter numbers, and invalid publication state.
+- Public query services never expose draft or archived content.
+- Admin management service tests reject non-admin and suspended users.
+- OpenAPI and shared schemas match implemented endpoints.
+- Database inventory tests are updated from “auth only” to the exact approved P01 model inventory.
 
-## 4. Verified current repository baseline
+## P02 — Persistent VPS Media Platform
 
-### 4.1 Architecture
+**Suggested feature slug:** `persistent-vps-media`
 
-The current repository is a pnpm/Turborepo TypeScript monorepo:
+**Objective:** Replace URL/sample-image assumptions with one secure, persistent media pipeline.
 
-- `apps/web`: Next.js 16.2.12, React 19.2.8, TypeScript, React Query, React Hook Form, Zod, Axios, CSS modules, Lucide, and Embla.
-- `apps/api`: Express 5.2.1, Zod, OpenAPI, Pino, JWT authentication, Argon2id, email delivery, CSRF protection, and rate limiting.
-- `packages/database`: Prisma with PostgreSQL.
-- `packages/contracts`: shared request and response schemas.
-- `packages/config-*`: shared linting, TypeScript, and formatting configuration.
+**Media classes:** Work cover, work background, illustrated chapter page, user avatar, avatar frame, and comment decoration.
 
-The expected production topology is one public origin, with Caddy routing `/api/*` to Express and all other traffic to Next.js.
+**Implementation scope:**
 
-### 4.2 What is already functional
+- Store files outside replaceable release directories on a configured persistent VPS path.
+- Validate declared MIME type and decoded content, formats, dimensions, size limits, and transparency where required.
+- Generate server-owned file names and stable relative identifiers; never trust original paths or names.
+- Block path traversal and executable/malformed content.
+- Serve correct content type, caching, content-disposition where applicable, and safe headers.
+- Add optimized variants/thumbnails for catalog assets when the phase plan proves they are needed.
+- Track media references before replacement or physical removal.
+- Add upload authorization by media class and intended owner/admin workflow.
+- Add media directory configuration to `.env.example` without exposing local or production secrets.
+- Add database/media backup and restore steps that keep identifiers and files consistent.
 
-The backend currently implements:
+**Frontend reuse:** Preserve current cover/banner preview, chapter page order, avatar preview, and gift preview interactions. Replace random sample selection and object-URL-only success with real upload state, progress, validation errors, retry, and persisted identifiers.
 
-- Health endpoints.
-- Registration and email verification.
-- Resending verification.
-- Login and token refresh.
-- Logout and logout-all.
-- Forgot/reset password and reset-token validation.
-- Password change.
-- Read and update the current user's basic profile.
+**Out of scope:** ZIP imports, scraping, external media libraries, GIF gifts, and text-chapter embedded images.
 
-The database currently contains only `users` and `refresh_tokens`. The web authentication flow is connected to the API and includes protected workspace routing.
+**Exit gate:**
 
-### 4.3 What is currently presentation-only
+- Positive and negative upload tests cover every media class.
+- MIME/extension mismatch, invalid decoded content, oversize/dimension violations, executable content, and path manipulation are rejected.
+- Authorized files survive application restart and simulated release replacement.
+- Unauthorized upload/replacement/removal fails.
+- Reference-aware replacement/removal cannot break an active record.
+- A documented restore test recovers database references and physical media together.
 
-Most product-domain screens use local fixtures or component state. This includes works, chapters, catalog filters, bookmarks, progress, ratings, comments, notifications, gifts, support messages, advertising settings, and almost the entire admin area.
+## P03 — Persistent Admin Categories and Works
 
-Therefore, the implementation must preserve the approved visual design while replacing fixtures with contracts, API calls, permissions, persistent database records, and real loading/error/empty states.
+**Suggested feature slug:** `admin-categories-works`
 
-### 4.4 Frontend screen inventory
+**Routes:** `/admin/categories`, `/admin/works`, `/admin/works/new`, `/admin/works/[workId]/edit`.
 
-The frontend contains 36 route pages: 11 public, 5 authentication, 3 user workspace, and 17 admin routes. It also contains root loading, not-found, and global-error experiences.
+**Objective:** Connect the existing admin visual workflows to real category/work APIs and remove their local sources of truth.
 
-## 5. Users and permissions
+**Reuse:** Admin layout, headers, tables, filters, pagination, status badges, confirmation dialogs, form layout, media previews, and work/category tests where product behavior remains valid.
 
-### 5.1 Visitor
+**Replace/build:**
 
-A visitor can browse public pages, search/filter published works, and view public work metadata, published chapter metadata, aggregate ratings, and visible comments.
+- Replace `ADMIN_CATEGORY_FIXTURES` and relevant `AdminDataProvider` work state with React Query reads/mutations.
+- Category create/edit/search/order/enable/disable and real usage counts.
+- Prevent destructive deletion of an in-use category; support disable and an explicitly designed merge path only if included in the phase spec.
+- Work list/search/filter/pagination and create/edit/preview/publish/unpublish/archive/restore.
+- Persist title, optional alternative title, unique slug, work type, story status, publication state, synopsis, author, optional artist, categories, tags, cover, optional background, featured-home flag/order, and timestamps.
+- Replace the current derived SEO-preview slug with the persisted slug.
+- Replace fixed genre constants as the work-category source with real enabled categories.
+- Validate required metadata and display media before publication.
+- Remove replaced work/category fixture mutation paths and reset-to-fixtures behavior.
 
-A visitor cannot receive chapter content, bookmark, rate, comment, like, report, save progress, or access workspace routes. Opening a protected chapter redirects to login with a safe return path. After successful login, a verified active user returns to the requested chapter.
+**Out of scope:** Chapter authoring, public catalog reads, personalized recommendations, and advanced SEO editing.
 
-### 5.2 Verified active user
+**Exit gate:**
 
-An active user with a verified email can:
+- Admin creates, reloads, edits, publishes, unpublishes, archives, and restores illustrated and text works using persisted data.
+- Category order/enablement persists and in-use protection is enforced server-side.
+- Duplicate slugs and invalid transitions fail consistently in contract, service, and HTTP integration tests.
+- Non-admin/suspended callers cannot use management APIs.
+- No hard-delete control or sample-image cycling remains in the connected workflow.
 
-- Read published chapters.
-- Bookmark works and manage the library.
-- Resume from saved reading progress.
-- Rate works.
-- Create, edit, and delete their own comments.
-- Like or unlike visible comments and report comments.
-- Receive and manage in-site notifications.
-- Select one owned avatar frame and one owned comment decoration, or use the default appearance.
-- Update display name and avatar, and change password.
+## P04 — Persistent Chapter Authoring and Publishing
 
-### 5.3 Pending-verification user
+**Suggested feature slug:** `admin-chapter-publishing`
 
-A pending user can access the verification flow and request a new verification email. Protected reading and interaction remain unavailable until verification succeeds.
+**Routes:** `/admin/works/[workId]/chapters`, `/admin/works/[workId]/chapters/new`, `/admin/works/[workId]/chapters/[chapterId]/edit`.
 
-### 5.4 Suspended user
+**Objective:** Connect existing chapter-management designs to persistent, validated illustrated/text content.
 
-A suspended user cannot log in or use protected actions. Protected API calls must also reject already-open sessions after suspension is detected. Suspension does not automatically delete the user's comments, bookmarks, gifts, or other records.
+**Reuse:** Chapter list/form layout, order controls, preview modal shell, state actions, and confirmation patterns.
 
-### 5.5 Administrator
+**Replace/build:**
 
-An administrator can access all admin workflows in this plan. Multiple admin accounts are supported, but the MVP has no UI for creating admins or changing roles. Admin accounts are provisioned operationally. No independent moderator role is required.
+- Replace chapter fixtures and `useAdminWorkActions` chapter state with API queries/mutations.
+- Derive content type from the parent work; do not allow incompatible manual switching.
+- Illustrated multi-file upload through P02, stable ordering, reorder, replacement, removal, retry, and full preview.
+- Replace “add random sample page” with actual upload.
+- Define one structured text format for paragraphs, H2/H3 headings, bold, italic, lists, and sanitized links.
+- Remove quote/image formats that are outside MVP scope.
+- Replace the Markdown-like editor/preview split with an editor that writes the canonical structured format.
+- Use the same core illustrated/text renderer for admin preview and P07 public reading.
+- Save draft, preview, publish, unpublish, archive, and restore.
+- Produce an idempotent durable publication event/identity for P09 without sending notifications yet.
 
-Every `/admin` route and every admin API endpoint must verify the `ADMIN` role. Hiding a navigation item is not authorization.
+**Exit gate:**
 
-## 6. Canonical frontend route map
+- An admin creates and publishes one illustrated and one text chapter, reloads both, and previews exactly what the reader renderer will show.
+- Page ordering is stable and duplicate positions cannot commit.
+- Text links/content are sanitized and unsupported blocks are rejected.
+- Repeating publication does not create duplicate publication events.
+- Public query services expose only published chapters under a published work.
+- No fractional number, ZIP import, scraping, schedule, volume/season, or hard-delete path exists.
 
-### 6.1 Public routes
+## P05 — Public Catalog, Discovery, Work Details, and SEO
 
-| Route                             | Existing design | Final responsibility                                                                                                         |
-| --------------------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `/`                               | Yes             | Featured works, genre shortcuts, trending works, community banner, latest releases, suggestions, and the single home ad slot |
-| `/discover`                       | Yes             | Searchable and filterable catalog for all work types; default emphasis may remain illustrated works                          |
-| `/stories`                        | Yes             | Text-only catalog for novels and text stories, reusing the catalog query and pagination pattern                              |
-| `/categories`                     | Yes             | Searchable category directory linking to filtered catalog results                                                            |
-| `/story/[id]`                     | Yes             | Correct illustrated or text work details, published chapter list, bookmark, rating, similar works, and work comments         |
-| `/story/[id]/chapter/[chapterId]` | Yes             | Protected illustrated or text reader with progress and chapter comments; never contains ads                                  |
-| `/contact`                        | Yes             | Public contact form persisted to the admin inbox                                                                             |
-| `/report-issue`                   | Yes             | Public issue form with issue type, page URL, details, and optional contact email                                             |
-| `/privacy`                        | Yes             | Final static privacy policy                                                                                                  |
-| `/terms`                          | Yes             | Final static terms of use                                                                                                    |
-| `/copyright`                      | Yes             | Final static copyright and takedown policy                                                                                   |
+**Suggested feature slug:** `public-catalog-discovery-seo`
 
-The global navbar search must search all published work types and use `/discover?q=...`. `/stories` remains a convenient text-only view rather than a separate data source.
+**Routes:** `/`, `/discover`, `/stories`, `/categories`, `/story/[id]`, public not-found/unavailable states.
 
-### 6.2 Authentication routes
+**Objective:** Replace all public content fixtures with one published catalog and preserve the approved visual experience.
 
-| Route                   | Existing design       | Final responsibility                                                               |
-| ----------------------- | --------------------- | ---------------------------------------------------------------------------------- |
-| `/auth/login`           | Yes and API-connected | Email/password login, remember-me behavior, safe return path, account-state errors |
-| `/auth/register`        | Yes and API-connected | Display name, email, password, terms acknowledgement; no phone or Google           |
-| `/auth/verify-email`    | Yes and API-connected | Consume verification token and resend verification                                 |
-| `/auth/forgot-password` | Yes and API-connected | Request password-reset email without account enumeration                           |
-| `/auth/reset-password`  | Yes and API-connected | Validate token and set a new password                                              |
+**Reuse:** Home sections, catalog filters/grids, category directory, work-detail layouts, cards, URL parsers where compatible, navbar search, public loading/error primitives, and current Arabic RTL design.
 
-### 6.3 User workspace routes
-
-| Route        | Existing design | Final responsibility                                                                                        |
-| ------------ | --------------- | ----------------------------------------------------------------------------------------------------------- |
-| `/dashboard` | Yes             | Account summary, continue reading, library preview, owned appearance gifts, and quick links; no points card |
-| `/library`   | Yes             | Saved works, search/filter/sort, resume reading, removal confirmation, unavailable-content state            |
-| `/settings`  | Yes             | Display name, avatar, password, sessions, avatar-frame selection, and comment-decoration selection          |
+**Replace/build:**
 
-### 6.4 Admin routes
-
-| Route                                             | Existing design        | Final responsibility                                                                                                    |
-| ------------------------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `/admin`                                          | Yes                    | Redirect to `/admin/dashboard` after authorization                                                                      |
-| `/admin/dashboard`                                | Yes                    | Simple platform metrics, recent works, trending works, recent activity, and moderation alerts                           |
-| `/admin/works`                                    | Yes                    | Search, filters, pagination, preview, publish/unpublish, archive/restore, edit, and chapter navigation                  |
-| `/admin/works/new`                                | Yes                    | Create an illustrated or text work as draft or published                                                                |
-| `/admin/works/[workId]/edit`                      | Yes                    | Edit metadata, media, classification, visibility, and publication state                                                 |
-| `/admin/works/[workId]/chapters`                  | Yes                    | Manage chapters for one work                                                                                            |
-| `/admin/works/[workId]/chapters/new`              | Yes                    | Create an illustrated or text chapter                                                                                   |
-| `/admin/works/[workId]/chapters/[chapterId]/edit` | Yes                    | Edit, preview, publish, unpublish, archive, or restore a chapter                                                        |
-| `/admin/users`                                    | Yes                    | Search/filter users, view state and gift count, suspend/reactivate, and open details; no points column                  |
-| `/admin/users/[userId]`                           | Yes                    | Account facts, reading progress, bookmarks, gifts, moderation notes, suspension, grant/revoke; no points panel          |
-| `/admin/gifts`                                    | Yes                    | Create, edit, preview, disable, reactivate, or archive gift designs                                                     |
-| `/admin/gifts/grants`                             | Yes                    | Individual and bulk grants, duplicate prevention, revocation, and grant history                                         |
-| `/admin/comments`                                 | Yes                    | Search and review comments, open context, hide/restore, and inspect report count                                        |
-| `/admin/reports`                                  | Yes                    | Review comment reports and resolve or dismiss them with an outcome                                                      |
-| `/admin/contact`                                  | Yes                    | Combined support inbox for contact and issue-report submissions                                                         |
-| `/admin/contact/[messageId]`                      | Yes                    | Full submission detail, status, internal note, linked URL, and archive/restore actions                                  |
-| `/admin/ads`                                      | Yes but obsolete rules | Global advertising state, the two approved placements, configuration health, safe preview, and ad-block-message preview |
-
-### 6.5 Required route addition
-
-`/admin/categories` must be added because category management is a required admin capability but has no current route. It must support list, search, create, edit, order, enable/disable, and usage-count display. A category in use should be disabled or merged rather than hard-deleted silently.
-
-## 7. Detailed functional requirements
-
-### 7.1 Shared public layout
-
-- Keep the existing Fury visual identity, Arabic copy, RTL direction, responsive navigation, and footer structure.
-- Navbar destinations must point to working pages only.
-- The search field must submit a real query and retain it in the URL.
-- The notification bell and library shortcut are visible only to authenticated users.
-- Footer community links come from deployment configuration or maintained constants and must not be placeholders at launch.
-- Every interactive control must have keyboard behavior, focus visibility, an accessible name, and a real action.
-
-### 7.2 Home page
-
-- Featured hero items are selected and ordered by an administrator.
-- Genre shortcuts come from enabled categories.
-- Trending works are ordered by chapter opens during the previous seven days. The MVP may count opens rather than unique readers.
-- Latest Releases is driven by recently published chapters.
-- Suggestions use shared enabled categories; no personalized or AI recommendation engine is required.
-- The current two duplicated autoplay videos are removed and replaced by the single `home-banner` placement.
-- The community/Discord banner remains a static outbound link supplied by the owner.
-- Empty sections are hidden or show a purposeful empty state; fixture numbers and fake engagement must not ship.
-
-### 7.3 Catalogs, search, filters, and pagination
-
-- `/discover` is the canonical searchable catalog.
-- `/stories` applies the same query model while restricting results to `novel` and `text-story`.
-- Supported filters: query, category, work type, story status, and sort order.
-- Supported sort choices: newest update, oldest update, title, rating, and popularity where data exists.
-- Search and filter state is represented in URL query parameters.
-- Pagination supports previous/next and a stable page indicator.
-- Invalid or unsupported query values fall back safely instead of causing an error.
-- Results include only published works and published chapters appropriate to the viewer.
-- Provide loading, error with retry, no-results, and normal states.
-- Place the single `catalog-banner` between filters and results when enabled.
-
-### 7.4 Work details
-
-- Render the work resolved by the route slug or ID; never fall back to a fixed fixture.
-- Show title, alternative title when present, cover, background, synopsis, type, story status, author, optional artist, categories, tags, update date, aggregate rating, and rating count.
-- Show only published chapters to public users.
-- Provide first chapter, latest chapter, and resume-reading actions when applicable.
-- Bookmarking, rating, and commenting require an authenticated verified user.
-- The user has one editable five-star rating per work.
-- Similar works use shared categories and exclude the current work.
-- Work comments are distinct from comments belonging to a chapter.
-- Archived or unpublished content returns a deliberate unavailable state, not leaked draft data.
-
-### 7.5 Illustrated reader
-
-- Require an active verified user before returning page URLs.
-- Preserve the designed continuous-scroll and single-image modes.
-- Provide chapter selection, previous/next chapter, work-details navigation, page position, and responsive controls.
-- Store the latest useful page index and percentage with a debounced update.
-- Mark a chapter completed when the reader reaches at least 75%; this status is for reading progress only and has no reward or advertising effect.
-- Avoid saving duplicate events on every scroll pixel.
-- Display a useful failure state for an image and allow retry without breaking the remaining chapter.
-- Render chapter comments after the reading content.
-- Never load an ad placement, ad provider script, ad-block check, popup, or forced navigation.
-
-### 7.6 Text reader
-
-- Apply the same authentication, publication, navigation, progress, and comment rules as the illustrated reader.
-- Render sanitized structured text supporting paragraphs, headings, bold, italic, lists, and links.
-- Do not support images embedded in text chapters in the MVP.
-- Preserve simple reader preferences such as font size and line spacing.
-- Store a paragraph/block position and approximate percentage, not an exact cross-device pixel offset.
-- Mark completion at 75% for progress only.
-- Never contain advertising.
-
-### 7.7 Library and reading progress
-
-- One user/work bookmark record represents the user's saved library.
-- Bookmark creation must be idempotent; removal must not affect progress or rating records.
-- Library cards show cover, title, latest published chapter, saved date, and resume action when progress exists.
-- Search, filter, and sort operate on the user's real bookmarks.
-- If a work is archived or unpublished after being saved, retain the library entry and show it as unavailable.
-- Store one current progress record per user/chapter or user/work as chosen during schema design; updating progress replaces the previous position rather than creating a detailed session history.
-- The dashboard and work details must resolve the same canonical resume position.
-
-### 7.8 Comments, likes, and reports
-
-- Support comments on a work and separately on a chapter.
-- A comment has a maximum of 1,000 characters.
-- The author may edit or soft-delete their own visible comment.
-- A soft-deleted or admin-hidden comment is not returned as normal visible content, but remains available to authorized moderation workflows.
-- Users may like/unlike a visible comment, with one like per user/comment.
-- Do not implement replies or display a reply button/count.
-- Do not implement images or spoiler masking in comments.
-- Report reasons are: abuse, inappropriate content, spoiler, spam, or other.
-- The optional report description must be bounded and sanitized.
-- Prevent accidental duplicate open reports by the same user for the same comment.
-- Gift comment decorations are applied from the comment author's currently selected owned decoration.
-
-### 7.9 Notifications
-
-- In-site notification types in the MVP are a gift grant and a new chapter for a bookmarked work.
-- Notification data includes title, concise message, created time, read time, and destination.
-- Gift notifications include the gift name and image and link to the relevant settings section.
-- New-chapter notifications link directly to the published chapter.
-- Support marking one notification or all notifications as read.
-- Load on page navigation/refresh and when the menu opens; WebSockets and background push are not required.
-- Do not create duplicate new-chapter notifications for repeated publish events.
-- Revoking or disabling a gift does not erase the historical notification; its destination must explain that the gift is no longer available.
-
-### 7.10 Gifts and appearance
-
-- Supported gift types are avatar frames and comment decorations.
-- Designs are static PNG or WebP files with transparent backgrounds; no GIF or browser design editor.
-- Gifts do not expire automatically.
-- A user can select one owned active avatar frame and one owned active comment decoration, or return either to the default.
-- Granting the same gift to the same user twice is idempotent and does not create a duplicate notification.
-- An administrator can grant to one user or in bulk to all active non-admin accounts existing at the time of the grant.
-- Suspended users and admin accounts are excluded from bulk grants.
-- Future registrations do not inherit an earlier bulk grant.
-- A grant can be revoked from a specific user.
-- A design can be disabled globally; existing grants remain in history but cannot be selected while disabled.
-
-### 7.11 Profile and account settings
-
-- Display name does not have to be unique; email remains unique.
-- Users can update display name and avatar.
-- Users cannot change email in the MVP.
-- Remove phone from contracts, forms, persistence, and profile copy.
-- Retain the current password change and logout-all-sessions workflows.
-- Avatar upload uses the same VPS media service and validated image rules.
-- The settings route supports direct links to avatar-frame and comment-decoration sections from notifications.
-
-### 7.12 Contact, issue reports, and legal pages
-
-- Contact is available to visitors and users and records name, email, subject, and message.
-- Issue reports record type, affected URL, description, and optional contact email.
-- A signed-in submission may also reference the user account without exposing it publicly.
-- Both flows create records in the admin support inbox and return a clear confirmation.
-- No live chat, threaded ticket conversation, assignment system, or email notification to the admin is required.
-- Privacy, terms, and copyright pages are static. Final legally reviewed text is an owner-provided launch dependency.
-
-### 7.13 SEO
-
-- Provide unique title and description metadata for public indexable routes.
-- Work details include canonical URL and Open Graph title, description, and cover image.
-- Catalog query variants should not create uncontrolled duplicate indexing.
-- Generate a sitemap for the home page, catalogs, categories, legal pages, and published works.
-- Exclude authentication, workspace, admin, and reader routes from indexing.
-- Provide a suitable `robots.txt`.
-- No advanced SEO editor is required in admin.
-
-## 8. Admin requirements
-
-### 8.1 Dashboard
-
-- Show published works, draft works, published chapters, active users, open comment reports, and unread support messages.
-- Show recent content changes, recent registrations, and unresolved moderation items.
-- Show the last-seven-day trending list using the same rule as the public home page.
-- Do not show revenue forecasts, point statistics, or unsupported vanity metrics.
-
-### 8.2 Works
-
-Work fields include display title, optional alternative title, unique slug, work type, story status, publication status, synopsis, author, optional artist, categories, tags, cover, optional background, and featured-home state/order.
-
-Supported story statuses are ongoing, completed, hiatus, and cancelled. Publication statuses are draft, published, and archived.
-
-Actions are create, edit, preview, publish, unpublish, archive, and restore. Do not expose hard delete. Publishing validates required metadata and display media. Draft and archived content is inaccessible from public APIs.
-
-### 8.3 Chapters
-
-Shared fields are parent work, positive integer chapter number unique within the work, optional title, content type derived from the work, publication state, and timestamps.
-
-Illustrated chapters support multiple image upload, reorder, replacement/removal, full preview, and explicit stable page order. Text chapters use a limited structured editor for the approved formats and preview through the same renderer as the public reader.
-
-Actions are save draft, preview, publish, unpublish, archive, and restore. Publishing a new chapter creates notifications for users who bookmarked the work.
-
-### 8.4 Categories
-
-- Create and edit name and unique slug.
-- Enable/disable and control display order.
-- Show the number of associated works.
-- Prevent destructive deletion while associated with works.
-- Disabled categories remain internally associated but disappear from public navigation and filters.
-
-### 8.5 Users
-
-- Search and filter by status and gift ownership.
-- Show display name, email, account state, registration date, last activity, and gift count.
-- Remove the current points column, points badges, points filters, and points detail card.
-- View bookmarks, reading progress, owned gifts, and moderation notes.
-- Suspend or reactivate a user with confirmation.
-- Grant or revoke gifts from the detail workflow.
-- Never display password hashes, tokens, or secrets.
-- Do not provide admin creation or role-changing controls.
-
-### 8.6 Comments and reports
-
-- Search by author/content and filter by work, chapter, visibility, and report state.
-- Open the full comment with work/chapter context.
-- Hide with an internal reason and restore when appropriate.
-- Reports move through open, under-review, resolved, or dismissed.
-- Resolution outcomes include comment hidden, no violation, duplicate, or user reviewed.
-- Keep moderation history and avoid permanent deletion from routine actions.
-
-### 8.7 Gifts and grants
-
-- Upload, name, describe, categorize, preview, enable/disable, and archive designs.
-- Show recipient count and current state.
-- Individual grant supports user selection and optional reason.
-- Bulk grant shows the number of eligible recipients before confirmation.
-- Grant history records gift, recipient, granting admin, time, reason, and revocation state.
-- Every successful new grant creates one in-site notification.
-
-### 8.8 Support inbox
-
-- Combine contact messages and issue reports using a type/category indicator.
-- Search and filter by sender type, message type, status, and date.
-- Statuses are unread/open, resolved, and archived.
-- Detail view includes the full message, sender facts, affected URL when present, and one internal note.
-- Admin may open a `mailto:` action, but Fury does not implement a conversation thread.
-
-### 8.9 Advertising settings
-
-- Global advertising enable/disable.
-- Per-placement enable/disable for `home-banner` and `catalog-banner`.
-- Read-only provider name, configured zone identifier status, expected dimensions, last configuration update, and safe preview.
-- Preview of the final ad-block support message.
-- Never expose provider secrets or allow arbitrary script execution from stored admin input.
-- Remove all point values, thresholds, popunder controls, chapter triggers, and duplicate homepage placement concepts.
-
-## 9. Data and backend plan
-
-### 9.1 Current models to retain and adjust
-
-- Retain `User` and `RefreshToken` and the existing secure account lifecycle.
-- Remove the optional phone field from the product contract and schema in a forward migration.
-- Retain only `USER` and `ADMIN` roles.
-- Retain pending, active, and suspended account states.
-
-### 9.2 Required domain records
-
-The final schema should cover these concepts without creating duplicate sources of truth:
-
-- Work.
-- Category and work/category relation.
-- Chapter.
-- Ordered illustrated chapter pages or media references.
-- Structured text chapter content.
-- Bookmark.
-- Reading progress.
-- Work rating.
-- Comment and comment like.
-- Comment report.
-- Gift design and gift grant.
-- User appearance selection.
-- Notification.
-- Support/contact submission.
-- Admin moderation note.
-- Lightweight admin/activity event where dashboard history cannot be derived safely.
-
-Advertising provider code should remain deployment configuration. Only operational enablement and safe placement metadata need persistence if administrators must change them without a deployment.
-
-### 9.3 Important database invariants
-
-- Unique normalized user email.
-- Unique work slug.
-- Unique chapter number within a work.
-- Unique bookmark per user/work.
-- Unique rating per user/work.
-- Unique comment like per user/comment.
-- Unique active gift grant per user/gift with clear revocation history.
-- One active appearance choice per user per gift type.
-- Ordered illustrated pages cannot share the same position within one chapter.
-- Publication state and timestamps remain consistent.
-- Routine deletion uses soft-delete, archive, or disabled states where required by this plan.
-
-### 9.4 API modules
-
-Keep the existing module/controller/service/DTO pattern and add domain modules for:
-
-- Catalog, works, categories, and chapters.
-- Media upload and delivery metadata.
-- Bookmarks and reading progress.
-- Ratings.
-- Comments, likes, and reports.
-- Notifications.
-- Gifts and appearance.
-- Support submissions.
-- Admin dashboard and protected admin operations.
-- Advertising operational settings.
-
-All request and response shapes shared with the web app belong in `@fury/contracts`. OpenAPI output must reflect the implemented routes.
-
-### 9.5 Authorization rules
-
-- Enforce permissions in API middleware/services, not only in React components.
-- Public APIs never return draft or archived content.
-- Reader content requires an active verified account.
-- Users can modify only their own profile, bookmarks, progress, rating, comments, likes, notifications, and appearance selection.
-- Admin endpoints require the admin role and validate the target record state.
-- Suspended users are rejected on protected requests even if an access token has not yet expired.
-
-## 10. VPS media plan
-
-All uploaded media is stored on the same VPS, but outside replaceable application release directories and on a persistent mounted path.
-
-Required media classes are work covers, work backgrounds, illustrated chapter pages, user avatars, avatar frames, and comment decorations.
-
-Rules:
-
-- Validate MIME type and decoded file content, not only the extension.
-- Generate server-owned file names; never trust the uploaded path or original name.
-- Enforce documented size and dimension limits per media class.
-- Store only stable relative media identifiers/paths in PostgreSQL.
-- Prevent path traversal and executable uploads.
-- Serve media with correct content types, caching, and safe headers.
-- Deleting/replacing media must account for references before removing the physical file.
-- Include the persistent media directory in backup and restore procedures.
-- Use thumbnails or optimized variants where large source images would harm catalog performance.
-
-## 11. Frontend implementation rules
-
-- Preserve the approved visual design and follow `DESIGN-SYSTEM.md`.
-- Treat `DESIGN-SYSTEM-INCONSISTENCIES.md` as a remediation backlog, especially keyboard access, focus, reduced motion, responsive collisions, fake controls, images, and duplicated/dead styles.
-- Keep route files thin. Feature UI, hooks, query definitions, validation, and mapping logic belong in the relevant feature folder.
-- Reuse truly shared components; do not create a generic abstraction for a single use.
-- Use React Query as the owner of server state and invalidate targeted query keys after mutations.
-- Keep filter/search state in the URL where shareable.
-- Replace local fixture state incrementally; do not maintain a second fake production path after a feature is connected.
-- Use framework image optimization or an explicitly justified media path.
-- Add loading, empty, recoverable error, forbidden, unavailable, and success states appropriate to every data-driven screen.
-- Keep all user-facing copy Arabic and direction-aware. Technical identifiers and source code remain English.
-
-## 12. Security, privacy, and operational requirements
-
-- Preserve the existing access-token, rotating refresh-token, HttpOnly cookie, and double-submit CSRF architecture.
-- Preserve rate limiting and non-enumerating authentication responses.
-- Validate all inputs with shared schemas and repeat authorization checks server-side.
-- Sanitize text chapter links/content and all user-generated content before rendering.
-- Do not allow stored arbitrary JavaScript for advertisements.
-- Do not log passwords, tokens, provider secrets, raw reset/verification URLs, or unnecessary user content.
-- Restrict upload types and block executable content.
-- Use HTTPS in production and the same-origin topology already documented by the repository.
-- Create database and media backups and verify a restore procedure before launch.
-- Provide request IDs and actionable server logs for failed domain operations.
-
-## 13. Accessibility, responsive behavior, and quality
-
-- Target keyboard-operable menus, filters, dialogs, carousels, readers, and admin tables.
-- Provide visible focus and correct labels, landmarks, headings, dialog focus management, and error association.
-- Respect reduced-motion preferences for carousel and animation behavior.
-- Do not rely on color alone for states.
-- Use accessible foreground/background combinations defined by the design system.
-- Ensure mobile layouts do not introduce horizontal scrolling for ordinary content.
-- Reserve banner-ad dimensions to reduce layout shift.
-- Lazy-load non-critical media and chapter images responsibly without making reader navigation unreliable.
-- Support modern desktop and mobile browsers at launch; exact support versions can follow the project's deployment policy.
-
-## 14. Delivery phases
+- Remove `heroData`, `trendingData`, `latestData`, `suggestionsData`, `discoverData`, `categories`, `storyData`, and `textStories` as production data sources when their route is connected.
+- One catalog query model for all work types; `/stories` applies only the text-work restriction.
+- URL-backed query, category, work type, story status, sort, and stable pagination.
+- Safe fallback for invalid query values, retry, empty, unavailable, and not-found states.
+- Admin-featured home ordering, enabled-category shortcuts, latest published chapters, category-based suggestions, and seven-day trending based on real chapter opens when available.
+- Work detail metadata, published chapters, first/latest actions, similar works, aggregate rating display, and deliberate unavailable behavior.
+- Hide or clearly defer interactive bookmark/rating/comment controls until their owning phases; never leave a fake active action.
+- Unique metadata, canonical work URL, Open Graph cover data, sitemap, robots exclusions, and controlled catalog query indexing.
+- Community link comes from maintained configuration, not placeholder copy.
+- Keep only structural reserved locations for P13 ads; no provider claim is made here.
 
-Each phase ends only when its data is persistent, permissions are enforced, the approved UI is connected, and relevant tests pass.
+**Exit gate:**
 
-### Phase 0 — Product alignment and obsolete UI removal
+- All owned routes read the API and no connected route imports its former product fixture data.
+- The same URL reproduces catalog query state after refresh.
+- `/discover` searches all supported work types and `/stories` is only a restricted view.
+- Draft/archived data and unpublished chapters do not leak through metadata, responses, sitemap, or similar results.
+- Empty home sections are hidden or intentional.
+- Public SEO outputs match the approved route inclusion/exclusion policy.
 
-Scope:
-
-- Remove all points UI, fixtures, types, copy, tests, and ad-threshold behavior.
-- Remove popunder and duplicate video/ad concepts.
-- Remove phone from registration/profile contracts and UI.
-- Remove Google placeholders and moderator/role-management UI if present.
-- Remove comment reply controls/counts.
-- Correct global search to target the canonical catalog.
-- Add the missing `/admin/categories` route shell and navigation item.
-- Protect the admin route tree visibly and server-side/API-side.
+## P06 — Bookmarks, Ratings, Library, and Dashboard Basics
 
-Exit criteria:
+**Suggested feature slug:** `bookmarks-ratings-library`
 
-- No user-visible point, threshold, popunder, or chapter-ad language remains.
-- The frontend route map and navigation agree with this plan.
-- Existing static screens still build and preserve their approved design.
+**Routes/surfaces:** `/library`, personal sections on `/dashboard`, and bookmark/rating controls on `/story/[id]`.
 
-### Phase 1 — Domain foundation and VPS media
+**Objective:** Deliver the first persistent personal content slice.
 
-Scope:
+**Data/contracts:** Add Bookmark and WorkRating through a forward migration. Enforce one bookmark and one rating per user/work. Ratings are integer 1–5. Bookmark removal must not remove ratings or later progress.
 
-- Add domain schema and migrations.
-- Add shared contracts and base domain modules.
-- Implement work/category/chapter persistence.
-- Implement secure VPS upload and media delivery.
-- Seed only deliberate local development content, never production demo records.
+**Replace/build:**
 
-Exit criteria:
+- Replace `LIBRARY_WORKS` and local removal/undo behavior with server state and real confirmation/recovery behavior.
+- Idempotent bookmark creation and removal.
+- One editable five-star rating and transactionally correct aggregate/count reads.
+- Library search/filter/sort, saved date, latest published chapter, and unavailable saved-work state.
+- Preserve bookmarks for works later unpublished/archived without exposing their content.
+- Replace dashboard bookmark/rating summary fixtures with real values; progress, gifts, and notifications remain honest empty states until their phases.
+- Keep visitor/pending/suspended restrictions consistent in UI and API.
 
-- An admin can create draft data through tested APIs.
-- Uploaded media survives an application restart/deployment path.
-- Database constraints protect the key invariants.
+**Exit gate:**
 
-### Phase 2 — Live public catalog and work details
+- Bookmark create/remove survives a new session and repeated creation is idempotent.
+- Rating create/update leaves one row and recalculates aggregate/count correctly under concurrency tests.
+- An unavailable saved work remains listed but cannot leak protected content.
+- Visitors and ineligible accounts cannot mutate bookmarks/ratings.
+- Connected library/dashboard sections no longer import their old fixture records.
 
-Scope:
+## P07 — Protected Readers, Progress, Completion, and Resume
 
-- Connect home sections, `/discover`, `/stories`, `/categories`, and work details.
-- Implement search, filters, pagination, featured ordering, latest releases, trending, and similar works.
-- Add rating read/write behavior and bookmarks on details.
-- Add public metadata, sitemap, robots, and unavailable states.
+**Suggested feature slug:** `protected-readers-progress`
 
-Exit criteria:
+**Route/surfaces:** `/story/[id]/chapter/[chapterId]`, resume links on work details, library, and dashboard.
 
-- All public work data comes from the API.
-- Query parameters reproduce the same results on refresh.
-- Draft and archived records never leak.
+**Objective:** Replace both fixture readers with authenticated chapter-content delivery and one canonical resume model.
 
-### Phase 3 — Protected readers, progress, dashboard, and library
+**Data/contracts:** Add ReadingProgress and the minimal chapter-open/activity record needed for seven-day trending. Decide and document whether progress is canonical per user/chapter with derived work resume; do not store pixel-level session history.
 
-Scope:
+**Replace/build:**
 
-- Protect illustrated and text chapter content with safe login return paths.
-- Connect both readers to live chapter content.
-- Implement progress saving, 75% completion status, resume logic, and reader preferences.
-- Connect dashboard and library to bookmarks, progress, and gifts summary.
+- API returns chapter content/page identifiers only to active verified users.
+- Safe login return to the requested chapter.
+- Split the current combined route implementation into a thin route and reusable illustrated/text reader feature components while preserving approved visuals.
+- Replace `MOCK_PAGES` and text fixtures with protected API data.
+- Illustrated continuous-scroll and single-page modes, stable page index, approximate percentage, debounced updates, and image retry.
+- Text block/paragraph position, approximate percentage, and existing font-size/line-spacing preferences.
+- Completion at 75% for progress only.
+- Same canonical resume destination from work details, dashboard, and library.
+- Chapter selection, previous/next navigation, and deliberate unavailable state after publication changes.
+- Record real opens for trending without creating one event per scroll update.
+- Guarantee no ad provider or ad-block code is imported/executed in reader bundles.
 
-Exit criteria:
+**Exit gate:**
 
-- A verified user can leave and resume both reader types.
-- A visitor cannot retrieve chapter content through the UI or API.
-- No reader route loads advertising or ad-block detection.
+- Anonymous callers cannot retrieve chapter text or page URLs through UI or API.
+- A verified user leaves and resumes illustrated and text chapters near the saved useful position.
+- Debouncing/idempotency prevents scroll-event write floods.
+- 75% changes only completion state.
+- Unpublished/archived transitions stop content access without leaking it from cached public responses.
+- Network/bundle verification proves zero advertising/detection behavior on the reader.
 
-### Phase 4 — Community and notifications
+## P08 — Community and Moderation
 
-Scope:
+**Suggested feature slug:** `community-moderation`
 
-- Implement work/chapter comments, editing, soft deletion, likes, and reports.
-- Remove all reply behavior.
-- Implement notification persistence and mark-read actions.
-- Create new-chapter notifications for bookmarked works.
+**Routes/surfaces:** Work and chapter comment sections, `/admin/comments`, `/admin/reports`.
 
-Exit criteria:
+**Objective:** Replace duplicated local discussion behavior with one flat persistent community model and its moderation workflow.
 
-- Community actions persist and enforce ownership.
-- Moderation can retrieve hidden content and reports.
-- Notification links open the correct current destination.
+**Data/contracts:** Add Comment, CommentLike, CommentReport, and moderation-history data needed for hide/restore/resolution audit. Enforce one like per user/comment and one open report per user/comment.
 
-### Phase 5 — Gifts and account appearance
+**Replace/build:**
 
-Scope:
+- One comment component/query model for work and chapter targets.
+- Visible public comment reads; active verified users create up to 1,000 characters.
+- Owner edit and soft delete; like/unlike; bounded sanitized reports.
+- Report reasons and statuses/outcomes exactly match `PLAN.md`.
+- Replace `STORY_COMMENTS`, text fixture comments, local `Date.now()` IDs, local likes, and local report flags.
+- Connect existing admin comment/report tables, filters, dialogs, hide/restore, status, and resolution UI to authorized APIs.
+- Preserve hidden/deleted records for moderation and history.
+- Leave decoration rendering contract ready for P10, with default appearance until then.
 
-- Implement gift design media, grants, revocation, bulk eligibility, and selection.
-- Apply selected frames/decorations to user and comment presentation.
-- Create gift notifications.
-- Complete avatar upload and account settings.
+**Exit gate:**
 
-Exit criteria:
+- Ownership and admin authorization tests cover every mutation.
+- Work comments and chapter comments remain distinct targets using one model.
+- Duplicate likes/open reports fail safely under concurrency.
+- Hidden/soft-deleted content is absent from normal reads and available to authorized moderation.
+- No reply/thread/image/spoiler-mask path or dormant production fixture remains.
+- Rendered content is sanitized against script injection.
 
-- Duplicate grants are prevented.
-- Disabled/revoked gifts cannot remain selected.
-- Bulk grants affect only the confirmed eligible snapshot.
+## P09 — In-Site Notifications
 
-### Phase 6 — Admin content operations
+**Suggested feature slug:** `in-site-notifications`
 
-Scope:
+**Surfaces:** Navbar bell, workspace bell, chapter destinations, and settings appearance destinations.
 
-- Connect dashboard metrics/activity.
-- Connect works, chapters, and the new categories screen.
-- Implement draft/publish/unpublish/archive/restore and previews.
-- Implement illustrated upload ordering and the text editor/renderer contract.
+**Objective:** Replace two independent fixture notification stores with one persistent service and one shared UI state owner.
 
-Exit criteria:
+**Data/contracts:** Add Notification with type, title, concise message, safe destination, creation time, and optional read time. Add idempotency identity for chapter publication and gift grant notifications.
 
-- Publishing a work/chapter changes public visibility correctly.
-- No hard-delete action is exposed.
-- Admin previews use the same core renderers as public pages.
+**Replace/build:**
 
-### Phase 7 — Admin users, moderation, gifts, and support
+- Consolidate navbar and workspace notification implementations around shared queries/components without forcing identical layout.
+- New-chapter notifications for users with a bookmark at eligible publication time.
+- Consume P04 publication identity so repeated publish actions do not duplicate notifications.
+- Gift-notification creation service for P10, including gift name/image and the relevant settings section.
+- Mark one/read all, persistent unread count, refresh/navigation/menu-open loading.
+- Preserve historical notification when a gift is revoked/disabled and show current unavailability at destination.
+- No WebSocket, push, or background-polling architecture.
 
-Scope:
+**Exit gate:**
 
-- Connect users and user details without points or role editing.
-- Connect comments, reports, gifts, grants, support inbox, and detail views.
-- Add suspension/reactivation, internal notes, statuses, and moderation outcomes.
+- One eligible publication creates exactly one notification per eligible bookmark.
+- Mark-one/mark-all persists across sessions and both navigation surfaces agree.
+- Destinations are safe and resolve to the current chapter or settings state.
+- Anonymous users show no fixture count.
+- Old fixture notification files are removed from production imports.
 
-Exit criteria:
+## P10 — Gifts, Appearance, and Avatar Completion
 
-- Every mutation is authorized and confirmed when destructive or consequential.
-- Lists have real filters, pagination, empty states, and error recovery.
-- Historical records remain auditable after hide, revoke, disable, or archive operations.
+**Suggested feature slug:** `gifts-appearance-avatar`
 
-### Phase 8 — Advertising and ad-block message
+**Routes/surfaces:** `/admin/gifts`, `/admin/gifts/grants`, user-detail gift actions, avatar/appearance sections of `/settings`, avatar/comment presentation.
 
-Scope:
+**Objective:** Replace color/tone demo gifts and local selection with media-backed, admin-granted, persistent appearance.
 
-- Integrate the two approved display-banner placements.
-- Add global/per-placement enablement and configuration-health status.
-- Replace the current admin ads page rules and previews.
-- Add client-side ad-block detection and the non-blocking support message on eligible pages only.
+**Data/contracts:** Add GiftDesign, GiftGrant, and UserAppearanceSelection. Preserve grant/revocation history and enforce one active grant per user/gift and one selection per gift type.
 
-Exit criteria:
+**Replace/build:**
 
-- Exactly zero ad scripts/checks run on readers or excluded routes.
-- A blocked ad shows the support message without blocking content.
-- Disabling ads removes both slots and detection behavior.
-- No point, popup, interstitial, or forced advertisement path exists.
+- Transparent PNG/WebP gift asset upload through P02.
+- Gift create/edit/preview/enable/disable/reactivate/archive and recipient count.
+- Individual grant with optional reason.
+- Bulk eligibility snapshot/preview/confirmation for active non-admin accounts existing at confirmation.
+- Exclude suspended users/admins; future registrations do not inherit prior bulk grants.
+- Idempotent duplicate prevention and one P09 notification per new grant.
+- Revoke a grant without deleting history.
+- Select default or one owned active frame/decoration; disabled/revoked items cannot remain effective.
+- Persist avatar upload through P02; decoded-content validation remains server-side even though current UI validates file type/size.
+- Apply selected frame/decoration to approved avatar and comment surfaces.
+- Remove fixture gift data and local-only selection once connected.
 
-### Phase 9 — Launch readiness
+**Exit gate:**
 
-Scope:
+- Individual/bulk grants are idempotent and auditable.
+- Bulk execution affects the confirmed eligible snapshot only.
+- Selection rejects unowned, disabled, revoked, and wrong-type gifts.
+- Disable/revoke invalidates effective selection without erasing history/notification.
+- Avatar/gift uploads pass P02 validation and persist across sessions/deployments.
 
-- Replace legal drafts and external-link placeholders with owner-approved content.
-- Remove production fixture data and dead assets.
-- Complete accessibility and responsive remediation.
-- Verify backups, restore, logging, health checks, rate limits, email provider, media persistence, and HTTPS topology.
-- Run full repository verification and critical browser journeys.
+## P11 — Support Inbox and Legal Pages
 
-Exit criteria:
+**Suggested feature slug:** `support-inbox-legal`
 
-- Launch acceptance scenarios pass on production-like infrastructure.
-- Legal copy, ad zones, gift assets, domain/email configuration, and initial content are present.
-- The team has documented deployment, rollback, backup, and restore procedures.
+**Routes:** `/contact`, `/report-issue`, `/admin/contact`, `/admin/contact/[messageId]`, `/privacy`, `/terms`, `/copyright`.
 
-## 15. Acceptance scenarios
+**Objective:** Connect public forms to one persistent inbox and replace draft legal content before launch.
 
-The MVP is not complete merely because every route renders. At minimum, verify these end-to-end outcomes:
+**Data/contracts:** Add SupportSubmission with contact/issue type, sender facts, optional user relation, issue type, affected URL, message fields, status, one internal note, and timestamps.
 
-1. A visitor browses, searches, filters, and opens the correct published work.
-2. A visitor opening a chapter is redirected to login and returns to that chapter after a valid verified login.
-3. Registration, email verification, password reset, password change, logout, and logout-all work without phone or Google.
-4. A user bookmarks a work, sees it after a new session, removes it, and receives a new-chapter notification while it is bookmarked.
-5. A user resumes an illustrated and a text chapter near the saved position.
-6. A user creates, edits, deletes, likes, and reports allowed comments, with no reply feature present.
-7. A user creates or updates one five-star rating and the aggregate changes correctly.
-8. An admin creates and publishes both an illustrated and text work/chapter, and public visibility follows publication state.
-9. An admin archives and restores content without hard deletion.
-10. An admin suspends a user and protected API access stops.
-11. An admin creates both gift types, grants individually and in bulk, prevents duplicates, revokes a grant, and disables a design.
-12. A user receives a gift notification and selects an owned active appearance.
-13. Contact and issue submissions appear in the support inbox and can be resolved/archived.
-14. A normal eligible page shows at most one enabled banner; a reader shows none.
-15. Blocking ads produces a non-modal disable-ad-block message, and continuing to browse or read remains possible.
-16. An admin cannot access arbitrary-script editing or any point/popunder configuration.
-17. Draft, archived, private, and secret data is not exposed through public responses.
-18. Empty, loading, error, unavailable, forbidden, and not-found states are usable in Arabic RTL layouts.
+**Replace/build:**
 
-## 16. Verification strategy
+- Replace 250 ms simulated form success with real submission mutations.
+- Reuse current client validation ergonomics while moving authoritative limits/schemas into `@fury/contracts` and the API.
+- Apply public-form rate limiting and safe non-enumerating responses.
+- Combine contact and issue reports in the admin inbox with real search/filter/date/status behavior.
+- Include issue affected URL and type in detail view; current generic `AdminContactMessage` does not represent them fully.
+- Persist unread/open, resolved, archived, internal note, archive/restore, and safe `mailto:` behavior.
+- Remove support fixtures and local admin mutations after connection.
+- Replace legal drafts with owner-approved text; do not invent legal advice.
 
-- Contract schema tests for every shared request/response and bounded enum.
-- Service and controller tests for business rules and permissions.
-- Disposable PostgreSQL integration tests for critical invariants and concurrent/idempotent operations.
-- Component tests for forms, filters, dialogs, workspace states, admin actions, and ad-block messaging.
-- Route-level tests for redirects, safe return paths, metadata, and protected areas.
-- Browser smoke journeys for registration, discovery, both readers, bookmark/resume, community actions, gift selection, admin publishing, moderation, support, and advertising exclusions.
-- Security checks for upload validation, authorization, XSS sanitization, CSRF, rate limits, and secret leakage.
-- Run the repository's formatting, linting, type checking, unit/integration tests, build, build-output verification, and diff checks before release.
+**Exit gate:**
 
-## 17. Owner-provided launch inputs
+- Visitor and signed-in submissions appear exactly once in the admin inbox.
+- Signed-in association is private and public responses reveal no account data.
+- Invalid/unsafe input and rate limits produce clear recoverable behavior.
+- Admin status/note/archive changes persist and require `ADMIN`.
+- Final legal text is owner-approved before P14 release approval.
 
-The product scope is defined, but launch still requires:
+## P12 — Admin Users, Suspension, Dashboard, and Activity
 
-- Final legal text for privacy, terms, and copyright/takedown.
+**Suggested feature slug:** `admin-users-dashboard`
+
+**Routes:** `/admin`, `/admin/dashboard`, `/admin/users`, `/admin/users/[userId]`.
+
+**Objective:** Replace cross-domain admin fixtures and synthetic metrics after their authoritative domains exist.
+
+**Data/contracts:** Add AdminModerationNote and only the lightweight activity records that cannot be derived reliably. Do not build an analytics warehouse.
+
+**Replace/build:**
+
+- User search/filter by status and gift ownership; real registration/last-activity/gift counts.
+- User detail with bookmarks, progress, gifts, notes, and appropriate moderation history.
+- Suspend/reactivate with confirmation and immediate protected-API rejection. Preserve the existing middleware behavior that looks up current user state on every protected request.
+- Reuse P10 gift services rather than duplicating grant/revoke logic.
+- Dashboard authoritative counts for published/draft works, published chapters, active users, open reports, and unread support.
+- Recent content changes, registrations, unresolved moderation items, and the same seven-day trending definition as public home.
+- Remove `deriveAdminMetrics` hard-coded baseline deltas and relevant admin fixtures.
+- Never expose password hashes, tokens, provider secrets, admin creation, role changes, impersonation, revenue forecasts, or point metrics.
+
+**Exit gate:**
+
+- Dashboard values reconcile with authoritative database queries.
+- Suspension blocks login, refresh, and protected API use without deleting user content.
+- Reactivation restores eligible access without rebuilding records.
+- User/admin lists have real filtering, pagination, empty, and retry behavior.
+- Consequential actions are confirmed and auditable.
+- No synthetic metric baseline or secret/role-management UI remains.
+
+## P13 — Approved Display Advertising
+
+**Suggested feature slug:** `display-advertising`
+
+**Routes/placements:** `home-banner` on `/`; `catalog-banner` on `/discover` and `/stories`; `/admin/ads`.
+
+**Objective:** Convert the existing placeholder slot/detector design into safe operational configuration for exactly the approved placements.
+
+**Reuse:** `AdvertisementSlot`, `AdBlockNotice`, approved placement positions, admin preview UI, session dismissal, retry, and non-modal behavior where tests confirm them.
+
+**Replace/build:**
+
+- One source of truth for global and per-placement enablement; eliminate the split between admin context state and public hard-coded constants.
+- Deployment-configured Adsterra display-banner script/zone identifiers only; no stored arbitrary JavaScript.
+- `home-banner` remains beside/near Latest Releases on desktop and inline between sections on smaller screens.
+- `catalog-banner` remains after filters and before results on `/discover` and `/stories`.
+- Read-only provider name, zone configuration health, dimensions, last configuration update, safe preview, and support-message preview.
+- Load provider/detection only when global and current placement enablement both permit it.
+- Keep detection failure/false positive non-blocking and browsing available.
+- Do not claim impression/revenue events unless provider-reported.
+
+**Exit gate:**
+
+- Eligible pages render zero or one Fury placement.
+- Global disable removes slots, provider loading, and detection.
+- Per-placement disable affects only its approved routes.
+- Network/bundle tests prove zero provider/detection code on work details, categories, readers, auth, workspace, support, legal, admin, error, and not-found routes.
+- Admin cannot store/execute arbitrary scripts or view secrets.
+- No points, thresholds, refresh, popup, popunder, interstitial, rewarded, reader, or forced-ad path exists.
+
+## P14 — Launch Readiness and Release Approval
+
+**Suggested feature slug:** `launch-readiness`
+
+**Objective:** Prove all completed slices operate together on production-like infrastructure and remove development-only residue.
+
+**Implementation scope:**
+
+- Remove remaining production fixture imports, sample media, dead assets, zero-byte assets, fake counts, placeholder links, stale types, and superseded local mutation paths.
+- Re-run `DESIGN-SYSTEM-INCONSISTENCIES.md` against current code and close verified blocking/material issues relevant to shipped flows.
+- Verify Arabic/RTL copy, keyboard use, focus, touch targets, contrast, reduced motion, responsive boundaries, reader landmarks, error shells, and no ordinary horizontal overflow.
+- Replace Google CSS font imports and unmanaged raw images where the current Next.js pipeline/design decision requires it.
+- Validate current Next.js 16 behavior against installed framework documentation before framework-sensitive changes, as required by `apps/web/AGENTS.md`.
+- Supply owner-approved legal text, community links, production domain/email configuration, ad zones, initial content, gift assets, VPS storage, database, backup destination, and restore access.
+- Verify health, request IDs, actionable logs, rate limits, email provider, HTTPS/same-origin routing, media persistence, and no secret leakage.
+- Demonstrate database and media backup/restore.
+- Update `README.md` and `PROJECT_REFERENCE.md` from generic auth-template documentation to the implemented Fury product architecture and operations.
+- Run repository formatting, Prisma format/validate/generate, lint, type check, unit tests, disposable-database integration tests, build, build-output verification, route smoke, browser journeys, security checks, and `git diff --check`.
+- Document deployment, forward migration, rollback, backup, restore, and operational provisioning.
+
+**Exit gate:**
+
+- All cross-product journeys in Section 9 pass on production-like infrastructure.
+- No fixture/local-only behavior can masquerade as persisted production behavior.
+- Restore is demonstrated for database and media.
+- No public response, rendered page, build output, or log leaks protected data or secrets.
+- Release evidence records tested revision, environment, migration version, owner inputs, rollback point, and known non-blocking limitations.
+
+## 7. Route ownership matrix
+
+| Route/surface                                                    | Phase ownership                                                   |
+| ---------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `/`                                                              | P05 live content; P13 approved banner                             |
+| `/discover`                                                      | P05 canonical catalog; P13 approved banner                        |
+| `/stories`                                                       | P05 text-only catalog view; P13 approved banner                   |
+| `/categories`                                                    | P05 public enabled-category directory                             |
+| `/story/[id]`                                                    | P05 data/details; P06 bookmarks/ratings; P08 comments             |
+| `/story/[id]/chapter/[chapterId]`                                | P00 temporary protection; P07 real readers/progress; P08 comments |
+| `/contact`, `/report-issue`                                      | P11                                                               |
+| `/privacy`, `/terms`, `/copyright`                               | P11 content; P14 final owner approval                             |
+| `/auth/*`                                                        | Preserve existing behavior; P00 phone cleanup/regression          |
+| `/dashboard`                                                     | P06 base; enriched P07/P09/P10                                    |
+| `/library`                                                       | P06; resume enrichment P07                                        |
+| `/settings`                                                      | Existing security/profile preserved; P10 avatar/appearance        |
+| `/admin`                                                         | Existing guard preserved; P12 redirect/operational completion     |
+| `/admin/dashboard`                                               | P12                                                               |
+| `/admin/categories`                                              | Existing local UI connected in P03                                |
+| `/admin/works`, `/admin/works/new`, `/admin/works/[workId]/edit` | P03                                                               |
+| `/admin/works/[workId]/chapters*`                                | P04                                                               |
+| `/admin/comments`, `/admin/reports`                              | P08                                                               |
+| `/admin/gifts`, `/admin/gifts/grants`                            | P10                                                               |
+| `/admin/contact`, `/admin/contact/[messageId]`                   | P11                                                               |
+| `/admin/users`, `/admin/users/[userId]`                          | P12; gift actions reuse P10                                       |
+| `/admin/ads`                                                     | P13                                                               |
+| Root loading/not-found/global-error                              | Maintained by each owner; integrated audit P14                    |
+
+## 8. Cross-phase implementation rules
+
+- Every schema change uses a new forward migration. Never rewrite `20260818000000_init_authentication`.
+- A phase owns the database models it first needs; do not create the full future schema in P01 and leave unused tables.
+- Every endpoint ships with shared schemas, OpenAPI documentation, service/controller tests, and HTTP integration coverage proportional to risk.
+- Every admin mutation uses API `ADMIN` authorization. The existing client guard remains a user-experience layer only.
+- Public APIs never return drafts/archives; reader APIs additionally require an active verified user.
+- React Query replaces server-backed local state. Remove the old fixture path when the real query is connected.
+- Do not keep `AdminDataProvider` as a second database. Shrink it phase by phase, then remove it when no connected admin feature depends on it.
+- Preserve the existing API envelope, CSRF, cookie, access-token, refresh, logging, and error architecture unless a phase proves a required change.
+- Keep route files thin and place query/mutation/mapping logic in feature modules.
+- Public filter state remains in the URL. Personal transient UI preferences may remain local when the product plan does not require cross-device persistence.
+- Use the approved Arabic UI and RTL design. Technical source identifiers remain English.
+- Accessibility, responsive behavior, security, and operational needs are part of each phase, not deferred wholesale to P14.
+- Update `README.md`, `PROJECT_REFERENCE.md`, OpenAPI, and applicable design/operation docs when their claims change.
+- Stop after each phase acceptance gate unless the user explicitly authorizes batch continuation, matching root repository instructions.
+
+## 9. Cross-product acceptance journeys
+
+P14 executes these end to end; each owner phase adds its portion earlier.
+
+1. A visitor browses home, searches all work types, filters, refreshes the URL, and opens the intended published work.
+2. A visitor opening a chapter is sent to login and returns to it after a valid verified login; the visitor never receives chapter content beforehand.
+3. Registration, verification/resend, login, password recovery/change, logout, and logout-all work without phone or Google sign-in.
+4. A user bookmarks a work, sees it in a new session, removes it independently of rating/progress, and receives new-chapter notifications only while eligible.
+5. A user leaves and resumes illustrated and text chapters near the saved position.
+6. A user creates, edits, soft-deletes, likes, and reports permitted comments; no reply feature exists.
+7. A user creates and updates one integer five-star rating and aggregates remain correct.
+8. An admin creates/publishes illustrated and text works/chapters; public visibility follows state.
+9. An admin unpublishes, archives, and restores content without hard deletion or public leakage.
+10. An admin suspends a user and login, refresh, and protected API actions stop while user records remain.
+11. An admin creates both gift types, grants individually/in bulk, prevents duplicates, revokes a grant, and disables a design.
+12. A user receives a gift notification and can select only owned active appearance assets.
+13. Visitor and signed-in contact/issue submissions reach the inbox and can be resolved/archived.
+14. An eligible page shows at most one configured banner; every excluded route loads none.
+15. Ad blocking shows a non-modal request while browsing, login, and reading remain available.
+16. No admin can edit arbitrary provider scripts or configure points, intrusive ads, or reader ads.
+17. Draft, archived, protected, private, token, hash, and secret data is absent from public responses and logs.
+18. Loading, empty, recoverable error, unavailable, forbidden, and not-found states work in Arabic RTL on keyboard and mobile.
+
+## 10. Definition of ready for each Spec Kit phase
+
+- All dependency phases passed their exit gates.
+- The feature spec lists current components to preserve and fixture/local paths to remove.
+- Product choices affecting behavior are decided or marked as explicit clarifications.
+- The implementation plan names exact existing repository paths after re-inspection at phase start.
+- Migration, compatibility, rollback, authorization, and caching effects are understood.
+- User stories are prioritized and independently demonstrable.
+- Required owner inputs are available or safely represented by non-production configuration.
+- No story depends on pretending that a later phase already exists.
+
+## 11. Definition of done for each phase
+
+- Approved behavior uses persistent real data where persistence is required.
+- Browser behavior and API authorization agree.
+- Contracts, OpenAPI, migrations, services, UI, and tests describe the same behavior.
+- Relevant loading, empty, success, retry, forbidden, unavailable, and not-found states exist.
+- Arabic, RTL, responsive, keyboard, focus, target-size, contrast, and reduced-motion behavior is verified for owned surfaces.
+- Replaced fixtures/local mutation paths are no longer imported by production code.
+- Security, logging, media, backup, or operational obligations introduced by the phase are verified.
+- Relevant repository checks pass without weakening existing checks.
+- Documentation claims are updated against implemented code.
+- Acceptance evidence is saved in the feature record before the phase is declared complete.
+
+## 12. Owner-provided launch inputs
+
+These are not reasons to keep production placeholders. They must exist before P14 approval:
+
+- Final privacy, terms, and copyright/takedown text.
 - Production domain and email-provider credentials.
-- Adsterra approval and display-banner zone identifiers for the two placements.
+- Adsterra approval and zone identifiers for `home-banner` and `catalog-banner`.
 - Final Discord/community links.
-- Initial real works, chapters, covers, backgrounds, and categories.
-- PNG/WebP avatar-frame and comment-decoration assets.
-- VPS storage, database, backup destination, and restore access.
+- Initial real categories, works, chapters, covers, and backgrounds.
+- Transparent PNG/WebP avatar-frame and comment-decoration assets.
+- VPS persistent media storage, PostgreSQL, backup destination, and restore access.
 
-These are launch dependencies, not reasons to retain placeholder content as production data.
+## 13. Recommended immediate next action
 
-## 18. Definition of done
-
-A feature is done only when:
-
-- Its approved frontend design is connected to persistent real data.
-- Browser and API authorization agree.
-- Contracts, loading, empty, success, error, and recovery states exist.
-- Mobile, RTL, keyboard, focus, and reduced-motion behavior is appropriate.
-- Relevant tests pass and no obsolete fixture path can masquerade as production behavior.
-- Product copy matches this plan, especially the removal of points and intrusive advertising.
-- Operational requirements such as media persistence, logging, and backup are satisfied where applicable.
-
-The Fury MVP is complete when all required routes and acceptance scenarios above work together as one product, not when individual screens merely look complete.
+Start only P00 as the first Spec Kit feature. Its specification should be narrow: repository governance repair, phone removal, reader truth/protection, integer chapter alignment, fixture-status inventory, and current-check preservation. Do not begin the content schema or media implementation in the same feature. After P00 is accepted, create P01 from the verified clean baseline.

@@ -1,496 +1,1041 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import type { Route } from "next";
+import { useRouter } from "next/navigation";
 import {
-  Archive,
-  BookOpen,
-  CheckCircle,
-  ExternalLink,
-  EyeOff,
-  RotateCcw,
-  Save,
-  Send,
-} from "lucide-react";
-import { useAdminData } from "../../context/admin-context";
-import type { AdminPublishStatus, AdminWork } from "../../types/admin.types";
+  type SyntheticEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { FormProvider, useForm, useWatch } from "react-hook-form";
+
+import type {
+  AdminWork,
+  CreateWorkBody,
+  PublicationStatus,
+  UpdateWorkBody,
+} from "@fury/contracts";
+import { useSession } from "@/features/auth/hooks/auth.hooks";
+
+import { SafeAdminContentError } from "../../api/admin-content.api";
+import {
+  useCreateAdminWork,
+  useUpdateAdminWork,
+  useTransitionAdminWork,
+} from "../../hooks/admin-content.hooks";
+import {
+  adminWorkErrorMessage,
+  isAmbiguousAdminCreateResult,
+  isMissingAdminCreateReadback,
+  workFieldErrors,
+} from "../../model/admin-content.errors";
+import {
+  adoptServerWork,
+  continueDraftAgainstServer,
+  createWorkCommand,
+  createPublishedWorkCommand,
+  receiveWorkRefresh,
+  updateWorkCommand,
+  updatePublishedWorkCommand,
+  workFormValuesFromServer,
+  workMatchesCreateCommand,
+  workMatchesUpdateCommand,
+  type MediaDraftSelection,
+  type WorkEditorState,
+} from "../../model/admin-work-editor";
 import { AdminConfirmDialog } from "../AdminConfirmDialog/AdminConfirmDialog";
-import { AdminNoticeBanner } from "../AdminNoticeBanner/AdminNoticeBanner";
-import { AdminStatusBadge } from "../AdminStatusBadge/AdminStatusBadge";
 import { AdminWorkBasicFields } from "./AdminWorkBasicFields";
 import { AdminWorkMediaFields } from "./AdminWorkMediaFields";
 import { AdminWorkSeoPreview } from "./AdminWorkSeoPreview";
-import type { FormErrors, FormValues } from "./form.types";
+import {
+  adminWorkFormErrorMap,
+  adminWorkFormSchema,
+  emptyWorkFormValues,
+  type FormValues,
+} from "../../model/admin-work-form";
 import styles from "./AdminWorkForm.module.css";
-
-const DEFAULT_COVER = "/anime/01.jpg";
-const DEFAULT_BANNER = "/anime/02.jpg";
-
-const SAMPLE_COVERS = [
-  "/anime/341452.jpg",
-  "/anime/366722.jpg",
-  "/anime/384226.jpg",
-  "/anime/411246.jpg",
-  "/anime/463379.jpg",
-  "/anime/463592.jpg",
-  "/anime/472451.jpg",
-  "/anime/473048.jpg",
-];
-
-const SAMPLE_BANNERS = [
-  "/anime/603242.jpg",
-  "/anime/604271.jpg",
-  "/anime/484571.jpg",
-];
 
 interface AdminWorkFormProps {
   mode: "create" | "edit";
   initialWork?: AdminWork | undefined;
+  canSave?: boolean;
 }
 
-export function AdminWorkForm({ mode, initialWork }: AdminWorkFormProps) {
+export function AdminWorkForm(props: AdminWorkFormProps) {
+  const session = useSession();
+  const user = session.data?.user;
+  const actorId =
+    user?.role === "ADMIN" &&
+    user.status === "ACTIVE" &&
+    user.emailVerifiedAt !== null
+      ? user.id
+      : null;
+  if (actorId === null) {
+    return <p role="status">جارٍ التحقق من صلاحية الإدارة…</p>;
+  }
+  return (
+    <ActorWorkForm
+      key={`${actorId}:${props.mode}:${props.initialWork?.id ?? "new"}`}
+      {...props}
+    />
+  );
+}
+
+function ActorWorkForm({
+  mode,
+  initialWork,
+  canSave = true,
+}: AdminWorkFormProps) {
   const router = useRouter();
-  const {
-    createWork,
-    updateWork,
-    toggleWorkPublish,
-    archiveWork,
-    restoreWork,
-  } = useAdminData();
-
+  const createWork = useCreateAdminWork();
+  const updateWork = useUpdateAdminWork();
+  const transitionWork = useTransitionAdminWork();
   const isEdit = mode === "edit" && initialWork !== undefined;
-
-  // Form State
-  const [values, setValues] = useState<FormValues>(() => {
-    if (isEdit) {
-      return {
-        title: initialWork.title,
-        alternativeTitle: initialWork.alternativeTitle ?? "",
-        type: initialWork.type,
-        storyStatus: initialWork.storyStatus,
-        publishStatus: initialWork.publishStatus,
-        description: initialWork.description,
-        author: initialWork.author,
-        artist: initialWork.artist ?? "",
-        genres: [...initialWork.genres],
-        tags: initialWork.tags.join("، "),
-        coverImage: initialWork.coverImage,
-        bannerImage: initialWork.bannerImage ?? "",
-      };
-    }
-    return {
-      title: "",
-      alternativeTitle: "",
-      type: "manhwa",
-      storyStatus: "ongoing",
-      publishStatus: "draft",
-      description: "",
-      author: "",
-      artist: "",
-      genres: ["أكشن", "فنتازيا"],
-      tags: "",
-      coverImage: DEFAULT_COVER,
-      bannerImage: DEFAULT_BANNER,
+  const form = useForm<FormValues>({
+    resolver: zodResolver(adminWorkFormSchema, {
+      error: adminWorkFormErrorMap,
+    }),
+    defaultValues: initialWork
+      ? workFormValuesFromServer(initialWork)
+      : emptyWorkFormValues(),
+    mode: "onSubmit",
+    reValidateMode: "onChange",
+  });
+  const { clearErrors, getValues, reset, setError, setFocus } = form;
+  const formDirty = form.formState.isDirty;
+  const [resolvedConflictVersion, setResolvedConflictVersion] = useState<
+    number | null
+  >(null);
+  const [coverCandidateAssetId, setCoverCandidateAssetId] = useState<
+    string | null
+  >(null);
+  const [backgroundCandidateAssetId, setBackgroundCandidateAssetId] = useState<
+    string | null
+  >(null);
+  const [clearCover, setClearCover] = useState(false);
+  const [clearBackground, setClearBackground] = useState(false);
+  const [formMessage, setFormMessage] = useState<string | null>(null);
+  const [createOutcomeUnknown, setCreateOutcomeUnknown] = useState(false);
+  const [isCheckingCreate, setIsCheckingCreate] = useState(false);
+  const [isDiscardOpen, setIsDiscardOpen] = useState(false);
+  const [transitionUnknown, setTransitionUnknown] = useState(false);
+  const [editOutcomeUnknown, setEditOutcomeUnknown] = useState(false);
+  const [pendingAction, setPendingAction] = useState<
+    "draft" | "published" | "transition" | null
+  >(null);
+  const [isCheckingTransition, setIsCheckingTransition] = useState(false);
+  const [confirmedStatus, setConfirmedStatus] =
+    useState<PublicationStatus | null>(null);
+  const submitIntent = useRef<"draft" | "published">("draft");
+  const createId = useRef<string | null>(null);
+  const lastCreateCommand = useRef<CreateWorkBody | null>(null);
+  const lastCreateDraft = useRef<string | null>(null);
+  const lastEditCommand = useRef<UpdateWorkBody | null>(null);
+  const lastEditDraft = useRef<string | null>(null);
+  const createConflictSeen = useRef(false);
+  const [confirmedCreateId, setConfirmedCreateId] = useState<string | null>(
+    null,
+  );
+  const submitLocked = useRef(false);
+  const readbackLocked = useRef(false);
+  const mounted = useRef(true);
+  const currentIdentity = useRef("");
+  const currentDraft = useRef("");
+  const draftRevision = useRef(0);
+  const [pendingEdit, setPendingEdit] = useState<{
+    identity: string;
+    draft: string;
+  } | null>(null);
+  const [preserveAfterSave, setPreserveAfterSave] = useState(false);
+  const currentCanSave = useRef(true);
+  const currentUnknown = useRef(false);
+  const currentConflict = useRef(false);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
     };
+  }, []);
+  const [baseline, setBaseline] = useState({
+    workId: initialWork?.id ?? null,
+    version: initialWork?.version ?? null,
   });
-
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [isDirty, setIsDirty] = useState(false);
-
-  // Field refs for auto-focusing on validation failure
-  const titleRef = useRef<HTMLInputElement>(null);
-  const descRef = useRef<HTMLTextAreaElement>(null);
-  const authorRef = useRef<HTMLInputElement>(null);
-
-  // Dialog State
-  const [dialogState, setDialogState] = useState<{
-    isOpen: boolean;
-    action: "unpublish" | "archive" | "restore" | "discard";
-  }>({
-    isOpen: false,
-    action: "discard",
+  const syncedWorkVersion = useRef(initialWork?.version ?? null);
+  const watchedValues = useWatch({ control: form.control });
+  const values: FormValues = { ...getValues(), ...watchedValues };
+  const attachedCoverId = values.coverAssetId;
+  const attachedBackgroundId = values.backgroundAssetId;
+  const mediaDirty =
+    coverCandidateAssetId !== null ||
+    backgroundCandidateAssetId !== null ||
+    clearCover ||
+    clearBackground;
+  const draft = JSON.stringify({
+    values,
+    coverCandidateAssetId,
+    backgroundCandidateAssetId,
+    clearCover,
+    clearBackground,
   });
+  const editorDirty =
+    formDirty ||
+    mediaDirty ||
+    preserveAfterSave ||
+    (pendingEdit?.identity === `${mode}:${initialWork?.id ?? "new"}` &&
+      pendingEdit.draft !== draft);
+  useEffect(() => {
+    currentIdentity.current = `${mode}:${initialWork?.id ?? "new"}`;
+    if (currentDraft.current !== draft) draftRevision.current += 1;
+    currentDraft.current = draft;
+    currentCanSave.current = canSave;
+    currentUnknown.current = createOutcomeUnknown || editOutcomeUnknown;
+  });
+  if (
+    initialWork !== undefined &&
+    !editorDirty &&
+    baseline.workId === initialWork.id &&
+    baseline.version !== initialWork.version
+  ) {
+    setBaseline({ workId: initialWork.id, version: initialWork.version });
+  }
+  const serverConflict =
+    initialWork !== undefined &&
+    editorDirty &&
+    baseline.workId === initialWork.id &&
+    baseline.version !== null &&
+    initialWork.version > baseline.version &&
+    resolvedConflictVersion !== initialWork.version
+      ? initialWork
+      : null;
 
-  // Handle field change
-  const handleChange = <K extends keyof FormValues>(
-    field: K,
-    value: FormValues[K],
-  ) => {
-    setValues((prev) => ({ ...prev, [field]: value }));
-    setIsDirty(true);
-    if (errors[field as keyof FormErrors]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }));
+  useEffect(() => {
+    if (initialWork === undefined) return;
+    if (baseline.workId !== initialWork.id) return;
+    if (editorDirty) return;
+    if (
+      syncedWorkVersion.current !== null &&
+      initialWork.version <= syncedWorkVersion.current
+    )
+      return;
+    const previous: WorkEditorState = {
+      workId: baseline.workId,
+      baseVersion: baseline.version,
+      dirty: editorDirty,
+      values: getValues(),
+      conflictWork: null,
+    };
+    const refreshed = receiveWorkRefresh(previous, initialWork.id, initialWork);
+    reset(refreshed.values);
+    syncedWorkVersion.current = initialWork.version;
+  }, [baseline, editorDirty, getValues, initialWork, reset]);
+
+  const onCoverSelected = useCallback(
+    (assetId: string | null) => {
+      setCoverCandidateAssetId(assetId);
+      setClearCover(false);
+      if (assetId !== null) clearErrors("coverAssetId");
+    },
+    [clearErrors],
+  );
+  const onBackgroundSelected = useCallback((assetId: string | null) => {
+    setBackgroundCandidateAssetId(assetId);
+    setClearBackground(false);
+  }, []);
+  const onClearCover = useCallback(() => {
+    setCoverCandidateAssetId(null);
+    setClearCover(attachedCoverId !== null);
+  }, [attachedCoverId]);
+  const onClearBackground = useCallback(() => {
+    setBackgroundCandidateAssetId(null);
+    setClearBackground(attachedBackgroundId !== null);
+  }, [attachedBackgroundId]);
+  const onKeepCover = useCallback(() => {
+    setCoverCandidateAssetId(null);
+    setClearCover(false);
+    clearErrors("coverAssetId");
+  }, [clearErrors]);
+  const onKeepBackground = useCallback(() => {
+    setBackgroundCandidateAssetId(null);
+    setClearBackground(false);
+  }, []);
+
+  const applySafeFieldErrors = (error: unknown) => {
+    const fields = workFieldErrors(error);
+    if (fields.title)
+      setError("title", { type: "server", message: fields.title });
+    if (fields.slug) setError("slug", { type: "server", message: fields.slug });
+    if (fields.alternativeTitle) {
+      setError("alternativeTitle", {
+        type: "server",
+        message: fields.alternativeTitle,
+      });
+    }
+    if (fields.synopsis) {
+      setError("synopsis", { type: "server", message: fields.synopsis });
+    }
+    if (fields.author)
+      setError("author", { type: "server", message: fields.author });
+    if (fields.artist)
+      setError("artist", { type: "server", message: fields.artist });
+    if (fields.categoryIds) {
+      setError("categoryIds", {
+        type: "server",
+        message: fields.categoryIds,
+      });
+    }
+    if (fields.tagsText) {
+      setError("tagsText", { type: "server", message: fields.tagsText });
+    }
+    if (fields.featuredOrderText) {
+      setError("featuredOrderText", {
+        type: "server",
+        message: fields.featuredOrderText,
+      });
+    }
+    if (fields.coverAssetId) {
+      setError("coverAssetId", {
+        type: "server",
+        message: fields.coverAssetId,
+      });
     }
   };
 
-  // Toggle Genre
-  const handleToggleGenre = (genre: string) => {
-    setValues((prev) => {
-      const exists = prev.genres.includes(genre);
-      const nextGenres = exists
-        ? prev.genres.filter((g) => g !== genre)
-        : [...prev.genres, genre];
-      return { ...prev, genres: nextGenres };
+  const transition = async (targetState: PublicationStatus) => {
+    if (
+      initialWork === undefined ||
+      baseline.version === null ||
+      editorDirty ||
+      submitLocked.current ||
+      readbackLocked.current ||
+      !canSave ||
+      transitionUnknown ||
+      editOutcomeUnknown ||
+      serverConflict !== null
+    )
+      return;
+    submitLocked.current = true;
+    const identity = currentIdentity.current;
+    setPendingAction("transition");
+    setFormMessage(null);
+    try {
+      const result = await transitionWork.mutateAsync({
+        workId: initialWork.id,
+        body: { expectedVersion: baseline.version, targetState },
+      });
+      if (!canFinishSave(identity)) return;
+      setBaseline({ workId: initialWork.id, version: result.version });
+      syncedWorkVersion.current = result.version;
+      setConfirmedStatus(result.publicationStatus);
+      setFormMessage(
+        result.transitioned
+          ? targetState === "archived"
+            ? "أُرشف العمل على الخادم."
+            : targetState === "draft"
+              ? "أُعيد العمل إلى المسودة."
+              : "نُشر العمل على الخادم."
+          : "العمل في هذه الحالة بالفعل؛ لم يُنشأ حدث نشر جديد.",
+      );
+    } catch (error: unknown) {
+      if (!canFinishSave(identity)) return;
+      if (isAmbiguousAdminCreateResult(error)) {
+        setTransitionUnknown(true);
+        setFormMessage(
+          "نتيجة تغيير حالة العمل غير مؤكدة. تحقق من حالة الخادم قبل إعادة المحاولة.",
+        );
+      } else {
+        setFormMessage(adminWorkErrorMessage(error));
+        applySafeFieldErrors(error);
+      }
+    } finally {
+      submitLocked.current = false;
+      if (mounted.current && currentIdentity.current === identity)
+        setPendingAction(null);
+    }
+  };
+
+  const checkUnknownTransition = async () => {
+    if (
+      initialWork === undefined ||
+      readbackLocked.current ||
+      submitLocked.current
+    )
+      return;
+    readbackLocked.current = true;
+    const identity = currentIdentity.current;
+    setIsCheckingTransition(true);
+    try {
+      const work = await transitionWork.readback(initialWork.id);
+      if (!canFinishSave(identity)) return;
+      setConfirmedStatus(work.publicationStatus);
+      setBaseline({ workId: work.id, version: work.version });
+      syncedWorkVersion.current = work.version;
+      setTransitionUnknown(false);
+      setFormMessage(
+        `تأكدت حالة العمل على الخادم: ${work.publicationStatus === "published" ? "منشور" : work.publicationStatus === "archived" ? "مؤرشف" : "مسودة"}.`,
+      );
+    } catch (error: unknown) {
+      if (canFinishSave(identity)) setFormMessage(adminWorkErrorMessage(error));
+    } finally {
+      readbackLocked.current = false;
+      if (mounted.current && currentIdentity.current === identity)
+        setIsCheckingTransition(false);
+    }
+  };
+
+  useEffect(() => {
+    currentConflict.current = serverConflict !== null;
+  });
+  const canFinishSave = (identity: string) =>
+    mounted.current &&
+    currentCanSave.current &&
+    currentIdentity.current === identity;
+
+  const onSubmit = (event: SyntheticEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (
+      submitLocked.current ||
+      readbackLocked.current ||
+      !currentCanSave.current ||
+      currentUnknown.current ||
+      transitionUnknown ||
+      currentConflict.current
+    )
+      return;
+    submitLocked.current = true;
+    const targetState = submitIntent.current;
+    submitIntent.current = "draft";
+    setPendingAction(targetState);
+    void form
+      .handleSubmit(
+        async (values) => {
+          if (
+            !canFinishSave(`${mode}:${initialWork?.id ?? "new"}`) ||
+            currentUnknown.current ||
+            currentConflict.current
+          )
+            return;
+          const submittedIdentity = currentIdentity.current;
+          const submittedDraft = currentDraft.current;
+          const submittedRevision = draftRevision.current;
+          setFormMessage(null);
+          const coverSelection: MediaDraftSelection = {
+            attachedAssetId: values.coverAssetId,
+            candidateAssetId: coverCandidateAssetId,
+            clearAttached: clearCover,
+          };
+          const backgroundSelection: MediaDraftSelection = {
+            attachedAssetId: values.backgroundAssetId,
+            candidateAssetId: backgroundCandidateAssetId,
+            clearAttached: clearBackground,
+          };
+          try {
+            if (mode === "create") {
+              createId.current ??= globalThis.crypto.randomUUID();
+              const body = (
+                targetState === "published"
+                  ? createPublishedWorkCommand
+                  : createWorkCommand
+              )(values, createId.current, coverSelection, backgroundSelection);
+              lastCreateCommand.current = body;
+              lastCreateDraft.current = submittedDraft;
+              const saved = await createWork.mutateAsync(body);
+              if (!canFinishSave(submittedIdentity)) return;
+              if (
+                draftRevision.current !== submittedRevision ||
+                currentDraft.current !== submittedDraft
+              ) {
+                setConfirmedCreateId(saved.id);
+                currentUnknown.current = true;
+                setCreateOutcomeUnknown(true);
+                setFormMessage(
+                  "حُفظت النسخة المرسلة، لكن لديك تعديلات غير محفوظة. راجع المسودة المحفوظة قبل إرسال تعديل آخر.",
+                );
+                return;
+              }
+              setFormMessage(
+                targetState === "published"
+                  ? "حُفظ العمل ونُشر على الخادم."
+                  : "حُفظت المسودة على الخادم.",
+              );
+              router.push(`/admin/works/${saved.id}/edit` as Route);
+              return;
+            }
+
+            if (initialWork === undefined) {
+              setFormMessage(
+                "تعذر تحديد العمل المطلوب للتعديل. أعد تحميل التفاصيل.",
+              );
+              return;
+            }
+            const expectedVersion = baseline.version;
+            if (expectedVersion === null) {
+              setFormMessage(
+                "تعذر تحديد نسخة العمل الحالية. أعد تحميل التفاصيل.",
+              );
+              return;
+            }
+            const body = (
+              targetState === "published"
+                ? updatePublishedWorkCommand
+                : updateWorkCommand
+            )(values, expectedVersion, coverSelection, backgroundSelection);
+            lastEditCommand.current = body;
+            lastEditDraft.current = submittedDraft;
+            setPendingEdit({
+              identity: submittedIdentity,
+              draft: submittedDraft,
+            });
+            const saved = await updateWork.mutateAsync({
+              workId: initialWork.id,
+              body,
+            });
+            if (
+              !canFinishSave(submittedIdentity) ||
+              saved.id !== initialWork.id
+            )
+              return;
+            setBaseline({ workId: saved.id, version: saved.version });
+            syncedWorkVersion.current = saved.version;
+            setConfirmedStatus(saved.publicationStatus);
+            if (
+              draftRevision.current !== submittedRevision ||
+              currentDraft.current !== submittedDraft
+            ) {
+              setPreserveAfterSave(true);
+              setFormMessage(
+                "حُفظت النسخة المرسلة، لكن لديك تعديلات غير محفوظة في المحرر.",
+              );
+              return;
+            }
+            setPreserveAfterSave(false);
+            reset(workFormValuesFromServer(saved));
+            setCoverCandidateAssetId(null);
+            setBackgroundCandidateAssetId(null);
+            setClearCover(false);
+            setClearBackground(false);
+            setFormMessage(
+              targetState === "published"
+                ? "حُفظت التعديلات ونُشر العمل."
+                : "حُفظت التعديلات على العمل.",
+            );
+          } catch (error: unknown) {
+            if (!canFinishSave(submittedIdentity)) return;
+            setFormMessage(adminWorkErrorMessage(error));
+            applySafeFieldErrors(error);
+            if (isEdit && isAmbiguousAdminCreateResult(error)) {
+              currentUnknown.current = true;
+              setEditOutcomeUnknown(true);
+            }
+            if (
+              !isEdit &&
+              (isAmbiguousAdminCreateResult(error) ||
+                (error instanceof SafeAdminContentError &&
+                  error.code === "CONTENT_CONFLICT"))
+            ) {
+              if (
+                error instanceof SafeAdminContentError &&
+                error.code === "CONTENT_CONFLICT"
+              ) {
+                createConflictSeen.current = true;
+              }
+              currentUnknown.current = true;
+              setCreateOutcomeUnknown(true);
+            }
+          }
+        },
+        (errors) => {
+          const firstInvalid = [
+            "title",
+            "slug",
+            "alternativeTitle",
+            "synopsis",
+            "author",
+            "artist",
+            "categoryIds",
+            "tagsText",
+            "featuredOrderText",
+          ].find((field) => field in errors) as keyof FormValues | undefined;
+          if (firstInvalid !== undefined) setFocus(firstInvalid);
+        },
+      )(event)
+      .finally(() => {
+        if (mounted.current) setPendingEdit(null);
+        if (mounted.current) setPendingAction(null);
+        submitLocked.current = false;
+      });
+  };
+
+  const checkUnknownCreate = async () => {
+    const id = createId.current;
+    const submitted = lastCreateCommand.current;
+    if (
+      id === null ||
+      submitted === null ||
+      readbackLocked.current ||
+      submitLocked.current ||
+      !currentCanSave.current
+    )
+      return;
+    readbackLocked.current = true;
+    const identity = currentIdentity.current;
+    const draft = currentDraft.current;
+    setIsCheckingCreate(true);
+    setFormMessage(null);
+    try {
+      const saved = await createWork.readback(id);
+      if (!canFinishSave(identity)) return;
+      if (!workMatchesCreateCommand(saved, submitted)) {
+        currentUnknown.current = true;
+        setCreateOutcomeUnknown(true);
+        setFormMessage(
+          "يوجد تعارض في هوية العمل؛ لم نعتبر نتيجة القراءة نجاحًا ولم نغيّر مسودتك.",
+        );
+        return;
+      }
+      setConfirmedCreateId(saved.id);
+      if (
+        currentDraft.current !== draft ||
+        currentDraft.current !== lastCreateDraft.current
+      ) {
+        setFormMessage(
+          "تأكد حفظ النسخة المرسلة، لكن لديك تعديلات غير محفوظة. افتح النسخة المحفوظة للمراجعة.",
+        );
+        return;
+      }
+      reset(workFormValuesFromServer(saved));
+      currentUnknown.current = false;
+      setCreateOutcomeUnknown(false);
+      setFormMessage("تم العثور على المسودة المحفوظة بالمعرّف نفسه.");
+      router.push(`/admin/works/${saved.id}/edit` as Route);
+    } catch (error: unknown) {
+      if (!canFinishSave(identity)) return;
+      if (isMissingAdminCreateReadback(error)) {
+        if (!createConflictSeen.current) {
+          currentUnknown.current = false;
+          setCreateOutcomeUnknown(false);
+          setFormMessage(
+            "لم يُعثر على مسودة بهذا المعرّف. احتفظ بالحقول ثم أرسلها صراحةً باستخدام المعرّف نفسه.",
+          );
+        } else {
+          setFormMessage(
+            "لم تحسم القراءة تعارض الحفظ. احتفظ بمسودتك وأعد التحقق من المعرّف قبل أي إرسال آخر.",
+          );
+        }
+      } else {
+        setFormMessage(adminWorkErrorMessage(error));
+      }
+    } finally {
+      readbackLocked.current = false;
+      if (mounted.current && currentIdentity.current === identity)
+        setIsCheckingCreate(false);
+    }
+  };
+
+  const checkUnknownEdit = async () => {
+    if (
+      initialWork === undefined ||
+      lastEditCommand.current === null ||
+      readbackLocked.current ||
+      submitLocked.current ||
+      !canSave
+    )
+      return;
+    readbackLocked.current = true;
+    const identity = currentIdentity.current;
+    const body = lastEditCommand.current;
+    setIsCheckingTransition(true);
+    try {
+      const saved = await updateWork.readback(initialWork.id);
+      if (!canFinishSave(identity)) return;
+      if (workMatchesUpdateCommand(saved, body)) {
+        setBaseline({ workId: saved.id, version: saved.version });
+        syncedWorkVersion.current = saved.version;
+        setConfirmedStatus(saved.publicationStatus);
+        currentUnknown.current = false;
+        setEditOutcomeUnknown(false);
+        if (currentDraft.current === lastEditDraft.current) {
+          reset(workFormValuesFromServer(saved));
+          setCoverCandidateAssetId(null);
+          setBackgroundCandidateAssetId(null);
+          setClearCover(false);
+          setClearBackground(false);
+          setPreserveAfterSave(false);
+          setFormMessage("تأكد حفظ التعديلات على الخادم.");
+        } else {
+          setPreserveAfterSave(true);
+          setFormMessage(
+            "تأكد حفظ النسخة المرسلة؛ تعديلاتك الأحدث لا تزال محلية.",
+          );
+        }
+      } else if (saved.version === body.expectedVersion) {
+        currentUnknown.current = false;
+        setEditOutcomeUnknown(false);
+        setFormMessage("لم تُحفظ التعديلات المرسلة. راجعها ثم أعد المحاولة.");
+      } else {
+        currentUnknown.current = false;
+        setEditOutcomeUnknown(false);
+        setFormMessage(
+          "تغيّرت نسخة العمل على الخادم. قارنها بتعديلاتك قبل إعادة الإرسال.",
+        );
+      }
+    } catch (error: unknown) {
+      if (canFinishSave(identity)) setFormMessage(adminWorkErrorMessage(error));
+    } finally {
+      readbackLocked.current = false;
+      if (mounted.current && currentIdentity.current === identity)
+        setIsCheckingTransition(false);
+    }
+  };
+
+  const adoptServer = () => {
+    if (initialWork === undefined || serverConflict === null) return;
+    const state: WorkEditorState = {
+      workId: initialWork.id,
+      baseVersion: baseline.version,
+      dirty: true,
+      values: getValues(),
+      conflictWork: serverConflict,
+    };
+    const adopted = adoptServerWork(state);
+    setBaseline({
+      workId: serverConflict.id,
+      version: serverConflict.version,
     });
-    setIsDirty(true);
+    reset(adopted.values);
+    syncedWorkVersion.current = serverConflict.version;
+    setPreserveAfterSave(false);
+    setFormMessage(null);
+    setResolvedConflictVersion(serverConflict.version);
+    setCoverCandidateAssetId(null);
+    setBackgroundCandidateAssetId(null);
+    setClearCover(false);
+    setClearBackground(false);
   };
 
-  // Cycle cover image from sample set
-  const handleCycleCover = () => {
-    const currentIndex = SAMPLE_COVERS.indexOf(values.coverImage);
-    const nextIndex = (currentIndex + 1) % SAMPLE_COVERS.length;
-    handleChange("coverImage", SAMPLE_COVERS[nextIndex] ?? DEFAULT_COVER);
+  const continueDraft = () => {
+    if (initialWork === undefined || serverConflict === null) return;
+    const state: WorkEditorState = {
+      workId: initialWork.id,
+      baseVersion: baseline.version,
+      dirty: true,
+      values: getValues(),
+      conflictWork: serverConflict,
+    };
+    const continued = continueDraftAgainstServer(state);
+    setBaseline({
+      workId: initialWork.id,
+      version: continued.baseVersion,
+    });
+    setResolvedConflictVersion(serverConflict.version);
   };
 
-  // Cycle banner image
-  const handleCycleBanner = () => {
-    const currentIndex = SAMPLE_BANNERS.indexOf(values.bannerImage);
-    const nextIndex = (currentIndex + 1) % SAMPLE_BANNERS.length;
-    handleChange("bannerImage", SAMPLE_BANNERS[nextIndex] ?? DEFAULT_BANNER);
+  const discard = () => {
+    router.push("/admin/works");
+    setIsDiscardOpen(false);
   };
+  const isSaving =
+    form.formState.isSubmitting ||
+    createWork.isPending ||
+    updateWork.isPending ||
+    transitionWork.isPending ||
+    isCheckingCreate ||
+    isCheckingTransition;
+  const displayedStatus =
+    initialWork === undefined
+      ? null
+      : baseline.version !== null && baseline.version >= initialWork.version
+        ? (confirmedStatus ?? initialWork.publicationStatus)
+        : initialWork.publicationStatus;
 
-  // Validate form
-  const validate = (): boolean => {
-    const nextErrors: FormErrors = {};
-
-    if (!values.title.trim()) {
-      nextErrors.title = "يرجى إدخال عنوان العمل بالعربية.";
-    }
-
-    if (!values.description.trim()) {
-      nextErrors.description = "يرجى كتابة نبذة توضيحية عن العمل.";
-    } else if (values.description.trim().length < 20) {
-      nextErrors.description = "يجب أن تكون النبذة من 20 حرفًا على الأقل.";
-    }
-
-    if (!values.author.trim()) {
-      nextErrors.author = "يرجى إدخال اسم المؤلف.";
-    }
-
-    if (values.genres.length === 0) {
-      nextErrors.genres = "يرجى اختيار تصنيف واحد على الأقل للعمل.";
-    }
-
-    setErrors(nextErrors);
-
-    // Auto-focus first invalid field
-    if (nextErrors.title) {
-      titleRef.current?.focus();
-    } else if (nextErrors.description) {
-      descRef.current?.focus();
-    } else if (nextErrors.author) {
-      authorRef.current?.focus();
-    }
-
-    return Object.keys(nextErrors).length === 0;
-  };
-
-  // Submit Handler
-  const handleSubmit = async (submitStatus: AdminPublishStatus) => {
-    if (!validate()) return;
-
-    setIsSubmitting(true);
-
-    const parsedTags = values.tags
-      .split(/[,،]/)
-      .map((t) => t.trim())
-      .filter(Boolean);
-
-    await new Promise((r) => setTimeout(r, 200));
-
-    if (isEdit) {
-      updateWork(initialWork.id, {
-        title: values.title.trim(),
-        alternativeTitle: values.alternativeTitle.trim() || undefined,
-        type: values.type,
-        storyStatus: values.storyStatus,
-        publishStatus: submitStatus,
-        description: values.description.trim(),
-        author: values.author.trim(),
-        artist: values.artist.trim() || undefined,
-        genres: values.genres,
-        tags: parsedTags,
-        coverImage: values.coverImage,
-        bannerImage: values.bannerImage || undefined,
-      });
-
-      setIsSubmitting(false);
-      setIsDirty(false);
-      setSuccessMessage("تم حفظ التعديلات بنجاح.");
-    } else {
-      const created = createWork({
-        title: values.title.trim(),
-        alternativeTitle: values.alternativeTitle.trim() || undefined,
-        type: values.type,
-        storyStatus: values.storyStatus,
-        publishStatus: submitStatus,
-        description: values.description.trim(),
-        author: values.author.trim(),
-        artist: values.artist.trim() || undefined,
-        genres: values.genres,
-        tags: parsedTags,
-        coverImage: values.coverImage,
-        bannerImage: values.bannerImage || undefined,
-      });
-
-      setIsSubmitting(false);
-      setIsDirty(false);
-      setSuccessMessage(`تم إنشاء العمل '${created.title}' بنجاح.`);
-
-      // Navigate to works after brief delay or stay
-      setTimeout(() => {
-        router.push("/admin/works");
-      }, 1000);
-    }
-  };
-
-  // Execute confirm dialog actions
-  const handleDialogConfirm = () => {
-    if (!initialWork) return;
-
-    if (dialogState.action === "unpublish") {
-      toggleWorkPublish(initialWork.id);
-      handleChange("publishStatus", "draft");
-    } else if (dialogState.action === "archive") {
-      archiveWork(initialWork.id);
-      handleChange("publishStatus", "archived");
-    } else if (dialogState.action === "restore") {
-      restoreWork(initialWork.id);
-      handleChange("publishStatus", "draft");
-    } else {
-      router.push("/admin/works");
-    }
-
-    setDialogState({ isOpen: false, action: "discard" });
-  };
-
-  // Handle Cancel navigation
-  const handleCancelClick = () => {
-    if (isDirty) {
-      setDialogState({ isOpen: true, action: "discard" });
-    } else {
-      router.push("/admin/works");
-    }
-  };
-
-  const slug =
-    values.title
-      .trim()
-      .toLowerCase()
-      .replace(/[^\u0621-\u064A\w\s-]/gu, "")
-      .replace(/\s+/g, "-") || "new-story";
+  if (mode === "edit" && initialWork === undefined) {
+    return (
+      <div role="alert" dir="rtl">
+        تعذر تحميل العمل المطلوب.
+      </div>
+    );
+  }
 
   return (
-    <div className={styles["formLayout"]}>
-      {/* Edit mode Work Identity Banner */}
-      {isEdit ? (
-        <div className={styles["identityBanner"]}>
-          <div className={styles["identityMeta"]}>
-            <span className={styles["identityId"]}>
-              المعرّف: {initialWork.id}
-            </span>
-            <AdminStatusBadge kind="workType" status={values.type} />
-            <AdminStatusBadge kind="story" status={values.storyStatus} />
-            <AdminStatusBadge kind="publish" status={values.publishStatus} />
-            <span className={styles["identityId"]}>
-              الفصول: {initialWork.chapterCount}
-            </span>
-          </div>
-
-          <div className={styles["quickNavGroup"]}>
+    <FormProvider {...form}>
+      <div className={styles["formLayout"]} dir="rtl">
+        {mode === "edit" && initialWork !== undefined ? (
+          <div className={styles["identityBanner"]}>
+            <div className={styles["identityMeta"]}>
+              <span className={styles["identityId"]}>
+                المعرّف: {initialWork.id}
+              </span>
+              <span className={styles["identityId"]} dir="ltr">
+                الرابط الثابت: {initialWork.slug}
+              </span>
+              <span className={styles["identityId"]}>
+                النسخة: {initialWork.version}
+              </span>
+            </div>
             <Link
               href={`/admin/works/${initialWork.id}/chapters` as Route}
               className={styles["quickNavLink"]}
             >
-              <BookOpen size={14} aria-hidden="true" />
-              <span>إدارة الفصول</span>
-            </Link>
-            <Link
-              href={`/story/${initialWork.id}` as Route}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles["quickNavLink"]}
-            >
-              <ExternalLink size={14} aria-hidden="true" />
-              <span>معاينة في الموقع</span>
+              إدارة الفصول
             </Link>
           </div>
-        </div>
-      ) : null}
+        ) : null}
 
-      {/* Success banner */}
-      {successMessage ? (
-        <AdminNoticeBanner
-          variant="success"
-          title="تم الحفظ بنجاح"
-          description={successMessage}
-          actionLabel="العودة لقائمة الأعمال"
-          actionHref="/admin/works"
-          onDismiss={() => {
-            setSuccessMessage(null);
+        {serverConflict !== null ? (
+          <section className={styles["conflictBanner"]} role="alert">
+            <h2>تغيّرت النسخة المحفوظة</h2>
+            <p>
+              ما زالت تعديلاتك المحلية محفوظة. نسخة الخادم الحالية رقم{" "}
+              {serverConflict.version}.
+            </p>
+            <div className={styles["actionButtonsGroup"]}>
+              <button type="button" onClick={adoptServer}>
+                اعتماد نسخة الخادم
+              </button>
+              <button type="button" onClick={continueDraft}>
+                متابعة مسودتي على النسخة الحالية
+              </button>
+            </div>
+          </section>
+        ) : null}
+
+        {formMessage !== null ? (
+          <p
+            role={
+              formMessage.startsWith("حُفظت") ||
+              formMessage.startsWith("تم العثور")
+                ? "status"
+                : "alert"
+            }
+            aria-live="polite"
+            className={
+              formMessage.startsWith("حُفظت")
+                ? styles["successMessage"]
+                : styles["errorMessage"]
+            }
+          >
+            {formMessage}
+          </p>
+        ) : null}
+        {createOutcomeUnknown ? (
+          <div role="status" aria-live="polite">
+            <p>
+              {confirmedCreateId === null
+                ? "نتيجة الإنشاء غير مؤكدة. لم نعد إرسال الطلب تلقائيًا."
+                : "تأكد حفظ النسخة المرسلة؛ تعديلاتك الأحدث لا تزال محلية."}
+            </p>
+            {confirmedCreateId !== null ? (
+              <Link href={`/admin/works/${confirmedCreateId}/edit` as Route}>
+                فتح النسخة المحفوظة للمراجعة
+              </Link>
+            ) : null}
+            {confirmedCreateId === null ? (
+              <button
+                type="button"
+                onClick={() => void checkUnknownCreate()}
+                disabled={isCheckingCreate}
+              >
+                تحقق من حالة الحفظ بالمعرّف نفسه
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+        {transitionUnknown ? (
+          <div role="status" aria-live="polite">
+            <p>
+              نتيجة تغيير الحالة غير مؤكدة. احتفظ بتعديلاتك وتحقق من الخادم.
+            </p>
+            <button
+              type="button"
+              onClick={() => void checkUnknownTransition()}
+              disabled={isCheckingTransition}
+            >
+              تحقق من حالة العمل
+            </button>
+          </div>
+        ) : null}
+        {editOutcomeUnknown ? (
+          <div role="status" aria-live="polite">
+            <p>
+              نتيجة حفظ التعديلات غير مؤكدة. تحقق من النسخة المحفوظة قبل إعادة
+              الإرسال.
+            </p>
+            <button
+              type="button"
+              onClick={() => void checkUnknownEdit()}
+              disabled={isCheckingTransition}
+            >
+              تحقق من حفظ التعديلات
+            </button>
+          </div>
+        ) : null}
+
+        {mode === "edit" && initialWork !== undefined ? (
+          <p role="status" aria-live="polite">
+            الحالة المحفوظة:{" "}
+            {displayedStatus === "published"
+              ? "منشور"
+              : displayedStatus === "archived"
+                ? "مؤرشف"
+                : "مسودة"}
+          </p>
+        ) : null}
+
+        <form noValidate onSubmit={onSubmit}>
+          <AdminWorkBasicFields
+            isEdit={isEdit}
+            retainedCategories={initialWork?.categories ?? []}
+          />
+          <AdminWorkMediaFields
+            values={values}
+            coverSelection={{
+              attachedAssetId: attachedCoverId,
+              candidateAssetId: coverCandidateAssetId,
+              clearAttached: clearCover,
+            }}
+            backgroundSelection={{
+              attachedAssetId: attachedBackgroundId,
+              candidateAssetId: backgroundCandidateAssetId,
+              clearAttached: clearBackground,
+            }}
+            onCoverSelected={onCoverSelected}
+            onBackgroundSelected={onBackgroundSelected}
+            onClearCover={onClearCover}
+            onClearBackground={onClearBackground}
+            onKeepCover={onKeepCover}
+            onKeepBackground={onKeepBackground}
+          />
+          <AdminWorkSeoPreview
+            values={values}
+            savedWork={initialWork ?? null}
+            dirty={editorDirty}
+          />
+
+          <div className={styles["actionsBar"]}>
+            <button
+              type="button"
+              className={styles["cancelBtn"]}
+              onClick={() => {
+                if (editorDirty) setIsDiscardOpen(true);
+                else discard();
+              }}
+            >
+              إلغاء والعودة
+            </button>
+            <div className={styles["actionButtonsGroup"]}>
+              <button
+                type="submit"
+                className={styles["saveDraftBtn"]}
+                disabled={
+                  isSaving ||
+                  !canSave ||
+                  createOutcomeUnknown ||
+                  editOutcomeUnknown ||
+                  transitionUnknown ||
+                  serverConflict !== null
+                }
+              >
+                {isSaving
+                  ? pendingAction === "published"
+                    ? "جارٍ الحفظ والنشر…"
+                    : mode === "create"
+                      ? "جارٍ حفظ المسودة…"
+                      : "جارٍ حفظ التعديلات…"
+                  : isEdit
+                    ? "حفظ التعديلات"
+                    : "حفظ كمسودة"}
+              </button>
+              {displayedStatus === null || displayedStatus === "draft" ? (
+                <button
+                  type="submit"
+                  className={styles["saveDraftBtn"]}
+                  onClick={() => {
+                    submitIntent.current = "published";
+                  }}
+                  disabled={
+                    isSaving ||
+                    !canSave ||
+                    createOutcomeUnknown ||
+                    editOutcomeUnknown ||
+                    transitionUnknown ||
+                    serverConflict !== null
+                  }
+                >
+                  {isSaving
+                    ? pendingAction === "published"
+                      ? "جارٍ الحفظ والنشر…"
+                      : "جارٍ إكمال طلب آخر…"
+                    : "حفظ ونشر"}
+                </button>
+              ) : null}
+              {mode === "edit" &&
+              initialWork !== undefined &&
+              !editorDirty &&
+              !transitionUnknown &&
+              !editOutcomeUnknown ? (
+                displayedStatus === "published" ? (
+                  <>
+                    <button
+                      type="button"
+                      disabled={isSaving || !canSave}
+                      onClick={() => void transition("draft")}
+                    >
+                      إلغاء النشر
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isSaving || !canSave}
+                      onClick={() => void transition("archived")}
+                    >
+                      أرشفة العمل
+                    </button>
+                  </>
+                ) : displayedStatus === "archived" ? (
+                  <button
+                    type="button"
+                    disabled={isSaving || !canSave}
+                    onClick={() => void transition("draft")}
+                  >
+                    استعادة كمسودة
+                  </button>
+                ) : displayedStatus === "draft" ? (
+                  <button
+                    type="button"
+                    disabled={isSaving || !canSave}
+                    onClick={() => void transition("archived")}
+                  >
+                    أرشفة العمل
+                  </button>
+                ) : null
+              ) : null}
+            </div>
+          </div>
+          {isSaving ? (
+            <p role="status" aria-live="polite">
+              {pendingAction === "published"
+                ? "جارٍ حفظ العمل ونشره؛ انتظر تأكيد الخادم."
+                : pendingAction === "transition"
+                  ? "جارٍ تغيير حالة العمل؛ انتظر تأكيد الخادم."
+                  : mode === "create"
+                    ? "جارٍ حفظ المسودة؛ لا تبدأ طلب حفظ آخر."
+                    : "جارٍ حفظ التعديلات؛ لا تبدأ طلب حفظ آخر."}
+            </p>
+          ) : null}
+        </form>
+        <AdminConfirmDialog
+          isOpen={isDiscardOpen}
+          title="تجاهل تعديلات المسودة؟"
+          description="لديك تغييرات غير محفوظة. ستبقى المسودة المحفوظة كما هي إذا غادرت الآن."
+          confirmLabel="مغادرة الصفحة"
+          onConfirm={discard}
+          onCancel={() => {
+            setIsDiscardOpen(false);
           }}
         />
-      ) : null}
-
-      <AdminWorkBasicFields
-        values={values}
-        errors={errors}
-        isEdit={isEdit}
-        titleRef={titleRef}
-        descRef={descRef}
-        authorRef={authorRef}
-        onChange={handleChange}
-        onToggleGenre={handleToggleGenre}
-      />
-      <AdminWorkMediaFields
-        values={values}
-        onChange={handleChange}
-        onCycleCover={handleCycleCover}
-        onCycleBanner={handleCycleBanner}
-      />
-      <AdminWorkSeoPreview values={values} slug={slug} />
-
-      {/* Actions Bar */}
-      <div className={styles["actionsBar"]}>
-        <button
-          type="button"
-          onClick={handleCancelClick}
-          className={styles["cancelBtn"]}
-        >
-          إلغاء والعودة
-        </button>
-
-        <div className={styles["actionButtonsGroup"]}>
-          {isEdit ? (
-            <>
-              {/* Publish / Unpublish Toggle */}
-              {values.publishStatus === "published" ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDialogState({ isOpen: true, action: "unpublish" });
-                  }}
-                  className={styles["saveDraftBtn"]}
-                >
-                  <EyeOff size={16} aria-hidden="true" />
-                  <span>إلغاء النشر</span>
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => {
-                    void handleSubmit("published");
-                  }}
-                  className={styles["saveDraftBtn"]}
-                >
-                  <Send size={16} aria-hidden="true" />
-                  <span>نشر العمل</span>
-                </button>
-              )}
-
-              {/* Archive / Restore Toggle */}
-              {values.publishStatus !== "archived" ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDialogState({ isOpen: true, action: "archive" });
-                  }}
-                  className={styles["saveDraftBtn"]}
-                >
-                  <Archive size={16} aria-hidden="true" />
-                  <span>أرشفة</span>
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDialogState({ isOpen: true, action: "restore" });
-                  }}
-                  className={styles["saveDraftBtn"]}
-                >
-                  <RotateCcw size={16} aria-hidden="true" />
-                  <span>استعادة</span>
-                </button>
-              )}
-
-              {/* Save changes */}
-              <button
-                type="button"
-                onClick={() => {
-                  void handleSubmit(values.publishStatus);
-                }}
-                disabled={isSubmitting}
-                className={styles["publishBtn"]}
-              >
-                <Save size={16} aria-hidden="true" />
-                <span>{isSubmitting ? "جارٍ الحفظ..." : "حفظ التعديلات"}</span>
-              </button>
-            </>
-          ) : (
-            <>
-              {/* Create Mode: Save as Draft */}
-              <button
-                type="button"
-                onClick={() => {
-                  void handleSubmit("draft");
-                }}
-                disabled={isSubmitting}
-                className={styles["saveDraftBtn"]}
-              >
-                <Save size={16} aria-hidden="true" />
-                <span>حفظ كمسودة</span>
-              </button>
-
-              {/* Create Mode: Publish */}
-              <button
-                type="button"
-                onClick={() => {
-                  void handleSubmit("published");
-                }}
-                disabled={isSubmitting}
-                className={styles["publishBtn"]}
-              >
-                <CheckCircle size={16} aria-hidden="true" />
-                <span>نشر العمل الآن</span>
-              </button>
-            </>
-          )}
-        </div>
       </div>
-
-      {/* Confirmation Dialog */}
-      <AdminConfirmDialog
-        isOpen={dialogState.isOpen}
-        title={
-          dialogState.action === "unpublish"
-            ? "تأكيد إلغاء النشر"
-            : dialogState.action === "archive"
-              ? "تأكيد أرشفة العمل"
-              : dialogState.action === "restore"
-                ? "استعادة العمل"
-                : "مغادرة الصفحة وتجاهل التعديلات؟"
-        }
-        description={
-          dialogState.action === "unpublish"
-            ? "هل أنت متأكد من إلغاء نشر هذا العمل وتحويله لمسودة؟"
-            : dialogState.action === "archive"
-              ? "هل تريد نقل هذا العمل للأرشيف؟ لن يظهر للزوار في الموقع."
-              : dialogState.action === "restore"
-                ? "استعادة هذا العمل من الأرشيف كمسودة؟"
-                : "لديك تعديلات غير محفوظة، هل أنت متأكد من رغبتك في المغادرة وإلغاء هذه التغييرات؟"
-        }
-        confirmLabel={
-          dialogState.action === "discard" ? "مغادرة وتجاهل" : "تأكيد"
-        }
-        onConfirm={handleDialogConfirm}
-        onCancel={() => {
-          setDialogState({ isOpen: false, action: "discard" });
-        }}
-      />
-    </div>
+    </FormProvider>
   );
 }
