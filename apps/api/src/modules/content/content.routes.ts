@@ -15,6 +15,7 @@ import {
   createCategoryBodySchema,
   createChapterBodySchema,
   createWorkBodySchema,
+  adminWorkListQuerySchema,
   paginationQuerySchema,
   publicationCommandBodySchema,
   publicChapterParamsSchema,
@@ -98,7 +99,7 @@ export const contentRoutes = (
   );
   admin.get(
     "/works",
-    validationMiddleware({ query: paginationQuerySchema }),
+    validationMiddleware({ query: adminWorkListQuerySchema }),
     managementController.listWorks,
   );
   admin.post(

@@ -11,6 +11,7 @@ import {
   createCategoryBodySchema,
   createChapterBodySchema,
   createWorkBodySchema,
+  adminWorkListQuerySchema,
   paginationQuerySchema,
   publicationCommandBodySchema,
   replaceWorkCategoriesBodySchema,
@@ -140,8 +141,9 @@ export class ContentManagementController {
     request: Request,
     response: Response,
   ): Promise<Response> => {
-    const pagination = this.paginationFrom(request);
-    const responseData = await this.works.listWorks(pagination);
+    const query = adminWorkListQuerySchema.parse(request.validated?.query);
+    const pagination = parsePagination(query);
+    const responseData = await this.works.listWorks(pagination, query);
     const message = "Works loaded.";
     const requestPath = request.path;
     const requestId = request.requestId;

@@ -1,4 +1,4 @@
-import type { CategoryListQuery } from "@fury/contracts";
+import type { AdminWorkListQuery, CategoryListQuery } from "@fury/contracts";
 
 const actorKey = (actorId: string) => ["admin-content", actorId] as const;
 const categoriesKey = (actorId: string) =>
@@ -8,6 +8,8 @@ const categoryListScopeKey = (actorId: string) =>
 const worksKey = (actorId: string) => [...actorKey(actorId), "works"] as const;
 const workDetailScopeKey = (actorId: string) =>
   [...worksKey(actorId), "detail"] as const;
+const workListScopeKey = (actorId: string) =>
+  [...worksKey(actorId), "list"] as const;
 
 export const adminContentKeys = {
   actor: actorKey,
@@ -15,6 +17,9 @@ export const adminContentKeys = {
   categoryListScope: categoryListScopeKey,
   works: worksKey,
   workDetailScope: workDetailScopeKey,
+  workListScope: workListScopeKey,
+  workList: (actorId: string, query: AdminWorkListQuery) =>
+    [...workListScopeKey(actorId), query] as const,
   workDetail: (actorId: string, workId: string) =>
     [...workDetailScopeKey(actorId), workId] as const,
   categoryList: (actorId: string, query: CategoryListQuery) =>

@@ -74,6 +74,80 @@ afterEach(() => {
 });
 
 describe("administrator category API", () => {
+  it("uses the final bearer header and parses only a saved Work list summary", async () => {
+    setAccessToken("list-admin-token");
+    const requests: InternalAxiosRequestConfig[] = [];
+    const summary = {
+      id: work.id,
+      title: work.title,
+      alternativeTitle: work.alternativeTitle,
+      slug: work.slug,
+      type: work.type,
+      storyStatus: work.storyStatus,
+      publicationStatus: work.publicationStatus,
+      publishedAt: work.publishedAt,
+      featuredHome: work.featuredHome,
+      featuredOrder: work.featuredOrder,
+      coverAssetId: work.coverAssetId,
+      chapterCount: 0,
+      version: work.version,
+      createdAt: work.createdAt,
+      updatedAt: work.updatedAt,
+    };
+    const list = {
+      items: [summary],
+      pagination: {
+        page: 1,
+        limit: 25,
+        total: 1,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPreviousPage: false,
+      },
+    };
+    apiClient.defaults.adapter = (
+      config: InternalAxiosRequestConfig,
+    ): Promise<AxiosResponse> => {
+      requests.push(config);
+      return Promise.resolve({
+        config,
+        headers: new AxiosHeaders(),
+        status: 200,
+        statusText: "OK",
+        data: successEnvelope(list, 200, config.url ?? ""),
+      });
+    };
+    const abort = new AbortController();
+    await expect(
+      adminContentApi.listWorks(
+        { page: 1, limit: 25, sort: "updated" },
+        abort.signal,
+      ),
+    ).resolves.toEqual(list);
+    expect(requests[0]?.url).toBe("/content/admin/works");
+    expect(requests[0]?.headers.get("Authorization")).toBe(
+      "Bearer list-admin-token",
+    );
+    expect(requests[0]?.headers.get("x-csrf-token")).toBeUndefined();
+    expect(requests[0]?.signal).toBe(abort.signal);
+    apiClient.defaults.adapter = (
+      config: InternalAxiosRequestConfig,
+    ): Promise<AxiosResponse> =>
+      Promise.resolve({
+        config,
+        headers: new AxiosHeaders(),
+        status: 200,
+        statusText: "OK",
+        data: successEnvelope(
+          { ...list, items: [{ ...summary, views: 10 }] },
+          200,
+          config.url ?? "",
+        ),
+      });
+    await expect(
+      adminContentApi.listWorks({ page: 1, limit: 25, sort: "updated" }),
+    ).rejects.toBeInstanceOf(SafeAdminContentError);
+  });
   it("sends a CSRF-protected publication command and parses only its strict transition", async () => {
     setAccessToken("publication-admin-token");
     document.cookie = "csrfToken=publication-csrf; path=/";

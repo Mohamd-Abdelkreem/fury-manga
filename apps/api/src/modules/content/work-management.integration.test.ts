@@ -6,8 +6,13 @@ import { join } from "node:path";
 import sharp from "sharp";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 
-import type { CreateWorkBody } from "@fury/contracts";
-import { createDatabaseClient, UserRole, UserStatus } from "@fury/database";
+import type { AdminWorkListQuery, CreateWorkBody } from "@fury/contracts";
+import {
+  ChapterContentType,
+  createDatabaseClient,
+  UserRole,
+  UserStatus,
+} from "@fury/database";
 
 import { createMediaConfig } from "../../core/config/media.config.js";
 import { MediaStorage } from "../../infrastructure/media/media-storage.js";
@@ -100,6 +105,86 @@ afterAll(async () => {
 });
 
 describe("complete Work draft management with PostgreSQL", () => {
+  it("filters saved Works and counts chapters with stable database pages", async () => {
+    const first = await works.createWork(
+      uniqueWorkBody({
+        title: "Atlas",
+        alternativeTitle: "North",
+        type: "manga",
+      }),
+    );
+    const second = await works.createWork(
+      uniqueWorkBody({
+        title: "Beta",
+        alternativeTitle: "Atlas Two",
+        type: "manga",
+      }),
+    );
+    const novel = await works.createWork(
+      uniqueWorkBody({ title: "Atlas Novel", type: "novel" }),
+    );
+    await database.work.update({
+      where: { id: first.id },
+      data: {
+        createdAt: new Date("2026-01-01T00:00:00.000Z"),
+        updatedAt: new Date("2026-03-01T00:00:00.000Z"),
+      },
+    });
+    await database.work.update({
+      where: { id: second.id },
+      data: {
+        createdAt: new Date("2026-02-01T00:00:00.000Z"),
+        updatedAt: new Date("2026-02-01T00:00:00.000Z"),
+      },
+    });
+    await database.work.update({
+      where: { id: novel.id },
+      data: { publicationStatus: "ARCHIVED" },
+    });
+    await database.chapter.create({
+      data: {
+        workId: second.id,
+        number: 1,
+        contentType: ChapterContentType.ILLUSTRATED,
+      },
+    });
+    const pagination = { page: 1, limit: 1, skip: 0, take: 1 };
+    const query: AdminWorkListQuery = {
+      page: 1,
+      limit: 1,
+      search: "atlas",
+      type: "manga",
+      sort: "chapters",
+    };
+    const firstPage = await works.listWorks(pagination, query);
+    expect(firstPage.pagination.total).toBe(2);
+    expect(firstPage.items).toMatchObject([{ id: second.id, chapterCount: 1 }]);
+    const secondPage = await works.listWorks(
+      { ...pagination, page: 2, skip: 1 },
+      { ...query, page: 2 },
+    );
+    expect(secondPage.items).toMatchObject([{ id: first.id, chapterCount: 0 }]);
+    expect(secondPage.pagination.total).toBe(2);
+    expect(Object.keys(firstPage.items[0] ?? {})).not.toContain("synopsis");
+    for (const [sort, expectedId] of [
+      ["updated", first.id],
+      ["oldest", first.id],
+      ["title", first.id],
+      ["chapters", second.id],
+    ] as const) {
+      const sorted = await works.listWorks(pagination, { ...query, sort });
+      expect(sorted.items[0]?.id).toBe(expectedId);
+    }
+    const archived = await works.listWorks(pagination, {
+      page: 1,
+      limit: 1,
+      sort: "updated",
+      publicationStatus: "archived",
+      type: "novel",
+    });
+    expect(archived.pagination.total).toBe(1);
+    expect(archived.items[0]?.id).toBe(novel.id);
+  });
   it("publishes a complete create atomically and retains one event", async () => {
     const actorUserId = await createAdmin();
     const category = await categories.createCategory({

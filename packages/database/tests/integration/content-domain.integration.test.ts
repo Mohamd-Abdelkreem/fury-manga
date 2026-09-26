@@ -65,6 +65,62 @@ const insertWork = async (
 };
 
 describe("content-domain PostgreSQL invariants", () => {
+  it("retains true zero chapter counts and stable ID ties for saved Works", async () => {
+    const firstId = await insertWork(`list-first-${randomUUID()}`);
+    const secondId = await insertWork(`list-second-${randomUUID()}`);
+    await pool.query(
+      "UPDATE works SET updated_at = $1, created_at = $1 WHERE id = ANY($2::uuid[])",
+      ["2026-01-01T00:00:00.000Z", [firstId, secondId]],
+    );
+    await pool.query(
+      "INSERT INTO chapters (work_id, number, content_type, updated_at) VALUES ($1, 1, 'illustrated', CURRENT_TIMESTAMP)",
+      [secondId],
+    );
+    const rows = await pool.query<{ id: string; chapter_count: string }>(
+      `SELECT w.id, COUNT(c.id)::text AS chapter_count FROM works w
+       LEFT JOIN chapters c ON c.work_id = w.id
+       WHERE w.id = ANY($1::uuid[]) GROUP BY w.id
+       ORDER BY COUNT(c.id) DESC, w.id ASC`,
+      [[firstId, secondId]],
+    );
+    expect(rows.rows).toEqual([
+      { id: secondId, chapter_count: "1" },
+      { id: firstId, chapter_count: "0" },
+    ]);
+    const tied = await pool.query<{ id: string }>(
+      "SELECT id FROM works WHERE id = ANY($1::uuid[]) ORDER BY updated_at DESC, id ASC",
+      [[firstId, secondId]],
+    );
+    expect(tied.rows.map(({ id }) => id)).toEqual(
+      [firstId, secondId].toSorted(),
+    );
+  });
+
+  it("keeps rows and total on one snapshot while another Work is saved", async () => {
+    await insertWork(`snapshot-first-${randomUUID()}`);
+    const reader = await pool.connect();
+    try {
+      await reader.query("BEGIN ISOLATION LEVEL REPEATABLE READ");
+      const rows = await reader.query(
+        "SELECT id FROM works ORDER BY id LIMIT 25",
+      );
+      await insertWork(`snapshot-later-${randomUUID()}`);
+      const total = await reader.query<{ count: string }>(
+        "SELECT COUNT(*)::text AS count FROM works",
+      );
+      expect(Number(total.rows[0]?.count)).toBe(rows.rowCount);
+      await reader.query("COMMIT");
+      const afterCommit = await pool.query<{ count: string }>(
+        "SELECT COUNT(*)::text AS count FROM works",
+      );
+      expect(Number(afterCommit.rows[0]?.count)).toBe((rows.rowCount ?? 0) + 1);
+    } catch (error: unknown) {
+      await reader.query("ROLLBACK");
+      throw error;
+    } finally {
+      reader.release();
+    }
+  });
   beforeEach(async () => {
     await pool.query(
       "TRUNCATE media_reference_events, media_references, upload_attempts, media_assets, publication_events, chapter_pages, chapters, work_tags, work_categories, categories, works",

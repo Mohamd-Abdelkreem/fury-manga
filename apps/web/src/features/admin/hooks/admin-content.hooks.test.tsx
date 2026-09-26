@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type {
   AdminWork,
+  AdminWorkListQuery,
   CategoryListQuery,
   CreateWorkBody,
 } from "@fury/contracts";
@@ -19,12 +20,14 @@ import {
   useCreateAdminCategory,
   useCreateAdminWork,
   useAdminWorkDetail,
+  useAdminWorkList,
   useUpdateAdminCategory,
   useUpdateAdminWork,
   useTransitionAdminWork,
 } from "./admin-content.hooks";
 
 const apiMock = vi.hoisted(() => ({
+  listWorks: vi.fn(),
   listCategories: vi.fn(),
   getCategory: vi.fn(),
   createCategory: vi.fn(),
@@ -133,6 +136,119 @@ beforeEach(() => {
   });
   sessionMock.id = "11111111-1111-4111-8111-111111111111";
   sessionMock.role = "ADMIN";
+});
+
+describe("administrator Work list query isolation", () => {
+  it("retains confirmed list data after a background refresh failure", async () => {
+    apiMock.listWorks.mockResolvedValue({ ...listData, items: [work] });
+    const query = { page: 1, limit: 25, sort: "updated" } as const;
+    const view = renderHook(() => useAdminWorkList(query), { wrapper });
+    await waitFor(() => {
+      expect(view.result.current.data?.items[0]?.id).toBe(work.id);
+    });
+    apiMock.listWorks.mockRejectedValue(new Error("unavailable"));
+    await act(async () => {
+      await view.result.current.refetch();
+    });
+    await waitFor(() => {
+      expect(view.result.current.isError).toBe(true);
+    });
+    expect(view.result.current.data?.items[0]?.id).toBe(work.id);
+  });
+  it("keeps a late old-filter response out of the current list", async () => {
+    const oldResponse = Promise.withResolvers<{
+      items: unknown[];
+      pagination: typeof listData.pagination;
+    }>();
+    let oldSignal: AbortSignal | undefined;
+    apiMock.listWorks.mockImplementation(
+      (query: { search?: string }, signal: AbortSignal) => {
+        if (query.search === "old") {
+          oldSignal = signal;
+          return oldResponse.promise;
+        }
+        return Promise.resolve({ ...listData, items: [] });
+      },
+    );
+    let query: AdminWorkListQuery = {
+      page: 1,
+      limit: 25,
+      sort: "updated",
+      search: "old",
+    };
+    const view = renderHook(() => useAdminWorkList(query), { wrapper });
+    await waitFor(() => {
+      expect(apiMock.listWorks).toHaveBeenCalledTimes(1);
+    });
+    query = { ...query, search: "new" };
+    view.rerender();
+    await waitFor(() => {
+      expect(oldSignal?.aborted).toBe(true);
+    });
+    await waitFor(() => {
+      expect(view.result.current.data?.items).toEqual([]);
+    });
+    oldResponse.resolve({ ...listData, items: [work] });
+    await waitFor(() => {
+      expect(view.result.current.data?.items).toEqual([]);
+    });
+    expect(
+      queryClient.getQueryData(
+        adminContentKeys.workList(sessionMock.id, query),
+      ),
+    ).toMatchObject({ items: [] });
+  });
+  it("keeps actor and filter results in separate QueryClient entries", async () => {
+    const summary = {
+      id: work.id,
+      title: work.title,
+      alternativeTitle: work.alternativeTitle,
+      slug: work.slug,
+      type: work.type,
+      storyStatus: work.storyStatus,
+      publicationStatus: work.publicationStatus,
+      publishedAt: work.publishedAt,
+      featuredHome: work.featuredHome,
+      featuredOrder: work.featuredOrder,
+      coverAssetId: work.coverAssetId,
+      chapterCount: 0,
+      version: work.version,
+      createdAt: work.createdAt,
+      updatedAt: work.updatedAt,
+    };
+    const query = { page: 1, limit: 25, sort: "updated" } as const;
+    apiMock.listWorks.mockResolvedValue({
+      items: [summary],
+      pagination: {
+        page: 1,
+        limit: 25,
+        total: 1,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPreviousPage: false,
+      },
+    });
+    const first = renderHook(() => useAdminWorkList(query), { wrapper });
+    await waitFor(() => {
+      expect(first.result.current.data?.items[0]?.id).toBe(work.id);
+    });
+    const oldKey = adminContentKeys.workList(sessionMock.id, query);
+    expect(queryClient.getQueryData(oldKey)).toBeDefined();
+    const filtered = { ...query, search: "missing" };
+    expect(adminContentKeys.workList(sessionMock.id, filtered)).not.toEqual(
+      oldKey,
+    );
+    sessionMock.id = "99999999-9999-4999-8999-999999999999";
+    first.rerender();
+    await waitFor(() => {
+      expect(apiMock.listWorks).toHaveBeenCalledTimes(2);
+    });
+    expect(
+      queryClient.getQueryData(
+        adminContentKeys.workList(sessionMock.id, query),
+      ),
+    ).toBeDefined();
+  });
 });
 
 describe("administrator category query identity and state", () => {

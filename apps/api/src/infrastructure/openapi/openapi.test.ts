@@ -175,6 +175,19 @@ const responseCodeEnum = (
 };
 
 describe("OpenAPI document", () => {
+  it("documents the bounded administrative Work list query and summary", () => {
+    const operation =
+      buildOpenApiDocument().paths?.["/content/admin/works"]?.get;
+    expect(operation?.security).toEqual([{ BearerAuth: [] }]);
+    const parameters = JSON.stringify(operation?.parameters);
+    expect(parameters).toContain("publicationStatus");
+    expect(parameters).toContain("chapters");
+    const success = JSON.stringify(
+      buildOpenApiDocument().components?.schemas?.["AdminWorkListData"],
+    );
+    expect(success).toContain("chapterCount");
+    expect(success).not.toContain("backgroundAssetId");
+  });
   it("documents private media upload and binary read with bearer authority", () => {
     const document = buildOpenApiDocument();
     const upload = document.paths?.["/media/assets"]?.post;

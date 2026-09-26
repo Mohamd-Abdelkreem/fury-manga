@@ -6,6 +6,7 @@ import { useCallback, useMemo, useRef, useSyncExternalStore } from "react";
 import { createWorkBodySchema } from "@fury/contracts";
 import type {
   AdminWork,
+  AdminWorkListQuery,
   CategoryListQuery,
   CategoryPositionBody,
   CreateCategoryBody,
@@ -320,6 +321,45 @@ export const useAdminCategoryList = (
     available: actorId !== null,
     sessionReady: session.sessionReady,
     sessionError: session.sessionError,
+    denied,
+    retryAccess,
+  };
+};
+
+export const useAdminWorkList = (query: AdminWorkListQuery) => {
+  const session = useAdminActor();
+  const queryClient = useQueryClient();
+  const actorId = session.actorId;
+  const denied = useActorDenial(queryClient, actorId);
+  const queryKey = adminContentKeys.workList(actorId ?? "anonymous", query);
+  const retryAccess = useCallback(async () => {
+    if (actorId === null) throw denialError();
+    return queryClient.fetchQuery({
+      queryKey,
+      queryFn: ({ signal }) =>
+        runRecoveryRead(queryClient, actorId, () =>
+          adminContentApi.listWorks(query, signal),
+        ),
+      staleTime: 0,
+      retry: false,
+    });
+  }, [actorId, query, queryClient, queryKey]);
+  const queryResult = useQuery({
+    queryKey,
+    queryFn: ({ signal }) => {
+      if (actorId === null) throw denialError();
+      return runActorRequest(queryClient, actorId, () =>
+        adminContentApi.listWorks(query, signal),
+      );
+    },
+    enabled: actorId !== null && !denied,
+    retry: false,
+  });
+  return {
+    ...queryResult,
+    actorId,
+    available: actorId !== null,
+    sessionReady: session.sessionReady,
     denied,
     retryAccess,
   };

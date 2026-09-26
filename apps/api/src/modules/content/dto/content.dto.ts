@@ -5,6 +5,7 @@ import {
   createCategoryBodySchema,
   createChapterBodySchema,
   createWorkBodySchema,
+  adminWorkListQuerySchema,
   paginationQuerySchema,
   publicationCommandBodySchema,
   publicChapterParamsSchema,
@@ -22,6 +23,7 @@ import type {
   CreateCategoryBody,
   CreateChapterBody,
   CreateWorkBody,
+  AdminWorkListQuery,
   PublicationCommandBody,
   ReplaceWorkCategoriesBody,
   UpdateCategoryBody,
@@ -36,6 +38,7 @@ export {
   createCategoryBodySchema,
   createChapterBodySchema,
   createWorkBodySchema,
+  adminWorkListQuerySchema,
   paginationQuerySchema,
   publicationCommandBodySchema,
   publicChapterParamsSchema,
@@ -53,6 +56,7 @@ export type CategoryPositionBodyDto = CategoryPositionBody;
 export type CreateCategoryBodyDto = CreateCategoryBody;
 export type UpdateCategoryBodyDto = UpdateCategoryBody;
 export type CreateWorkBodyDto = CreateWorkBody;
+export type AdminWorkListQueryDto = AdminWorkListQuery;
 export type UpdateWorkBodyDto = UpdateWorkBody;
 export type ReplaceWorkCategoriesBodyDto = ReplaceWorkCategoriesBody;
 export type CreateChapterBodyDto = CreateChapterBody;

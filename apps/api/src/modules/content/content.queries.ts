@@ -1,4 +1,5 @@
 import type { PaginationQuery } from "../../core/pagination/pagination.js";
+import type { AdminWorkListQuery } from "@fury/contracts";
 import type { Prisma } from "@fury/database";
 import { MediaAssetStatus, PublicationStatus } from "@fury/database";
 
@@ -8,13 +9,20 @@ import {
   PUBLIC_CHAPTER_SELECT,
   PUBLIC_WORK_SELECT,
   WORK_SELECT,
+  WORK_LIST_SELECT,
   type CategoryRecord,
   type ChapterRecord,
   type PublicChapterRecord,
   type PublicWorkRecord,
   type WorkRecord,
+  type WorkListRecord,
 } from "./content.mapper.js";
-import type { WorkReadinessInput } from "./content.rules.js";
+import {
+  toDatabasePublicationStatus,
+  toDatabaseStoryStatus,
+  toDatabaseWorkType,
+  type WorkReadinessInput,
+} from "./content.rules.js";
 
 export type ContentReadClient = Pick<
   Prisma.TransactionClient,
@@ -147,13 +155,57 @@ export const listAdminCategories = (
 export const listAdminWorks = (
   database: ContentReadClient,
   pagination: PaginationQuery,
-): Promise<WorkRecord[]> =>
+  query: AdminWorkListQuery,
+): Promise<WorkListRecord[]> =>
   database.work.findMany({
-    orderBy: [{ createdAt: "desc" }, { id: "asc" }],
+    where: buildAdminWorkWhere(query),
+    orderBy: adminWorkOrder(query.sort),
     skip: pagination.skip,
     take: pagination.take,
-    select: WORK_SELECT,
+    select: WORK_LIST_SELECT,
   });
+
+export const buildAdminWorkWhere = (
+  query: AdminWorkListQuery,
+): Prisma.WorkWhereInput => ({
+  ...(query.search === undefined || query.search.length === 0
+    ? {}
+    : {
+        OR: [
+          { title: { contains: query.search, mode: "insensitive" as const } },
+          {
+            alternativeTitle: {
+              contains: query.search,
+              mode: "insensitive" as const,
+            },
+          },
+        ],
+      }),
+  ...(query.type === undefined ? {} : { type: toDatabaseWorkType(query.type) }),
+  ...(query.storyStatus === undefined
+    ? {}
+    : { storyStatus: toDatabaseStoryStatus(query.storyStatus) }),
+  ...(query.publicationStatus === undefined
+    ? {}
+    : {
+        publicationStatus: toDatabasePublicationStatus(query.publicationStatus),
+      }),
+});
+
+const adminWorkOrder = (
+  sort: AdminWorkListQuery["sort"],
+): Prisma.WorkOrderByWithRelationInput[] => {
+  switch (sort) {
+    case "oldest":
+      return [{ createdAt: "asc" }, { id: "asc" }];
+    case "title":
+      return [{ title: "asc" }, { id: "asc" }];
+    case "chapters":
+      return [{ chapters: { _count: "desc" } }, { id: "asc" }];
+    case "updated":
+      return [{ updatedAt: "desc" }, { id: "asc" }];
+  }
+};
 
 export const listAdminChapters = (
   database: ContentReadClient,

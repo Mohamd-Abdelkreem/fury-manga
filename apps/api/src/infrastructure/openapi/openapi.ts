@@ -12,6 +12,7 @@ import {
   adminChapterSchema,
   adminWorkDataSchema,
   adminWorkListDataSchema,
+  adminWorkListQuerySchema,
   adminWorkSchema,
   categoryIdParamsSchema,
   categoryListQuerySchema,
@@ -591,7 +592,7 @@ export const buildOpenApiDocument = () =>
         get: {
           summary: "List Works for content management",
           security: adminReadSecurity,
-          requestParams: { query: paginationQuerySchema },
+          requestParams: { query: adminWorkListQuerySchema },
           responses: {
             "200": successResponse(
               "Administrative Work list",

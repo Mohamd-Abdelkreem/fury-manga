@@ -1,6 +1,10 @@
 import { randomUUID } from "node:crypto";
 
-import type { AdminWork } from "@fury/contracts";
+import type {
+  AdminWork,
+  AdminWorkListItem,
+  AdminWorkListQuery,
+} from "@fury/contracts";
 import { Prisma, PublicationStatus, type DatabaseClient } from "@fury/database";
 
 import { NotFoundException } from "../../core/errors/not-found.error.js";
@@ -14,9 +18,10 @@ import {
   ContentConflictException,
   ContentStaleWriteException,
 } from "./content.errors.js";
-import { mapAdminWork } from "./content.mapper.js";
+import { mapAdminWork, mapAdminWorkListItem } from "./content.mapper.js";
 import {
   findAdminWork,
+  buildAdminWorkWhere,
   findPublishedFeaturedWork,
   listAdminWorks,
   lockCategoryEligibilityState,
@@ -52,16 +57,23 @@ export class WorkManagementService {
 
   async listWorks(
     pagination: PaginationQuery,
-  ): Promise<ContentList<AdminWork>> {
+    query: AdminWorkListQuery,
+  ): Promise<ContentList<AdminWorkListItem>> {
+    const where = buildAdminWorkWhere(query);
     const [records, total] = await this.database.$transaction(
-      async (transaction) =>
-        Promise.all([
-          listAdminWorks(transaction, pagination),
-          transaction.work.count(),
-        ]),
+      async (transaction) => {
+        const pageRecords = await listAdminWorks(
+          transaction,
+          pagination,
+          query,
+        );
+        const filteredTotal = await transaction.work.count({ where });
+        return [pageRecords, filteredTotal] as const;
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
     );
     return {
-      items: records.map(mapAdminWork),
+      items: records.map(mapAdminWorkListItem),
       pagination: buildPaginationMeta({ ...pagination, total }),
     };
   }

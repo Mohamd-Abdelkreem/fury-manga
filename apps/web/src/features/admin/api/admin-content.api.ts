@@ -19,9 +19,12 @@ import {
   updateWorkBodySchema,
   workIdParamsSchema,
   adminWorkDataSchema,
+  adminWorkListDataSchema,
+  adminWorkListQuerySchema,
   type AdminCategory,
   type AdminCategoryMove,
   type AdminWork,
+  type AdminWorkListQuery,
   type CategoryListQuery,
   type CategoryPositionBody,
   type ContentOperationErrorCode,
@@ -152,6 +155,20 @@ const readSuccessData = (value: unknown): unknown =>
   successEnvelopeSchema.parse(value).data;
 
 export const adminContentApi = {
+  listWorks(
+    query: AdminWorkListQuery,
+    signal?: AbortSignal,
+  ): Promise<z.infer<typeof adminWorkListDataSchema>> {
+    return safeRequest(async () => {
+      const params = adminWorkListQuerySchema.parse(query);
+      const response = await apiClient.get("/content/admin/works", {
+        params,
+        ...(signal === undefined ? {} : { signal }),
+      });
+      return adminWorkListDataSchema.parse(readSuccessData(response.data));
+    });
+  },
+
   listCategories(
     query: CategoryListQuery,
     signal?: AbortSignal,

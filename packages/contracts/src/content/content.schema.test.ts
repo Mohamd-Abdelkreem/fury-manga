@@ -6,6 +6,9 @@ import {
   adminCategorySchema,
   adminChapterSchema,
   adminWorkDataSchema,
+  adminWorkListDataSchema,
+  adminWorkListItemSchema,
+  adminWorkListQuerySchema,
   adminWorkSchema,
   categoryListQuerySchema,
   categoryPositionBodySchema,
@@ -870,6 +873,77 @@ describe("Phase 5 publication commands", () => {
         expectedVersion: 1,
         targetState: "draft",
       }).success,
+    ).toBe(false);
+  });
+});
+
+describe("Phase 6 administrative Work listing", () => {
+  it("normalizes bounded combined criteria and rejects unsupported queries", () => {
+    expect(
+      adminWorkListQuerySchema.parse({
+        page: "2",
+        limit: "100",
+        search: "  Example  ",
+        type: "manga",
+        storyStatus: "ongoing",
+        publicationStatus: "archived",
+        sort: "chapters",
+      }),
+    ).toEqual({
+      page: 2,
+      limit: 100,
+      search: "Example",
+      type: "manga",
+      storyStatus: "ongoing",
+      publicationStatus: "archived",
+      sort: "chapters",
+    });
+    for (const sort of ["updated", "oldest", "title", "chapters"]) {
+      expect(adminWorkListQuerySchema.parse({ sort }).sort).toBe(sort);
+    }
+    for (const query of [
+      { page: "100001" },
+      { limit: "101" },
+      { search: "x".repeat(201) },
+      { sort: "views" },
+      { unexpected: "field" },
+    ]) {
+      expect(adminWorkListQuerySchema.safeParse(query).success).toBe(false);
+    }
+  });
+
+  it("accepts only the bounded summary and stable pagination envelope", () => {
+    const item = {
+      id: firstId,
+      title: "Saved Work",
+      alternativeTitle: null,
+      slug: "saved-work",
+      type: "manga",
+      storyStatus: "ongoing",
+      publicationStatus: "draft",
+      publishedAt: null,
+      featuredHome: false,
+      featuredOrder: null,
+      coverAssetId: null,
+      chapterCount: 0,
+      version: 0,
+      createdAt: "2026-09-22T00:00:00.000Z",
+      updatedAt: "2026-09-22T00:00:00.000Z",
+    };
+    const data = {
+      items: [item],
+      pagination: {
+        page: 1,
+        limit: 25,
+        total: 1,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPreviousPage: false,
+      },
+    };
+    expect(adminWorkListDataSchema.parse(data)).toEqual(data);
+    expect(
+      adminWorkListItemSchema.safeParse({ ...item, views: 10 }).success,
     ).toBe(false);
   });
 });

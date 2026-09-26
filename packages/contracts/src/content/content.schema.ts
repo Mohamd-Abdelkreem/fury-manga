@@ -268,6 +268,29 @@ export const categoryListQuerySchema = z
   })
   .strict();
 
+export const adminWorkListQuerySchema = z
+  .object({
+    ...paginationQuerySchema.shape,
+    page: paginationQuerySchema.shape.page.pipe(
+      z.number().int().min(1).max(100_000),
+    ),
+    search: z
+      .string()
+      .transform(normalizeText)
+      .pipe(
+        z
+          .string()
+          .max(200)
+          .refine((value) => !hasUnsupportedTextControl(value)),
+      )
+      .optional(),
+    type: workTypeSchema.optional(),
+    storyStatus: storyStatusSchema.optional(),
+    publicationStatus: publicationStatusSchema.optional(),
+    sort: z.enum(["updated", "oldest", "title", "chapters"]).default("updated"),
+  })
+  .strict();
+
 export const createCategoryBodySchema = z
   .object({
     id: contentIdSchema.optional(),
@@ -541,6 +564,26 @@ export const adminWorkSchema = z
   .strict()
   .superRefine(addFeaturedPairIssues);
 
+export const adminWorkListItemSchema = z
+  .object({
+    id: contentIdSchema,
+    title: z.string().min(1).max(200),
+    alternativeTitle: z.string().max(200).nullable(),
+    slug: contentSlugSchema,
+    type: workTypeSchema,
+    storyStatus: storyStatusSchema,
+    publicationStatus: publicationStatusSchema,
+    publishedAt: contentTimestampSchema.nullable(),
+    featuredHome: z.boolean(),
+    featuredOrder: positiveIntegerSchema.nullable(),
+    coverAssetId: contentIdSchema.nullable(),
+    chapterCount: z.number().int().min(0),
+    version: contentVersionSchema,
+    createdAt: contentTimestampSchema,
+    updatedAt: contentTimestampSchema,
+  })
+  .strict();
+
 export const adminChapterPageSchema = z
   .object({
     id: contentIdSchema,
@@ -611,7 +654,7 @@ const listDataSchema = <T extends z.ZodType>(itemSchema: T) =>
 export const publicWorkListDataSchema = listDataSchema(publicWorkSchema);
 export const publicChapterListDataSchema = listDataSchema(publicChapterSchema);
 export const adminCategoryListDataSchema = listDataSchema(adminCategorySchema);
-export const adminWorkListDataSchema = listDataSchema(adminWorkSchema);
+export const adminWorkListDataSchema = listDataSchema(adminWorkListItemSchema);
 export const adminChapterListDataSchema = listDataSchema(adminChapterSchema);
 
 export type WorkType = z.infer<typeof workTypeSchema>;
@@ -626,6 +669,7 @@ export type StructuredTextDocument = z.infer<
   typeof structuredTextDocumentSchema
 >;
 export type CategoryListQuery = z.infer<typeof categoryListQuerySchema>;
+export type AdminWorkListQuery = z.infer<typeof adminWorkListQuerySchema>;
 export type CreateCategoryBody = z.infer<typeof createCategoryBodySchema>;
 export type UpdateCategoryBody = z.infer<typeof updateCategoryBodySchema>;
 export type CategoryPositionBody = z.infer<typeof categoryPositionBodySchema>;
@@ -646,5 +690,6 @@ export type PublicChapter = z.infer<typeof publicChapterSchema>;
 export type AdminCategory = z.infer<typeof adminCategorySchema>;
 export type AdminCategoryMove = z.infer<typeof adminCategoryMoveDataSchema>;
 export type AdminWork = z.infer<typeof adminWorkSchema>;
+export type AdminWorkListItem = z.infer<typeof adminWorkListItemSchema>;
 export type AdminChapter = z.infer<typeof adminChapterSchema>;
 export type PublicationTransition = z.infer<typeof publicationTransitionSchema>;

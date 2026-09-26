@@ -16,6 +16,7 @@ import {
   adminCategoryMoveDataSchema,
   adminChapterDataSchema as chapterDataSchema,
   adminWorkDataSchema as workDataSchema,
+  adminWorkListDataSchema,
   contentOperationErrorCodeSchema,
   errorEnvelopeSchema,
   publicationTransitionDataSchema as transitionDataSchema,
@@ -243,6 +244,79 @@ describe("real HTTP content boundary", () => {
   afterAll(async () => {
     await database.$disconnect();
     rmSync(mediaFixtureRoot, { recursive: true, force: true });
+  });
+
+  it("lists saved Work summaries with combined filters and safe authority", async () => {
+    const admin = await createIdentity(UserRole.ADMIN);
+    const ordinary = await createIdentity(UserRole.USER);
+    const saved = await database.work.create({
+      data: {
+        title: "Saved Atlas",
+        alternativeTitle: "Alternate Atlas",
+        slug: "saved-atlas",
+        type: "MANGA",
+        storyStatus: "ONGOING",
+      },
+    });
+    const disabledCategory = await database.category.create({
+      data: {
+        displayName: "Disabled editorial",
+        slug: "disabled-editorial",
+        enabled: false,
+      },
+    });
+    await database.workCategory.create({
+      data: { workId: saved.id, categoryId: disabledCategory.id },
+    });
+    await database.work.create({
+      data: {
+        title: "Different",
+        slug: "different",
+        type: "NOVEL",
+        storyStatus: "COMPLETED",
+        publicationStatus: "ARCHIVED",
+      },
+    });
+    const path = "/api/v1/content/admin/works";
+    expect((await request(app).get(path)).status).toBe(401);
+    expect(
+      (await authorize(request(app).get(path), ordinary.token)).status,
+    ).toBe(403);
+    const listed = await authorize(request(app).get(path), admin.token).query({
+      search: " atlas ",
+      type: "manga",
+      storyStatus: "ongoing",
+      publicationStatus: "draft",
+      sort: "title",
+      page: 1,
+      limit: 25,
+    });
+    expect(listed.status).toBe(200);
+    const list = parseSuccessData(listed, adminWorkListDataSchema);
+    expect(list.pagination.total).toBe(1);
+    expect(list.items).toMatchObject([{ id: saved.id, chapterCount: 0 }]);
+    expect(Object.keys(list.items[0] ?? {})).not.toContain("synopsis");
+    const all = await authorize(request(app).get(path), admin.token);
+    expect(
+      parseSuccessData(all, adminWorkListDataSchema)
+        .items.map(({ publicationStatus }) => publicationStatus)
+        .toSorted(),
+    ).toEqual(["archived", "draft"]);
+    const invalid = await authorize(request(app).get(path), admin.token).query({
+      sort: "views",
+    });
+    expect(invalid.status).toBe(400);
+    expect(parseErrorBody(invalid).code).toBe("VALIDATION_ERROR");
+    const unknown = await authorize(
+      request(app).get(`${path}/${randomUUID()}`),
+      admin.token,
+    );
+    expect(unknown.status).toBe(404);
+    const publicList = await request(app).get("/api/v1/content/works");
+    expect(publicList.status).toBe(200);
+    expect(
+      parseSuccessData(publicList, publicWorkListDataSchema).items,
+    ).toEqual([]);
   });
 
   it("applies authentication and ADMIN denial before target lookup", async () => {

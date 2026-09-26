@@ -2,6 +2,7 @@ import type {
   AdminCategory,
   AdminChapter,
   AdminWork,
+  AdminWorkListItem,
   ChapterContentType as ContractChapterContentType,
   PublicationStatus as ContractPublicationStatus,
   PublicCategory,
@@ -63,6 +64,28 @@ export const WORK_SELECT = {
   },
 } as const satisfies Prisma.WorkSelect;
 
+export const WORK_LIST_SELECT = {
+  id: true,
+  title: true,
+  alternativeTitle: true,
+  slug: true,
+  type: true,
+  storyStatus: true,
+  publicationStatus: true,
+  publishedAt: true,
+  featuredHome: true,
+  featuredOrder: true,
+  version: true,
+  createdAt: true,
+  updatedAt: true,
+  _count: { select: { chapters: true } },
+  mediaReferences: {
+    where: { retiredAt: null, slot: "WORK_COVER" },
+    select: { assetId: true },
+    take: 1,
+  },
+} as const satisfies Prisma.WorkSelect;
+
 export const PUBLIC_CATEGORY_SELECT = {
   id: true,
   displayName: true,
@@ -110,6 +133,9 @@ export type CategoryRecord = Prisma.CategoryGetPayload<{
 }>;
 export type WorkRecord = Prisma.WorkGetPayload<{
   select: typeof WORK_SELECT;
+}>;
+export type WorkListRecord = Prisma.WorkGetPayload<{
+  select: typeof WORK_LIST_SELECT;
 }>;
 export type PublicCategoryRecord = Prisma.CategoryGetPayload<{
   select: typeof PUBLIC_CATEGORY_SELECT;
@@ -218,6 +244,26 @@ export const mapAdminWork = (record: WorkRecord): AdminWork => ({
   createdAt: record.createdAt.toISOString(),
   updatedAt: record.updatedAt.toISOString(),
   categories: orderedAdminWorkCategories(record).map(mapAdminCategory),
+});
+
+export const mapAdminWorkListItem = (
+  record: WorkListRecord,
+): AdminWorkListItem => ({
+  id: record.id,
+  title: record.title,
+  alternativeTitle: record.alternativeTitle,
+  slug: record.slug,
+  type: workTypeMap[record.type],
+  storyStatus: storyStatusMap[record.storyStatus],
+  publicationStatus: publicationStatusMap[record.publicationStatus],
+  publishedAt: record.publishedAt?.toISOString() ?? null,
+  featuredHome: record.featuredHome,
+  featuredOrder: record.featuredOrder,
+  coverAssetId: record.mediaReferences[0]?.assetId ?? null,
+  chapterCount: record._count.chapters,
+  version: record.version,
+  createdAt: record.createdAt.toISOString(),
+  updatedAt: record.updatedAt.toISOString(),
 });
 
 export const mapPublicWork = (record: PublicWorkRecord): PublicWork => {
