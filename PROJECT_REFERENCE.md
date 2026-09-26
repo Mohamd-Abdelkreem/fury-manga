@@ -173,10 +173,12 @@ links it as the aggregate's current event; unpublish/archive clears only current
 publication fields. Same-state retries reuse authoritative state, stale losers
 cannot overwrite the winner, and failed dependent writes roll back fully.
 
-The content foundation and both P03 migrations are forward-only. Migration A
+The content foundation and four P03 migrations are forward-only. Migration A
 adds editorial/category fields without inventing missing legacy metadata;
 migration B installs published-readiness guards only after an operator inventory
-and remediation. Existing web fixtures are not migrated or seeded. Schema
+and remediation. Migrations C and D guard the 100 Category links per Work limit
+and newly assigned disabled Categories at the database boundary. Existing web
+fixtures are not migrated or seeded. Schema
 correction requires a later forward migration or a verified coordinated backup
 restore, never editing applied history.
 

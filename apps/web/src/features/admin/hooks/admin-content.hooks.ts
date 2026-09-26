@@ -25,6 +25,7 @@ import {
   isTerminalAdminContentError,
   isWriteSideAdminForbidden,
 } from "../model/admin-content.errors";
+import { categoryMatchesCreateCommand } from "../model/admin-category-editor";
 import { adminContentKeys } from "../model/admin-content.keys";
 import { workMatchesCreateCommand } from "../model/admin-work-editor";
 import { mediaKeys } from "@/features/media/model/media.keys";
@@ -432,13 +433,54 @@ export const useAdminCategoryPicker = (page = 1, search = "") => {
 export const useCreateAdminCategory = () => {
   const session = useAdminActor();
   const queryClient = useQueryClient();
-  return useMutation({
+  const unresolvedCreate = useRef<{
+    actorId: string;
+    command: CreateCategoryBody & { id: string };
+    conflicted: boolean;
+  } | null>(null);
+  const mutation = useMutation({
     mutationFn: (body: CreateCategoryBody) => {
       if (session.actorId === null) return Promise.reject(denialError());
-      return runActorRequest(queryClient, session.actorId, async () => {
+      const actorId = session.actorId;
+      const pending = unresolvedCreate.current;
+      if (
+        pending?.actorId === actorId &&
+        pending.command.id === body.id &&
+        (pending.conflicted ||
+          pending.command.displayName !== body.displayName ||
+          pending.command.slug !== body.slug)
+      ) {
+        return Promise.reject(
+          new SafeAdminContentError("CONTENT_CONFLICT", 409, ""),
+        );
+      }
+      return runActorRequest(queryClient, actorId, async () => {
         try {
-          return await adminContentApi.createCategory(body);
+          const saved = await adminContentApi.createCategory(body);
+          unresolvedCreate.current = null;
+          return saved;
         } catch (error: unknown) {
+          const prior = unresolvedCreate.current;
+          if (
+            body.id !== undefined &&
+            error instanceof SafeAdminContentError &&
+            error.statusCode === 409 &&
+            prior?.actorId === actorId &&
+            prior.command.id === body.id
+          ) {
+            try {
+              const recovered = await adminContentApi.getCategory(body.id);
+              if (categoryMatchesCreateCommand(recovered, prior.command)) {
+                unresolvedCreate.current = null;
+                return recovered;
+              }
+            } catch (readbackError: unknown) {
+              if (isTerminalAdminContentError(readbackError))
+                throw readbackError;
+            }
+            unresolvedCreate.current = { ...prior, conflicted: true };
+            throw error;
+          }
           if (
             body.id === undefined ||
             !(error instanceof SafeAdminContentError) ||
@@ -446,31 +488,67 @@ export const useCreateAdminCategory = () => {
           ) {
             throw error;
           }
+          const command = { ...body, id: body.id };
+          unresolvedCreate.current = { actorId, command, conflicted: true };
           try {
             const recovered = await adminContentApi.getCategory(body.id);
-            if (
-              recovered.displayName === body.displayName &&
-              recovered.slug === body.slug
-            ) {
+            if (categoryMatchesCreateCommand(recovered, command)) {
+              unresolvedCreate.current = null;
               return recovered;
             }
           } catch (readbackError: unknown) {
             if (isTerminalAdminContentError(readbackError)) throw readbackError;
+            if (
+              readbackError instanceof SafeAdminContentError &&
+              readbackError.statusCode === 404
+            ) {
+              unresolvedCreate.current = {
+                actorId,
+                command,
+                conflicted: false,
+              };
+            }
           }
           throw error;
         }
       });
     },
-    onSuccess: async (category) => {
-      if (session.actorId === null) return;
+    onMutate: () => ({ actorId: session.actorId }),
+    onSuccess: async (category, _variables, context) => {
+      const actorId = context.actorId;
+      if (actorId === null || isActorDenied(queryClient, actorId)) return;
       queryClient.setQueryData(
-        adminContentKeys.categoryDetail(session.actorId, category.id),
+        adminContentKeys.categoryDetail(actorId, category.id),
         category,
       );
-      await invalidateActorCategories(queryClient, session.actorId);
+      await invalidateActorCategories(queryClient, actorId);
     },
     retry: false,
   });
+  const readback = useCallback(
+    async (categoryId: string) => {
+      const actorId = session.actorId;
+      if (actorId === null) throw denialError();
+      return runActorRequest(queryClient, actorId, async () => {
+        const category = await adminContentApi.getCategory(categoryId);
+        const pending = unresolvedCreate.current;
+        if (pending?.actorId === actorId && pending.command.id === categoryId) {
+          if (!categoryMatchesCreateCommand(category, pending.command)) {
+            throw new SafeAdminContentError("CONTENT_CONFLICT", 409, "");
+          }
+          unresolvedCreate.current = null;
+        }
+        queryClient.setQueryData(
+          adminContentKeys.categoryDetail(actorId, categoryId),
+          category,
+        );
+        await invalidateActorCategories(queryClient, actorId);
+        return category;
+      });
+    },
+    [queryClient, session.actorId],
+  );
+  return { ...mutation, readback };
 };
 
 export const useUpdateAdminCategory = () => {
@@ -489,28 +567,31 @@ export const useUpdateAdminCategory = () => {
         adminContentApi.updateCategory(categoryId, body),
       );
     },
-    onSuccess: async (category) => {
-      if (session.actorId === null) return;
+    onMutate: () => ({ actorId: session.actorId }),
+    onSuccess: async (category, _variables, context) => {
+      const actorId = context.actorId;
+      if (actorId === null || isActorDenied(queryClient, actorId)) return;
       queryClient.setQueryData(
-        adminContentKeys.categoryDetail(session.actorId, category.id),
+        adminContentKeys.categoryDetail(actorId, category.id),
         category,
       );
       await Promise.all([
-        invalidateActorCategories(queryClient, session.actorId),
+        invalidateActorCategories(queryClient, actorId),
         queryClient.invalidateQueries({
-          queryKey: adminContentKeys.workDetailScope(session.actorId),
+          queryKey: adminContentKeys.workDetailScope(actorId),
         }),
       ]);
     },
-    onError: async (error, variables) => {
+    onError: async (error, variables, context) => {
       if (
-        session.actorId !== null &&
+        context?.actorId !== null &&
+        context?.actorId !== undefined &&
         error instanceof SafeAdminContentError &&
         error.code === "CONTENT_STALE_WRITE"
       ) {
         await queryClient.invalidateQueries({
           queryKey: adminContentKeys.categoryDetail(
-            session.actorId,
+            context.actorId,
             variables.categoryId,
           ),
         });
@@ -536,25 +617,24 @@ export const useMoveAdminCategory = () => {
         adminContentApi.moveCategory(categoryId, body),
       );
     },
-    onSuccess: async (result) => {
-      if (session.actorId === null) return;
+    onMutate: () => ({ actorId: session.actorId }),
+    onSuccess: async (result, _variables, context) => {
+      const actorId = context.actorId;
+      if (actorId === null || isActorDenied(queryClient, actorId)) return;
       queryClient.setQueryData(
-        adminContentKeys.categoryDetail(session.actorId, result.category.id),
+        adminContentKeys.categoryDetail(actorId, result.category.id),
         result.category,
       );
       if (result.displacedCategory !== null) {
         queryClient.setQueryData(
-          adminContentKeys.categoryDetail(
-            session.actorId,
-            result.displacedCategory.id,
-          ),
+          adminContentKeys.categoryDetail(actorId, result.displacedCategory.id),
           result.displacedCategory,
         );
       }
       await Promise.all([
-        invalidateActorCategories(queryClient, session.actorId),
+        invalidateActorCategories(queryClient, actorId),
         queryClient.invalidateQueries({
-          queryKey: adminContentKeys.workDetailScope(session.actorId),
+          queryKey: adminContentKeys.workDetailScope(actorId),
         }),
       ]);
     },

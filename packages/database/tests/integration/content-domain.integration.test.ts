@@ -176,6 +176,189 @@ describe("content-domain PostgreSQL invariants", () => {
     ).rejects.toMatchObject({ code: "23503" });
   });
 
+  it("caps direct and concurrent Work category assignments at 100", async () => {
+    const categoryRows = await pool.query<{
+      id: string;
+      display_position: number;
+    }>(
+      `INSERT INTO categories (display_name, slug, display_position, updated_at)
+       SELECT 'Category ' || n, 'limit-category-' || n, n, CURRENT_TIMESTAMP
+       FROM generate_series(1, 101) AS n
+       RETURNING id, display_position`,
+    );
+    const categoryIds = categoryRows.rows
+      .toSorted((left, right) => left.display_position - right.display_position)
+      .map(({ id }) => id);
+    const workId = await insertWork("category-limit");
+    await pool.query(
+      `INSERT INTO work_categories (work_id, category_id)
+       SELECT $1, id FROM categories ORDER BY display_position LIMIT 100`,
+      [workId],
+    );
+    await expect(
+      pool.query(
+        "INSERT INTO work_categories (work_id, category_id) VALUES ($1, $2)",
+        [workId, categoryIds[100]],
+      ),
+    ).rejects.toMatchObject({
+      code: "PZ100",
+      constraint: "ck_work_categories_max_100",
+    });
+    const unchanged = await pool.query<{ count: number }>(
+      "SELECT count(*)::int AS count FROM work_categories WHERE work_id = $1",
+      [workId],
+    );
+    expect(unchanged.rows[0]?.count).toBe(100);
+
+    const concurrentWorkId = await insertWork("concurrent-category-limit");
+    await pool.query(
+      `INSERT INTO work_categories (work_id, category_id)
+       SELECT $1, id FROM categories ORDER BY display_position LIMIT 99`,
+      [concurrentWorkId],
+    );
+    const first = await pool.connect();
+    const second = await pool.connect();
+    try {
+      await first.query("BEGIN");
+      await second.query("BEGIN");
+      await first.query(
+        "INSERT INTO work_categories (work_id, category_id) VALUES ($1, $2)",
+        [concurrentWorkId, categoryIds[99]],
+      );
+      const competingInsert = second.query(
+        "INSERT INTO work_categories (work_id, category_id) VALUES ($1, $2)",
+        [concurrentWorkId, categoryIds[100]],
+      );
+      await first.query("COMMIT");
+      await expect(competingInsert).rejects.toMatchObject({
+        code: "PZ100",
+        constraint: "ck_work_categories_max_100",
+      });
+      await second.query("ROLLBACK");
+    } finally {
+      await first.query("ROLLBACK").catch(() => undefined);
+      await second.query("ROLLBACK").catch(() => undefined);
+      first.release();
+      second.release();
+    }
+    const finalCount = await pool.query<{ count: number }>(
+      "SELECT count(*)::int AS count FROM work_categories WHERE work_id = $1",
+      [concurrentWorkId],
+    );
+    expect(finalCount.rows[0]?.count).toBe(100);
+  });
+
+  it("rejects new disabled Category assignments while preserving old draft links", async () => {
+    const workId = await insertWork("disabled-category-draft");
+    const otherWorkId = await insertWork("disabled-category-other-draft");
+    const categories = await pool.query<{ id: string }>(
+      `INSERT INTO categories (display_name, slug, updated_at)
+       VALUES ('Retained', 'retained-category', CURRENT_TIMESTAMP)
+       RETURNING id`,
+    );
+    const categoryId = categories.rows[0]?.id;
+    await pool.query(
+      "INSERT INTO work_categories (work_id, category_id) VALUES ($1, $2)",
+      [workId, categoryId],
+    );
+    await pool.query("UPDATE categories SET enabled = false WHERE id = $1", [
+      categoryId,
+    ]);
+    await pool.query(
+      "UPDATE work_categories SET category_id = category_id WHERE work_id = $1",
+      [workId],
+    );
+    await expect(
+      pool.query(
+        "INSERT INTO work_categories (work_id, category_id) VALUES ($1, $2)",
+        [otherWorkId, categoryId],
+      ),
+    ).rejects.toMatchObject({
+      code: "PZ101",
+      constraint: "ck_work_categories_enabled_assignment",
+    });
+    const links = await pool.query<{ work_id: string }>(
+      "SELECT work_id FROM work_categories WHERE category_id = $1",
+      [categoryId],
+    );
+    expect(links.rows).toEqual([{ work_id: workId }]);
+    await pool.query(
+      "DELETE FROM work_categories WHERE work_id = $1 AND category_id = $2",
+      [workId, categoryId],
+    );
+    expect(
+      (
+        await pool.query(
+          "SELECT 1 FROM work_categories WHERE category_id = $1",
+          [categoryId],
+        )
+      ).rowCount,
+    ).toBe(0);
+  });
+
+  it("serializes a direct Category disable against a draft assignment", async () => {
+    const workId = await insertWork("concurrent-disabled-assignment");
+    const category = await pool.query<{ id: string }>(
+      `INSERT INTO categories (display_name, slug, updated_at)
+       VALUES ('Concurrent', 'concurrent-assignment', CURRENT_TIMESTAMP)
+       RETURNING id`,
+    );
+    const categoryId = category.rows[0]?.id;
+    const disabler = await pool.connect();
+    const assigner = await pool.connect();
+    let disableCommitted = false;
+    let assignmentCommitted = false;
+    try {
+      await disabler.query("BEGIN");
+      await assigner.query("BEGIN");
+      const outcomes = await Promise.allSettled([
+        disabler
+          .query("UPDATE categories SET enabled = false WHERE id = $1", [
+            categoryId,
+          ])
+          .then(() => disabler.query("COMMIT")),
+        assigner
+          .query(
+            "INSERT INTO work_categories (work_id, category_id) VALUES ($1, $2)",
+            [workId, categoryId],
+          )
+          .then(() => assigner.query("COMMIT")),
+      ]);
+      disableCommitted = outcomes[0].status === "fulfilled";
+      assignmentCommitted = outcomes[1].status === "fulfilled";
+      expect(disableCommitted || assignmentCommitted).toBe(true);
+    } finally {
+      await disabler.query("ROLLBACK").catch(() => undefined);
+      await assigner.query("ROLLBACK").catch(() => undefined);
+      disabler.release();
+      assigner.release();
+    }
+    const saved = await pool.query<{ enabled: boolean; associated: boolean }>(
+      `SELECT c.enabled, EXISTS (
+         SELECT 1 FROM work_categories wc
+         WHERE wc.work_id = $1 AND wc.category_id = c.id
+       ) AS associated
+       FROM categories c WHERE c.id = $2`,
+      [workId, categoryId],
+    );
+    expect(saved.rows).toHaveLength(1);
+    expect(saved.rows[0]).toEqual({
+      enabled: !disableCommitted,
+      associated: assignmentCommitted,
+    });
+    if (disableCommitted && !assignmentCommitted) {
+      await expect(
+        pool.query(
+          "INSERT INTO work_categories (work_id, category_id) VALUES ($1, $2)",
+          [workId, categoryId],
+        ),
+      ).rejects.toMatchObject({
+        code: "PZ101",
+        constraint: "ck_work_categories_enabled_assignment",
+      });
+    }
+  });
+
   it("allows an empty illustrated draft and enforces chapter/page ordering facts", async () => {
     const workId = await insertWork();
     const chapter = await pool.query<{ id: string }>(

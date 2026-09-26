@@ -51,6 +51,8 @@ const transitionContentConstraints = new Set([
 ]);
 
 const contentConflictConstraints = new Set([
+  "ck_work_categories_max_100",
+  "ck_work_categories_enabled_assignment",
   "ck_categories_display_name_nonblank",
   "ck_categories_slug_normalized",
   "ck_categories_version_nonnegative",
@@ -83,6 +85,7 @@ const mappedCodes = new Set([
   "P2014",
   "P2025",
   "P2034",
+  "P2039",
   ...connectivityCodes,
 ]);
 
@@ -140,6 +143,16 @@ export const mapPrismaError = (error: unknown): AppError => {
     return new ConflictException(
       "A conflicting transaction is in progress. Retry the request.",
     );
+  }
+  if (code === "P2039" && isRecord(error["meta"])) {
+    const adapterError = error["meta"]["driverAdapterError"];
+    const cause = isRecord(adapterError) ? adapterError["cause"] : null;
+    if (
+      isRecord(cause) &&
+      (cause["originalCode"] === "PZ100" || cause["originalCode"] === "PZ101")
+    ) {
+      return new ContentConflictException();
+    }
   }
   if (
     (code === "P2004" || code === "P2009") &&

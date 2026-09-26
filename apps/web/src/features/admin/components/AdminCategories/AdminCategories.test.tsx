@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
+  act,
   fireEvent,
   render,
   screen,
@@ -18,7 +19,13 @@ import type {
 } from "@fury/contracts";
 
 import { SafeAdminContentError } from "../../api/admin-content.api";
+import { ProtectedRoute } from "@/components/auth/protected-route";
 import { AdminCategories } from "./AdminCategories";
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/admin/categories",
+  useRouter: () => ({ replace: vi.fn() }),
+}));
 
 const apiMock = vi.hoisted(() => ({
   listCategories: vi.fn(),
@@ -57,6 +64,9 @@ vi.mock("@/features/auth/hooks/auth.hooks", () => ({
       },
     },
     status: "success",
+    isPending: false,
+    isFetched: true,
+    isError: false,
     error: null,
   }),
 }));
@@ -316,7 +326,7 @@ describe("AdminCategories", () => {
       within(dialog).getByRole("button", { name: "حفظ التصنيف" }),
     );
     expect(await within(dialog).findByRole("alert")).toHaveTextContent(
-      "تعذر الاتصال بالخدمة",
+      "نتيجة حفظ التصنيف غير مؤكدة",
     );
     expect(within(dialog).getByLabelText("اسم التصنيف")).toHaveValue("غموض");
     expect(within(dialog).getByLabelText("الرابط المختصر")).toHaveValue(
@@ -332,6 +342,186 @@ describe("AdminCategories", () => {
     expect(submittedCreateIds[0]).toBe(submittedCreateIds[1]);
     expect(await screen.findByText("غموض")).toBeInTheDocument();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("drops an old ADMIN draft on an account switch within the mounted route", async () => {
+    const renderRoute = () => (
+      <ProtectedRoute allowedRoles={["ADMIN"]}>
+        <AdminCategories />
+      </ProtectedRoute>
+    );
+    const view = render(renderRoute(), { wrapper });
+    await screen.findByText("رومانسي");
+    fireEvent.click(screen.getByRole("button", { name: "إنشاء تصنيف" }));
+    const dialog = screen.getByRole("dialog");
+    fireEvent.change(within(dialog).getByLabelText("اسم التصنيف"), {
+      target: { value: "Private A draft" },
+    });
+    sessionMock.id = "77777777-7777-4777-8777-777777777777";
+    view.rerender(renderRoute());
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(
+      screen.queryByDisplayValue("Private A draft"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("keeps the next ADMIN dialog open after the previous actor's late save", async () => {
+    const pending = Promise.withResolvers<AdminCategory>();
+    apiMock.createCategory.mockReturnValueOnce(pending.promise);
+    const renderRoute = () => (
+      <ProtectedRoute allowedRoles={["ADMIN"]}>
+        <AdminCategories />
+      </ProtectedRoute>
+    );
+    const view = render(renderRoute(), { wrapper });
+    await screen.findByText("رومانسي");
+    fireEvent.click(screen.getByRole("button", { name: "إنشاء تصنيف" }));
+    let dialog = screen.getByRole("dialog");
+    fireEvent.change(within(dialog).getByLabelText("اسم التصنيف"), {
+      target: { value: "Actor A category" },
+    });
+    fireEvent.change(within(dialog).getByLabelText("الرابط المختصر"), {
+      target: { value: "actor-a-category" },
+    });
+    fireEvent.click(
+      within(dialog).getByRole("button", { name: "حفظ التصنيف" }),
+    );
+    await waitFor(() => {
+      expect(apiMock.createCategory).toHaveBeenCalledTimes(1);
+    });
+    const command = apiMock.createCategory.mock
+      .calls[0]?.[0] as CreateCategoryBody;
+    const commandId = command.id;
+    if (commandId === undefined) throw new Error("Missing Category create ID");
+
+    sessionMock.id = "77777777-7777-4777-8777-777777777777";
+    view.rerender(renderRoute());
+    fireEvent.click(screen.getByRole("button", { name: "إنشاء تصنيف" }));
+    dialog = screen.getByRole("dialog");
+    fireEvent.change(within(dialog).getByLabelText("اسم التصنيف"), {
+      target: { value: "Actor B category" },
+    });
+    await act(async () => {
+      pending.resolve(
+        makeCategory(4, {
+          id: commandId,
+          displayName: command.displayName,
+          slug: command.slug,
+        }),
+      );
+      await pending.promise;
+    });
+    expect(within(dialog).getByLabelText("اسم التصنيف")).toHaveValue(
+      "Actor B category",
+    );
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(apiMock.createCategory).toHaveBeenCalledTimes(1);
+  });
+
+  it("blocks a third Category POST after an uncertain 404, retry 409, and second 404", async () => {
+    records = [];
+    apiMock.createCategory
+      .mockRejectedValueOnce(new SafeAdminContentError("NETWORK_ERROR", 0, ""))
+      .mockRejectedValueOnce(
+        new SafeAdminContentError("CONTENT_CONFLICT", 409, ""),
+      );
+    render(<AdminCategories />, { wrapper });
+    const [createButton] = screen.getAllByRole("button", {
+      name: "إنشاء تصنيف",
+    });
+    if (createButton === undefined)
+      throw new Error("Category create action missing");
+    fireEvent.click(createButton);
+    const dialog = screen.getByRole("dialog");
+    fireEvent.change(within(dialog).getByLabelText("اسم التصنيف"), {
+      target: { value: "Uncertain category" },
+    });
+    fireEvent.change(within(dialog).getByLabelText("الرابط المختصر"), {
+      target: { value: "uncertain-category" },
+    });
+    fireEvent.click(
+      within(dialog).getByRole("button", { name: "حفظ التصنيف" }),
+    );
+    await within(dialog).findByText(/نتيجة حفظ التصنيف غير مؤكدة/u);
+    fireEvent.click(
+      within(dialog).getByRole("button", { name: "حفظ التصنيف" }),
+    );
+    await waitFor(() => {
+      expect(apiMock.createCategory).toHaveBeenCalledTimes(2);
+    });
+    expect(
+      within(dialog).getByRole("button", { name: "حفظ التصنيف" }),
+    ).toBeDisabled();
+    fireEvent.click(
+      within(dialog).getByRole("button", { name: "التحقق من نتيجة الحفظ" }),
+    );
+    await waitFor(() => {
+      expect(apiMock.getCategory).toHaveBeenCalledTimes(3);
+    });
+    expect(apiMock.createCategory).toHaveBeenCalledTimes(2);
+    expect(within(dialog).getByLabelText("اسم التصنيف")).toHaveValue(
+      "Uncertain category",
+    );
+    const submitted = apiMock.createCategory.mock.calls.map(
+      ([body]) => (body as CreateCategoryBody).id,
+    );
+    expect(submitted[0]).toBe(submitted[1]);
+    fireEvent.click(within(dialog).getByRole("button", { name: "إلغاء" }));
+    const [reopenButton] = screen.getAllByRole("button", {
+      name: "إنشاء تصنيف",
+    });
+    if (reopenButton === undefined)
+      throw new Error("Category create action missing");
+    fireEvent.click(reopenButton);
+    const reopened = screen.getByRole("dialog");
+    expect(within(reopened).getByLabelText("اسم التصنيف")).toHaveValue(
+      "Uncertain category",
+    );
+    expect(within(reopened).getByLabelText("اسم التصنيف")).toHaveAttribute(
+      "readonly",
+    );
+    expect(
+      within(reopened).getByRole("button", { name: "حفظ التصنيف" }),
+    ).toBeDisabled();
+    expect(apiMock.createCategory).toHaveBeenCalledTimes(2);
+  });
+
+  it("locks rapid Category submits before the pending indicator renders", async () => {
+    const pending = Promise.withResolvers<AdminCategory>();
+    apiMock.createCategory.mockReturnValueOnce(pending.promise);
+    render(<AdminCategories />, { wrapper });
+    await screen.findByText("رومانسي");
+    fireEvent.click(screen.getByRole("button", { name: "إنشاء تصنيف" }));
+    const dialog = screen.getByRole("dialog");
+    fireEvent.change(within(dialog).getByLabelText("اسم التصنيف"), {
+      target: { value: "Rapid category" },
+    });
+    fireEvent.change(within(dialog).getByLabelText("الرابط المختصر"), {
+      target: { value: "rapid-category" },
+    });
+    const form = within(dialog)
+      .getByRole("button", { name: "حفظ التصنيف" })
+      .closest("form");
+    if (form === null) throw new Error("Category form missing");
+    fireEvent.submit(form);
+    fireEvent.submit(form);
+    await waitFor(() => {
+      expect(apiMock.createCategory).toHaveBeenCalledTimes(1);
+    });
+    const command = apiMock.createCategory.mock
+      .calls[0]?.[0] as CreateCategoryBody;
+    const commandId = command.id;
+    if (commandId === undefined) throw new Error("Missing Category create ID");
+    await act(async () => {
+      pending.resolve(
+        makeCategory(4, {
+          id: commandId,
+          displayName: command.displayName,
+          slug: command.slug,
+        }),
+      );
+      await pending.promise;
+    });
   });
 
   it("keeps slug immutable, focuses invalid fields, and retains draft on validation failure", async () => {

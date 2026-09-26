@@ -15,7 +15,9 @@ type AdminCategoryDialogProps = Readonly<{
   errorMessage: string | null;
   isPending: boolean;
   canSave: boolean;
+  lockDraft: boolean;
   retryDetail: (() => void) | null;
+  checkCreate: (() => void) | null;
   onDraftChange: (draft: CategoryDraft) => void;
   onClose: () => void;
   onSave: () => void;
@@ -28,7 +30,9 @@ export function AdminCategoryDialog({
   errorMessage,
   isPending,
   canSave,
+  lockDraft,
   retryDetail,
+  checkCreate,
   onDraftChange,
   onClose,
   onSave,
@@ -85,6 +89,7 @@ export function AdminCategoryDialog({
               fieldErrors.name === undefined ? undefined : "category-name-error"
             }
             maxLength={100}
+            readOnly={lockDraft}
             required
           />
           {fieldErrors.name === undefined ? null : (
@@ -102,7 +107,7 @@ export function AdminCategoryDialog({
             onChange={(event) => {
               onDraftChange({ ...draft, slug: event.target.value });
             }}
-            readOnly={mode === "edit"}
+            readOnly={mode === "edit" || lockDraft}
             maxLength={120}
             pattern="[A-Za-z0-9-]+"
             aria-invalid={fieldErrors.slug === undefined ? undefined : true}
@@ -130,6 +135,11 @@ export function AdminCategoryDialog({
         {retryDetail === null ? null : (
           <button type="button" onClick={retryDetail} disabled={isPending}>
             إعادة تحميل التصنيف
+          </button>
+        )}
+        {checkCreate === null ? null : (
+          <button type="button" onClick={checkCreate} disabled={isPending}>
+            التحقق من نتيجة الحفظ
           </button>
         )}
         <div>

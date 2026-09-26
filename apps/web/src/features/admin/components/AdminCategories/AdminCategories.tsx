@@ -8,12 +8,15 @@ import {
   Plus,
   Search,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { AdminCategory, CategoryListQuery } from "@fury/contracts";
+import { useSession } from "@/features/auth/hooks/auth.hooks";
 
+import { SafeAdminContentError } from "../../api/admin-content.api";
 import {
   adminContentErrorMessage,
   categoryFieldErrors,
+  isAmbiguousAdminCreateResult,
 } from "../../model/admin-content.errors";
 import {
   useAdminCategoryDetail,
@@ -34,6 +37,18 @@ type CategoryDialogState =
   | Readonly<{ mode: "edit"; categoryId: string }>;
 
 export function AdminCategories() {
+  const session = useSession();
+  const user = session.data?.user;
+  const actorId =
+    user?.role === "ADMIN" &&
+    user.status === "ACTIVE" &&
+    user.emailVerifiedAt !== null
+      ? user.id
+      : null;
+  return <ActorCategories key={actorId ?? "unavailable"} />;
+}
+
+function ActorCategories() {
   const [search, setSearch] = useState("");
   const [enabledFilter, setEnabledFilter] = useState<"all" | "true" | "false">(
     "all",
@@ -47,6 +62,15 @@ export function AdminCategories() {
   const [writeError, setWriteError] = useState<unknown>(null);
   const [accessRetryError, setAccessRetryError] = useState<unknown>(null);
   const [isRetryingAccess, setIsRetryingAccess] = useState(false);
+  const [createOutcomeUnknown, setCreateOutcomeUnknown] = useState(false);
+  const [createConflictSeen, setCreateConflictSeen] = useState(false);
+  const [isCheckingCreate, setIsCheckingCreate] = useState(false);
+  const submitLocked = useRef(false);
+  const unresolvedCreateDraft = useRef<{
+    requestId: string;
+    draft: CategoryDraft;
+    conflicted: boolean;
+  } | null>(null);
   const hasFilters = search.trim().length > 0 || enabledFilter !== "all";
 
   const query = useMemo<CategoryListQuery>(
@@ -77,7 +101,8 @@ export function AdminCategories() {
   const isMutationPending =
     createCategory.isPending ||
     updateCategory.isPending ||
-    moveCategory.isPending;
+    moveCategory.isPending ||
+    isCheckingCreate;
   const fieldErrors = categoryFieldErrors(writeError);
   const mutationErrorMessage =
     writeError === null ? null : adminContentErrorMessage(writeError);
@@ -94,26 +119,50 @@ export function AdminCategories() {
     : null;
 
   const closeDialog = () => {
-    if (isMutationPending) return;
+    if (isMutationPending || submitLocked.current) return;
+    if (dialog?.mode === "create" && createOutcomeUnknown) {
+      unresolvedCreateDraft.current = {
+        requestId: dialog.requestId,
+        draft,
+        conflicted: createConflictSeen,
+      };
+    }
     setDialog(null);
     setDraft({ name: "", slug: "" });
     setWriteError(null);
+    setCreateOutcomeUnknown(false);
+    setCreateConflictSeen(false);
   };
 
   const openCreate = () => {
+    if (submitLocked.current) return;
+    const unresolved = unresolvedCreateDraft.current;
+    if (unresolved !== null) {
+      setDraft(unresolved.draft);
+      setDialog({ mode: "create", requestId: unresolved.requestId });
+      setCreateOutcomeUnknown(true);
+      setCreateConflictSeen(unresolved.conflicted);
+      return;
+    }
     setWriteError(null);
+    setCreateOutcomeUnknown(false);
+    setCreateConflictSeen(false);
     setDraft({ name: "", slug: "" });
     setDialog({ mode: "create", requestId: globalThis.crypto.randomUUID() });
   };
 
   const openEdit = (category: AdminCategory) => {
+    if (submitLocked.current) return;
     setWriteError(null);
+    setCreateOutcomeUnknown(false);
+    setCreateConflictSeen(false);
     setDraft({ name: category.displayName, slug: category.slug });
     setDialog({ mode: "edit", categoryId: category.id });
   };
 
   const saveCategory = async () => {
-    if (dialog === null) return;
+    if (dialog === null || submitLocked.current || createConflictSeen) return;
+    submitLocked.current = true;
     setWriteError(null);
     const displayName = draft.name.trim().normalize("NFC");
     const slug = draft.slug.trim().normalize("NFC").toLowerCase();
@@ -134,8 +183,47 @@ export function AdminCategories() {
       }
       setDialog(null);
       setDraft({ name: "", slug: "" });
+      unresolvedCreateDraft.current = null;
+      setCreateOutcomeUnknown(false);
+      setCreateConflictSeen(false);
     } catch (error: unknown) {
       setWriteError(error);
+      if (dialog.mode === "create") {
+        if (isAmbiguousAdminCreateResult(error)) setCreateOutcomeUnknown(true);
+        if (
+          createOutcomeUnknown &&
+          error instanceof SafeAdminContentError &&
+          error.statusCode === 409
+        ) {
+          setCreateConflictSeen(true);
+        }
+      }
+    } finally {
+      submitLocked.current = false;
+    }
+  };
+
+  const checkUnknownCreate = async () => {
+    if (dialog?.mode !== "create" || isCheckingCreate || submitLocked.current)
+      return;
+    submitLocked.current = true;
+    setIsCheckingCreate(true);
+    setWriteError(null);
+    try {
+      await createCategory.readback(dialog.requestId);
+      setDialog(null);
+      setDraft({ name: "", slug: "" });
+      unresolvedCreateDraft.current = null;
+      setCreateOutcomeUnknown(false);
+      setCreateConflictSeen(false);
+    } catch (error: unknown) {
+      setWriteError(error);
+      if (error instanceof SafeAdminContentError && error.statusCode === 409) {
+        setCreateConflictSeen(true);
+      }
+    } finally {
+      submitLocked.current = false;
+      setIsCheckingCreate(false);
     }
   };
 
@@ -450,14 +538,24 @@ export function AdminCategories() {
           mode={dialog.mode}
           draft={draft}
           fieldErrors={fieldErrors}
-          errorMessage={detailError ?? mutationErrorMessage}
+          errorMessage={
+            createOutcomeUnknown
+              ? "نتيجة حفظ التصنيف غير مؤكدة. تحقق من السجل المحفوظ قبل إعادة المحاولة."
+              : (detailError ?? mutationErrorMessage)
+          }
           isPending={
             isMutationPending ||
             (dialog.mode === "edit" && (detail.isLoading || detail.isFetching))
           }
           canSave={
-            dialog.mode === "create" ||
+            (dialog.mode === "create" && !createConflictSeen) ||
             (detail.data !== undefined && !detail.isError)
+          }
+          lockDraft={dialog.mode === "create" && createOutcomeUnknown}
+          checkCreate={
+            dialog.mode === "create" && createOutcomeUnknown
+              ? () => void checkUnknownCreate()
+              : null
           }
           retryDetail={
             dialog.mode === "edit" && detailError !== null

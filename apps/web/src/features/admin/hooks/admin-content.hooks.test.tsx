@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type {
+  AdminCategory,
   AdminWork,
   AdminWorkListQuery,
   CategoryListQuery,
@@ -392,6 +393,7 @@ describe("administrator category query identity and state", () => {
     );
     apiMock.getCategory.mockResolvedValue({
       ...category,
+      id: "33333333-3333-4333-8333-333333333333",
       displayName: "New category",
       slug: "new-category",
     });
@@ -409,6 +411,132 @@ describe("administrator category query identity and state", () => {
     expect(apiMock.getCategory).toHaveBeenCalledWith(
       "33333333-3333-4333-8333-333333333333",
     );
+  });
+
+  it("keeps a Category create unresolved after 404, 409, and a second 404", async () => {
+    const body = {
+      id: "33333333-3333-4333-8333-333333333333",
+      displayName: "New category",
+      slug: "new-category",
+    };
+    apiMock.createCategory
+      .mockRejectedValueOnce(new SafeAdminContentError("NETWORK_ERROR", 0, ""))
+      .mockRejectedValueOnce(
+        new SafeAdminContentError("CONTENT_CONFLICT", 409, ""),
+      );
+    apiMock.getCategory.mockRejectedValue(
+      new SafeAdminContentError("NOT_FOUND", 404, ""),
+    );
+    const { result } = renderHook(() => useCreateAdminCategory(), { wrapper });
+
+    await act(async () => {
+      await expect(result.current.mutateAsync(body)).rejects.toMatchObject({
+        code: "NETWORK_ERROR",
+      });
+      await expect(result.current.mutateAsync(body)).rejects.toMatchObject({
+        code: "CONTENT_CONFLICT",
+      });
+      await expect(result.current.mutateAsync(body)).rejects.toMatchObject({
+        code: "CONTENT_CONFLICT",
+      });
+    });
+    expect(apiMock.createCategory).toHaveBeenCalledTimes(2);
+    expect(apiMock.getCategory).toHaveBeenCalledTimes(2);
+    apiMock.getCategory.mockResolvedValue({ ...category, ...body });
+    await act(async () => {
+      await expect(result.current.readback(body.id)).resolves.toMatchObject(
+        body,
+      );
+    });
+    expect(apiMock.createCategory).toHaveBeenCalledTimes(2);
+  });
+
+  it("accepts a matching second readback after an uncertain Category create", async () => {
+    const body = {
+      id: "33333333-3333-4333-8333-333333333333",
+      displayName: "New category",
+      slug: "new-category",
+    };
+    apiMock.createCategory
+      .mockRejectedValueOnce(new SafeAdminContentError("NETWORK_ERROR", 0, ""))
+      .mockRejectedValueOnce(
+        new SafeAdminContentError("CONTENT_CONFLICT", 409, ""),
+      );
+    apiMock.getCategory
+      .mockRejectedValueOnce(new SafeAdminContentError("NOT_FOUND", 404, ""))
+      .mockResolvedValueOnce({ ...category, ...body });
+    const { result } = renderHook(() => useCreateAdminCategory(), { wrapper });
+    await act(async () => {
+      await expect(result.current.mutateAsync(body)).rejects.toMatchObject({
+        code: "NETWORK_ERROR",
+      });
+      await expect(result.current.mutateAsync(body)).resolves.toMatchObject(
+        body,
+      );
+    });
+    expect(apiMock.createCategory).toHaveBeenCalledTimes(2);
+    expect(apiMock.getCategory).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not accept a mismatched Category record after an uncertain create", async () => {
+    const body = {
+      id: "33333333-3333-4333-8333-333333333333",
+      displayName: "New category",
+      slug: "new-category",
+    };
+    apiMock.createCategory
+      .mockRejectedValueOnce(new SafeAdminContentError("NETWORK_ERROR", 0, ""))
+      .mockRejectedValueOnce(
+        new SafeAdminContentError("CONTENT_CONFLICT", 409, ""),
+      );
+    apiMock.getCategory
+      .mockRejectedValueOnce(new SafeAdminContentError("NOT_FOUND", 404, ""))
+      .mockResolvedValueOnce({ ...category, id: body.id });
+    const { result } = renderHook(() => useCreateAdminCategory(), { wrapper });
+    await act(async () => {
+      await expect(result.current.mutateAsync(body)).rejects.toMatchObject({
+        code: "NETWORK_ERROR",
+      });
+      await expect(result.current.mutateAsync(body)).rejects.toMatchObject({
+        code: "CONTENT_CONFLICT",
+      });
+    });
+    expect(apiMock.createCategory).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps a late Category create out of another administrator's cache", async () => {
+    const actorA = sessionMock.id;
+    const actorB = "77777777-7777-4777-8777-777777777777";
+    const saved = { ...category, id: "33333333-3333-4333-8333-333333333333" };
+    const pending = Promise.withResolvers<typeof saved>();
+    apiMock.createCategory.mockReturnValue(pending.promise);
+    const { result, rerender } = renderHook(() => useCreateAdminCategory(), {
+      wrapper,
+    });
+    let submitted: Promise<AdminCategory> | undefined;
+    act(() => {
+      submitted = result.current.mutateAsync({
+        id: saved.id,
+        displayName: saved.displayName,
+        slug: saved.slug,
+      });
+    });
+    sessionMock.id = actorB;
+    rerender();
+    await act(async () => {
+      pending.resolve(saved);
+      await submitted;
+    });
+    expect(
+      queryClient.getQueryData(
+        adminContentKeys.categoryDetail(actorB, saved.id),
+      ),
+    ).toBeUndefined();
+    expect(
+      queryClient.getQueryData(
+        adminContentKeys.categoryDetail(actorA, saved.id),
+      ),
+    ).toEqual(saved);
   });
 
   it("makes denial terminal and prevents late reads from restoring cached data", async () => {

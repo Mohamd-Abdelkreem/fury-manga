@@ -30,6 +30,7 @@ import { createDatabaseClient, UserRole, UserStatus } from "@fury/database";
 
 import { createApp } from "./app.js";
 import { createMediaConfig } from "./core/config/media.config.js";
+import { mapPrismaError } from "./infrastructure/database/prisma-error.mapper.js";
 import { MediaStorage } from "./infrastructure/media/media-storage.js";
 import { PublicationManagementService } from "./modules/content/publication-management.service.js";
 import { WorkManagementService } from "./modules/content/work-management.service.js";
@@ -262,11 +263,14 @@ describe("real HTTP content boundary", () => {
       data: {
         displayName: "Disabled editorial",
         slug: "disabled-editorial",
-        enabled: false,
       },
     });
     await database.workCategory.create({
       data: { workId: saved.id, categoryId: disabledCategory.id },
+    });
+    await database.category.update({
+      where: { id: disabledCategory.id },
+      data: { enabled: false },
     });
     await database.work.create({
       data: {
@@ -317,6 +321,37 @@ describe("real HTTP content boundary", () => {
     expect(
       parseSuccessData(publicList, publicWorkListDataSchema).items,
     ).toEqual([]);
+  });
+
+  it("maps a real disabled Category assignment guard to a safe content conflict", async () => {
+    const work = await database.work.create({
+      data: {
+        title: "Guarded draft",
+        slug: "guarded-draft",
+        type: "MANGA",
+        storyStatus: "ONGOING",
+      },
+    });
+    const category = await database.category.create({
+      data: {
+        displayName: "Disabled guard category",
+        slug: "disabled-guard-category",
+        enabled: false,
+      },
+    });
+    let failure: unknown;
+    try {
+      await database.workCategory.create({
+        data: { workId: work.id, categoryId: category.id },
+      });
+    } catch (error: unknown) {
+      failure = error;
+    }
+    expect(failure).toBeDefined();
+    expect(mapPrismaError(failure)).toMatchObject({
+      statusCode: 409,
+      code: "CONTENT_CONFLICT",
+    });
   });
 
   it("applies authentication and ADMIN denial before target lookup", async () => {

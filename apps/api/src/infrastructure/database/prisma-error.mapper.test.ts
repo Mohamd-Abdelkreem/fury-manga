@@ -48,12 +48,39 @@ describe("mapPrismaError", () => {
       "CONTENT_TRANSITION_CONFLICT",
     ],
     ["ck_chapters_number_positive", "CONTENT_CONFLICT"],
+    ["ck_work_categories_max_100", "CONTENT_CONFLICT"],
+    ["ck_work_categories_enabled_assignment", "CONTENT_CONFLICT"],
   ])("maps allowlisted content check %s to %s", (constraint, code) => {
     expect(
       mapPrismaError(
         prismaError({ code: "P2004", meta: { database_error: constraint } }),
       ).code,
     ).toBe(code);
+  });
+
+  it.each(["PZ100", "PZ101"])(
+    "maps the %s PostgreSQL guard code from Prisma's driver adapter",
+    (originalCode) => {
+      expect(
+        mapPrismaError(
+          prismaError({
+            code: "P2039",
+            meta: { driverAdapterError: { cause: { originalCode } } },
+          }),
+        ),
+      ).toMatchObject({ statusCode: 409, code: "CONTENT_CONFLICT" });
+    },
+  );
+
+  it("keeps unknown driver adapter errors private", () => {
+    expect(
+      mapPrismaError(
+        prismaError({
+          code: "P2039",
+          meta: { driverAdapterError: { cause: { originalCode: "PZ999" } } },
+        }),
+      ).statusCode,
+    ).toBe(500);
   });
 
   it("maps only allowlisted content uniqueness to the stable content code", () => {
@@ -95,6 +122,7 @@ describe("isAllowlistedPrismaCode", () => {
   it("accepts mapped codes and rejects unknown values", () => {
     expect(isAllowlistedPrismaCode("P2002")).toBe(true);
     expect(isAllowlistedPrismaCode("P2004")).toBe(true);
+    expect(isAllowlistedPrismaCode("P2039")).toBe(true);
     expect(isAllowlistedPrismaCode("P9999")).toBe(false);
     expect(isAllowlistedPrismaCode({ code: "P2002" })).toBe(false);
   });

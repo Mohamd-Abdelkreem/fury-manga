@@ -14,6 +14,9 @@ const phoneRemovalMigration = "20260923000000_remove_obsolete_phone";
 const mediaMigration = "20260923010000_persistent_vps_media";
 const p03Migration = "20260925010000_p03_editorial_foundation";
 const p03ReadinessMigration = "20260925020000_p03_published_readiness";
+const p03CategoryLimitMigration = "20260926010000_p03_work_category_limit";
+const p03EnabledAssignmentMigration =
+  "20260926020000_p03_enabled_category_assignments";
 
 const databaseUrl = (): string => {
   const value = process.env["DATABASE_URL"];
@@ -893,6 +896,16 @@ export default defineConfig({
       expect(retainedPublicationHistory.rows).toEqual([
         { id: publicationEventId },
       ]);
+      for (const migration of [
+        p03CategoryLimitMigration,
+        p03EnabledAssignmentMigration,
+      ]) {
+        await cp(
+          join(sourcePrisma, "migrations", migration),
+          join(temporaryMigrations, migration),
+          { recursive: true },
+        );
+      }
       await deployFrom(
         stagedUrl.toString(),
         join(temporaryRoot, "prisma.config.ts"),

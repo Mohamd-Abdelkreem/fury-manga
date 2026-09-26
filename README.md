@@ -244,9 +244,11 @@ does not provide or claim a verified one-command production Compose stack.
 ## Database invariants
 
 The migration chain contains the initial account/session migration, the
-additive `20260922010000_content_domain_foundation` migration, and the
-forward-only `20260923010000_persistent_vps_media` migration. The initial
-migration enforces:
+additive `20260922010000_content_domain_foundation` migration, the
+`20260923000000_remove_obsolete_phone` cleanup, the forward-only
+`20260923010000_persistent_vps_media` migration, and four P03
+migrations: editorial foundation, published readiness, Work Category limit,
+and enabled Category assignment. The initial migration enforces:
 
 - `ck_users_email_normalized`
 - `ck_users_status_timestamps_consistent`

@@ -6,8 +6,12 @@ Migration `20260925010000_p03_editorial_foundation` (A) adds nullable Work
 editorial fields, Work tags and featured constraints, then backfills category
 positions by `(created_at, id)` without creating missing synopsis, author or
 cover values. Migration `20260925020000_p03_published_readiness` (B) adds
-cross-row published-readiness guards. Rehearse A and the inventory below on an
-isolated populated copy before B; a fresh installation applies both in order.
+cross-row published-readiness guards. Migration
+`20260926010000_p03_work_category_limit` (C) limits each Work to 100 Category
+links. Migration `20260926020000_p03_enabled_category_assignments` (D) rejects
+new links to disabled Categories while preserving existing links. Rehearse A and
+the inventory below on an isolated populated copy before B; a fresh
+installation applies A through D in order.
 
 ## Inventory before the strict guard
 
@@ -73,3 +77,22 @@ metadata reads already fail closed for incomplete or unavailable-cover Works.
 The migration integration test constructs a populated P01/P02 upgrade with an incomplete legacy published work, observes its inventory result, verifies that the strict guard refuses it, returns it to draft while retaining its publication event, and repeats the inventory before installing migration B. Its isolated populated-upgrade and installed-guard assertions are automated rehearsal evidence. A fresh test command and its outcome must be recorded at each review gate; this runbook does not certify a production inventory or backup.
 
 After a successful isolated migration, repeat the read-only inventory and direct-write guard tests. Public metadata must fail closed for any later published work whose cover becomes unavailable during reconciliation; verified byte restoration and a fresh readiness check are required before it reappears.
+
+Before applying C and D to a populated copy, check for Works with more than 100
+Category links. These migrations retain existing links; an over-limit Work
+remains over limit until an authorized editor removes links. New insertions are
+rejected in that state. Use this read-only inventory:
+
+```sql
+SELECT work_id, count(*) AS category_count
+FROM work_categories
+GROUP BY work_id
+HAVING count(*) > 100
+ORDER BY work_id;
+```
+
+Rehearse concurrent inserts at the limit and an
+assignment racing with Category disable against the isolated copy. If C or D
+fails, inspect the migration failure, resolve the failed attempt as rolled back,
+repair the cause, and retry the same unapplied migration. Keep the coordinated
+PostgreSQL and media backup for restore under the linked recovery procedure.
