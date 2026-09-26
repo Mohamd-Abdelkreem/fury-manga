@@ -9,6 +9,8 @@ import {
   categoryListQuerySchema,
   categoryPositionBodySchema,
   contentOperationErrorCodeSchema,
+  publicationCommandBodySchema,
+  publicationTransitionDataSchema,
   createCategoryBodySchema,
   createWorkBodySchema,
   errorEnvelopeSchema,
@@ -23,6 +25,8 @@ import {
   type CategoryListQuery,
   type CategoryPositionBody,
   type ContentOperationErrorCode,
+  type PublicationCommandBody,
+  type PublicationTransition,
   type CreateCategoryBody,
   type CreateWorkBody,
   type UpdateCategoryBody,
@@ -61,6 +65,7 @@ const SAFE_FIELD_PATHS = new Set([
   "body.backgroundAssetId",
   "body.featuredHome",
   "body.featuredOrder",
+  "body.targetState",
   "params.categoryId",
   "params.workId",
   "query.page",
@@ -245,6 +250,23 @@ export const adminContentApi = {
         command,
       );
       return adminWorkDataSchema.parse(readSuccessData(response.data)).work;
+    });
+  },
+
+  transitionWork(
+    workId: string,
+    body: PublicationCommandBody,
+  ): Promise<PublicationTransition> {
+    return safeRequest(async () => {
+      const { workId: id } = workIdParamsSchema.parse({ workId });
+      const command = publicationCommandBodySchema.parse(body);
+      const response = await apiClient.put(
+        `/content/admin/works/${id}/publication`,
+        command,
+      );
+      return publicationTransitionDataSchema.parse(
+        readSuccessData(response.data),
+      ).transition;
     });
   },
 };

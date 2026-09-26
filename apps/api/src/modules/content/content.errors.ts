@@ -55,6 +55,32 @@ export class ContentCategoryInUseException extends ContentException {
   }
 }
 
+export class ContentNotReadyException extends AppError {
+  constructor(fields: readonly string[]) {
+    super(
+      "The Work is not ready for publication.",
+      HTTP_STATUS.CONFLICT,
+      "CONTENT_NOT_READY",
+      true,
+      fields.map((field) => ({
+        field: `body.${field}`,
+        message: "Required for publication.",
+      })),
+    );
+    this.name = "ContentNotReadyException";
+  }
+}
+
+export class ContentFeaturedConflictException extends ContentException {
+  constructor() {
+    super(
+      "CONTENT_FEATURED_CONFLICT",
+      "The featured position is already occupied.",
+    );
+    this.name = "ContentFeaturedConflictException";
+  }
+}
+
 export class ContentInvalidCategoryPositionException extends AppError {
   constructor() {
     super(

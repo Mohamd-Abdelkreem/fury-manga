@@ -1,6 +1,6 @@
 import type { PaginationQuery } from "../../core/pagination/pagination.js";
 import type { Prisma } from "@fury/database";
-import { PublicationStatus } from "@fury/database";
+import { MediaAssetStatus, PublicationStatus } from "@fury/database";
 
 import {
   CATEGORY_SELECT,
@@ -14,6 +14,7 @@ import {
   type PublicWorkRecord,
   type WorkRecord,
 } from "./content.mapper.js";
+import type { WorkReadinessInput } from "./content.rules.js";
 
 export type ContentReadClient = Pick<
   Prisma.TransactionClient,
@@ -73,6 +74,53 @@ export const findAdminWork = (
     select: WORK_SELECT,
   });
 
+export const readWorkReadiness = async (
+  transaction: Prisma.TransactionClient,
+  record: WorkRecord,
+): Promise<WorkReadinessInput> => {
+  const coverAssetId = record.mediaReferences.find(
+    ({ slot }) => slot === "WORK_COVER",
+  )?.assetId;
+  const availableCover =
+    coverAssetId === undefined
+      ? null
+      : await transaction.mediaAsset.findFirst({
+          where: {
+            id: coverAssetId,
+            status: MediaAssetStatus.AVAILABLE,
+            mediaClass: "WORK_COVER",
+            scope: "ADMIN",
+          },
+          select: { id: true },
+        });
+  return {
+    title: record.title,
+    synopsis: record.synopsis,
+    author: record.author,
+    enabledCategoryCount: record.categories.filter(
+      ({ category }) => category.enabled,
+    ).length,
+    hasAvailableCover: availableCover !== null,
+  };
+};
+
+export const findPublishedFeaturedWork = (
+  transaction: Prisma.TransactionClient,
+  featuredOrder: number,
+  excludingWorkId?: string,
+): Promise<{ id: string } | null> =>
+  transaction.work.findFirst({
+    where: {
+      publicationStatus: PublicationStatus.PUBLISHED,
+      featuredHome: true,
+      featuredOrder,
+      ...(excludingWorkId === undefined
+        ? {}
+        : { id: { not: excludingWorkId } }),
+    },
+    select: { id: true },
+  });
+
 export const findAdminChapter = (
   database: ContentReadClient,
   workId: string,
@@ -120,12 +168,30 @@ export const listAdminChapters = (
     select: CHAPTER_SELECT,
   });
 
+export const PUBLIC_READY_WORK_WHERE = {
+  publicationStatus: PublicationStatus.PUBLISHED,
+  synopsis: { not: null },
+  author: { not: null },
+  categories: { some: { category: { enabled: true } } },
+  mediaReferences: {
+    some: {
+      slot: "WORK_COVER",
+      retiredAt: null,
+      asset: {
+        mediaClass: "WORK_COVER",
+        scope: "ADMIN",
+        status: MediaAssetStatus.AVAILABLE,
+      },
+    },
+  },
+} satisfies Prisma.WorkWhereInput;
+
 export const listPublicWorks = (
   database: ContentReadClient,
   pagination: PaginationQuery,
 ): Promise<PublicWorkRecord[]> =>
   database.work.findMany({
-    where: { publicationStatus: PublicationStatus.PUBLISHED },
+    where: PUBLIC_READY_WORK_WHERE,
     orderBy: [{ publishedAt: "desc" }, { id: "asc" }],
     skip: pagination.skip,
     take: pagination.take,
@@ -137,7 +203,7 @@ export const findPublicWork = (
   slug: string,
 ): Promise<PublicWorkRecord | null> =>
   database.work.findFirst({
-    where: { slug, publicationStatus: PublicationStatus.PUBLISHED },
+    where: { AND: [PUBLIC_READY_WORK_WHERE, { slug }] },
     select: PUBLIC_WORK_SELECT,
   });
 

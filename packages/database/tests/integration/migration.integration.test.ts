@@ -1,4 +1,5 @@
 import { execFile } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { join, resolve, sep } from "node:path";
 import { promisify } from "node:util";
@@ -12,6 +13,7 @@ const contentMigration = "20260922010000_content_domain_foundation";
 const phoneRemovalMigration = "20260923000000_remove_obsolete_phone";
 const mediaMigration = "20260923010000_persistent_vps_media";
 const p03Migration = "20260925010000_p03_editorial_foundation";
+const p03ReadinessMigration = "20260925020000_p03_published_readiness";
 
 const databaseUrl = (): string => {
   const value = process.env["DATABASE_URL"];
@@ -91,6 +93,135 @@ const resolveRolledBackFrom = async (
 };
 
 describe("fresh post-P01 migration chain", () => {
+  it("rejects direct writes that invalidate a published work after the strict guard", async () => {
+    const pool = new Pool({ connectionString: databaseUrl() });
+    const userId = randomUUID();
+    const categoryId = randomUUID();
+    const workId = randomUUID();
+    const assetId = randomUUID();
+    const referenceId = randomUUID();
+    const eventId = randomUUID();
+    const publishedAt = new Date("2026-09-25T00:00:00.000Z");
+    try {
+      await pool.query(
+        `INSERT INTO users (id, email, password_hash, full_name, status, email_verified_at, updated_at)
+         VALUES ($1, $2, 'hash', 'Migration Guard', 'ACTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+        [userId, `guard-${userId}@example.com`],
+      );
+      await pool.query(
+        `INSERT INTO categories (id, display_name, slug, updated_at)
+         VALUES ($1, 'Guard Category', $2, CURRENT_TIMESTAMP)`,
+        [categoryId, `guard-${categoryId}`],
+      );
+      await pool.query(
+        `INSERT INTO works (id, title, slug, type, story_status, synopsis, author, updated_at)
+         VALUES ($1, 'Guard Work', $2, 'manga', 'ongoing', $3, 'Guard Author', CURRENT_TIMESTAMP)`,
+        [
+          workId,
+          `guard-${workId}`,
+          "A complete synopsis for migration guard testing.",
+        ],
+      );
+      await pool.query(
+        `INSERT INTO work_categories (work_id, category_id) VALUES ($1, $2)`,
+        [workId, categoryId],
+      );
+      await pool.query(
+        `INSERT INTO media_assets
+           (id, media_class, scope, uploaded_by_user_id, relative_key, content_type,
+            byte_length, width, height, sha256, status, available_at)
+         VALUES ($1, 'work_cover', 'admin', $2, $3, 'image/webp', 100, 10, 10,
+                 $4, 'available', CURRENT_TIMESTAMP)`,
+        [assetId, userId, `guard-${assetId}`, "a".repeat(64)],
+      );
+      await pool.query(
+        `INSERT INTO media_references (id, asset_id, work_id, slot, updated_at)
+         VALUES ($1, $2, $3, 'work_cover', CURRENT_TIMESTAMP)`,
+        [referenceId, assetId, workId],
+      );
+      await pool.query(
+        `INSERT INTO publication_events (id, work_id, occurred_at) VALUES ($1, $2, $3)`,
+        [eventId, workId, publishedAt],
+      );
+      await pool.query(
+        `UPDATE works SET publication_status = 'published', published_at = $3,
+               current_publication_event_id = $2 WHERE id = $1`,
+        [workId, eventId, publishedAt],
+      );
+
+      await expect(
+        pool.query(`UPDATE works SET author = NULL WHERE id = $1`, [workId]),
+      ).rejects.toMatchObject({ code: "23514" });
+      const saved = await pool.query<{ author: string }>(
+        `SELECT author FROM works WHERE id = $1`,
+        [workId],
+      );
+      expect(saved.rows).toEqual([{ author: "Guard Author" }]);
+      await expect(
+        pool.query(`UPDATE categories SET enabled = false WHERE id = $1`, [
+          categoryId,
+        ]),
+      ).rejects.toMatchObject({ code: "23514" });
+      await expect(
+        pool.query(
+          `UPDATE media_references SET retired_at = CURRENT_TIMESTAMP WHERE id = $1`,
+          [referenceId],
+        ),
+      ).rejects.toMatchObject({ code: "23514" });
+      await expect(
+        pool.query(
+          `UPDATE media_assets SET status = 'removing' WHERE id = $1`,
+          [assetId],
+        ),
+      ).rejects.toMatchObject({ code: "23514" });
+      const concurrent = await Promise.allSettled([
+        pool.query(
+          `DELETE FROM work_categories WHERE work_id = $1 AND category_id = $2`,
+          [workId, categoryId],
+        ),
+        pool.query(
+          `UPDATE media_references SET retired_at = CURRENT_TIMESTAMP WHERE id = $1`,
+          [referenceId],
+        ),
+      ]);
+      expect(concurrent.map((result) => result.status)).toEqual([
+        "rejected",
+        "rejected",
+      ]);
+      const intact = await pool.query<{
+        enabled: boolean;
+        category_count: number;
+        active_cover_count: number;
+        event_count: number;
+      }>(
+        `SELECT c.enabled,
+           (SELECT count(*)::int FROM work_categories WHERE work_id = $2) AS category_count,
+           (SELECT count(*)::int FROM media_references WHERE work_id = $2 AND retired_at IS NULL) AS active_cover_count,
+           (SELECT count(*)::int FROM publication_events WHERE work_id = $2) AS event_count
+         FROM categories c WHERE c.id = $1`,
+        [categoryId, workId],
+      );
+      expect(intact.rows).toEqual([
+        {
+          enabled: true,
+          category_count: 1,
+          active_cover_count: 1,
+          event_count: 1,
+        },
+      ]);
+      await pool.query(
+        `UPDATE media_assets SET status = 'unavailable' WHERE id = $1`,
+        [assetId],
+      );
+      const observedFailure = await pool.query<{ status: string }>(
+        `SELECT status FROM media_assets WHERE id = $1`,
+        [assetId],
+      );
+      expect(observedFailure.rows).toEqual([{ status: "unavailable" }]);
+    } finally {
+      await pool.end();
+    }
+  });
   it("creates exactly the required application tables, columns, and indexes", async () => {
     const pool = new Pool({ connectionString: databaseUrl() });
     try {
@@ -691,6 +822,81 @@ export default defineConfig({
       expect(retainedMedia.rows).toEqual([
         { asset_id: assetId, reference_id: referenceId, work_id: draftWorkId },
       ]);
+      const incompletePublished = await stagedPool.query<{ id: string }>(
+        `SELECT w.id FROM works w
+         WHERE w.publication_status = 'published'
+           AND (w.synopsis IS NULL OR w.author IS NULL
+             OR NOT EXISTS (
+               SELECT 1 FROM work_categories wc
+               JOIN categories c ON c.id = wc.category_id
+               WHERE wc.work_id = w.id AND c.enabled
+             )
+             OR NOT EXISTS (
+               SELECT 1 FROM media_references r
+               JOIN media_assets a ON a.id = r.asset_id
+               WHERE r.work_id = w.id AND r.slot = 'work_cover'
+                 AND r.retired_at IS NULL AND a.status = 'available'
+             )) ORDER BY w.id`,
+      );
+      expect(incompletePublished.rows).toEqual([{ id: publishedWorkId }]);
+      await cp(
+        join(sourcePrisma, "migrations", p03ReadinessMigration),
+        join(temporaryMigrations, p03ReadinessMigration),
+        { recursive: true },
+      );
+      await expect(
+        deployFrom(
+          stagedUrl.toString(),
+          join(temporaryRoot, "prisma.config.ts"),
+        ),
+      ).rejects.toThrow();
+      const stillPublished = await stagedPool.query<{ id: string }>(
+        `SELECT id FROM works WHERE id = $1 AND publication_status = 'published'`,
+        [publishedWorkId],
+      );
+      expect(stillPublished.rows).toEqual([{ id: publishedWorkId }]);
+      await resolveRolledBackFrom(
+        stagedUrl.toString(),
+        join(temporaryRoot, "prisma.config.ts"),
+        p03ReadinessMigration,
+      );
+      await stagedPool.query(
+        `UPDATE works SET publication_status = 'draft', published_at = NULL,
+           current_publication_event_id = NULL, version = version + 1,
+           updated_at = CURRENT_TIMESTAMP WHERE id = $1`,
+        [publishedWorkId],
+      );
+      const afterRemediation = await stagedPool.query<{ id: string }>(
+        `SELECT w.id FROM works w
+         WHERE w.publication_status = 'published'
+           AND (btrim(w.title) = ''
+             OR w.synopsis IS NULL OR char_length(btrim(w.synopsis)) < 20
+             OR w.author IS NULL OR btrim(w.author) = ''
+             OR NOT EXISTS (
+               SELECT 1 FROM work_categories wc
+               JOIN categories c ON c.id = wc.category_id
+               WHERE wc.work_id = w.id AND c.enabled
+             )
+             OR NOT EXISTS (
+               SELECT 1 FROM media_references r
+               JOIN media_assets a ON a.id = r.asset_id
+               WHERE r.work_id = w.id AND r.slot = 'work_cover'
+                 AND r.retired_at IS NULL AND a.media_class = 'work_cover'
+                 AND a.scope = 'admin' AND a.status = 'available'
+             ))`,
+      );
+      expect(afterRemediation.rows).toEqual([]);
+      const retainedPublicationHistory = await stagedPool.query<{ id: string }>(
+        `SELECT id FROM publication_events WHERE work_id = $1`,
+        [publishedWorkId],
+      );
+      expect(retainedPublicationHistory.rows).toEqual([
+        { id: publicationEventId },
+      ]);
+      await deployFrom(
+        stagedUrl.toString(),
+        join(temporaryRoot, "prisma.config.ts"),
+      );
       const legacyInsert = await stagedPool.query<{
         display_position: number;
       }>(

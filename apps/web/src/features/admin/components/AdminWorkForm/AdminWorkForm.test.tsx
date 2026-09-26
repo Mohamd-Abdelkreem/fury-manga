@@ -14,6 +14,7 @@ import type {
   AdminWork,
   CreateWorkBody,
   UpdateWorkBody,
+  PublicationCommandBody,
 } from "@fury/contracts";
 
 import { SafeAdminContentError } from "../../api/admin-content.api";
@@ -32,6 +33,15 @@ const mocks = vi.hoisted(() => ({
       }) => Promise<AdminWork>
     >(),
   readback: vi.fn(),
+  updateReadback: vi.fn(),
+  transition:
+    vi.fn<
+      (variables: {
+        workId: string;
+        body: PublicationCommandBody;
+      }) => Promise<unknown>
+    >(),
+  transitionReadback: vi.fn(),
   push: vi.fn(),
   replace: vi.fn(),
   actorId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
@@ -141,6 +151,12 @@ vi.mock("../../hooks/admin-content.hooks", () => ({
   }),
   useUpdateAdminWork: () => ({
     mutateAsync: mocks.update,
+    isPending: false,
+    readback: mocks.updateReadback,
+  }),
+  useTransitionAdminWork: () => ({
+    mutateAsync: mocks.transition,
+    readback: mocks.transitionReadback,
     isPending: false,
   }),
 }));
@@ -255,6 +271,169 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+});
+
+describe("publication controls", () => {
+  it("checks an unknown edit acknowledgement before allowing another save", async () => {
+    mocks.update.mockRejectedValueOnce(
+      new SafeAdminContentError("NETWORK_ERROR", 0, ""),
+    );
+    mocks.updateReadback.mockResolvedValueOnce({
+      ...work,
+      title: "Updated remotely",
+      version: work.version + 1,
+    });
+    renderForm("edit", work);
+    fireEvent.change(screen.getByLabelText(/عنوان العمل/u), {
+      target: { value: "Updated remotely" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "حفظ التعديلات" }));
+    await waitFor(() => {
+      expect(mocks.update).toHaveBeenCalledOnce();
+    });
+    expect(
+      screen.getByRole("button", { name: "حفظ التعديلات" }),
+    ).toBeDisabled();
+    fireEvent.click(
+      await screen.findByRole("button", { name: "تحقق من حفظ التعديلات" }),
+    );
+    await waitFor(() => {
+      expect(mocks.updateReadback).toHaveBeenCalledWith(work.id);
+    });
+    expect(
+      await screen.findByText("تأكد حفظ التعديلات على الخادم."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "حفظ التعديلات" })).toBeEnabled();
+  });
+  it("keeps a failed combined create-and-publish draft and reports readiness", async () => {
+    mocks.create.mockRejectedValueOnce(
+      new SafeAdminContentError("CONTENT_NOT_READY", 409, "not-ready", [
+        "body.author",
+        "body.coverAssetId",
+      ]),
+    );
+    renderForm("create");
+    fireEvent.change(screen.getByLabelText(/عنوان العمل/u), {
+      target: { value: "عمل للنشر" },
+    });
+    fireEvent.change(screen.getByLabelText("الرابط المختصر"), {
+      target: { value: "publish-work" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "حفظ ونشر" }));
+    await waitFor(() => {
+      expect(mocks.create).toHaveBeenCalledOnce();
+    });
+    expect(mocks.create.mock.calls[0]?.[0]).toHaveProperty(
+      "targetState",
+      "published",
+    );
+    expect(screen.getByLabelText(/عنوان العمل/u)).toHaveValue("عمل للنشر");
+    expect(screen.getByText(/لا يمكن نشر العمل/u)).toBeInTheDocument();
+    expect(
+      screen.getByText("اختر غلاف عمل متاحًا قبل النشر."),
+    ).toBeInTheDocument();
+    expect(mocks.push).not.toHaveBeenCalled();
+  });
+
+  it("archives a clean published work with its current version", async () => {
+    mocks.transition.mockResolvedValueOnce({
+      resourceType: "work",
+      resourceId: work.id,
+      publicationStatus: "archived",
+      publishedAt: null,
+      publicationEventId: null,
+      version: work.version + 1,
+      transitioned: true,
+    });
+    mocks.transitionReadback.mockResolvedValueOnce({
+      ...work,
+      publicationStatus: "archived",
+      version: work.version + 1,
+    });
+    renderForm("edit", { ...work, publicationStatus: "published" });
+    fireEvent.click(screen.getByRole("button", { name: "أرشفة العمل" }));
+    await waitFor(() => {
+      expect(mocks.transition).toHaveBeenCalledWith({
+        workId: work.id,
+        body: { expectedVersion: work.version, targetState: "archived" },
+      });
+    });
+    expect(
+      await screen.findByText("أُرشف العمل على الخادم."),
+    ).toBeInTheDocument();
+  });
+
+  it("reports the server state after an ambiguous unpublish instead of claiming success", async () => {
+    mocks.transition.mockRejectedValueOnce(
+      new SafeAdminContentError("NETWORK_ERROR", 0, ""),
+    );
+    mocks.transitionReadback.mockResolvedValueOnce({
+      ...work,
+      publicationStatus: "published",
+    });
+    renderForm("edit", { ...work, publicationStatus: "published" });
+    fireEvent.click(screen.getByRole("button", { name: "إلغاء النشر" }));
+    expect(
+      await screen.findByRole("button", { name: "تحقق من حالة العمل" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("أُعيد العمل إلى المسودة."),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "تحقق من حالة العمل" }));
+    expect(
+      await screen.findByText("تأكدت حالة العمل على الخادم: منشور."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "إلغاء النشر" })).toBeEnabled();
+  });
+
+  it("reports same-state publication without claiming another event", async () => {
+    mocks.transition.mockResolvedValueOnce({
+      resourceType: "work",
+      resourceId: work.id,
+      publicationStatus: "draft",
+      publishedAt: null,
+      publicationEventId: null,
+      version: work.version,
+      transitioned: false,
+    });
+    renderForm("edit", { ...work, publicationStatus: "archived" });
+    expect(
+      screen.queryByRole("button", { name: "حفظ ونشر" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "استعادة ونشر" }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "استعادة كمسودة" }));
+    expect(
+      await screen.findByText(
+        "العمل في هذه الحالة بالفعل؛ لم يُنشأ حدث نشر جديد.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText("الحالة المحفوظة: مسودة")).toBeInTheDocument();
+  });
+
+  it("archives a clean draft after unpublishing", async () => {
+    mocks.transition.mockResolvedValueOnce({
+      resourceType: "work",
+      resourceId: work.id,
+      publicationStatus: "archived",
+      publishedAt: null,
+      publicationEventId: null,
+      version: work.version + 1,
+      transitioned: true,
+    });
+    renderForm("edit", work);
+    fireEvent.click(screen.getByRole("button", { name: "أرشفة العمل" }));
+    await waitFor(() => {
+      expect(mocks.transition).toHaveBeenCalledWith({
+        workId: work.id,
+        body: { expectedVersion: work.version, targetState: "archived" },
+      });
+    });
+    expect(
+      await screen.findByText("أُرشف العمل على الخادم."),
+    ).toBeInTheDocument();
+  });
 });
 
 describe("actor-scoped mounted Work routes", () => {
@@ -816,7 +995,7 @@ describe("saved administrator Work editor", () => {
     );
     expect(title).toHaveValue(work.title);
     expect(
-      screen.getByRole("button", { name: "جارٍ حفظ المسودة…" }),
+      screen.getByRole("button", { name: "جارٍ حفظ التعديلات…" }),
     ).toBeDisabled();
     finish?.(saved);
     await screen.findByText(

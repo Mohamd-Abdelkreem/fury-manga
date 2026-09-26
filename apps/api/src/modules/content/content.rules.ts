@@ -14,6 +14,8 @@ import {
 
 import {
   ContentImmutableException,
+  ContentNotReadyException,
+  ContentFeaturedConflictException,
   ContentTransitionConflictException,
   ContentTypeConflictException,
 } from "./content.errors.js";
@@ -122,6 +124,21 @@ export const findWorkReadinessIssues = (
   if (input.enabledCategoryCount < 1) issues.push("categoryIds");
   if (!input.hasAvailableCover) issues.push("coverAssetId");
   return issues;
+};
+
+export const assertWorkReady = (input: WorkReadinessInput): void => {
+  const issues = findWorkReadinessIssues(input);
+  if (issues.length > 0) throw new ContentNotReadyException(issues);
+};
+
+export const assertFeaturedPositionAvailable = (
+  featuredHome: boolean,
+  featuredOrder: number | null,
+  occupied: boolean,
+): void => {
+  if (featuredHome && featuredOrder !== null && occupied) {
+    throw new ContentFeaturedConflictException();
+  }
 };
 
 export const assertPositiveChapterNumber = (value: number): void => {

@@ -208,6 +208,7 @@ export const mediaOperationErrorCodeSchema = z.enum([
   "MEDIA_TARGET_CONFLICT",
   "VERSION_CONFLICT",
   "MEDIA_UNAVAILABLE",
+  "CONTENT_NOT_READY",
 ]);
 
 export type MediaClass = z.infer<typeof mediaClassSchema>;

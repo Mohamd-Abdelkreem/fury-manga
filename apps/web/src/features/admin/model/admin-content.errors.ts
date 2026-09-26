@@ -24,6 +24,7 @@ export type WorkFieldErrors = Readonly<{
   categoryIds?: string;
   tagsText?: string;
   featuredOrderText?: string;
+  coverAssetId?: string;
 }>;
 
 // A rejected unsafe request may be CSRF, not revocation of GET authority.
@@ -106,6 +107,10 @@ export const adminWorkErrorMessage = (error: unknown): string => {
   switch (error.code) {
     case "CONTENT_CONFLICT":
       return "تعارضت بيانات العمل أو الوسائط. راجع اختياراتك ثم حاول مجددًا.";
+    case "CONTENT_NOT_READY":
+      return "لا يمكن نشر العمل قبل إكمال الحقول المطلوبة والتصنيف المفعل والغلاف المتاح. راجع الحقول المحددة ثم حاول مجددًا.";
+    case "CONTENT_FEATURED_CONFLICT":
+      return "موضع العرض المميز مستخدم لعمل آخر. اختر موضعًا آخر ثم أعد المحاولة.";
     case "CONTENT_IMMUTABLE":
       return "لا يمكن تغيير الرابط المختصر أو نوع العمل بعد إنشائه.";
     case "CONTENT_STALE_WRITE":
@@ -138,7 +143,7 @@ export const adminWorkErrorMessage = (error: unknown): string => {
 export const workFieldErrors = (error: unknown): WorkFieldErrors => {
   if (
     !(error instanceof SafeAdminContentError) ||
-    error.code !== "VALIDATION_ERROR"
+    (error.code !== "VALIDATION_ERROR" && error.code !== "CONTENT_NOT_READY")
   ) {
     return {};
   }
@@ -164,6 +169,9 @@ export const workFieldErrors = (error: unknown): WorkFieldErrors => {
     ...(hasTagError ? { tagsText: "راجع الوسوم المكررة أو حدودها." } : {}),
     ...(paths.has("body.featuredOrder")
       ? { featuredOrderText: "راجع موضع العرض المميز." }
+      : {}),
+    ...(paths.has("body.coverAssetId")
+      ? { coverAssetId: "اختر غلاف عمل متاحًا قبل النشر." }
       : {}),
   };
 };

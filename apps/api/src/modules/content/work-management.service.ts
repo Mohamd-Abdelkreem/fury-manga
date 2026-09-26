@@ -1,10 +1,7 @@
+import { randomUUID } from "node:crypto";
+
 import type { AdminWork } from "@fury/contracts";
-import {
-  MediaAssetStatus,
-  Prisma,
-  PublicationStatus,
-  type DatabaseClient,
-} from "@fury/database";
+import { Prisma, PublicationStatus, type DatabaseClient } from "@fury/database";
 
 import { NotFoundException } from "../../core/errors/not-found.error.js";
 import type { PaginationQuery } from "../../core/pagination/pagination.js";
@@ -20,16 +17,21 @@ import {
 import { mapAdminWork } from "./content.mapper.js";
 import {
   findAdminWork,
+  findPublishedFeaturedWork,
   listAdminWorks,
   lockCategoryEligibilityState,
+  readWorkReadiness,
 } from "./content.queries.js";
 import {
   assertImmutableValue,
+  assertFeaturedPositionAvailable,
+  assertPublicationTransition,
+  assertWorkReady,
   normalizeWorkTags,
   toDatabaseStoryStatus,
   toDatabaseWorkType,
 } from "./content.rules.js";
-import type { ContentList } from "./content.types.js";
+import type { ContentList, PublicationDependencies } from "./content.types.js";
 import type { MediaService } from "../media/media.service.js";
 import type { WorkMediaSelection } from "../media/media.types.js";
 import type {
@@ -42,6 +44,10 @@ export class WorkManagementService {
   constructor(
     private readonly database: DatabaseClient,
     private readonly mediaReferences?: Pick<MediaService, "saveWorkReferences">,
+    private readonly publicationDependencies: PublicationDependencies = {
+      currentTime: () => new Date(),
+      createIdentifier: randomUUID,
+    },
   ) {}
 
   async listWorks(
@@ -123,6 +129,37 @@ export class WorkManagementService {
               mediaSelection,
             );
           }
+          if (data.targetState === "published") {
+            const candidate = await findAdminWork(transaction, work.id);
+            if (candidate === null) throw new NotFoundException();
+            assertWorkReady(await readWorkReadiness(transaction, candidate));
+            const featuredOrder = candidate.featuredHome
+              ? candidate.featuredOrder
+              : null;
+            const occupied =
+              featuredOrder !== null &&
+              (await findPublishedFeaturedWork(transaction, featuredOrder)) !==
+                null;
+            assertFeaturedPositionAvailable(
+              candidate.featuredHome,
+              featuredOrder,
+              occupied,
+            );
+            const publishedAt = this.publicationDependencies.currentTime();
+            const eventId = this.publicationDependencies.createIdentifier();
+            await transaction.publicationEvent.create({
+              data: { id: eventId, workId: work.id, occurredAt: publishedAt },
+            });
+            await transaction.work.update({
+              where: { id: work.id },
+              data: {
+                publicationStatus: PublicationStatus.PUBLISHED,
+                publishedAt,
+                currentPublicationEventId: eventId,
+                version: { increment: 1 },
+              },
+            });
+          }
           const record = await findAdminWork(transaction, work.id);
           if (record === null) throw new NotFoundException();
           return record;
@@ -161,6 +198,15 @@ export class WorkManagementService {
           assertImmutableValue("Work type", mapped.type, data.type);
           if (current.version !== data.expectedVersion) {
             throw new ContentStaleWriteException();
+          }
+          const transitionRequested =
+            data.targetState === "published" &&
+            current.publicationStatus !== PublicationStatus.PUBLISHED;
+          if (transitionRequested) {
+            assertPublicationTransition(
+              current.publicationStatus,
+              PublicationStatus.PUBLISHED,
+            );
           }
 
           const title = data.title ?? current.title;
@@ -220,7 +266,8 @@ export class WorkManagementService {
             !categoriesChanged &&
             !tagsChanged &&
             !coverChanged &&
-            !backgroundChanged
+            !backgroundChanged &&
+            !transitionRequested
           ) {
             return current;
           }
@@ -290,29 +337,44 @@ export class WorkManagementService {
           }
           const record = await findAdminWork(transaction, workId);
           if (record === null) throw new NotFoundException();
-          if (current.publicationStatus === PublicationStatus.PUBLISHED) {
-            const coverId = record.mediaReferences.find(
-              ({ slot }) => slot === "WORK_COVER",
-            )?.assetId;
-            const availableCover =
-              coverId === undefined
-                ? null
-                : await transaction.mediaAsset.findFirst({
-                    where: { id: coverId, status: MediaAssetStatus.AVAILABLE },
-                    select: { id: true },
-                  });
-            if (
-              record.synopsis === null ||
-              record.synopsis.trim().length < 20 ||
-              record.author === null ||
-              record.author.trim().length === 0 ||
-              !record.categories.some(({ category }) => category.enabled) ||
-              availableCover === null
-            ) {
-              throw new ContentConflictException(
-                "A published Work must retain its required metadata, enabled Category, and available cover.",
-              );
-            }
+          if (
+            current.publicationStatus === PublicationStatus.PUBLISHED ||
+            transitionRequested
+          ) {
+            assertWorkReady(await readWorkReadiness(transaction, record));
+            const featuredOrder = record.featuredHome
+              ? record.featuredOrder
+              : null;
+            const occupied =
+              featuredOrder !== null &&
+              (await findPublishedFeaturedWork(
+                transaction,
+                featuredOrder,
+                workId,
+              )) !== null;
+            assertFeaturedPositionAvailable(
+              record.featuredHome,
+              featuredOrder,
+              occupied,
+            );
+          }
+          if (transitionRequested) {
+            const publishedAt = this.publicationDependencies.currentTime();
+            const eventId = this.publicationDependencies.createIdentifier();
+            await transaction.publicationEvent.create({
+              data: { id: eventId, workId, occurredAt: publishedAt },
+            });
+            await transaction.work.update({
+              where: { id: workId },
+              data: {
+                publicationStatus: PublicationStatus.PUBLISHED,
+                publishedAt,
+                currentPublicationEventId: eventId,
+              },
+            });
+            const publishedRecord = await findAdminWork(transaction, workId);
+            if (publishedRecord === null) throw new NotFoundException();
+            return publishedRecord;
           }
           return record;
         },

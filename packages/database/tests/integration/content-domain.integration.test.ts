@@ -1,4 +1,5 @@
 import { Pool } from "pg";
+import { randomUUID } from "node:crypto";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 
 const databaseUrl = process.env["DATABASE_URL"];
@@ -7,6 +8,50 @@ if (databaseUrl === undefined) {
 }
 
 const pool = new Pool({ connectionString: databaseUrl });
+const fixtureUserIds: string[] = [];
+
+const preparePublishedWork = async (
+  workId: string,
+  categoryId?: string,
+): Promise<void> => {
+  const selectedCategoryId = categoryId ?? randomUUID();
+  if (categoryId === undefined) {
+    await pool.query(
+      "INSERT INTO categories (id, display_name, slug, updated_at) VALUES ($1, 'Ready', $2, CURRENT_TIMESTAMP)",
+      [selectedCategoryId, `ready-${selectedCategoryId}`],
+    );
+  }
+  await pool.query(
+    `INSERT INTO work_categories (work_id, category_id)
+     VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+    [workId, selectedCategoryId],
+  );
+  await pool.query(
+    `UPDATE works SET synopsis = 'A complete synopsis for publication constraints.',
+       author = 'Fixture Author' WHERE id = $1`,
+    [workId],
+  );
+  const userId = randomUUID();
+  fixtureUserIds.push(userId);
+  await pool.query(
+    `INSERT INTO users (id, email, password_hash, full_name, status, email_verified_at, updated_at)
+     VALUES ($1, $2, 'hash', 'Fixture Admin', 'ACTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+    [userId, `ready-${userId}@example.test`],
+  );
+  const assetId = randomUUID();
+  await pool.query(
+    `INSERT INTO media_assets (id, media_class, scope, uploaded_by_user_id, relative_key,
+       content_type, byte_length, width, height, sha256, status, available_at)
+     VALUES ($1, 'work_cover', 'admin', $2, $3, 'image/webp', 100, 10, 10,
+       $4, 'available', CURRENT_TIMESTAMP)`,
+    [assetId, userId, `ready-${assetId}`, "a".repeat(64)],
+  );
+  await pool.query(
+    `INSERT INTO media_references (asset_id, work_id, slot, updated_at)
+     VALUES ($1, $2, 'work_cover', CURRENT_TIMESTAMP)`,
+    [assetId, workId],
+  );
+};
 
 const insertWork = async (
   slug = "durable-work",
@@ -27,6 +72,12 @@ describe("content-domain PostgreSQL invariants", () => {
   });
 
   afterAll(async () => {
+    await pool.query(
+      "TRUNCATE media_reference_events, media_references, upload_attempts, media_assets, publication_events, chapter_pages, chapters, work_tags, work_categories, categories, works",
+    );
+    await pool.query("DELETE FROM users WHERE id = ANY($1::uuid[])", [
+      fixtureUserIds,
+    ]);
     await pool.end();
   });
 
@@ -184,6 +235,8 @@ describe("content-domain PostgreSQL invariants", () => {
     await expect(
       pool.query("INSERT INTO publication_events DEFAULT VALUES"),
     ).rejects.toMatchObject({ code: "23514" });
+
+    await preparePublishedWork(workId);
 
     const client = await pool.connect();
     let eventId = "";
@@ -511,6 +564,7 @@ describe("content-domain PostgreSQL invariants", () => {
         "UPDATE works SET featured_home = true, featured_order = 1 WHERE id = $1",
         [workId],
       );
+      await preparePublishedWork(workId);
       const client = await pool.connect();
       try {
         await client.query("BEGIN");
@@ -643,6 +697,7 @@ describe("content-domain PostgreSQL invariants", () => {
     const draft = await insertWork("category-usage-draft");
     const published = await insertWork("category-usage-published");
     const archived = await insertWork("category-usage-archived");
+    await preparePublishedWork(published, categoryIds[0]);
     const publication = await pool.query<{ id: string }>(
       "INSERT INTO publication_events (work_id) VALUES ($1) RETURNING id",
       [published],
@@ -657,8 +712,8 @@ describe("content-domain PostgreSQL invariants", () => {
       [archived],
     );
     await pool.query(
-      "INSERT INTO work_categories (work_id, category_id) VALUES ($1, $2), ($3, $2), ($4, $2), ($1, $5)",
-      [draft, categoryIds[0], published, archived, categoryIds[1]],
+      "INSERT INTO work_categories (work_id, category_id) VALUES ($1, $2), ($3, $2), ($1, $4)",
+      [draft, categoryIds[0], archived, categoryIds[1]],
     );
     const usage = await pool.query<{ count: string }>(
       "SELECT count(DISTINCT work_id)::text AS count FROM work_categories WHERE category_id = $1",

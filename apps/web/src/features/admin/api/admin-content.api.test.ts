@@ -74,6 +74,45 @@ afterEach(() => {
 });
 
 describe("administrator category API", () => {
+  it("sends a CSRF-protected publication command and parses only its strict transition", async () => {
+    setAccessToken("publication-admin-token");
+    document.cookie = "csrfToken=publication-csrf; path=/";
+    const requests: InternalAxiosRequestConfig[] = [];
+    const transition = {
+      resourceType: "work",
+      resourceId: work.id,
+      publicationStatus: "draft",
+      publishedAt: null,
+      publicationEventId: null,
+      version: work.version + 1,
+      transitioned: true,
+    };
+    apiClient.defaults.adapter = (
+      config: InternalAxiosRequestConfig,
+    ): Promise<AxiosResponse> => {
+      requests.push(config);
+      return Promise.resolve({
+        config,
+        headers: new AxiosHeaders(),
+        status: 200,
+        statusText: "OK",
+        data: successEnvelope({ transition }, 200, config.url ?? ""),
+      });
+    };
+    await expect(
+      adminContentApi.transitionWork(work.id, {
+        expectedVersion: work.version,
+        targetState: "draft",
+      }),
+    ).resolves.toEqual(transition);
+    expect(requests[0]?.url).toBe(
+      `/content/admin/works/${work.id}/publication`,
+    );
+    expect(requests[0]?.headers.get("Authorization")).toBe(
+      "Bearer publication-admin-token",
+    );
+    expect(requests[0]?.headers.get("x-csrf-token")).toBe("publication-csrf");
+  });
   it("uses the central bearer/CSRF client and parses strict category envelopes", async () => {
     setAccessToken("category-admin-token");
     document.cookie = "csrfToken=category-csrf-token; path=/";

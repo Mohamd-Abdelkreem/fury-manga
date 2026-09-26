@@ -21,6 +21,7 @@ import {
   useAdminWorkDetail,
   useUpdateAdminCategory,
   useUpdateAdminWork,
+  useTransitionAdminWork,
 } from "./admin-content.hooks";
 
 const apiMock = vi.hoisted(() => ({
@@ -32,6 +33,7 @@ const apiMock = vi.hoisted(() => ({
   getWork: vi.fn(),
   createWork: vi.fn(),
   updateWork: vi.fn(),
+  transitionWork: vi.fn(),
 }));
 const sessionMock = vi.hoisted(() => ({
   id: "11111111-1111-4111-8111-111111111111",
@@ -376,6 +378,37 @@ describe("administrator category query identity and state", () => {
 });
 
 describe("administrator Work draft queries and mutations", () => {
+  it("confirms a work transition before invalidating the current actor's detail and lists", async () => {
+    const transition = {
+      resourceType: "work",
+      resourceId: work.id,
+      publicationStatus: "published",
+      publishedAt: "2026-09-26T10:00:00.000Z",
+      publicationEventId: category.id,
+      version: work.version + 1,
+      transitioned: true,
+    };
+    apiMock.transitionWork.mockResolvedValue(transition);
+    const detailKey = adminContentKeys.workDetail(sessionMock.id, work.id);
+    const otherKey = adminContentKeys.workDetail("other-admin", work.id);
+    queryClient.setQueryData(detailKey, work);
+    queryClient.setQueryData(otherKey, work);
+    const { result } = renderHook(() => useTransitionAdminWork(), { wrapper });
+    await act(async () => {
+      await expect(
+        result.current.mutateAsync({
+          workId: work.id,
+          body: { expectedVersion: work.version, targetState: "published" },
+        }),
+      ).resolves.toEqual(transition);
+    });
+    expect(apiMock.transitionWork).toHaveBeenCalledWith(work.id, {
+      expectedVersion: work.version,
+      targetState: "published",
+    });
+    expect(queryClient.getQueryState(detailKey)?.isInvalidated).toBe(true);
+    expect(queryClient.getQueryState(otherKey)?.isInvalidated).toBe(false);
+  });
   it("uses actor-and-resource detail keys and an abortable read", async () => {
     expect(adminContentKeys.workDetail("actor-one", work.id)).not.toEqual(
       adminContentKeys.workDetail("actor-two", work.id),

@@ -7,7 +7,9 @@ import {
   continueDraftAgainstServer,
   createWorkEditorState,
   createWorkCommand,
+  createPublishedWorkCommand,
   updateWorkCommand,
+  updatePublishedWorkCommand,
   mediaAssetForSave,
   nullableEditorialValue,
   receiveWorkRefresh,
@@ -213,6 +215,27 @@ describe("admin Work editor refresh and draft state", () => {
       categoryIds: [],
       slug: work.slug,
       tagsText: "Adventure، Mystery",
+    });
+  });
+
+  it("shapes atomic publish bodies without changing draft command semantics", () => {
+    const values = workFormValuesFromServer(work);
+    const media = {
+      attachedAssetId: work.coverAssetId,
+      candidateAssetId: null,
+      clearAttached: false,
+    };
+    expect(createWorkCommand(values, work.id, media, media)).not.toHaveProperty(
+      "targetState",
+    );
+    expect(
+      createPublishedWorkCommand(values, work.id, media, media),
+    ).toMatchObject({ targetState: "published" });
+    expect(
+      updatePublishedWorkCommand(values, work.version, media, media),
+    ).toMatchObject({
+      expectedVersion: work.version,
+      targetState: "published",
     });
   });
 });

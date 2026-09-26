@@ -10,6 +10,7 @@ import {
 import { CategoryManagementService } from "./category-management.service.js";
 import { PublicationManagementService } from "./publication-management.service.js";
 import { WorkManagementService } from "./work-management.service.js";
+import { prepareWorkForPublication } from "../../test-support/content-publication-fixture.test-helper.js";
 
 const databaseUrl = process.env["DATABASE_URL"];
 if (databaseUrl === undefined) {
@@ -24,6 +25,7 @@ const publications = new PublicationManagementService(database, {
   createIdentifier: randomUUID,
 });
 const pagination = { page: 1, limit: 25, skip: 0, take: 25 };
+const fixtureActorIds: string[] = [];
 
 const createCategory = (slug: string) =>
   categories.createCategory({ displayName: slug, slug });
@@ -45,6 +47,9 @@ const createPublishedWork = async (
     expectedVersion: work.version,
     categoryIds: [...categoryIds],
   });
+  fixtureActorIds.push(
+    await prepareWorkForPublication(database, work.id, categoryIds[0]),
+  );
   await publications.publishWork(work.id, {
     expectedVersion: assigned.version,
     targetState: "published",
@@ -60,6 +65,10 @@ describe("category management with PostgreSQL", () => {
   });
 
   afterAll(async () => {
+    await database.$executeRawUnsafe(
+      "TRUNCATE media_reference_events, media_references, upload_attempts, media_assets, publication_events, chapter_pages, chapters, work_tags, work_categories, categories, works",
+    );
+    await database.user.deleteMany({ where: { id: { in: fixtureActorIds } } });
     await database.$disconnect();
   });
 

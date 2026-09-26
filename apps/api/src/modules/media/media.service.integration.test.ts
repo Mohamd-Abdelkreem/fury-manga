@@ -12,6 +12,8 @@ import { createMediaConfig } from "../../core/config/media.config.js";
 import { AppError } from "../../core/errors/app.error.js";
 import { MediaStorage } from "../../infrastructure/media/media-storage.js";
 import { MediaService } from "./media.service.js";
+import { CategoryManagementService } from "../content/category-management.service.js";
+import { WorkManagementService } from "../content/work-management.service.js";
 
 const databaseUrl = process.env["DATABASE_URL"];
 if (databaseUrl === undefined)
@@ -23,8 +25,9 @@ const mediaRoot = join(fixtureRoot, "persistent");
 mkdirSync(mediaRoot);
 const storage = new MediaStorage(createMediaConfig(mediaRoot));
 const service = new MediaService(database, storage);
+const works = new WorkManagementService(database, service);
+const categories = new CategoryManagementService(database);
 const userIds: string[] = [];
-const workIds: string[] = [];
 
 const createActor = async (
   role: "ADMIN" | "USER" = "ADMIN",
@@ -47,18 +50,14 @@ const createActor = async (
 };
 
 afterAll(async () => {
-  await database.mediaReferenceEvent.deleteMany({
-    where: { actorUserId: { in: userIds } },
-  });
-  await database.mediaReference.deleteMany({
-    where: { workId: { in: workIds } },
-  });
+  await database.$executeRawUnsafe(
+    "TRUNCATE media_reference_events, media_references, publication_events, work_categories, categories, works CASCADE",
+  );
   for (const id of userIds) {
     await database.uploadAttempt.deleteMany({ where: { actorUserId: id } });
     await database.mediaAsset.deleteMany({ where: { uploadedByUserId: id } });
     await database.user.delete({ where: { id } });
   }
-  await database.work.deleteMany({ where: { id: { in: workIds } } });
   await database.$disconnect();
   rmSync(fixtureRoot, { recursive: true, force: true });
 });
@@ -272,7 +271,6 @@ describe("administrator media service", () => {
         storyStatus: "ONGOING",
       },
     });
-    workIds.push(work.id);
     const source = await sharp({
       create: { width: 600, height: 800, channels: 3, background: "green" },
     })
@@ -331,7 +329,6 @@ describe("administrator media service", () => {
         storyStatus: "ONGOING",
       },
     });
-    workIds.push(mismatchWork.id);
     await expect(
       service.bindReference(adminId, {
         targetKind: "work_cover",
@@ -407,7 +404,6 @@ describe("administrator media service", () => {
         storyStatus: "ONGOING",
       },
     });
-    workIds.push(work.id);
     const upload = async (background: string) =>
       service.uploadAdmin({
         actorUserId: adminId,
@@ -470,7 +466,6 @@ describe("administrator media service", () => {
         storyStatus: "ONGOING",
       },
     });
-    workIds.push(work.id);
     const uploaded = await service.uploadAdmin({
       actorUserId: adminId,
       attemptId: randomUUID(),
@@ -524,7 +519,6 @@ describe("administrator media service", () => {
       },
       select: { id: true },
     });
-    workIds.push(work.id);
 
     const upload = async (mediaClass: "work_cover" | "work_background") =>
       service.uploadAdmin({
@@ -664,5 +658,78 @@ describe("administrator media service", () => {
     await expect(service.reconcile(100)).resolves.toMatchObject({
       completedRemovals: 1,
     });
+  });
+  it("keeps a published cover on retire/removal failure and advances the Work on replacement", async () => {
+    const actorUserId = await createActor();
+    const category = await categories.createCategory({
+      displayName: "Protected",
+      slug: `protected-${randomUUID()}`,
+    });
+    const source = await sharp({
+      create: { width: 600, height: 800, channels: 3, background: "green" },
+    })
+      .jpeg()
+      .toBuffer();
+    const upload = async () =>
+      service.uploadAdmin({
+        actorUserId,
+        attemptId: randomUUID(),
+        mediaClass: "work_cover",
+        source,
+        declaredType: "image/jpeg",
+        sourceName: "cover.jpg",
+      });
+    const first = await upload();
+    const second = await upload();
+    const work = await works.createWork(
+      {
+        title: "Protected cover",
+        slug: `protected-${randomUUID()}`,
+        type: "manga",
+        storyStatus: "ongoing",
+        synopsis: "A complete synopsis for direct media safeguards.",
+        author: "Author",
+        categoryIds: [category.id],
+        coverAssetId: first.asset.id,
+        targetState: "published",
+      },
+      actorUserId,
+    );
+    const reference = await database.mediaReference.findFirstOrThrow({
+      where: { workId: work.id, slot: "WORK_COVER", retiredAt: null },
+    });
+    const before = await database.mediaReferenceEvent.count({
+      where: { referenceId: reference.id },
+    });
+    await expect(
+      service.retireReference(actorUserId, reference.id, {
+        expectedAssetId: first.asset.id,
+        expectedVersion: reference.version,
+      }),
+    ).rejects.toMatchObject({ code: "CONTENT_NOT_READY" });
+    await expect(
+      service.removeAdminAsset(actorUserId, first.asset.id),
+    ).rejects.toMatchObject({ code: "MEDIA_IN_USE" });
+    expect(
+      await database.mediaReferenceEvent.count({
+        where: { referenceId: reference.id },
+      }),
+    ).toBe(before);
+    expect(await works.getWork(work.id)).toMatchObject({
+      coverAssetId: first.asset.id,
+      version: work.version,
+    });
+    await service.replaceReference(actorUserId, reference.id, {
+      assetId: second.asset.id,
+      expectedAssetId: first.asset.id,
+      expectedVersion: reference.version,
+    });
+    expect(await works.getWork(work.id)).toMatchObject({
+      coverAssetId: second.asset.id,
+      version: work.version + 1,
+    });
+    expect(
+      await database.publicationEvent.count({ where: { workId: work.id } }),
+    ).toBe(1);
   });
 });

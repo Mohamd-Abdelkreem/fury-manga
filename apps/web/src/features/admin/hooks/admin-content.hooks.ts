@@ -10,6 +10,7 @@ import type {
   CategoryPositionBody,
   CreateCategoryBody,
   CreateWorkBody,
+  PublicationCommandBody,
   UpdateCategoryBody,
   UpdateWorkBody,
 } from "@fury/contracts";
@@ -759,7 +760,7 @@ export const useCreateAdminWork = () => {
 export const useUpdateAdminWork = () => {
   const session = useAdminActor();
   const queryClient = useQueryClient();
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: ({
       workId,
       body,
@@ -804,4 +805,69 @@ export const useUpdateAdminWork = () => {
     },
     retry: false,
   });
+  const readback = useCallback(
+    async (workId: string): Promise<AdminWork> => {
+      const actorId = session.actorId;
+      if (actorId === null) throw denialError();
+      const readOrder = issueWorkRead(queryClient, actorId, workId);
+      return runActorRequest(queryClient, actorId, async () => {
+        const work = await adminContentApi.getWork(workId);
+        return keepNewestWork(queryClient, actorId, work, readOrder);
+      });
+    },
+    [queryClient, session.actorId],
+  );
+  return { ...mutation, readback };
+};
+
+export const useTransitionAdminWork = () => {
+  const session = useAdminActor();
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: ({
+      workId,
+      body,
+    }: {
+      workId: string;
+      body: PublicationCommandBody;
+    }) => {
+      if (session.actorId === null) return Promise.reject(denialError());
+      return runActorRequest(
+        queryClient,
+        session.actorId,
+        () => adminContentApi.transitionWork(workId, body),
+        { workId, kind: "write" },
+      );
+    },
+    onMutate: () => ({ actorId: session.actorId }),
+    onSuccess: async (_transition, variables, context) => {
+      const actorId = context.actorId;
+      if (
+        actorId === null ||
+        actorId !== session.actorId ||
+        isActorDenied(queryClient, actorId)
+      )
+        return;
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: adminContentKeys.workDetail(actorId, variables.workId),
+        }),
+        invalidateWorkDependencies(queryClient, actorId, variables.workId),
+      ]);
+    },
+    retry: false,
+  });
+  const readback = useCallback(
+    async (workId: string): Promise<AdminWork> => {
+      const actorId = session.actorId;
+      if (actorId === null) throw denialError();
+      const readOrder = issueWorkRead(queryClient, actorId, workId);
+      return runActorRequest(queryClient, actorId, async () => {
+        const work = await adminContentApi.getWork(workId);
+        return keepNewestWork(queryClient, actorId, work, readOrder);
+      });
+    },
+    [queryClient, session.actorId],
+  );
+  return { ...mutation, readback };
 };

@@ -1,4 +1,5 @@
 import { ImageIcon } from "lucide-react";
+import { useFormContext } from "react-hook-form";
 import { AdminMediaCandidatePicker } from "@/features/media/components/AdminMediaCandidatePicker";
 import type { MediaDraftSelection } from "../../model/admin-work-editor";
 import type { FormValues } from "../../model/admin-work-form";
@@ -27,6 +28,9 @@ export function AdminWorkMediaFields({
   onKeepCover,
   onKeepBackground,
 }: Props) {
+  const {
+    formState: { errors },
+  } = useFormContext<FormValues>();
   return (
     <section className={styles["formCard"]}>
       <div className={styles["sectionHeader"]}>
@@ -46,6 +50,11 @@ export function AdminWorkMediaFields({
             initialAssetId={values.coverAssetId}
             onAssetSelected={onCoverSelected}
           />
+          {errors.coverAssetId?.message ? (
+            <p className={styles["errorMessage"]} role="alert">
+              {errors.coverAssetId.message}
+            </p>
+          ) : null}
           {coverSelection.candidateAssetId !== null ? (
             <p className={styles["hint"]} role="status">
               سيُربط الوسيط المختار بالمسودة عند الحفظ.

@@ -77,6 +77,7 @@ export const PUBLIC_WORK_SELECT = {
   storyStatus: true,
   publishedAt: true,
   categories: {
+    where: { category: { enabled: true } },
     select: { category: { select: PUBLIC_CATEGORY_SELECT } },
   },
 } as const satisfies Prisma.WorkSelect;

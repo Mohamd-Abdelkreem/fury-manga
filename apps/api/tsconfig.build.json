@@ -14,6 +14,7 @@
     "coverage",
     "tests",
     "**/*.test.ts",
+    "**/*.test-helper.ts",
     "**/*.spec.ts"
   ]
 }

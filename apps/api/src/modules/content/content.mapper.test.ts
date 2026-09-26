@@ -193,4 +193,10 @@ describe("content allowlist mappers", () => {
     ]);
     expect(mapped.categories[1]?.enabled).toBe(false);
   });
+
+  it("selects only enabled category associations for public projection", () => {
+    expect(PUBLIC_WORK_SELECT.categories).toMatchObject({
+      where: { category: { enabled: true } },
+    });
+  });
 });

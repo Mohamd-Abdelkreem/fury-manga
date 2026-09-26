@@ -1,5 +1,5 @@
 import type { PublicChapter, PublicWork } from "@fury/contracts";
-import { PublicationStatus, type DatabaseClient } from "@fury/database";
+import { PublicationStatus, Prisma, type DatabaseClient } from "@fury/database";
 
 import { NotFoundException } from "../../core/errors/not-found.error.js";
 import {
@@ -10,6 +10,7 @@ import { mapPublicChapter, mapPublicWork } from "./content.mapper.js";
 import {
   findPublicChapter,
   findPublicWork,
+  PUBLIC_READY_WORK_WHERE,
   listPublicChapters,
   listPublicWorks,
 } from "./content.queries.js";
@@ -25,10 +26,9 @@ export class PublicContentService {
       async (transaction) =>
         Promise.all([
           listPublicWorks(transaction, pagination),
-          transaction.work.count({
-            where: { publicationStatus: PublicationStatus.PUBLISHED },
-          }),
+          transaction.work.count({ where: PUBLIC_READY_WORK_WHERE }),
         ]),
+      { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
     );
     const workList = {
       items: records.map(mapPublicWork),

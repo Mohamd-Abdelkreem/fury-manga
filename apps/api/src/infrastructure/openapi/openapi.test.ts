@@ -79,11 +79,21 @@ const conflictCodesByOperation = [
     "put",
     ["CONTENT_CONFLICT", "CONTENT_STALE_WRITE"],
   ],
-  ["/content/admin/works", "post", ["CONTENT_CONFLICT"]],
+  [
+    "/content/admin/works",
+    "post",
+    ["CONTENT_CONFLICT", "CONTENT_NOT_READY", "CONTENT_FEATURED_CONFLICT"],
+  ],
   [
     "/content/admin/works/{workId}",
     "patch",
-    ["CONTENT_CONFLICT", "CONTENT_IMMUTABLE", "CONTENT_STALE_WRITE"],
+    [
+      "CONTENT_CONFLICT",
+      "CONTENT_IMMUTABLE",
+      "CONTENT_STALE_WRITE",
+      "CONTENT_NOT_READY",
+      "CONTENT_FEATURED_CONFLICT",
+    ],
   ],
   ["/content/admin/works/{workId}/categories", "put", ["CONTENT_STALE_WRITE"]],
   [
@@ -99,7 +109,12 @@ const conflictCodesByOperation = [
   [
     "/content/admin/works/{workId}/publication",
     "put",
-    ["CONTENT_TRANSITION_CONFLICT", "CONTENT_STALE_WRITE"],
+    [
+      "CONTENT_TRANSITION_CONFLICT",
+      "CONTENT_STALE_WRITE",
+      "CONTENT_NOT_READY",
+      "CONTENT_FEATURED_CONFLICT",
+    ],
   ],
   [
     "/content/admin/works/{workId}/chapters/{chapterId}/publication",
@@ -214,6 +229,18 @@ describe("OpenAPI document", () => {
         "409",
       ),
     ).toEqual(["MEDIA_TARGET_CONFLICT", "VERSION_CONFLICT"]);
+    expect(
+      responseCodeEnum(
+        document.paths,
+        "/media/references/{referenceId}",
+        "delete",
+        "409",
+      ),
+    ).toEqual([
+      "MEDIA_TARGET_CONFLICT",
+      "VERSION_CONFLICT",
+      "CONTENT_NOT_READY",
+    ]);
   });
 
   it("describes degraded readiness as a success envelope", () => {
@@ -325,6 +352,8 @@ describe("OpenAPI document", () => {
         "CONTENT_TRANSITION_CONFLICT",
         "CONTENT_STALE_WRITE",
         "CONTENT_CATEGORY_IN_USE",
+        "CONTENT_NOT_READY",
+        "CONTENT_FEATURED_CONFLICT",
       ],
     });
     for (const [path, method, expectedCodes] of conflictCodesByOperation) {

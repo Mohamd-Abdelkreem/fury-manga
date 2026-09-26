@@ -55,7 +55,7 @@ export const createApiRouter = (
   );
   const contentManagementController = new ContentManagementController(
     new CategoryManagementService(database),
-    new WorkManagementService(database, mediaService),
+    new WorkManagementService(database, mediaService, publicationDependencies),
     new ChapterManagementService(database),
     new PublicationManagementService(database, publicationDependencies),
   );

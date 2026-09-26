@@ -13,13 +13,19 @@ import {
 } from "react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 
-import type { AdminWork, CreateWorkBody } from "@fury/contracts";
+import type {
+  AdminWork,
+  CreateWorkBody,
+  PublicationStatus,
+  UpdateWorkBody,
+} from "@fury/contracts";
 import { useSession } from "@/features/auth/hooks/auth.hooks";
 
 import { SafeAdminContentError } from "../../api/admin-content.api";
 import {
   useCreateAdminWork,
   useUpdateAdminWork,
+  useTransitionAdminWork,
 } from "../../hooks/admin-content.hooks";
 import {
   adminWorkErrorMessage,
@@ -31,10 +37,13 @@ import {
   adoptServerWork,
   continueDraftAgainstServer,
   createWorkCommand,
+  createPublishedWorkCommand,
   receiveWorkRefresh,
   updateWorkCommand,
+  updatePublishedWorkCommand,
   workFormValuesFromServer,
   workMatchesCreateCommand,
+  workMatchesUpdateCommand,
   type MediaDraftSelection,
   type WorkEditorState,
 } from "../../model/admin-work-editor";
@@ -84,6 +93,7 @@ function ActorWorkForm({
   const router = useRouter();
   const createWork = useCreateAdminWork();
   const updateWork = useUpdateAdminWork();
+  const transitionWork = useTransitionAdminWork();
   const isEdit = mode === "edit" && initialWork !== undefined;
   const form = useForm<FormValues>({
     resolver: zodResolver(adminWorkFormSchema, {
@@ -95,7 +105,7 @@ function ActorWorkForm({
     mode: "onSubmit",
     reValidateMode: "onChange",
   });
-  const { getValues, reset, setError, setFocus } = form;
+  const { clearErrors, getValues, reset, setError, setFocus } = form;
   const formDirty = form.formState.isDirty;
   const [resolvedConflictVersion, setResolvedConflictVersion] = useState<
     number | null
@@ -112,9 +122,20 @@ function ActorWorkForm({
   const [createOutcomeUnknown, setCreateOutcomeUnknown] = useState(false);
   const [isCheckingCreate, setIsCheckingCreate] = useState(false);
   const [isDiscardOpen, setIsDiscardOpen] = useState(false);
+  const [transitionUnknown, setTransitionUnknown] = useState(false);
+  const [editOutcomeUnknown, setEditOutcomeUnknown] = useState(false);
+  const [pendingAction, setPendingAction] = useState<
+    "draft" | "published" | "transition" | null
+  >(null);
+  const [isCheckingTransition, setIsCheckingTransition] = useState(false);
+  const [confirmedStatus, setConfirmedStatus] =
+    useState<PublicationStatus | null>(null);
+  const submitIntent = useRef<"draft" | "published">("draft");
   const createId = useRef<string | null>(null);
   const lastCreateCommand = useRef<CreateWorkBody | null>(null);
   const lastCreateDraft = useRef<string | null>(null);
+  const lastEditCommand = useRef<UpdateWorkBody | null>(null);
+  const lastEditDraft = useRef<string | null>(null);
   const createConflictSeen = useRef(false);
   const [confirmedCreateId, setConfirmedCreateId] = useState<string | null>(
     null,
@@ -171,7 +192,7 @@ function ActorWorkForm({
     if (currentDraft.current !== draft) draftRevision.current += 1;
     currentDraft.current = draft;
     currentCanSave.current = canSave;
-    currentUnknown.current = createOutcomeUnknown;
+    currentUnknown.current = createOutcomeUnknown || editOutcomeUnknown;
   });
   if (
     initialWork !== undefined &&
@@ -212,10 +233,14 @@ function ActorWorkForm({
     syncedWorkVersion.current = initialWork.version;
   }, [baseline, editorDirty, getValues, initialWork, reset]);
 
-  const onCoverSelected = useCallback((assetId: string | null) => {
-    setCoverCandidateAssetId(assetId);
-    setClearCover(false);
-  }, []);
+  const onCoverSelected = useCallback(
+    (assetId: string | null) => {
+      setCoverCandidateAssetId(assetId);
+      setClearCover(false);
+      if (assetId !== null) clearErrors("coverAssetId");
+    },
+    [clearErrors],
+  );
   const onBackgroundSelected = useCallback((assetId: string | null) => {
     setBackgroundCandidateAssetId(assetId);
     setClearBackground(false);
@@ -231,7 +256,8 @@ function ActorWorkForm({
   const onKeepCover = useCallback(() => {
     setCoverCandidateAssetId(null);
     setClearCover(false);
-  }, []);
+    clearErrors("coverAssetId");
+  }, [clearErrors]);
   const onKeepBackground = useCallback(() => {
     setBackgroundCandidateAssetId(null);
     setClearBackground(false);
@@ -270,6 +296,94 @@ function ActorWorkForm({
         message: fields.featuredOrderText,
       });
     }
+    if (fields.coverAssetId) {
+      setError("coverAssetId", {
+        type: "server",
+        message: fields.coverAssetId,
+      });
+    }
+  };
+
+  const transition = async (targetState: PublicationStatus) => {
+    if (
+      initialWork === undefined ||
+      baseline.version === null ||
+      editorDirty ||
+      submitLocked.current ||
+      readbackLocked.current ||
+      !canSave ||
+      transitionUnknown ||
+      editOutcomeUnknown ||
+      serverConflict !== null
+    )
+      return;
+    submitLocked.current = true;
+    const identity = currentIdentity.current;
+    setPendingAction("transition");
+    setFormMessage(null);
+    try {
+      const result = await transitionWork.mutateAsync({
+        workId: initialWork.id,
+        body: { expectedVersion: baseline.version, targetState },
+      });
+      if (!canFinishSave(identity)) return;
+      setBaseline({ workId: initialWork.id, version: result.version });
+      syncedWorkVersion.current = result.version;
+      setConfirmedStatus(result.publicationStatus);
+      setFormMessage(
+        result.transitioned
+          ? targetState === "archived"
+            ? "أُرشف العمل على الخادم."
+            : targetState === "draft"
+              ? "أُعيد العمل إلى المسودة."
+              : "نُشر العمل على الخادم."
+          : "العمل في هذه الحالة بالفعل؛ لم يُنشأ حدث نشر جديد.",
+      );
+    } catch (error: unknown) {
+      if (!canFinishSave(identity)) return;
+      if (isAmbiguousAdminCreateResult(error)) {
+        setTransitionUnknown(true);
+        setFormMessage(
+          "نتيجة تغيير حالة العمل غير مؤكدة. تحقق من حالة الخادم قبل إعادة المحاولة.",
+        );
+      } else {
+        setFormMessage(adminWorkErrorMessage(error));
+        applySafeFieldErrors(error);
+      }
+    } finally {
+      submitLocked.current = false;
+      if (mounted.current && currentIdentity.current === identity)
+        setPendingAction(null);
+    }
+  };
+
+  const checkUnknownTransition = async () => {
+    if (
+      initialWork === undefined ||
+      readbackLocked.current ||
+      submitLocked.current
+    )
+      return;
+    readbackLocked.current = true;
+    const identity = currentIdentity.current;
+    setIsCheckingTransition(true);
+    try {
+      const work = await transitionWork.readback(initialWork.id);
+      if (!canFinishSave(identity)) return;
+      setConfirmedStatus(work.publicationStatus);
+      setBaseline({ workId: work.id, version: work.version });
+      syncedWorkVersion.current = work.version;
+      setTransitionUnknown(false);
+      setFormMessage(
+        `تأكدت حالة العمل على الخادم: ${work.publicationStatus === "published" ? "منشور" : work.publicationStatus === "archived" ? "مؤرشف" : "مسودة"}.`,
+      );
+    } catch (error: unknown) {
+      if (canFinishSave(identity)) setFormMessage(adminWorkErrorMessage(error));
+    } finally {
+      readbackLocked.current = false;
+      if (mounted.current && currentIdentity.current === identity)
+        setIsCheckingTransition(false);
+    }
   };
 
   useEffect(() => {
@@ -287,10 +401,14 @@ function ActorWorkForm({
       readbackLocked.current ||
       !currentCanSave.current ||
       currentUnknown.current ||
+      transitionUnknown ||
       currentConflict.current
     )
       return;
     submitLocked.current = true;
+    const targetState = submitIntent.current;
+    submitIntent.current = "draft";
+    setPendingAction(targetState);
     void form
       .handleSubmit(
         async (values) => {
@@ -317,12 +435,11 @@ function ActorWorkForm({
           try {
             if (mode === "create") {
               createId.current ??= globalThis.crypto.randomUUID();
-              const body = createWorkCommand(
-                values,
-                createId.current,
-                coverSelection,
-                backgroundSelection,
-              );
+              const body = (
+                targetState === "published"
+                  ? createPublishedWorkCommand
+                  : createWorkCommand
+              )(values, createId.current, coverSelection, backgroundSelection);
               lastCreateCommand.current = body;
               lastCreateDraft.current = submittedDraft;
               const saved = await createWork.mutateAsync(body);
@@ -339,7 +456,11 @@ function ActorWorkForm({
                 );
                 return;
               }
-              setFormMessage("حُفظت المسودة على الخادم.");
+              setFormMessage(
+                targetState === "published"
+                  ? "حُفظ العمل ونُشر على الخادم."
+                  : "حُفظت المسودة على الخادم.",
+              );
               router.push(`/admin/works/${saved.id}/edit` as Route);
               return;
             }
@@ -357,12 +478,13 @@ function ActorWorkForm({
               );
               return;
             }
-            const body = updateWorkCommand(
-              values,
-              expectedVersion,
-              coverSelection,
-              backgroundSelection,
-            );
+            const body = (
+              targetState === "published"
+                ? updatePublishedWorkCommand
+                : updateWorkCommand
+            )(values, expectedVersion, coverSelection, backgroundSelection);
+            lastEditCommand.current = body;
+            lastEditDraft.current = submittedDraft;
             setPendingEdit({
               identity: submittedIdentity,
               draft: submittedDraft,
@@ -378,6 +500,7 @@ function ActorWorkForm({
               return;
             setBaseline({ workId: saved.id, version: saved.version });
             syncedWorkVersion.current = saved.version;
+            setConfirmedStatus(saved.publicationStatus);
             if (
               draftRevision.current !== submittedRevision ||
               currentDraft.current !== submittedDraft
@@ -394,20 +517,28 @@ function ActorWorkForm({
             setBackgroundCandidateAssetId(null);
             setClearCover(false);
             setClearBackground(false);
-            setFormMessage("حُفظت التعديلات على المسودة.");
+            setFormMessage(
+              targetState === "published"
+                ? "حُفظت التعديلات ونُشر العمل."
+                : "حُفظت التعديلات على العمل.",
+            );
           } catch (error: unknown) {
             if (!canFinishSave(submittedIdentity)) return;
             setFormMessage(adminWorkErrorMessage(error));
             applySafeFieldErrors(error);
+            if (isEdit && isAmbiguousAdminCreateResult(error)) {
+              currentUnknown.current = true;
+              setEditOutcomeUnknown(true);
+            }
             if (
               !isEdit &&
               (isAmbiguousAdminCreateResult(error) ||
                 (error instanceof SafeAdminContentError &&
-                  error.statusCode === 409))
+                  error.code === "CONTENT_CONFLICT"))
             ) {
               if (
                 error instanceof SafeAdminContentError &&
-                error.statusCode === 409
+                error.code === "CONTENT_CONFLICT"
               ) {
                 createConflictSeen.current = true;
               }
@@ -433,6 +564,7 @@ function ActorWorkForm({
       )(event)
       .finally(() => {
         if (mounted.current) setPendingEdit(null);
+        if (mounted.current) setPendingAction(null);
         submitLocked.current = false;
       });
   };
@@ -503,6 +635,62 @@ function ActorWorkForm({
     }
   };
 
+  const checkUnknownEdit = async () => {
+    if (
+      initialWork === undefined ||
+      lastEditCommand.current === null ||
+      readbackLocked.current ||
+      submitLocked.current ||
+      !canSave
+    )
+      return;
+    readbackLocked.current = true;
+    const identity = currentIdentity.current;
+    const body = lastEditCommand.current;
+    setIsCheckingTransition(true);
+    try {
+      const saved = await updateWork.readback(initialWork.id);
+      if (!canFinishSave(identity)) return;
+      if (workMatchesUpdateCommand(saved, body)) {
+        setBaseline({ workId: saved.id, version: saved.version });
+        syncedWorkVersion.current = saved.version;
+        setConfirmedStatus(saved.publicationStatus);
+        currentUnknown.current = false;
+        setEditOutcomeUnknown(false);
+        if (currentDraft.current === lastEditDraft.current) {
+          reset(workFormValuesFromServer(saved));
+          setCoverCandidateAssetId(null);
+          setBackgroundCandidateAssetId(null);
+          setClearCover(false);
+          setClearBackground(false);
+          setPreserveAfterSave(false);
+          setFormMessage("تأكد حفظ التعديلات على الخادم.");
+        } else {
+          setPreserveAfterSave(true);
+          setFormMessage(
+            "تأكد حفظ النسخة المرسلة؛ تعديلاتك الأحدث لا تزال محلية.",
+          );
+        }
+      } else if (saved.version === body.expectedVersion) {
+        currentUnknown.current = false;
+        setEditOutcomeUnknown(false);
+        setFormMessage("لم تُحفظ التعديلات المرسلة. راجعها ثم أعد المحاولة.");
+      } else {
+        currentUnknown.current = false;
+        setEditOutcomeUnknown(false);
+        setFormMessage(
+          "تغيّرت نسخة العمل على الخادم. قارنها بتعديلاتك قبل إعادة الإرسال.",
+        );
+      }
+    } catch (error: unknown) {
+      if (canFinishSave(identity)) setFormMessage(adminWorkErrorMessage(error));
+    } finally {
+      readbackLocked.current = false;
+      if (mounted.current && currentIdentity.current === identity)
+        setIsCheckingTransition(false);
+    }
+  };
+
   const adoptServer = () => {
     if (initialWork === undefined || serverConflict === null) return;
     const state: WorkEditorState = {
@@ -553,7 +741,15 @@ function ActorWorkForm({
     form.formState.isSubmitting ||
     createWork.isPending ||
     updateWork.isPending ||
-    isCheckingCreate;
+    transitionWork.isPending ||
+    isCheckingCreate ||
+    isCheckingTransition;
+  const displayedStatus =
+    initialWork === undefined
+      ? null
+      : baseline.version !== null && baseline.version >= initialWork.version
+        ? (confirmedStatus ?? initialWork.publicationStatus)
+        : initialWork.publicationStatus;
 
   if (mode === "edit" && initialWork === undefined) {
     return (
@@ -647,6 +843,46 @@ function ActorWorkForm({
             ) : null}
           </div>
         ) : null}
+        {transitionUnknown ? (
+          <div role="status" aria-live="polite">
+            <p>
+              نتيجة تغيير الحالة غير مؤكدة. احتفظ بتعديلاتك وتحقق من الخادم.
+            </p>
+            <button
+              type="button"
+              onClick={() => void checkUnknownTransition()}
+              disabled={isCheckingTransition}
+            >
+              تحقق من حالة العمل
+            </button>
+          </div>
+        ) : null}
+        {editOutcomeUnknown ? (
+          <div role="status" aria-live="polite">
+            <p>
+              نتيجة حفظ التعديلات غير مؤكدة. تحقق من النسخة المحفوظة قبل إعادة
+              الإرسال.
+            </p>
+            <button
+              type="button"
+              onClick={() => void checkUnknownEdit()}
+              disabled={isCheckingTransition}
+            >
+              تحقق من حفظ التعديلات
+            </button>
+          </div>
+        ) : null}
+
+        {mode === "edit" && initialWork !== undefined ? (
+          <p role="status" aria-live="polite">
+            الحالة المحفوظة:{" "}
+            {displayedStatus === "published"
+              ? "منشور"
+              : displayedStatus === "archived"
+                ? "مؤرشف"
+                : "مسودة"}
+          </p>
+        ) : null}
 
         <form noValidate onSubmit={onSubmit}>
           <AdminWorkBasicFields
@@ -697,20 +933,95 @@ function ActorWorkForm({
                   isSaving ||
                   !canSave ||
                   createOutcomeUnknown ||
+                  editOutcomeUnknown ||
+                  transitionUnknown ||
                   serverConflict !== null
                 }
               >
                 {isSaving
-                  ? "جارٍ حفظ المسودة…"
+                  ? pendingAction === "published"
+                    ? "جارٍ الحفظ والنشر…"
+                    : mode === "create"
+                      ? "جارٍ حفظ المسودة…"
+                      : "جارٍ حفظ التعديلات…"
                   : isEdit
                     ? "حفظ التعديلات"
                     : "حفظ كمسودة"}
               </button>
+              {displayedStatus === null || displayedStatus === "draft" ? (
+                <button
+                  type="submit"
+                  className={styles["saveDraftBtn"]}
+                  onClick={() => {
+                    submitIntent.current = "published";
+                  }}
+                  disabled={
+                    isSaving ||
+                    !canSave ||
+                    createOutcomeUnknown ||
+                    editOutcomeUnknown ||
+                    transitionUnknown ||
+                    serverConflict !== null
+                  }
+                >
+                  {isSaving
+                    ? pendingAction === "published"
+                      ? "جارٍ الحفظ والنشر…"
+                      : "جارٍ إكمال طلب آخر…"
+                    : "حفظ ونشر"}
+                </button>
+              ) : null}
+              {mode === "edit" &&
+              initialWork !== undefined &&
+              !editorDirty &&
+              !transitionUnknown &&
+              !editOutcomeUnknown ? (
+                displayedStatus === "published" ? (
+                  <>
+                    <button
+                      type="button"
+                      disabled={isSaving || !canSave}
+                      onClick={() => void transition("draft")}
+                    >
+                      إلغاء النشر
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isSaving || !canSave}
+                      onClick={() => void transition("archived")}
+                    >
+                      أرشفة العمل
+                    </button>
+                  </>
+                ) : displayedStatus === "archived" ? (
+                  <button
+                    type="button"
+                    disabled={isSaving || !canSave}
+                    onClick={() => void transition("draft")}
+                  >
+                    استعادة كمسودة
+                  </button>
+                ) : displayedStatus === "draft" ? (
+                  <button
+                    type="button"
+                    disabled={isSaving || !canSave}
+                    onClick={() => void transition("archived")}
+                  >
+                    أرشفة العمل
+                  </button>
+                ) : null
+              ) : null}
             </div>
           </div>
           {isSaving ? (
             <p role="status" aria-live="polite">
-              جارٍ حفظ المسودة؛ لا تبدأ طلب حفظ آخر.
+              {pendingAction === "published"
+                ? "جارٍ حفظ العمل ونشره؛ انتظر تأكيد الخادم."
+                : pendingAction === "transition"
+                  ? "جارٍ تغيير حالة العمل؛ انتظر تأكيد الخادم."
+                  : mode === "create"
+                    ? "جارٍ حفظ المسودة؛ لا تبدأ طلب حفظ آخر."
+                    : "جارٍ حفظ التعديلات؛ لا تبدأ طلب حفظ آخر."}
             </p>
           ) : null}
         </form>

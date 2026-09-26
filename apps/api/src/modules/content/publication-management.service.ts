@@ -7,15 +7,26 @@ import {
 } from "@fury/database";
 
 import { NotFoundException } from "../../core/errors/not-found.error.js";
-import { isTransactionConflict } from "./content-write-conflict.js";
 import {
+  isFeaturedPositionConflict,
+  isTransactionConflict,
+} from "./content-write-conflict.js";
+import {
+  ContentFeaturedConflictException,
   ContentStaleWriteException,
   ContentTransitionConflictException,
 } from "./content.errors.js";
 import { mapPublicationStatus } from "./content.mapper.js";
-import { lockCategoryEligibilityState } from "./content.queries.js";
+import {
+  findAdminWork,
+  findPublishedFeaturedWork,
+  lockCategoryEligibilityState,
+  readWorkReadiness,
+} from "./content.queries.js";
 import {
   assertPublicationTransition,
+  assertFeaturedPositionAvailable,
+  assertWorkReady,
   toDatabasePublicationStatus,
 } from "./content.rules.js";
 import type {
@@ -85,17 +96,24 @@ export class PublicationManagementService {
             throw new ContentStaleWriteException();
           }
           if (target === PublicationStatus.PUBLISHED) {
-            const [categoryCount, enabledCategoryCount] = await Promise.all([
-              transaction.workCategory.count({ where: { workId } }),
-              transaction.workCategory.count({
-                where: { workId, category: { is: { enabled: true } } },
-              }),
-            ]);
-            if (categoryCount > 0 && enabledCategoryCount === 0) {
-              throw new ContentTransitionConflictException(
-                "A Work with Categories requires an enabled Category before publication.",
-              );
-            }
+            const record = await findAdminWork(transaction, workId);
+            if (record === null) throw new NotFoundException();
+            assertWorkReady(await readWorkReadiness(transaction, record));
+            const featuredOrder = record.featuredHome
+              ? record.featuredOrder
+              : null;
+            const occupied =
+              featuredOrder !== null &&
+              (await findPublishedFeaturedWork(
+                transaction,
+                featuredOrder,
+                workId,
+              )) !== null;
+            assertFeaturedPositionAvailable(
+              record.featuredHome,
+              featuredOrder,
+              occupied,
+            );
           }
           const publication = await this.buildPublicationWrite(
             transaction,
@@ -273,6 +291,8 @@ export class PublicationManagementService {
     error: unknown,
     workId?: string,
   ): Promise<PublicationTransition> {
+    if (isFeaturedPositionConflict(error))
+      throw new ContentFeaturedConflictException();
     if (
       error instanceof NotFoundException ||
       error instanceof ContentTransitionConflictException

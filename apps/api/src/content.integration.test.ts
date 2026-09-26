@@ -32,6 +32,7 @@ import { createMediaConfig } from "./core/config/media.config.js";
 import { MediaStorage } from "./infrastructure/media/media-storage.js";
 import { PublicationManagementService } from "./modules/content/publication-management.service.js";
 import { WorkManagementService } from "./modules/content/work-management.service.js";
+import { prepareWorkForPublication } from "./test-support/content-publication-fixture.test-helper.js";
 import { MediaService } from "./modules/media/media.service.js";
 import { rateLimitConfig } from "./core/config/rate-limit.config.js";
 import type { EmailDelivery } from "./infrastructure/email/email-delivery.js";
@@ -58,7 +59,7 @@ const emailDelivery: EmailDelivery = {
     return Promise.resolve({ providerMessageId: "content-test" });
   },
 };
-const app = createApp({
+let app = createApp({
   database,
   logger: pino({ level: "silent" }),
   emailDelivery,
@@ -166,7 +167,10 @@ const uploadWorkAsset = async (
   return uploaded.asset.id;
 };
 
-const createIllustratedAggregate = async (token: string) => {
+const createIllustratedAggregate = async (
+  token: string,
+  actorUserId: string,
+) => {
   const categoryResponse = await authorize(
     request(app).post("/api/v1/content/admin/categories"),
     token,
@@ -193,6 +197,18 @@ const createIllustratedAggregate = async (token: string) => {
   ).send({ expectedVersion: 0, categoryIds: [categoryId] });
   expect(assigned.status).toBe(200);
   const assignedWork = parseSuccessData(assigned, workDataSchema).work;
+  const coverAssetId = await uploadWorkAsset(actorUserId, "work_cover");
+  const prepared = await authorize(
+    request(app).patch("/api/v1/content/admin/works/" + workId),
+    token,
+  ).send({
+    expectedVersion: assignedWork.version,
+    synopsis: "A complete synopsis for the HTTP publication journey.",
+    author: "HTTP Author",
+    coverAssetId,
+  });
+  expect(prepared.status).toBe(200);
+  const preparedWork = parseSuccessData(prepared, workDataSchema).work;
 
   const chapterResponse = await authorize(
     request(app).post("/api/v1/content/admin/works/" + workId + "/chapters"),
@@ -204,7 +220,7 @@ const createIllustratedAggregate = async (token: string) => {
   return {
     categoryId,
     workId,
-    workVersion: assignedWork.version,
+    workVersion: preparedWork.version,
     chapterId: chapter.id,
     chapterVersion: chapter.version,
   };
@@ -216,6 +232,12 @@ describe("real HTTP content boundary", () => {
     await database.$executeRawUnsafe(
       "TRUNCATE media_reference_events, media_references, upload_attempts, media_assets, publication_events, chapter_pages, chapters, work_tags, work_categories, categories, works, refresh_tokens, users",
     );
+    app = createApp({
+      database,
+      logger: pino({ level: "silent" }),
+      emailDelivery,
+      mediaConfig,
+    });
   });
 
   afterAll(async () => {
@@ -299,7 +321,10 @@ describe("real HTTP content boundary", () => {
 
   it("keeps every management family server-authoritative before lookup", async () => {
     const admin = await createIdentity(UserRole.ADMIN);
-    const aggregate = await createIllustratedAggregate(admin.token);
+    const aggregate = await createIllustratedAggregate(
+      admin.token,
+      admin.user.id,
+    );
     const pending = await createIdentity(
       UserRole.ADMIN,
       UserStatus.PENDING_VERIFICATION,
@@ -659,7 +684,10 @@ describe("real HTTP content boundary", () => {
 
   it("creates and reconnects the foundational aggregate through ADMIN routes", async () => {
     const identity = await createIdentity(UserRole.ADMIN);
-    const aggregate = await createIllustratedAggregate(identity.token);
+    const aggregate = await createIllustratedAggregate(
+      identity.token,
+      identity.user.id,
+    );
 
     const read = await request(app)
       .get("/api/v1/content/admin/works/" + aggregate.workId)
@@ -698,7 +726,10 @@ describe("real HTTP content boundary", () => {
 
   it("returns stable immutable, validation, and authorized not-found outcomes", async () => {
     const identity = await createIdentity(UserRole.ADMIN);
-    const aggregate = await createIllustratedAggregate(identity.token);
+    const aggregate = await createIllustratedAggregate(
+      identity.token,
+      identity.user.id,
+    );
 
     const duplicateCategory = await authorize(
       request(app).post("/api/v1/content/admin/categories"),
@@ -788,6 +819,7 @@ describe("real HTTP content boundary", () => {
       expectedVersion: work.version,
       categoryIds: [first.id],
     });
+    await prepareWorkForPublication(database, work.id, first.id);
     const publications = new PublicationManagementService(database, {
       currentTime: () => new Date(),
       createIdentifier: randomUUID,
@@ -941,7 +973,10 @@ describe("real HTTP content boundary", () => {
 
   it("publishes allowlisted metadata credential-free and hides it identically", async () => {
     const identity = await createIdentity(UserRole.ADMIN);
-    const aggregate = await createIllustratedAggregate(identity.token);
+    const aggregate = await createIllustratedAggregate(
+      identity.token,
+      identity.user.id,
+    );
 
     const hidden = await request(app).get("/api/v1/content/works/http-work");
     expect(hidden.status).toBe(404);
@@ -1099,7 +1134,10 @@ describe("real HTTP content boundary", () => {
 
   it("recovers archived Works only through draft and records real republishes", async () => {
     const identity = await createIdentity(UserRole.ADMIN);
-    const aggregate = await createIllustratedAggregate(identity.token);
+    const aggregate = await createIllustratedAggregate(
+      identity.token,
+      identity.user.id,
+    );
     const publicationPath =
       "/api/v1/content/admin/works/" + aggregate.workId + "/publication";
     const publishedResponse = await authorize(
@@ -1316,7 +1354,7 @@ describe("real HTTP content boundary", () => {
       .query({ token: tokenFromLastEmail() })
       .send({});
     expect(verified.status).toBe(200);
-    await database.user.update({
+    const acceptanceAdmin = await database.user.update({
       where: { email: registration.email },
       data: { role: UserRole.ADMIN },
     });
@@ -1366,6 +1404,21 @@ describe("real HTTP content boundary", () => {
       workDataSchema,
     ).work;
 
+    const acceptanceCover = await uploadWorkAsset(
+      acceptanceAdmin.id,
+      "work_cover",
+    );
+    const readyResponse = await authorizeAgent(
+      agent.patch("/api/v1/content/admin/works/" + work.id),
+    ).send({
+      expectedVersion: assignedWork.version,
+      synopsis: "A complete synopsis for the accepted text story.",
+      author: "Story Author",
+      coverAssetId: acceptanceCover,
+    });
+    expect(readyResponse.status).toBe(200);
+    const readyWork = parseSuccessData(readyResponse, workDataSchema).work;
+
     const document = {
       version: 1,
       blocks: [
@@ -1394,7 +1447,7 @@ describe("real HTTP content boundary", () => {
     const publishedWorkResponse = await authorizeAgent(
       agent.put("/api/v1/content/admin/works/" + work.id + "/publication"),
     ).send({
-      expectedVersion: assignedWork.version,
+      expectedVersion: readyWork.version,
       targetState: "published",
     });
     const publishedWork = parseSuccessData(
@@ -1662,7 +1715,7 @@ describe("real HTTP content boundary", () => {
       expect(response.status).toBe(409);
       expect(response.body).toMatchObject({
         success: false,
-        code: "CONTENT_CONFLICT",
+        code: "CONTENT_NOT_READY",
       });
       expect(await works.getWork(created.id)).toEqual(baseline);
       expect(
@@ -1670,6 +1723,126 @@ describe("real HTTP content boundary", () => {
           where: { workId: created.id },
         }),
       ).toEqual(references);
+    }
+  });
+
+  it("publishes a complete HTTP create atomically and hides failed featured competitors", async () => {
+    const admin = await createIdentity(UserRole.ADMIN);
+    const categoryResponse = await authorize(
+      request(app).post("/api/v1/content/admin/categories"),
+      admin.token,
+    ).send({ displayName: "HTTP publish", slug: `publish-${randomUUID()}` });
+    const category = parseSuccessData(
+      categoryResponse,
+      categoryDataSchema,
+    ).category;
+    const firstCover = await uploadWorkAsset(admin.user.id, "work_cover");
+    const secondCover = await uploadWorkAsset(admin.user.id, "work_cover");
+    const incompleteId = randomUUID();
+    const incomplete = await authorize(
+      request(app).post("/api/v1/content/admin/works"),
+      admin.token,
+    ).send({
+      id: incompleteId,
+      title: "Incomplete",
+      slug: `incomplete-${randomUUID()}`,
+      type: "text-story",
+      storyStatus: "ongoing",
+      targetState: "published",
+    });
+    expect(incomplete.status).toBe(409);
+    expect(incomplete.body).toMatchObject({
+      success: false,
+      code: "CONTENT_NOT_READY",
+    });
+    expect(
+      await database.work.findUnique({ where: { id: incompleteId } }),
+    ).toBeNull();
+    const base = {
+      type: "text-story",
+      storyStatus: "ongoing",
+      synopsis: "A complete synopsis for an HTTP featured work.",
+      author: "HTTP Author",
+      categoryIds: [category.id],
+      featuredHome: true,
+      featuredOrder: 11,
+      targetState: "published",
+    };
+    const first = await authorize(
+      request(app).post("/api/v1/content/admin/works"),
+      admin.token,
+    ).send({
+      ...base,
+      title: "First featured",
+      slug: `first-${randomUUID()}`,
+      coverAssetId: firstCover,
+    });
+    expect(first.status).toBe(201);
+    const saved = parseSuccessData(first, workDataSchema).work;
+    expect(saved.publicationStatus).toBe("published");
+    const publicRead = await request(app).get(
+      `/api/v1/content/works/${saved.slug}`,
+    );
+    expect(publicRead.status).toBe(200);
+    const loserId = randomUUID();
+    const loser = await authorize(
+      request(app).post("/api/v1/content/admin/works"),
+      admin.token,
+    ).send({
+      ...base,
+      id: loserId,
+      title: "Second featured",
+      slug: `second-${randomUUID()}`,
+      coverAssetId: secondCover,
+    });
+    expect(loser.status).toBe(409);
+    expect(loser.body).toMatchObject({
+      success: false,
+      code: "CONTENT_FEATURED_CONFLICT",
+    });
+    expect(
+      await database.work.findUnique({ where: { id: loserId } }),
+    ).toBeNull();
+    expect(
+      await database.publicationEvent.count({ where: { workId: saved.id } }),
+    ).toBe(1);
+    await database.mediaAsset.update({
+      where: { id: firstCover },
+      data: { status: "UNAVAILABLE" },
+    });
+    const hidden = await request(app).get(
+      `/api/v1/content/works/${saved.slug}`,
+    );
+    expect(hidden.status).toBe(404);
+    const list = await request(app).get("/api/v1/content/works");
+    expect(
+      parseSuccessData(list, publicWorkListDataSchema).pagination.total,
+    ).toBe(0);
+    expect(
+      await database.publicationEvent.count({ where: { workId: saved.id } }),
+    ).toBe(1);
+  });
+
+  it("returns a safe 503 for a public read when database connectivity fails", async () => {
+    const fault = vi.spyOn(database.work, "findFirst").mockRejectedValueOnce(
+      Object.assign(new Error("database-offline-sentinel"), {
+        code: "P1001",
+      }),
+    );
+    try {
+      const response = await request(app).get(
+        "/api/v1/content/works/unavailable-work",
+      );
+      expect(response.status).toBe(503);
+      expect(response.body).toMatchObject({
+        success: false,
+        code: "SERVICE_UNAVAILABLE",
+      });
+      expect(JSON.stringify(response.body)).not.toContain(
+        "database-offline-sentinel",
+      );
+    } finally {
+      fault.mockRestore();
     }
   });
 

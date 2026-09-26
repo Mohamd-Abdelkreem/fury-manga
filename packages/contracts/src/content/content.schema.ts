@@ -85,6 +85,8 @@ export const contentErrorCodeSchema = z
     "CONTENT_TRANSITION_CONFLICT",
     "CONTENT_STALE_WRITE",
     "CONTENT_CATEGORY_IN_USE",
+    "CONTENT_NOT_READY",
+    "CONTENT_FEATURED_CONFLICT",
   ])
   .meta({ id: "ContentErrorCode" });
 export const contentOperationErrorCodeSchema = z
@@ -312,6 +314,7 @@ export const createWorkBodySchema = z
     tags: workTagsSchema.optional(),
     coverAssetId: canonicalContentIdSchema.nullable().optional(),
     backgroundAssetId: canonicalContentIdSchema.nullable().optional(),
+    targetState: z.enum(["draft", "published"]).optional(),
     ...featuredPairSchema,
   })
   .strict()
@@ -332,6 +335,7 @@ export const updateWorkBodySchema = z
     tags: workTagsSchema.optional(),
     coverAssetId: canonicalContentIdSchema.nullable().optional(),
     backgroundAssetId: canonicalContentIdSchema.nullable().optional(),
+    targetState: z.literal("published").optional(),
     ...featuredPairSchema,
   })
   .strict()
@@ -349,6 +353,7 @@ export const updateWorkBodySchema = z
       value.tags === undefined &&
       value.coverAssetId === undefined &&
       value.backgroundAssetId === undefined &&
+      value.targetState === undefined &&
       value.featuredHome === undefined &&
       value.featuredOrder === undefined
     ) {

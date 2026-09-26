@@ -8,6 +8,7 @@ import { ChapterManagementService } from "./chapter-management.service.js";
 import { PublicationManagementService } from "./publication-management.service.js";
 import { PublicContentService } from "./public-content.service.js";
 import { WorkManagementService } from "./work-management.service.js";
+import { prepareWorkForPublication } from "../../test-support/content-publication-fixture.test-helper.js";
 
 const databaseUrl = process.env["DATABASE_URL"];
 if (databaseUrl === undefined) {
@@ -23,6 +24,7 @@ const publications = new PublicationManagementService(database, {
 });
 const publicContent = new PublicContentService(database);
 const pagination = { page: 1, limit: 25, skip: 0, take: 25 };
+const fixtureActorIds: string[] = [];
 
 describe("PublicContentService with PostgreSQL", () => {
   beforeEach(async () => {
@@ -32,6 +34,10 @@ describe("PublicContentService with PostgreSQL", () => {
   });
 
   afterAll(async () => {
+    await database.$executeRawUnsafe(
+      "TRUNCATE media_reference_events, media_references, upload_attempts, media_assets, publication_events, chapter_pages, chapters, work_tags, work_categories, categories, works",
+    );
+    await database.user.deleteMany({ where: { id: { in: fixtureActorIds } } });
     await database.$disconnect();
   });
 
@@ -46,6 +52,7 @@ describe("PublicContentService with PostgreSQL", () => {
       number: 1,
       pages: [{ position: 1 }],
     });
+    fixtureActorIds.push(await prepareWorkForPublication(database, work.id));
     await expect(publicContent.listWorks(pagination)).resolves.toMatchObject({
       items: [],
       pagination: { total: 0 },
@@ -99,6 +106,75 @@ describe("PublicContentService with PostgreSQL", () => {
     });
   });
 
+  it("hides legacy published metadata when its last category or author becomes unavailable", async () => {
+    const draft = await works.createWork({
+      title: "Legacy visibility",
+      slug: `legacy-${randomUUID()}`,
+      type: "manga",
+      storyStatus: "ongoing",
+    });
+    fixtureActorIds.push(await prepareWorkForPublication(database, draft.id));
+    const category = await database.workCategory.findFirstOrThrow({
+      where: { workId: draft.id },
+    });
+    const published = await publications.publishWork(draft.id, {
+      expectedVersion: draft.version,
+      targetState: "published",
+    });
+    expect(published.publicationStatus).toBe("published");
+    expect((await publicContent.listWorks(pagination)).pagination.total).toBe(
+      1,
+    );
+
+    // Reproduce legacy data on this isolated database while leaving the installed guard enabled afterward.
+    await database.$executeRawUnsafe(
+      "ALTER TABLE categories DISABLE TRIGGER trg_categories_published_ready",
+    );
+    try {
+      await database.category.update({
+        where: { id: category.categoryId },
+        data: { enabled: false },
+      });
+    } finally {
+      await database.$executeRawUnsafe(
+        "ALTER TABLE categories ENABLE TRIGGER trg_categories_published_ready",
+      );
+    }
+    await expect(publicContent.getWork(draft.slug)).rejects.toMatchObject({
+      statusCode: 404,
+    });
+    expect((await publicContent.listWorks(pagination)).pagination.total).toBe(
+      0,
+    );
+    await database.category.update({
+      where: { id: category.categoryId },
+      data: { enabled: true },
+    });
+
+    await database.$executeRawUnsafe(
+      "ALTER TABLE works DISABLE TRIGGER trg_works_published_ready",
+    );
+    try {
+      await database.work.update({
+        where: { id: draft.id },
+        data: { author: null },
+      });
+    } finally {
+      await database.$executeRawUnsafe(
+        "ALTER TABLE works ENABLE TRIGGER trg_works_published_ready",
+      );
+    }
+    await expect(publicContent.getWork(draft.slug)).rejects.toMatchObject({
+      statusCode: 404,
+    });
+    expect((await publicContent.listWorks(pagination)).pagination.total).toBe(
+      0,
+    );
+    expect(
+      await database.publicationEvent.count({ where: { workId: draft.id } }),
+    ).toBe(1);
+  });
+
   it("enforces every parent and Chapter visibility-state combination", async () => {
     const states = [
       "draft",
@@ -120,6 +196,11 @@ describe("PublicContentService with PostgreSQL", () => {
           number: workIndex * states.length + chapterIndex + 1,
           pages: [{ position: 1 }],
         });
+        if (workState === "published") {
+          fixtureActorIds.push(
+            await prepareWorkForPublication(database, work.id),
+          );
+        }
         if (workState !== "draft") {
           await publications.publishWork(work.id, {
             expectedVersion: 0,

@@ -14,6 +14,7 @@ import { MediaStorage } from "../../infrastructure/media/media-storage.js";
 import { CategoryManagementService } from "./category-management.service.js";
 import { ContentConflictException } from "./content.errors.js";
 import { WorkManagementService } from "./work-management.service.js";
+import { PublicContentService } from "./public-content.service.js";
 import { MediaService } from "../media/media.service.js";
 
 const databaseUrl = process.env["DATABASE_URL"];
@@ -28,6 +29,7 @@ mkdirSync(mediaRoot);
 const mediaStorage = new MediaStorage(createMediaConfig(mediaRoot));
 const media = new MediaService(database, mediaStorage);
 const works = new WorkManagementService(database, media);
+const publicContent = new PublicContentService(database);
 const categories = new CategoryManagementService(database);
 const adminIds: string[] = [];
 
@@ -98,6 +100,272 @@ afterAll(async () => {
 });
 
 describe("complete Work draft management with PostgreSQL", () => {
+  it("publishes a complete create atomically and retains one event", async () => {
+    const actorUserId = await createAdmin();
+    const category = await categories.createCategory({
+      displayName: "Ready",
+      slug: `ready-${randomUUID()}`,
+    });
+    const coverAssetId = await uploadAsset(actorUserId, "work_cover");
+    const work = await works.createWork(
+      uniqueWorkBody({
+        synopsis: "A complete synopsis for publication and recovery.",
+        author: "Author",
+        categoryIds: [category.id],
+        coverAssetId,
+        targetState: "published",
+      }),
+      actorUserId,
+    );
+    expect(work).toMatchObject({
+      publicationStatus: "published",
+      coverAssetId,
+    });
+    expect(work.publishedAt).not.toBeNull();
+    expect(
+      await database.publicationEvent.count({ where: { workId: work.id } }),
+    ).toBe(1);
+  });
+
+  it("leaves no draft or submitted association after incomplete create-publish", async () => {
+    const actorUserId = await createAdmin();
+    const id = randomUUID();
+    await expect(
+      works.createWork(
+        uniqueWorkBody({ id, targetState: "published" }),
+        actorUserId,
+      ),
+    ).rejects.toMatchObject({ code: "CONTENT_NOT_READY", statusCode: 409 });
+    expect(await database.work.findUnique({ where: { id } })).toBeNull();
+    expect(
+      await database.publicationEvent.count({ where: { workId: id } }),
+    ).toBe(0);
+  });
+
+  it("rejects direct retirement of a published cover and advances the parent on replacement", async () => {
+    const actorUserId = await createAdmin();
+    const category = await categories.createCategory({
+      displayName: "Cover",
+      slug: `cover-${randomUUID()}`,
+    });
+    const firstCover = await uploadAsset(actorUserId, "work_cover");
+    const secondCover = await uploadAsset(actorUserId, "work_cover");
+    const published = await works.createWork(
+      uniqueWorkBody({
+        synopsis: "A complete synopsis for a published cover replacement.",
+        author: "Author",
+        categoryIds: [category.id],
+        coverAssetId: firstCover,
+        targetState: "published",
+      }),
+      actorUserId,
+    );
+    const reference = await database.mediaReference.findFirstOrThrow({
+      where: { workId: published.id, slot: "WORK_COVER", retiredAt: null },
+    });
+    await expect(
+      media.retireReference(actorUserId, reference.id, {
+        expectedAssetId: firstCover,
+        expectedVersion: reference.version,
+      }),
+    ).rejects.toMatchObject({ code: "CONTENT_NOT_READY", statusCode: 409 });
+    expect(
+      await database.mediaReferenceEvent.count({
+        where: { referenceId: reference.id },
+      }),
+    ).toBe(1);
+    await media.replaceReference(actorUserId, reference.id, {
+      assetId: secondCover,
+      expectedAssetId: firstCover,
+      expectedVersion: reference.version,
+    });
+    expect(await works.getWork(published.id)).toMatchObject({
+      coverAssetId: secondCover,
+      version: published.version + 1,
+    });
+  });
+
+  it("removes unavailable-cover metadata from public detail and total without losing admin history", async () => {
+    const actorUserId = await createAdmin();
+    const category = await categories.createCategory({
+      displayName: "Visible",
+      slug: `visible-${randomUUID()}`,
+    });
+    const coverAssetId = await uploadAsset(actorUserId, "work_cover");
+    const published = await works.createWork(
+      uniqueWorkBody({
+        synopsis: "A complete synopsis for fail closed public metadata.",
+        author: "Author",
+        categoryIds: [category.id],
+        coverAssetId,
+        targetState: "published",
+      }),
+      actorUserId,
+    );
+    const pagination = { page: 1, limit: 25, skip: 0, take: 25 };
+    expect((await publicContent.listWorks(pagination)).pagination.total).toBe(
+      1,
+    );
+    await database.mediaAsset.update({
+      where: { id: coverAssetId },
+      data: { status: "UNAVAILABLE" },
+    });
+    await expect(publicContent.getWork(published.slug)).rejects.toMatchObject({
+      statusCode: 404,
+    });
+    expect((await publicContent.listWorks(pagination)).pagination.total).toBe(
+      0,
+    );
+    expect(await works.getWork(published.id)).toMatchObject({
+      publicationStatus: "published",
+    });
+    expect(
+      await database.publicationEvent.count({
+        where: { workId: published.id },
+      }),
+    ).toBe(1);
+  });
+
+  it("rejects a competing published featured position without creating the losing Work", async () => {
+    const actorUserId = await createAdmin();
+    const category = await categories.createCategory({
+      displayName: "Featured",
+      slug: `featured-${randomUUID()}`,
+    });
+    const firstCover = await uploadAsset(actorUserId, "work_cover");
+    const secondCover = await uploadAsset(actorUserId, "work_cover");
+    const base = {
+      synopsis: "A complete synopsis for featured publication.",
+      author: "Author",
+      categoryIds: [category.id],
+      featuredHome: true,
+      featuredOrder: 7,
+      targetState: "published" as const,
+    };
+    await works.createWork(
+      uniqueWorkBody({ ...base, coverAssetId: firstCover }),
+      actorUserId,
+    );
+    expect(
+      await database.work.count({
+        where: { publicationStatus: "PUBLISHED", featuredOrder: 7 },
+      }),
+    ).toBe(1);
+    const losingId = randomUUID();
+    await expect(
+      works.createWork(
+        uniqueWorkBody({
+          ...base,
+          id: losingId,
+          coverAssetId: secondCover,
+        }),
+        actorUserId,
+      ),
+    ).rejects.toMatchObject({
+      code: "CONTENT_FEATURED_CONFLICT",
+      statusCode: 409,
+    });
+    expect(
+      await database.work.findUnique({ where: { id: losingId } }),
+    ).toBeNull();
+  });
+  it("rolls back early editorial and cover writes when a combined PATCH loses featured placement", async () => {
+    const actorUserId = await createAdmin();
+    const category = await categories.createCategory({
+      displayName: "Atomic",
+      slug: `atomic-${randomUUID()}`,
+    });
+    const winnerCover = await uploadAsset(actorUserId, "work_cover");
+    const losingCover = await uploadAsset(actorUserId, "work_cover");
+    await works.createWork(
+      uniqueWorkBody({
+        synopsis: "A complete synopsis for a featured winner Work.",
+        author: "Author",
+        categoryIds: [category.id],
+        coverAssetId: winnerCover,
+        featuredHome: true,
+        featuredOrder: 9,
+        targetState: "published",
+      }),
+      actorUserId,
+    );
+    const draft = await works.createWork(uniqueWorkBody(), actorUserId);
+    await expect(
+      works.updateWork(
+        draft.id,
+        {
+          expectedVersion: draft.version,
+          title: "Uncommitted title",
+          tags: ["atomic"],
+          synopsis: "A complete synopsis for losing featured placement.",
+          author: "Author",
+          categoryIds: [category.id],
+          coverAssetId: losingCover,
+          featuredHome: true,
+          featuredOrder: 9,
+          targetState: "published",
+        },
+        actorUserId,
+      ),
+    ).rejects.toMatchObject({ code: "CONTENT_FEATURED_CONFLICT" });
+    expect(await works.getWork(draft.id)).toMatchObject({
+      publicationStatus: "draft",
+      title: draft.title,
+      version: draft.version,
+      coverAssetId: null,
+    });
+    expect(
+      await database.workCategory.count({ where: { workId: draft.id } }),
+    ).toBe(0);
+    expect(await database.workTag.count({ where: { workId: draft.id } })).toBe(
+      0,
+    );
+    expect(
+      await database.mediaReference.count({ where: { workId: draft.id } }),
+    ).toBe(0);
+    expect(
+      await database.publicationEvent.count({ where: { workId: draft.id } }),
+    ).toBe(0);
+  });
+  it("admits only one simultaneous featured publication for a position", async () => {
+    const actorUserId = await createAdmin();
+    const category = await categories.createCategory({
+      displayName: "Racing",
+      slug: `racing-${randomUUID()}`,
+    });
+    const covers = await Promise.all([
+      uploadAsset(actorUserId, "work_cover"),
+      uploadAsset(actorUserId, "work_cover"),
+    ]);
+    const commands = covers.map((coverAssetId) =>
+      uniqueWorkBody({
+        synopsis: "A complete synopsis for concurrent featured placement.",
+        author: "Author",
+        categoryIds: [category.id],
+        coverAssetId,
+        featuredHome: true,
+        featuredOrder: 12,
+        targetState: "published",
+      }),
+    );
+    const outcomes = await Promise.allSettled(
+      commands.map((command) => works.createWork(command, actorUserId)),
+    );
+    expect(
+      outcomes.filter((outcome) => outcome.status === "fulfilled"),
+    ).toHaveLength(1);
+    const loser = outcomes.find((outcome) => outcome.status === "rejected");
+    expect(loser).toMatchObject({
+      status: "rejected",
+      reason: { statusCode: 409 },
+    });
+    expect(
+      await database.work.count({
+        where: { publicationStatus: "PUBLISHED", featuredOrder: 12 },
+      }),
+    ).toBe(1);
+    expect(await database.publicationEvent.count()).toBe(1);
+  });
   it("persists both Work types, all editorial values, enabled categories, featured preference, tags, and media history", async () => {
     const actorUserId = await createAdmin();
     const category = await categories.createCategory({

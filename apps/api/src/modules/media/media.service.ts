@@ -18,6 +18,7 @@ import {
   MediaReferenceSlot,
   MediaScope,
   Prisma,
+  PublicationStatus,
   UploadAttemptState,
   UserRole,
   UserStatus,
@@ -27,6 +28,7 @@ import {
 } from "@fury/database";
 
 import { AppError } from "../../core/errors/app.error.js";
+import { ContentNotReadyException } from "../content/content.errors.js";
 import { validateImage } from "../../infrastructure/media/image-validation.js";
 import { mediaSha256 } from "../../infrastructure/media/media-digest.js";
 import {
@@ -621,6 +623,12 @@ export class MediaService {
     try {
       return await this.database.$transaction(
         async (transaction) => {
+          const parentWorkId =
+            rule.slot === MediaReferenceSlot.CHAPTER_PAGE
+              ? null
+              : command.targetId;
+          if (parentWorkId !== null)
+            await this.lockWorkForMediaChange(transaction, parentWorkId);
           await transaction.$queryRaw`SELECT id FROM media_assets WHERE id = ${command.assetId}::uuid FOR UPDATE`;
           const asset = await transaction.mediaAsset.findUnique({
             where: { id: command.assetId },
@@ -666,6 +674,8 @@ export class MediaService {
               resultVersion: 0,
             },
           });
+          if (parentWorkId !== null)
+            await this.advanceWorkVersion(transaction, parentWorkId);
           return { reference: mapMediaReference(reference), created: true };
         },
         { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
@@ -713,6 +723,10 @@ export class MediaService {
     try {
       return await this.database.$transaction(
         async (transaction) => {
+          const parent = await this.lockReferenceParent(
+            transaction,
+            referenceId,
+          );
           const ids = [command.assetId, command.expectedAssetId].sort();
           for (const id of ids) {
             await transaction.$queryRaw`SELECT id FROM media_assets WHERE id = ${id}::uuid FOR UPDATE`;
@@ -784,6 +798,8 @@ export class MediaService {
               resultVersion,
             },
           });
+          if (parent !== null)
+            await this.advanceWorkVersion(transaction, parent.workId);
           return mapMediaReference(updated);
         },
         { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
@@ -829,6 +845,10 @@ export class MediaService {
     try {
       return await this.database.$transaction(
         async (transaction) => {
+          const parent = await this.lockReferenceParent(
+            transaction,
+            referenceId,
+          );
           await transaction.$queryRaw`SELECT id FROM media_references WHERE id = ${referenceId}::uuid FOR UPDATE`;
           const reference = await transaction.mediaReference.findUnique({
             where: { id: referenceId },
@@ -864,6 +884,12 @@ export class MediaService {
           ) {
             throw new MediaVersionConflictException();
           }
+          if (
+            reference.slot === MediaReferenceSlot.WORK_COVER &&
+            parent?.publicationStatus === PublicationStatus.PUBLISHED
+          ) {
+            throw new ContentNotReadyException(["coverAssetId"]);
+          }
           const resultVersion = reference.version + 1;
           await transaction.mediaReference.update({
             where: { id: reference.id },
@@ -878,6 +904,8 @@ export class MediaService {
               resultVersion,
             },
           });
+          if (parent !== null)
+            await this.advanceWorkVersion(transaction, parent.workId);
           return {
             id: reference.id,
             status: "retired",
@@ -989,6 +1017,47 @@ export class MediaService {
   }
 
   // Helper methods
+  private async lockWorkForMediaChange(
+    transaction: Prisma.TransactionClient,
+    workId: string,
+  ): Promise<PublicationStatus> {
+    await transaction.$queryRaw`SELECT id FROM works WHERE id = ${workId}::uuid FOR UPDATE`;
+    const work = await transaction.work.findUnique({
+      where: { id: workId },
+      select: { publicationStatus: true },
+    });
+    if (work === null)
+      throw new AppError("Media target not found.", 404, "NOT_FOUND");
+    return work.publicationStatus;
+  }
+
+  private async lockReferenceParent(
+    transaction: Prisma.TransactionClient,
+    referenceId: string,
+  ): Promise<{ workId: string; publicationStatus: PublicationStatus } | null> {
+    const reference = await transaction.mediaReference.findUnique({
+      where: { id: referenceId },
+      select: { workId: true },
+    });
+    if (reference?.workId === null || reference?.workId === undefined)
+      return null;
+    const publicationStatus = await this.lockWorkForMediaChange(
+      transaction,
+      reference.workId,
+    );
+    return { workId: reference.workId, publicationStatus };
+  }
+
+  private async advanceWorkVersion(
+    transaction: Prisma.TransactionClient,
+    workId: string,
+  ): Promise<void> {
+    await transaction.work.update({
+      where: { id: workId },
+      data: { version: { increment: 1 } },
+    });
+  }
+
   private async readStoredAsset(asset: MediaAsset): Promise<Buffer> {
     let bytes: Buffer;
     try {

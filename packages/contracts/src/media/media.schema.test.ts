@@ -9,6 +9,7 @@ import {
   mediaAttemptSchema,
   mediaClassSchema,
   mediaListQuerySchema,
+  mediaOperationErrorCodeSchema,
   mediaUploadFieldSchema,
   mediaUploadHeaderSchema,
   mediaRemovalResponseSchema,
@@ -34,6 +35,17 @@ const asset = {
 };
 
 describe("private media wire contracts", () => {
+  it("exposes only the stable work-cover readiness failure", () => {
+    expect(
+      mediaOperationErrorCodeSchema.safeParse("CONTENT_NOT_READY").success,
+    ).toBe(true);
+    expect(mediaOperationErrorCodeSchema.safeParse("P2003").success).toBe(
+      false,
+    );
+    expect(
+      mediaOperationErrorCodeSchema.safeParse("private/path").success,
+    ).toBe(false);
+  });
   it("accepts the five admin classes and rejects invented classes", () => {
     for (const mediaClass of [
       "work_cover",

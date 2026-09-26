@@ -8,12 +8,16 @@ import {
 
 import {
   ContentImmutableException,
+  ContentNotReadyException,
+  ContentFeaturedConflictException,
   ContentTypeConflictException,
 } from "./content.errors.js";
 import {
   assertChapterPageSequence,
   assertImmutableValue,
   assertPositiveChapterNumber,
+  assertWorkReady,
+  assertFeaturedPositionAvailable,
   assertPublicationTransition,
   assertStructuredTextDocument,
   deriveChapterContentType,
@@ -84,6 +88,12 @@ describe("content rules", () => {
   it("enforces the publication transition matrix", () => {
     expect(() => {
       assertPublicationTransition(
+        PublicationStatus.PUBLISHED,
+        PublicationStatus.PUBLISHED,
+      );
+    }).not.toThrow();
+    expect(() => {
+      assertPublicationTransition(
         PublicationStatus.DRAFT,
         PublicationStatus.PUBLISHED,
       );
@@ -94,6 +104,23 @@ describe("content rules", () => {
         PublicationStatus.PUBLISHED,
       );
     }).toThrow();
+  });
+
+  it("permits a ready Work without chapters and rejects only occupied featured placement", () => {
+    expect(() => {
+      assertWorkReady({
+        title: "Work",
+        synopsis: "A sufficiently long synopsis.",
+        author: "Author",
+        enabledCategoryCount: 1,
+        hasAvailableCover: true,
+      });
+      assertFeaturedPositionAvailable(false, 3, true);
+      assertFeaturedPositionAvailable(true, null, true);
+    }).not.toThrow();
+    expect(() => {
+      assertFeaturedPositionAvailable(true, 3, true);
+    }).toThrow(ContentFeaturedConflictException);
   });
 
   it("normalizes ordered work tags and rejects duplicates after NFC and trim", () => {
@@ -128,5 +155,37 @@ describe("content rules", () => {
         hasAvailableCover: false,
       }),
     ).toEqual(["title", "synopsis", "author", "categoryIds", "coverAssetId"]);
+  });
+
+  it("returns bounded field paths when publication is not ready", () => {
+    expect(() => {
+      assertWorkReady({
+        title: "Ready title",
+        synopsis: null,
+        author: null,
+        enabledCategoryCount: 0,
+        hasAvailableCover: false,
+      });
+    }).toThrow(ContentNotReadyException);
+    try {
+      assertWorkReady({
+        title: "Ready title",
+        synopsis: null,
+        author: null,
+        enabledCategoryCount: 0,
+        hasAvailableCover: false,
+      });
+    } catch (error: unknown) {
+      expect(error).toMatchObject({
+        code: "CONTENT_NOT_READY",
+        statusCode: 409,
+        errors: [
+          { field: "body.synopsis" },
+          { field: "body.author" },
+          { field: "body.categoryIds" },
+          { field: "body.coverAssetId" },
+        ],
+      });
+    }
   });
 });

@@ -601,7 +601,7 @@ export const buildOpenApiDocument = () =>
           },
         },
         post: {
-          summary: "Create a Work draft",
+          summary: "Create a Work draft or publish it atomically",
           description:
             "Accepts the minimal P01 body and optional editorial fields. An optional UUID permits authorized identity reconciliation after an unknown acknowledgement.",
           security: adminWriteSecurity,
@@ -609,7 +609,11 @@ export const buildOpenApiDocument = () =>
           responses: {
             "201": successResponse("Work created", adminWorkDataSchema),
             "404": contentNotFound,
-            "409": contentConflict(["CONTENT_CONFLICT"]),
+            "409": contentConflict([
+              "CONTENT_CONFLICT",
+              "CONTENT_NOT_READY",
+              "CONTENT_FEATURED_CONFLICT",
+            ]),
             ...adminContentErrors,
           },
         },
@@ -639,6 +643,8 @@ export const buildOpenApiDocument = () =>
               "CONTENT_CONFLICT",
               "CONTENT_IMMUTABLE",
               "CONTENT_STALE_WRITE",
+              "CONTENT_NOT_READY",
+              "CONTENT_FEATURED_CONFLICT",
             ]),
             ...adminContentErrors,
           },
@@ -748,6 +754,8 @@ export const buildOpenApiDocument = () =>
             "409": contentConflict([
               "CONTENT_TRANSITION_CONFLICT",
               "CONTENT_STALE_WRITE",
+              "CONTENT_NOT_READY",
+              "CONTENT_FEATURED_CONFLICT",
             ]),
             ...adminContentErrors,
           },
@@ -918,6 +926,14 @@ export const buildOpenApiDocument = () =>
               mediaReferenceRetirementSchema,
             ),
             ...mediaReferenceErrors,
+            "409": mediaErrorResponse(
+              "Media reference conflicts or published cover is required",
+              [
+                "MEDIA_TARGET_CONFLICT",
+                "VERSION_CONFLICT",
+                "CONTENT_NOT_READY",
+              ],
+            ),
           },
         },
       },

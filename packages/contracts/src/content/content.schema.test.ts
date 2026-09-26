@@ -51,6 +51,8 @@ describe("content request contracts", () => {
       "CONTENT_TRANSITION_CONFLICT",
       "CONTENT_STALE_WRITE",
       "CONTENT_CATEGORY_IN_USE",
+      "CONTENT_NOT_READY",
+      "CONTENT_FEATURED_CONFLICT",
     ]);
     expect(contentErrorCodeSchema.safeParse("P2002").success).toBe(false);
     expect(contentOperationErrorCodeSchema.safeParse("NOT_FOUND").success).toBe(
@@ -836,6 +838,38 @@ describe("Phase 4 work editorial contracts", () => {
     expect(
       adminWorkSchema.safeParse({ ...work, rawStoragePath: "private/path" })
         .success,
+    ).toBe(false);
+  });
+});
+
+describe("Phase 5 publication commands", () => {
+  const base = {
+    title: "Ready Work",
+    slug: "ready-work",
+    type: "manga",
+    storyStatus: "ongoing",
+  };
+
+  it("accepts atomic create and edit publication targets only", () => {
+    expect(
+      createWorkBodySchema.safeParse({ ...base, targetState: "published" })
+        .success,
+    ).toBe(true);
+    expect(
+      createWorkBodySchema.safeParse({ ...base, targetState: "archived" })
+        .success,
+    ).toBe(false);
+    expect(
+      updateWorkBodySchema.safeParse({
+        expectedVersion: 1,
+        targetState: "published",
+      }).success,
+    ).toBe(true);
+    expect(
+      updateWorkBodySchema.safeParse({
+        expectedVersion: 1,
+        targetState: "draft",
+      }).success,
     ).toBe(false);
   });
 });

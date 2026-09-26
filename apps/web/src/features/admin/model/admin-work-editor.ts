@@ -163,6 +163,26 @@ export const updateWorkCommand = (
   };
 };
 
+export const createPublishedWorkCommand = (
+  values: FormValues,
+  id: string,
+  cover: MediaDraftSelection,
+  background: MediaDraftSelection,
+): CreateWorkBody => ({
+  ...createWorkCommand(values, id, cover, background),
+  targetState: "published",
+});
+
+export const updatePublishedWorkCommand = (
+  values: FormValues,
+  expectedVersion: number,
+  cover: MediaDraftSelection,
+  background: MediaDraftSelection,
+): UpdateWorkBody => ({
+  ...updateWorkCommand(values, expectedVersion, cover, background),
+  targetState: "published",
+});
+
 export const workMatchesCreateCommand = (
   work: AdminWork,
   body: CreateWorkBody,
@@ -175,6 +195,7 @@ export const workMatchesCreateCommand = (
     work.slug === body.slug &&
     work.type === body.type &&
     work.storyStatus === body.storyStatus &&
+    work.publicationStatus === (body.targetState ?? "draft") &&
     work.alternativeTitle === (body.alternativeTitle ?? null) &&
     work.synopsis === (body.synopsis ?? null) &&
     work.author === (body.author ?? null) &&
@@ -183,6 +204,35 @@ export const workMatchesCreateCommand = (
     work.backgroundAssetId === (body.backgroundAssetId ?? null) &&
     work.featuredHome === (body.featuredHome ?? false) &&
     work.featuredOrder === (body.featuredOrder ?? null) &&
+    expectedCategoryIds.length === savedCategoryIds.length &&
+    expectedCategoryIds.every((id, index) => id === savedCategoryIds[index]) &&
+    work.tags.length === (body.tags ?? []).length &&
+    work.tags.every((tag, index) => tag === body.tags?.[index])
+  );
+};
+
+export const workMatchesUpdateCommand = (
+  work: AdminWork,
+  body: UpdateWorkBody,
+): boolean => {
+  const expectedCategoryIds = [...(body.categoryIds ?? [])].toSorted();
+  const savedCategoryIds = work.categories.map(({ id }) => id).toSorted();
+  return (
+    work.version >= body.expectedVersion &&
+    work.title === body.title &&
+    work.storyStatus === body.storyStatus &&
+    work.alternativeTitle === body.alternativeTitle &&
+    work.synopsis === body.synopsis &&
+    work.author === body.author &&
+    work.artist === body.artist &&
+    work.featuredHome === body.featuredHome &&
+    work.featuredOrder === body.featuredOrder &&
+    (body.targetState === undefined ||
+      work.publicationStatus === body.targetState) &&
+    (body.coverAssetId === undefined ||
+      work.coverAssetId === body.coverAssetId) &&
+    (body.backgroundAssetId === undefined ||
+      work.backgroundAssetId === body.backgroundAssetId) &&
     expectedCategoryIds.length === savedCategoryIds.length &&
     expectedCategoryIds.every((id, index) => id === savedCategoryIds[index]) &&
     work.tags.length === (body.tags ?? []).length &&

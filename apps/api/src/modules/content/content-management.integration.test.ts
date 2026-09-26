@@ -13,6 +13,7 @@ import { CategoryManagementService } from "./category-management.service.js";
 import { ChapterManagementService } from "./chapter-management.service.js";
 import { PublicationManagementService } from "./publication-management.service.js";
 import { WorkManagementService } from "./work-management.service.js";
+import { prepareWorkForPublication } from "../../test-support/content-publication-fixture.test-helper.js";
 
 const databaseUrl = process.env["DATABASE_URL"];
 if (databaseUrl === undefined) {
@@ -42,6 +43,11 @@ const service = {
 };
 
 const pagination = { page: 1, limit: 25, skip: 0, take: 25 };
+const fixtureActorIds: string[] = [];
+
+const makeReady = async (workId: string): Promise<void> => {
+  fixtureActorIds.push(await prepareWorkForPublication(database, workId));
+};
 
 const firstTextDocument = {
   version: 1,
@@ -61,6 +67,10 @@ describe("focused content management services with PostgreSQL", () => {
   });
 
   afterAll(async () => {
+    await database.$executeRawUnsafe(
+      "TRUNCATE media_reference_events, media_references, upload_attempts, media_assets, publication_events, chapter_pages, chapters, work_tags, work_categories, categories, works",
+    );
+    await database.user.deleteMany({ where: { id: { in: fixtureActorIds } } });
     await database.$disconnect();
   });
 
@@ -333,6 +343,7 @@ describe("focused content management services with PostgreSQL", () => {
       type: "manga",
       storyStatus: "ongoing",
     });
+    await makeReady(work.id);
     const emptyChapter = await service.createChapter(work.id, { number: 1 });
 
     await expect(
@@ -411,6 +422,7 @@ describe("focused content management services with PostgreSQL", () => {
       type: "manga",
       storyStatus: "ongoing",
     });
+    await makeReady(work.id);
 
     const transition = await deterministicPublication.publishWork(work.id, {
       expectedVersion: 0,
@@ -434,6 +446,7 @@ describe("focused content management services with PostgreSQL", () => {
       type: "manga",
       storyStatus: "ongoing",
     });
+    await makeReady(work.id);
     const outcomes = await Promise.allSettled([
       service.publishWork(work.id, {
         expectedVersion: 0,
@@ -469,6 +482,7 @@ describe("focused content management services with PostgreSQL", () => {
       type: "manga",
       storyStatus: "ongoing",
     });
+    await makeReady(work.id);
     const chapter = await service.createChapter(work.id, {
       number: 1,
       pages: [{ position: 1 }],
@@ -530,6 +544,7 @@ describe("focused content management services with PostgreSQL", () => {
       type: "manga",
       storyStatus: "ongoing",
     });
+    await makeReady(work.id);
     const outcomes = await Promise.all([
       service.publishWork(work.id, {
         expectedVersion: 0,
@@ -565,6 +580,7 @@ describe("focused content management services with PostgreSQL", () => {
       type: "manga",
       storyStatus: "ongoing",
     });
+    await makeReady(work.id);
     await database.$executeRawUnsafe(
       "CREATE FUNCTION fail_test_work_publication() RETURNS TRIGGER LANGUAGE plpgsql AS 'BEGIN IF NEW.publication_status = ''published'' THEN RAISE EXCEPTION ''forced test failure''; END IF; RETURN NEW; END;'",
     );

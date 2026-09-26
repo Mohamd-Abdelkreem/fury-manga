@@ -11,6 +11,9 @@ import { createDatabaseClient } from "@fury/database";
 import { createMediaConfig } from "../../core/config/media.config.js";
 import { MediaStorage } from "../../infrastructure/media/media-storage.js";
 import { MediaService } from "./media.service.js";
+import { CategoryManagementService } from "../content/category-management.service.js";
+import { WorkManagementService } from "../content/work-management.service.js";
+import { PublicContentService } from "../content/public-content.service.js";
 
 const databaseUrl = process.env["DATABASE_URL"];
 if (databaseUrl === undefined)
@@ -22,6 +25,9 @@ const mediaRoot = join(fixtureRoot, "persistent");
 mkdirSync(mediaRoot);
 const storage = new MediaStorage(createMediaConfig(mediaRoot));
 const service = new MediaService(database, storage);
+const categories = new CategoryManagementService(database);
+const works = new WorkManagementService(database, service);
+const publicContent = new PublicContentService(database);
 const actorIds: string[] = [];
 
 const createAdmin = async (): Promise<string> => {
@@ -42,6 +48,9 @@ const createAdmin = async (): Promise<string> => {
 };
 
 afterAll(async () => {
+  await database.$executeRawUnsafe(
+    "TRUNCATE media_reference_events, media_references, publication_events, work_tags, work_categories, categories, works CASCADE",
+  );
   await database.uploadAttempt.deleteMany({
     where: { actorUserId: { in: actorIds } },
   });
@@ -54,6 +63,70 @@ afterAll(async () => {
 });
 
 describe("operator media reconciliation", () => {
+  it("hides a published work after missing bytes and restores metadata only after verified recovery", async () => {
+    const actorUserId = await createAdmin();
+    const category = await categories.createCategory({
+      displayName: "Recovery",
+      slug: `recovery-${randomUUID()}`,
+    });
+    const source = await sharp({
+      create: { width: 600, height: 800, channels: 3, background: "teal" },
+    })
+      .jpeg()
+      .toBuffer();
+    const cover = await service.uploadAdmin({
+      actorUserId,
+      attemptId: randomUUID(),
+      mediaClass: "work_cover",
+      source,
+      declaredType: "image/jpeg",
+      sourceName: "cover.jpg",
+    });
+    const work = await works.createWork(
+      {
+        title: "Recovery work",
+        slug: `recovery-${randomUUID()}`,
+        type: "manga",
+        storyStatus: "ongoing",
+        synopsis: "A complete synopsis for safe missing-byte recovery.",
+        author: "Author",
+        categoryIds: [category.id],
+        coverAssetId: cover.asset.id,
+        targetState: "published",
+      },
+      actorUserId,
+    );
+    const pagination = { page: 1, limit: 25, skip: 0, take: 25 };
+    expect((await publicContent.listWorks(pagination)).pagination.total).toBe(
+      1,
+    );
+    const original = await storage.read(cover.asset.id);
+    await storage.remove(cover.asset.id);
+    expect(await service.reconcile(100)).toMatchObject({
+      markedUnavailable: 1,
+    });
+    await expect(publicContent.getWork(work.slug)).rejects.toMatchObject({
+      statusCode: 404,
+    });
+    expect((await publicContent.listWorks(pagination)).pagination.total).toBe(
+      0,
+    );
+    await storage.stage(cover.asset.id, original);
+    await storage.publish(cover.asset.id);
+    expect(await service.reconcile(100)).toMatchObject({
+      restoredAvailable: 1,
+    });
+    expect(await publicContent.getWork(work.slug)).toMatchObject({
+      slug: work.slug,
+    });
+    expect(await works.getWork(work.id)).toMatchObject({
+      version: work.version,
+      publicationStatus: "published",
+    });
+    expect(
+      await database.publicationEvent.count({ where: { workId: work.id } }),
+    ).toBe(1);
+  });
   it("accepts provable staged bytes and terminally rejects incomplete uploads", async () => {
     const actorUserId = await createAdmin();
     const acceptedKey = randomUUID();
