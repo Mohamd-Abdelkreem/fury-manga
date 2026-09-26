@@ -723,6 +723,132 @@ describe("content-domain PostgreSQL invariants", () => {
     ]);
   });
 
+  it("serializes competing draft replacements and rolls back a mid-write relation failure", async () => {
+    const workId = await insertWork("atomic-editorial", "text-story");
+    const categories = await Promise.all(
+      ["original", "replacement"].map((slug) =>
+        pool.query<{ id: string }>(
+          "INSERT INTO categories (display_name, slug, updated_at) VALUES ($1, $1, CURRENT_TIMESTAMP) RETURNING id",
+          [slug],
+        ),
+      ),
+    );
+    const originalCategoryId = categories[0]?.rows[0]?.id;
+    const replacementCategoryId = categories[1]?.rows[0]?.id;
+    if (
+      originalCategoryId === undefined ||
+      replacementCategoryId === undefined
+    ) {
+      throw new Error("Expected two isolated categories.");
+    }
+    await pool.query(
+      "INSERT INTO work_tags (work_id, normalized_tag, position) VALUES ($1, 'Original', 1)",
+      [workId],
+    );
+    await pool.query(
+      "INSERT INTO work_categories (work_id, category_id) VALUES ($1, $2)",
+      [workId, originalCategoryId],
+    );
+
+    const replace = async (title: string): Promise<boolean> => {
+      const client = await pool.connect();
+      try {
+        await client.query("BEGIN");
+        const updated = await client.query(
+          "UPDATE works SET title = $2, version = version + 1, updated_at = CURRENT_TIMESTAMP WHERE id = $1 AND version = 0 RETURNING id",
+          [workId, title],
+        );
+        if (updated.rowCount !== 1) {
+          await client.query("ROLLBACK");
+          return false;
+        }
+        await client.query("DELETE FROM work_tags WHERE work_id = $1", [
+          workId,
+        ]);
+        await client.query(
+          "INSERT INTO work_tags (work_id, normalized_tag, position) VALUES ($1, $2, 1)",
+          [workId, title],
+        );
+        await client.query("DELETE FROM work_categories WHERE work_id = $1", [
+          workId,
+        ]);
+        await client.query(
+          "INSERT INTO work_categories (work_id, category_id) VALUES ($1, $2)",
+          [workId, replacementCategoryId],
+        );
+        await client.query("COMMIT");
+        return true;
+      } catch (error: unknown) {
+        await client.query("ROLLBACK");
+        throw error;
+      } finally {
+        client.release();
+      }
+    };
+    expect(
+      (await Promise.all([replace("First"), replace("Second")])).filter(
+        Boolean,
+      ),
+    ).toHaveLength(1);
+
+    const committed = await pool.query<{ title: string; version: number }>(
+      "SELECT title, version FROM works WHERE id = $1",
+      [workId],
+    );
+    const winner = committed.rows[0];
+    expect(["First", "Second"]).toContain(winner?.title);
+    expect(winner?.version).toBe(1);
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      await client.query(
+        "UPDATE works SET title = 'Failed replacement', version = version + 1 WHERE id = $1",
+        [workId],
+      );
+      await client.query("DELETE FROM work_tags WHERE work_id = $1", [workId]);
+      await client.query(
+        "INSERT INTO work_tags (work_id, normalized_tag, position) VALUES ($1, 'Temporary', 1)",
+        [workId],
+      );
+      await client.query("DELETE FROM work_categories WHERE work_id = $1", [
+        workId,
+      ]);
+      await expect(
+        client.query(
+          "INSERT INTO work_tags (work_id, normalized_tag, position) VALUES ($1, 'Duplicate position', 1)",
+          [workId],
+        ),
+      ).rejects.toMatchObject({ code: "23505" });
+      await client.query("ROLLBACK");
+    } finally {
+      client.release();
+    }
+    expect(
+      (
+        await pool.query<{ title: string; version: number }>(
+          "SELECT title, version FROM works WHERE id = $1",
+          [workId],
+        )
+      ).rows[0],
+    ).toEqual(winner);
+    expect(
+      (
+        await pool.query<{ normalized_tag: string; position: number }>(
+          "SELECT normalized_tag, position FROM work_tags WHERE work_id = $1",
+          [workId],
+        )
+      ).rows,
+    ).toEqual([{ normalized_tag: winner?.title, position: 1 }]);
+    expect(
+      (
+        await pool.query(
+          "SELECT category_id FROM work_categories WHERE work_id = $1",
+          [workId],
+        )
+      ).rows,
+    ).toEqual([{ category_id: replacementCategoryId }]);
+  });
+
   it("persists rich draft metadata, ordered tags, and up to 100 distinct categories", async () => {
     const workId = await insertWork("rich-draft", "text-story");
     const categories = await Promise.all(

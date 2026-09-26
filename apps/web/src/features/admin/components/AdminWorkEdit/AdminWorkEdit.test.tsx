@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
     available: true,
     sessionReady: true,
     denied: false,
+    writeBlocked: false,
     retryAccess: vi.fn(),
     refetch: vi.fn(),
   },
@@ -25,8 +26,20 @@ vi.mock("../../hooks/admin-content.hooks", () => ({
 }));
 
 vi.mock("../AdminWorkForm/AdminWorkForm", () => ({
-  AdminWorkForm: ({ initialWork }: { initialWork: AdminWork }) => (
-    <div data-testid="authoritative-work-form">{initialWork.title}</div>
+  AdminWorkForm: ({
+    initialWork,
+    canSave,
+  }: {
+    initialWork: AdminWork;
+    canSave: boolean;
+  }) => (
+    <div data-testid="authoritative-work-form">
+      {initialWork.title}
+      <input aria-label="مسودة محلية" defaultValue={initialWork.title} />
+      <button type="button" disabled={!canSave}>
+        حفظ التعديلات
+      </button>
+    </div>
   ),
 }));
 
@@ -63,6 +76,7 @@ beforeEach(() => {
     available: true,
     sessionReady: true,
     denied: false,
+    writeBlocked: false,
   });
 });
 
@@ -96,6 +110,56 @@ describe("administrator Work detail route", () => {
     ).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /إعادة التحقق/u }));
     expect(mocks.detail.retryAccess).toHaveBeenCalledOnce();
+  });
+
+  it("retains dirty detail on transient refresh error, blocks save, and recovers after retry", () => {
+    mocks.detail.isPending = false;
+    mocks.detail.data = work;
+    const { rerender } = render(<AdminWorkEdit workId={work.id} />);
+    fireEvent.change(screen.getByLabelText("مسودة محلية"), {
+      target: { value: "تعديل لم يُحفظ" },
+    });
+    mocks.detail.isError = true;
+    mocks.detail.error = new SafeAdminContentError("NETWORK_ERROR", 0, "");
+    rerender(<AdminWorkEdit workId={work.id} />);
+    expect(screen.getByLabelText("مسودة محلية")).toHaveValue("تعديل لم يُحفظ");
+    expect(
+      screen.getByRole("button", { name: "حفظ التعديلات" }),
+    ).toBeDisabled();
+    expect(screen.getByRole("alert")).toHaveTextContent(/قديمة/u);
+    fireEvent.click(
+      screen.getByRole("button", { name: /إعادة تحميل المسودة/u }),
+    );
+    expect(mocks.detail.refetch).toHaveBeenCalledOnce();
+    mocks.detail.isError = false;
+    rerender(<AdminWorkEdit workId={work.id} />);
+    expect(screen.getByLabelText("مسودة محلية")).toHaveValue("تعديل لم يُحفظ");
+    expect(screen.getByRole("button", { name: "حفظ التعديلات" })).toBeEnabled();
+    mocks.detail.denied = true;
+    rerender(<AdminWorkEdit workId={work.id} />);
+    expect(screen.queryByLabelText("مسودة محلية")).not.toBeInTheDocument();
+  });
+
+  it("retains a dirty editor while a rejected write awaits read authorization, then masks actual reader denial", () => {
+    mocks.detail.isPending = false;
+    mocks.detail.data = work;
+    const { rerender } = render(<AdminWorkEdit workId={work.id} />);
+    fireEvent.change(screen.getByLabelText("مسودة محلية"), {
+      target: { value: "تعديل محلي" },
+    });
+    Object.assign(mocks.detail, { writeBlocked: true, isError: false });
+    rerender(<AdminWorkEdit workId={work.id} />);
+    expect(screen.getByLabelText("مسودة محلية")).toHaveValue("تعديل محلي");
+    expect(
+      screen.getByRole("button", { name: "حفظ التعديلات" }),
+    ).toBeDisabled();
+    fireEvent.click(
+      screen.getByRole("button", { name: /إعادة تحميل المسودة/u }),
+    );
+    expect(mocks.detail.retryAccess).toHaveBeenCalledOnce();
+    mocks.detail.denied = true;
+    rerender(<AdminWorkEdit workId={work.id} />);
+    expect(screen.queryByLabelText("مسودة محلية")).not.toBeInTheDocument();
   });
 
   it("shows a safe missing-work result and retries detail reads", () => {

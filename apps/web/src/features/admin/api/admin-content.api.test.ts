@@ -314,6 +314,78 @@ describe("administrator category API", () => {
     expect(requests).toHaveLength(2);
   });
 
+  it("rejects unknown private fields in a successful Work detail", async () => {
+    apiClient.defaults.adapter = (
+      config: InternalAxiosRequestConfig,
+    ): Promise<AxiosResponse> =>
+      Promise.resolve({
+        config,
+        headers: new AxiosHeaders(),
+        status: 200,
+        statusText: "OK",
+        data: successEnvelope(
+          { work: { ...work, storageKey: "C:\\private\\work" } },
+          200,
+          `/content/admin/works/${work.id}`,
+        ),
+      });
+
+    const error = await adminContentApi
+      .getWork(work.id)
+      .catch((received: unknown) => received);
+    expect(error).toBeInstanceOf(SafeAdminContentError);
+    expect(error).toMatchObject({ code: "HTTP_ERROR", statusCode: 0 });
+    expect(String(error)).not.toContain("private");
+  });
+
+  it("maps Work edit errors to safe field paths without leaking server details", async () => {
+    apiClient.defaults.adapter = (
+      config: InternalAxiosRequestConfig,
+    ): Promise<AxiosResponse> =>
+      Promise.reject(
+        new AxiosError(
+          "private transport detail",
+          undefined,
+          config,
+          undefined,
+          {
+            config,
+            headers: new AxiosHeaders(),
+            status: 400,
+            statusText: "Bad Request",
+            data: {
+              success: false,
+              statusCode: 400,
+              code: "VALIDATION_ERROR",
+              message: "private validation detail",
+              errors: [
+                { field: "body.tags.1", message: "private duplicate" },
+                { field: "body.coverAssetId", message: "private asset" },
+                { field: "body.internalNote", message: "private internal" },
+              ],
+              requestId: "request-work-edit",
+              timestamp: "2026-09-25T10:00:00.000Z",
+              path: `/api/v1/content/admin/works/${work.id}`,
+            },
+          },
+        ),
+      );
+
+    const error = await adminContentApi
+      .updateWork(work.id, {
+        expectedVersion: work.version,
+        tags: ["Duplicate"],
+      })
+      .catch((received: unknown) => received);
+    expect(error).toBeInstanceOf(SafeAdminContentError);
+    expect(error).toMatchObject({
+      code: "VALIDATION_ERROR",
+      statusCode: 400,
+      fieldPaths: ["body.tags.1", "body.coverAssetId"],
+    });
+    expect(String(error)).not.toContain("private");
+  });
+
   it("maps strict error envelopes to safe codes and field paths only", async () => {
     apiClient.defaults.adapter = (
       config: InternalAxiosRequestConfig,

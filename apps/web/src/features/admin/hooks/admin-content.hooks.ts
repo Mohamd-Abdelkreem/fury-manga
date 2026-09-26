@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { QueryClient } from "@tanstack/react-query";
-import { useCallback, useMemo, useSyncExternalStore } from "react";
+import { useCallback, useMemo, useRef, useSyncExternalStore } from "react";
 import { createWorkBodySchema } from "@fury/contracts";
 import type {
   AdminWork,
@@ -19,7 +19,10 @@ import {
   adminContentApi,
   SafeAdminContentError,
 } from "../api/admin-content.api";
-import { isTerminalAdminContentError } from "../model/admin-content.errors";
+import {
+  isTerminalAdminContentError,
+  isWriteSideAdminForbidden,
+} from "../model/admin-content.errors";
 import { adminContentKeys } from "../model/admin-content.keys";
 import { workMatchesCreateCommand } from "../model/admin-work-editor";
 import { mediaKeys } from "@/features/media/model/media.keys";
@@ -28,6 +31,7 @@ type ActorDenialState = {
   denied: boolean;
   deniedThrough: number;
   issuedThrough: number;
+  writeBlockedThrough: Map<string, number>;
   listeners: Set<() => void>;
 };
 
@@ -53,6 +57,7 @@ const ensureDenialState = (
       denied: false,
       deniedThrough: 0,
       issuedThrough: 0,
+      writeBlockedThrough: new Map(),
       listeners: new Set(),
     };
     actors.set(actorId, state);
@@ -76,6 +81,38 @@ const isActorDenied = (queryClient: QueryClient, actorId: string): boolean =>
   getDenialState(queryClient, actorId)?.denied ?? false;
 
 const denialError = () => new SafeAdminContentError("ACCESS_FENCED", 0, "");
+
+const isWorkWriteBlocked = (
+  queryClient: QueryClient,
+  actorId: string,
+  workId: string,
+): boolean =>
+  getDenialState(queryClient, actorId)?.writeBlockedThrough.has(workId) ??
+  false;
+
+const blockWorkWrite = (
+  queryClient: QueryClient,
+  actorId: string,
+  workId: string,
+): void => {
+  const state = ensureDenialState(queryClient, actorId);
+  state.writeBlockedThrough.set(workId, state.issuedThrough);
+  notifyDenialListeners(state);
+};
+
+const recoverWorkWrite = (
+  queryClient: QueryClient,
+  actorId: string,
+  workId: string,
+  requestId: number,
+): void => {
+  const state = getDenialState(queryClient, actorId);
+  const blockedThrough = state?.writeBlockedThrough.get(workId);
+  if (blockedThrough !== undefined && requestId > blockedThrough) {
+    state?.writeBlockedThrough.delete(workId);
+    if (state !== undefined) notifyDenialListeners(state);
+  }
+};
 
 const issueActorRequest = (
   queryClient: QueryClient,
@@ -134,8 +171,15 @@ const runActorRequest = async <T>(
   queryClient: QueryClient,
   actorId: string,
   request: () => Promise<T>,
+  workOperation?: Readonly<{ workId: string; kind: "read" | "write" }>,
 ): Promise<T> => {
   if (isActorDenied(queryClient, actorId)) throw denialError();
+  if (
+    workOperation?.kind === "write" &&
+    isWorkWriteBlocked(queryClient, actorId, workOperation.workId)
+  ) {
+    throw denialError();
+  }
   const requestId = issueActorRequest(queryClient, actorId);
   try {
     const result = await request();
@@ -143,10 +187,15 @@ const runActorRequest = async <T>(
     if (state !== undefined && requestId <= state.deniedThrough) {
       throw denialError();
     }
+    if (workOperation?.kind === "read") {
+      recoverWorkWrite(queryClient, actorId, workOperation.workId, requestId);
+    }
     return result;
   } catch (error: unknown) {
     const state = getDenialState(queryClient, actorId);
-    if (
+    if (workOperation?.kind === "write" && isWriteSideAdminForbidden(error)) {
+      blockWorkWrite(queryClient, actorId, workOperation.workId);
+    } else if (
       isTerminalAdminContentError(error) &&
       requestId > (state?.deniedThrough ?? 0)
     ) {
@@ -160,6 +209,7 @@ const runRecoveryRead = async <T>(
   queryClient: QueryClient,
   actorId: string,
   request: () => Promise<T>,
+  workId?: string,
 ): Promise<T> => {
   const requestId = issueActorRequest(queryClient, actorId);
   try {
@@ -167,6 +217,8 @@ const runRecoveryRead = async <T>(
     if (isActorDenied(queryClient, actorId)) {
       recoverActor(queryClient, actorId, requestId);
     }
+    if (workId !== undefined)
+      recoverWorkWrite(queryClient, actorId, workId, requestId);
     return result;
   } catch (error: unknown) {
     const state = getDenialState(queryClient, actorId);
@@ -302,18 +354,27 @@ export const useAdminCategoryDetail = (categoryId: string | null) => {
   };
 };
 
-export const useAdminCategoryPicker = () => {
+export const useAdminCategoryPicker = (page = 1, search = "") => {
   const session = useAdminActor();
   const queryClient = useQueryClient();
   const denied = useActorDenial(queryClient, session.actorId);
   const queryResult = useQuery({
-    queryKey: adminContentKeys.categoryPicker(session.actorId ?? "anonymous"),
+    queryKey: adminContentKeys.categoryPicker(
+      session.actorId ?? "anonymous",
+      page,
+      search,
+    ),
     queryFn: ({ signal }) => {
       if (session.actorId === null) throw denialError();
-      const query: CategoryListQuery = { page: 1, limit: 100, enabled: true };
+      const query: CategoryListQuery = {
+        page,
+        limit: 100,
+        enabled: true,
+        ...(search ? { search } : {}),
+      };
       return runActorRequest(queryClient, session.actorId, () =>
         adminContentApi.listCategories(query, signal),
-      ).then(({ items }) => items);
+      );
     },
     enabled: session.actorId !== null && !denied,
     retry: false,
@@ -393,7 +454,12 @@ export const useUpdateAdminCategory = () => {
         adminContentKeys.categoryDetail(session.actorId, category.id),
         category,
       );
-      await invalidateActorCategories(queryClient, session.actorId);
+      await Promise.all([
+        invalidateActorCategories(queryClient, session.actorId),
+        queryClient.invalidateQueries({
+          queryKey: adminContentKeys.workDetailScope(session.actorId),
+        }),
+      ]);
     },
     onError: async (error, variables) => {
       if (
@@ -444,10 +510,65 @@ export const useMoveAdminCategory = () => {
           result.displacedCategory,
         );
       }
-      await invalidateActorCategories(queryClient, session.actorId);
+      await Promise.all([
+        invalidateActorCategories(queryClient, session.actorId),
+        queryClient.invalidateQueries({
+          queryKey: adminContentKeys.workDetailScope(session.actorId),
+        }),
+      ]);
     },
     retry: false,
   });
+};
+
+type WorkFreshness = { issued: number; accepted: number };
+const workFreshness = new WeakMap<QueryClient, Map<string, WorkFreshness>>();
+
+const freshnessFor = (
+  queryClient: QueryClient,
+  actorId: string,
+  workId: string,
+): WorkFreshness => {
+  let resources = workFreshness.get(queryClient);
+  if (resources === undefined) {
+    resources = new Map();
+    workFreshness.set(queryClient, resources);
+  }
+  const key = JSON.stringify([actorId, workId]);
+  let state = resources.get(key);
+  if (state === undefined) {
+    state = { issued: 0, accepted: 0 };
+    resources.set(key, state);
+  }
+  return state;
+};
+
+const issueWorkRead = (
+  queryClient: QueryClient,
+  actorId: string,
+  workId: string,
+): number => ++freshnessFor(queryClient, actorId, workId).issued;
+
+const keepNewestWork = (
+  queryClient: QueryClient,
+  actorId: string,
+  incoming: AdminWork,
+  readOrder = issueWorkRead(queryClient, actorId, incoming.id),
+): AdminWork => {
+  if (isActorDenied(queryClient, actorId)) throw denialError();
+  const key = adminContentKeys.workDetail(actorId, incoming.id);
+  const cached = queryClient.getQueryData<AdminWork>(key);
+  const freshness = freshnessFor(queryClient, actorId, incoming.id);
+  if (cached !== undefined && cached.version > incoming.version) return cached;
+  if (readOrder < freshness.accepted) {
+    // An evicted detail cannot supply a safe result for a superseded read.
+    if (cached === undefined)
+      throw new SafeAdminContentError("CONTENT_STALE_WRITE", 409, "");
+    if (cached.version === incoming.version) return cached;
+  }
+  freshness.accepted = Math.max(freshness.accepted, readOrder);
+  queryClient.setQueryData(key, incoming);
+  return incoming;
 };
 
 export const useAdminWorkDetail = (workId: string | null) => {
@@ -455,6 +576,17 @@ export const useAdminWorkDetail = (workId: string | null) => {
   const queryClient = useQueryClient();
   const actorId = session.actorId;
   const denied = useActorDenial(queryClient, actorId);
+  const writeBlocked = useSyncExternalStore(
+    (listener) =>
+      actorId === null
+        ? () => undefined
+        : subscribeToDenial(queryClient, actorId, listener),
+    () =>
+      actorId !== null &&
+      workId !== null &&
+      isWorkWriteBlocked(queryClient, actorId, workId),
+    () => false,
+  );
   const queryKey = adminContentKeys.workDetail(
     actorId ?? "anonymous",
     workId ?? "none",
@@ -463,10 +595,15 @@ export const useAdminWorkDetail = (workId: string | null) => {
     if (actorId === null || workId === null) throw denialError();
     return queryClient.fetchQuery({
       queryKey,
-      queryFn: ({ signal }) =>
-        runRecoveryRead(queryClient, actorId, () =>
-          adminContentApi.getWork(workId, signal),
-        ),
+      queryFn: ({ signal }) => {
+        const readOrder = issueWorkRead(queryClient, actorId, workId);
+        return runRecoveryRead(
+          queryClient,
+          actorId,
+          () => adminContentApi.getWork(workId, signal),
+          workId,
+        ).then((work) => keepNewestWork(queryClient, actorId, work, readOrder));
+      },
       retry: false,
       staleTime: 0,
     });
@@ -475,9 +612,13 @@ export const useAdminWorkDetail = (workId: string | null) => {
     queryKey,
     queryFn: ({ signal }) => {
       if (actorId === null || workId === null) throw denialError();
-      return runActorRequest(queryClient, actorId, () =>
-        adminContentApi.getWork(workId, signal),
-      );
+      const readOrder = issueWorkRead(queryClient, actorId, workId);
+      return runActorRequest(
+        queryClient,
+        actorId,
+        () => adminContentApi.getWork(workId, signal),
+        { workId, kind: "read" },
+      ).then((work) => keepNewestWork(queryClient, actorId, work, readOrder));
     },
     enabled: actorId !== null && workId !== null && !denied,
     retry: false,
@@ -489,6 +630,7 @@ export const useAdminWorkDetail = (workId: string | null) => {
     sessionReady: session.sessionReady,
     sessionError: session.sessionError,
     denied,
+    writeBlocked,
     retryAccess,
   };
 };
@@ -502,38 +644,92 @@ const isAmbiguousWriteError = (error: unknown): boolean =>
 export const useCreateAdminWork = () => {
   const session = useAdminActor();
   const queryClient = useQueryClient();
+  const missingAfterAmbiguous = useRef<{
+    actorId: string;
+    command: CreateWorkBody;
+    conflicted: boolean;
+  } | null>(null);
   const mutation = useMutation({
     mutationFn: (body: CreateWorkBody) => {
       if (session.actorId === null) return Promise.reject(denialError());
       const parsed = createWorkBodySchema.parse(body);
-      const command =
-        parsed.id === undefined
-          ? { ...parsed, id: globalThis.crypto.randomUUID() }
-          : parsed;
-      return runActorRequest(queryClient, session.actorId, async () => {
+      const command = {
+        ...parsed,
+        id: parsed.id ?? globalThis.crypto.randomUUID(),
+      };
+      const actorId = session.actorId;
+      if (
+        missingAfterAmbiguous.current?.actorId === actorId &&
+        missingAfterAmbiguous.current.command.id === command.id &&
+        missingAfterAmbiguous.current.conflicted
+      ) {
+        return Promise.reject(
+          new SafeAdminContentError("CONTENT_CONFLICT", 409, ""),
+        );
+      }
+      return runActorRequest(queryClient, actorId, async () => {
         try {
-          return await adminContentApi.createWork(command);
+          const saved = await adminContentApi.createWork(command);
+          missingAfterAmbiguous.current = null;
+          return saved;
         } catch (error: unknown) {
-          if (command.id === undefined || !isAmbiguousWriteError(error)) {
+          if (
+            error instanceof SafeAdminContentError &&
+            error.statusCode === 409 &&
+            missingAfterAmbiguous.current?.actorId === actorId &&
+            JSON.stringify(missingAfterAmbiguous.current.command) ===
+              JSON.stringify(command)
+          ) {
+            // A 404 may have raced the first POST; the conflict itself proves nothing.
+            try {
+              const existing = await adminContentApi.getWork(command.id);
+              if (workMatchesCreateCommand(existing, command)) {
+                missingAfterAmbiguous.current = null;
+                return existing;
+              }
+            } catch (readbackError: unknown) {
+              if (isTerminalAdminContentError(readbackError))
+                throw readbackError;
+            }
+            missingAfterAmbiguous.current = {
+              actorId,
+              command,
+              conflicted: true,
+            };
             throw error;
           }
+          if (!isAmbiguousWriteError(error)) throw error;
           try {
             const existing = await adminContentApi.getWork(command.id);
             if (workMatchesCreateCommand(existing, command)) return existing;
           } catch (readbackError: unknown) {
             if (isTerminalAdminContentError(readbackError)) throw readbackError;
+            if (
+              readbackError instanceof SafeAdminContentError &&
+              readbackError.statusCode === 404
+            ) {
+              missingAfterAmbiguous.current = {
+                actorId,
+                command,
+                conflicted: false,
+              };
+            }
           }
           throw error;
         }
       });
     },
-    onSuccess: async (work) => {
-      if (session.actorId === null) return;
-      queryClient.setQueryData(
-        adminContentKeys.workDetail(session.actorId, work.id),
-        work,
-      );
-      await invalidateWorkDependencies(queryClient, session.actorId, work.id);
+    onMutate: () => ({ actorId: session.actorId }),
+    onSuccess: async (work, _variables, context) => {
+      const actorId = context.actorId;
+      if (
+        actorId === null ||
+        session.actorId !== actorId ||
+        isActorDenied(queryClient, actorId)
+      )
+        return;
+      keepNewestWork(queryClient, actorId, work);
+      await invalidateWorkDependencies(queryClient, actorId, work.id);
     },
     retry: false,
   });
@@ -541,13 +737,18 @@ export const useCreateAdminWork = () => {
     async (workId: string): Promise<AdminWork> => {
       const actorId = session.actorId;
       if (actorId === null) throw denialError();
+      const readOrder = issueWorkRead(queryClient, actorId, workId);
       return runActorRequest(queryClient, actorId, async () => {
         const work = await adminContentApi.getWork(workId);
-        queryClient.setQueryData(
-          adminContentKeys.workDetail(actorId, work.id),
-          work,
-        );
-        return work;
+        const pending = missingAfterAmbiguous.current;
+        if (
+          pending?.actorId === actorId &&
+          pending.command.id === workId &&
+          workMatchesCreateCommand(work, pending.command)
+        ) {
+          missingAfterAmbiguous.current = null;
+        }
+        return keepNewestWork(queryClient, actorId, work, readOrder);
       });
     },
     [queryClient, session.actorId],
@@ -567,29 +768,37 @@ export const useUpdateAdminWork = () => {
       body: UpdateWorkBody;
     }) => {
       if (session.actorId === null) return Promise.reject(denialError());
-      return runActorRequest(queryClient, session.actorId, () =>
-        adminContentApi.updateWork(workId, body),
+      return runActorRequest(
+        queryClient,
+        session.actorId,
+        () => adminContentApi.updateWork(workId, body),
+        { workId, kind: "write" },
       );
     },
-    onSuccess: async (work) => {
-      if (session.actorId === null) return;
-      queryClient.setQueryData(
-        adminContentKeys.workDetail(session.actorId, work.id),
-        work,
-      );
-      await invalidateWorkDependencies(queryClient, session.actorId, work.id);
-    },
-    onError: async (error, variables) => {
+    onMutate: () => ({ actorId: session.actorId }),
+    onSuccess: async (work, _variables, context) => {
+      const actorId = context.actorId;
       if (
-        session.actorId !== null &&
+        actorId === null ||
+        session.actorId !== actorId ||
+        isActorDenied(queryClient, actorId)
+      )
+        return;
+      keepNewestWork(queryClient, actorId, work);
+      await invalidateWorkDependencies(queryClient, actorId, work.id);
+    },
+    onError: async (error, variables, context) => {
+      const actorId = context?.actorId;
+      if (
+        actorId !== null &&
+        actorId !== undefined &&
+        session.actorId === actorId &&
+        !isActorDenied(queryClient, actorId) &&
         error instanceof SafeAdminContentError &&
         error.code === "CONTENT_STALE_WRITE"
       ) {
         await queryClient.invalidateQueries({
-          queryKey: adminContentKeys.workDetail(
-            session.actorId,
-            variables.workId,
-          ),
+          queryKey: adminContentKeys.workDetail(actorId, variables.workId),
         });
       }
     },

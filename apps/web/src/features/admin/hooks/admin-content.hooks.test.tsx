@@ -3,7 +3,11 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { CategoryListQuery, CreateWorkBody } from "@fury/contracts";
+import type {
+  AdminWork,
+  CategoryListQuery,
+  CreateWorkBody,
+} from "@fury/contracts";
 
 import { SafeAdminContentError } from "../api/admin-content.api";
 import { adminContentKeys } from "../model/admin-content.keys";
@@ -11,6 +15,7 @@ import { mediaKeys } from "@/features/media/model/media.keys";
 import {
   useAdminCategoryDetail,
   useAdminCategoryList,
+  useAdminCategoryPicker,
   useCreateAdminCategory,
   useCreateAdminWork,
   useAdminWorkDetail,
@@ -159,6 +164,38 @@ describe("administrator category query identity and state", () => {
     );
   });
 
+  it("requests only one bounded enabled picker page per search and page key", async () => {
+    apiMock.listCategories.mockResolvedValue(listData);
+    const { result, rerender } = renderHook(
+      ({ page, search }: { page: number; search: string }) =>
+        useAdminCategoryPicker(page, search),
+      { wrapper, initialProps: { page: 1, search: "" } },
+    );
+    await waitFor(() => {
+      expect(result.current.data?.items).toEqual([category]);
+    });
+    expect(apiMock.listCategories).toHaveBeenCalledWith(
+      { page: 1, limit: 100, enabled: true },
+      expect.any(AbortSignal),
+    );
+    rerender({ page: 2, search: "" });
+    await waitFor(() => {
+      expect(apiMock.listCategories).toHaveBeenCalledTimes(2);
+    });
+    expect(apiMock.listCategories).toHaveBeenLastCalledWith(
+      { page: 2, limit: 100, enabled: true },
+      expect.any(AbortSignal),
+    );
+    rerender({ page: 1, search: "خيال" });
+    await waitFor(() => {
+      expect(apiMock.listCategories).toHaveBeenCalledTimes(3);
+    });
+    expect(apiMock.listCategories).toHaveBeenLastCalledWith(
+      { page: 1, limit: 100, enabled: true, search: "خيال" },
+      expect.any(AbortSignal),
+    );
+  });
+
   it("uses abortable server queries and changes cache keys when page changes", async () => {
     apiMock.listCategories.mockResolvedValue(listData);
     const initialQuery: CategoryListQuery = { page: 1, limit: 25 };
@@ -207,6 +244,10 @@ describe("administrator category query identity and state", () => {
     });
     queryClient.setQueryData(actorListKey, listData);
     queryClient.setQueryData(otherListKey, listData);
+    const actorWorkKey = adminContentKeys.workDetail(sessionMock.id, work.id);
+    const otherWorkKey = adminContentKeys.workDetail("other-admin", work.id);
+    queryClient.setQueryData(actorWorkKey, work);
+    queryClient.setQueryData(otherWorkKey, work);
 
     const { result } = renderHook(() => useUpdateAdminCategory(), { wrapper });
     await act(async () => {
@@ -218,6 +259,8 @@ describe("administrator category query identity and state", () => {
 
     expect(queryClient.getQueryState(actorListKey)?.isInvalidated).toBe(true);
     expect(queryClient.getQueryState(otherListKey)?.isInvalidated).toBe(false);
+    expect(queryClient.getQueryState(actorWorkKey)?.isInvalidated).toBe(true);
+    expect(queryClient.getQueryState(otherWorkKey)?.isInvalidated).toBe(false);
     expect(
       queryClient.getQueryData(
         adminContentKeys.categoryDetail(sessionMock.id, category.id),
@@ -411,6 +454,97 @@ describe("administrator Work draft queries and mutations", () => {
     expect(queryClient.getQueryState(otherWorkKey)?.isInvalidated).toBe(false);
   });
 
+  it("keeps an ambiguous create unresolved after UUID 404 until deliberate same-ID retry", async () => {
+    const body: CreateWorkBody = {
+      id: work.id,
+      title: work.title,
+      slug: work.slug,
+      type: work.type,
+      storyStatus: work.storyStatus,
+      categoryIds: [category.id],
+    };
+    apiMock.createWork
+      .mockRejectedValueOnce(new SafeAdminContentError("NETWORK_ERROR", 0, ""))
+      .mockResolvedValueOnce(work);
+    apiMock.getWork.mockRejectedValueOnce(
+      new SafeAdminContentError("NOT_FOUND", 404, "readback-404"),
+    );
+    const { result } = renderHook(() => useCreateAdminWork(), { wrapper });
+
+    await act(async () => {
+      await expect(result.current.mutateAsync(body)).rejects.toMatchObject({
+        code: "NETWORK_ERROR",
+      });
+    });
+    expect(apiMock.createWork).toHaveBeenCalledTimes(1);
+    expect(apiMock.getWork).toHaveBeenCalledWith(work.id);
+    await act(async () => {
+      await expect(result.current.mutateAsync(body)).resolves.toEqual(work);
+    });
+    expect(apiMock.createWork).toHaveBeenCalledTimes(2);
+    expect(apiMock.createWork).toHaveBeenNthCalledWith(2, body);
+  });
+
+  it("reconciles an explicit same-ID POST conflict after an ambiguous 404 only after a matching second GET", async () => {
+    const body: CreateWorkBody = {
+      id: work.id,
+      title: work.title,
+      slug: work.slug,
+      type: work.type,
+      storyStatus: work.storyStatus,
+      categoryIds: [category.id],
+    };
+    apiMock.createWork
+      .mockRejectedValueOnce(new SafeAdminContentError("NETWORK_ERROR", 0, ""))
+      .mockRejectedValueOnce(
+        new SafeAdminContentError("CONTENT_CONFLICT", 409, ""),
+      );
+    apiMock.getWork
+      .mockRejectedValueOnce(new SafeAdminContentError("NOT_FOUND", 404, ""))
+      .mockResolvedValueOnce(work);
+    const { result } = renderHook(() => useCreateAdminWork(), { wrapper });
+    await act(async () => {
+      await expect(result.current.mutateAsync(body)).rejects.toMatchObject({
+        code: "NETWORK_ERROR",
+      });
+    });
+    await act(async () => {
+      await expect(result.current.mutateAsync(body)).resolves.toEqual(work);
+    });
+    expect(apiMock.createWork).toHaveBeenCalledTimes(2);
+    expect(apiMock.getWork).toHaveBeenCalledTimes(2);
+  });
+
+  it("refuses an occupied ID with mismatched intent after the ambiguous 404 and explicit 409", async () => {
+    const body: CreateWorkBody = {
+      id: work.id,
+      title: work.title,
+      slug: work.slug,
+      type: work.type,
+      storyStatus: work.storyStatus,
+      categoryIds: [category.id],
+    };
+    apiMock.createWork
+      .mockRejectedValueOnce(new SafeAdminContentError("NETWORK_ERROR", 0, ""))
+      .mockRejectedValueOnce(
+        new SafeAdminContentError("CONTENT_CONFLICT", 409, ""),
+      );
+    apiMock.getWork
+      .mockRejectedValueOnce(new SafeAdminContentError("NOT_FOUND", 404, ""))
+      .mockResolvedValueOnce({ ...work, title: "Another editor's record" });
+    const { result } = renderHook(() => useCreateAdminWork(), { wrapper });
+    await act(async () => {
+      await expect(result.current.mutateAsync(body)).rejects.toMatchObject({
+        code: "NETWORK_ERROR",
+      });
+      await expect(result.current.mutateAsync(body)).rejects.toMatchObject({
+        code: "CONTENT_CONFLICT",
+      });
+    });
+    expect(apiMock.createWork).toHaveBeenCalledTimes(2);
+    expect(apiMock.getWork).toHaveBeenCalledTimes(2);
+  });
+
   it("does not treat an occupied UUID with different content as the created Work", async () => {
     const failure = new SafeAdminContentError("NETWORK_ERROR", 0, "");
     apiMock.createWork.mockRejectedValueOnce(failure);
@@ -433,6 +567,340 @@ describe("administrator Work draft queries and mutations", () => {
     });
     expect(apiMock.createWork).toHaveBeenCalledTimes(1);
     expect(apiMock.getWork).toHaveBeenCalledWith(work.id);
+  });
+
+  it("does not cache a late Work save for a different signed-in administrator", async () => {
+    const actorA = sessionMock.id;
+    const actorB = "77777777-7777-4777-8777-777777777777";
+    let resolveUpdate: ((saved: AdminWork) => void) | undefined;
+    apiMock.updateWork.mockImplementation(
+      () =>
+        new Promise<AdminWork>((resolve) => {
+          resolveUpdate = resolve;
+        }),
+    );
+    const { result, rerender } = renderHook(() => useUpdateAdminWork(), {
+      wrapper,
+    });
+    let pending: Promise<unknown> | undefined;
+    act(() => {
+      pending = result.current.mutateAsync({
+        workId: work.id,
+        body: { expectedVersion: work.version, title: "Updated title" },
+      });
+    });
+    await waitFor(() => {
+      expect(resolveUpdate).toBeDefined();
+    });
+    sessionMock.id = actorB;
+    rerender();
+    await act(async () => {
+      resolveUpdate?.({
+        ...work,
+        title: "Updated title",
+        version: 3,
+        tags: [],
+        categories: [{ ...category }],
+      });
+      await pending;
+    });
+    expect(
+      queryClient.getQueryData(adminContentKeys.workDetail(actorB, work.id)),
+    ).toBeUndefined();
+    expect(
+      queryClient.getQueryData(adminContentKeys.workDetail(actorA, work.id)),
+    ).toBeUndefined();
+  });
+
+  it("keeps a newer cached detail when an older authorized GET completes late", async () => {
+    let finish: ((saved: AdminWork) => void) | undefined;
+    apiMock.getWork.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    );
+    const { result } = renderHook(() => useAdminWorkDetail(work.id), {
+      wrapper,
+    });
+    await waitFor(() => {
+      expect(apiMock.getWork).toHaveBeenCalledOnce();
+    });
+    const newer = { ...work, version: 12, title: "Newest Work" };
+    const key = adminContentKeys.workDetail(sessionMock.id, work.id);
+    act(() => {
+      queryClient.setQueryData(key, newer);
+    });
+    act(() => {
+      finish?.({
+        ...work,
+        tags: [...work.tags],
+        categories: [...work.categories],
+      });
+    });
+    expect(queryClient.getQueryData(key)).toEqual(newer);
+    await waitFor(() => {
+      expect(result.current.data).toEqual(newer);
+    });
+  });
+
+  it("fences an older equal-version GET after a fresher category projection, then accepts a later equal-version read", async () => {
+    let finishOld: ((saved: AdminWork) => void) | undefined;
+    const refreshed = {
+      ...work,
+      categories: [
+        {
+          ...category,
+          displayName: "خيال جديد",
+          enabled: false,
+          displayPosition: 4,
+        },
+      ],
+    };
+    const latest = {
+      ...work,
+      categories: [
+        {
+          ...category,
+          displayName: "خيال أحدث",
+          enabled: true,
+          displayPosition: 2,
+        },
+      ],
+    };
+    apiMock.getWork
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            finishOld = resolve;
+          }),
+      )
+      .mockResolvedValueOnce(refreshed)
+      .mockResolvedValueOnce(latest);
+    const { result } = renderHook(
+      () => ({
+        detail: useAdminWorkDetail(work.id),
+        create: useCreateAdminWork(),
+      }),
+      { wrapper },
+    );
+    await waitFor(() => {
+      expect(apiMock.getWork).toHaveBeenCalledOnce();
+    });
+    const key = adminContentKeys.workDetail(sessionMock.id, work.id);
+    await act(async () => {
+      await result.current.create.readback(work.id);
+    });
+    expect(queryClient.getQueryData(key)).toEqual(refreshed);
+    act(() => {
+      finishOld?.({
+        ...work,
+        tags: [...work.tags],
+        categories: [{ ...category }],
+      });
+    });
+    expect(queryClient.getQueryData(key)).toEqual(refreshed);
+    await waitFor(() => {
+      expect(result.current.detail.data).toEqual(refreshed);
+    });
+    await act(async () => {
+      await result.current.detail.refetch();
+    });
+    expect(queryClient.getQueryData(key)).toEqual(latest);
+    await waitFor(() => {
+      expect(result.current.detail.data).toEqual(latest);
+    });
+  });
+
+  it("does not resurrect an older equal-version category projection after detail GC", async () => {
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false, gcTime: 20 },
+        mutations: { retry: false },
+      },
+    });
+    const refreshed: AdminWork = {
+      ...work,
+      tags: [...work.tags],
+      categories: [{ ...category, displayName: "Updated", enabled: false }],
+    };
+    const latest: AdminWork = {
+      ...work,
+      tags: [...work.tags],
+      categories: [
+        { ...category, displayName: "Updated again", enabled: true },
+      ],
+    };
+    let finishOld: ((saved: AdminWork) => void) | undefined;
+    apiMock.getWork
+      .mockImplementationOnce(
+        () =>
+          new Promise<AdminWork>((resolve) => {
+            finishOld = resolve;
+          }),
+      )
+      .mockResolvedValueOnce(refreshed)
+      .mockResolvedValueOnce(latest);
+    const { result } = renderHook(() => useCreateAdminWork(), { wrapper });
+    const key = adminContentKeys.workDetail(sessionMock.id, work.id);
+    let pendingOld: Promise<AdminWork> | undefined;
+    act(() => {
+      pendingOld = result.current.readback(work.id);
+    });
+    await waitFor(() => {
+      expect(finishOld).toBeDefined();
+    });
+    vi.useFakeTimers();
+    try {
+      await act(async () => {
+        await expect(result.current.readback(work.id)).resolves.toEqual(
+          refreshed,
+        );
+      });
+      expect(queryClient.getQueryData(key)).toEqual(refreshed);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(21);
+      });
+      expect(queryClient.getQueryState(key)).toBeUndefined();
+      await act(async () => {
+        finishOld?.({
+          ...work,
+          tags: [...work.tags],
+          categories: [{ ...category }],
+        });
+        await expect(pendingOld).rejects.toMatchObject({
+          code: "CONTENT_STALE_WRITE",
+        });
+      });
+      expect(queryClient.getQueryData(key)).toBeUndefined();
+    } finally {
+      vi.useRealTimers();
+    }
+
+    await act(async () => {
+      await expect(result.current.readback(work.id)).resolves.toEqual(latest);
+    });
+    expect(queryClient.getQueryData(key)).toEqual(latest);
+    expect(apiMock.getWork).toHaveBeenCalledTimes(3);
+  });
+
+  it("does not replace a newer actor-scoped Work with an older create, edit, or manual readback", async () => {
+    const body: CreateWorkBody = {
+      id: work.id,
+      title: work.title,
+      slug: work.slug,
+      type: work.type,
+      storyStatus: work.storyStatus,
+      categoryIds: [category.id],
+    };
+    const key = adminContentKeys.workDetail(sessionMock.id, work.id);
+    const newer = { ...work, version: 9, title: "Newer authoritative detail" };
+    queryClient.setQueryData(key, newer);
+    apiMock.createWork.mockResolvedValue(work);
+    apiMock.updateWork.mockResolvedValue({ ...work, version: 3 });
+    apiMock.getWork.mockResolvedValue({ ...work, version: 4 });
+    const { result } = renderHook(
+      () => ({
+        create: useCreateAdminWork(),
+        update: useUpdateAdminWork(),
+      }),
+      { wrapper },
+    );
+    await act(async () => {
+      await result.current.create.mutateAsync(body);
+      await result.current.update.mutateAsync({
+        workId: work.id,
+        body: { expectedVersion: 2, title: "Older" },
+      });
+      await result.current.create.readback(work.id);
+    });
+    expect(queryClient.getQueryData(key)).toEqual(newer);
+    const other = adminContentKeys.workDetail("another-actor", work.id);
+    expect(queryClient.getQueryData(other)).toBeUndefined();
+  });
+
+  it("does not repeat a same-ID POST after an ambiguous 404, conflict, and second 404", async () => {
+    const body: CreateWorkBody = {
+      id: work.id,
+      title: work.title,
+      slug: work.slug,
+      type: work.type,
+      storyStatus: work.storyStatus,
+    };
+    apiMock.createWork
+      .mockRejectedValueOnce(new SafeAdminContentError("NETWORK_ERROR", 0, ""))
+      .mockRejectedValueOnce(
+        new SafeAdminContentError("CONTENT_CONFLICT", 409, ""),
+      );
+    apiMock.getWork.mockRejectedValue(
+      new SafeAdminContentError("NOT_FOUND", 404, ""),
+    );
+    const { result } = renderHook(() => useCreateAdminWork(), { wrapper });
+    await act(async () => {
+      await expect(result.current.mutateAsync(body)).rejects.toMatchObject({
+        code: "NETWORK_ERROR",
+      });
+      await expect(result.current.mutateAsync(body)).rejects.toMatchObject({
+        code: "CONTENT_CONFLICT",
+      });
+      await expect(result.current.mutateAsync(body)).rejects.toMatchObject({
+        code: "CONTENT_CONFLICT",
+      });
+      await expect(
+        result.current.mutateAsync({ ...body, title: "Changed local input" }),
+      ).rejects.toMatchObject({
+        code: "CONTENT_CONFLICT",
+      });
+    });
+    expect(apiMock.createWork).toHaveBeenCalledTimes(2);
+    expect(apiMock.getWork).toHaveBeenCalledTimes(2);
+  });
+
+  it("retains Work detail after a CSRF write rejection until a newer authorized GET, but masks reader denial", async () => {
+    apiMock.getWork
+      .mockResolvedValueOnce(work)
+      .mockResolvedValueOnce(work)
+      .mockRejectedValueOnce(
+        new SafeAdminContentError("FORBIDDEN", 403, "reader-denied"),
+      );
+    apiMock.updateWork.mockRejectedValue(
+      new SafeAdminContentError("FORBIDDEN", 403, "csrf-write"),
+    );
+    const key = adminContentKeys.workDetail(sessionMock.id, work.id);
+    const { result } = renderHook(
+      () => ({
+        detail: useAdminWorkDetail(work.id),
+        update: useUpdateAdminWork(),
+      }),
+      { wrapper },
+    );
+    await waitFor(() => {
+      expect(result.current.detail.data).toEqual(work);
+    });
+    await act(async () => {
+      await expect(
+        result.current.update.mutateAsync({
+          workId: work.id,
+          body: { expectedVersion: work.version, title: "Draft" },
+        }),
+      ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    });
+    expect(result.current.detail.denied).toBe(false);
+    expect(result.current.detail.writeBlocked).toBe(true);
+    expect(queryClient.getQueryData(key)).toEqual(work);
+    await act(async () => {
+      await result.current.detail.retryAccess();
+    });
+    await waitFor(() => {
+      expect(result.current.detail.writeBlocked).toBe(false);
+    });
+    await act(async () => {
+      await result.current.detail.refetch();
+    });
+    await waitFor(() => {
+      expect(result.current.detail.denied).toBe(true);
+    });
+    expect(queryClient.getQueryData(key)).toBeUndefined();
   });
 
   it("invalidates stale detail after an update conflict and fences denied reads", async () => {

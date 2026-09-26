@@ -3,7 +3,11 @@
 import Link from "next/link";
 
 import { useAdminWorkDetail } from "../../hooks/admin-content.hooks";
-import { adminWorkErrorMessage } from "../../model/admin-content.errors";
+import {
+  adminWorkErrorMessage,
+  isTerminalAdminContentError,
+  isMissingAdminCreateReadback,
+} from "../../model/admin-content.errors";
 import { AdminPageHeader } from "../AdminPageHeader/AdminPageHeader";
 import { AdminWorkForm } from "../AdminWorkForm/AdminWorkForm";
 
@@ -31,10 +35,17 @@ export function AdminWorkEdit({ workId }: AdminWorkEditProps) {
       </section>
     );
   }
-  if (detail.isPending) {
+  const terminalFailure =
+    detail.isError &&
+    (isTerminalAdminContentError(detail.error) ||
+      isMissingAdminCreateReadback(detail.error));
+  if (detail.isPending && work === undefined) {
     return <p role="status">جارٍ تحميل بيانات العمل المحفوظة…</p>;
   }
-  if (detail.isError) {
+  if (
+    detail.isError &&
+    (work === undefined || terminalFailure || work.id !== workId)
+  ) {
     return (
       <section role="alert" dir="rtl">
         <p>{adminWorkErrorMessage(detail.error)}</p>
@@ -60,7 +71,35 @@ export function AdminWorkEdit({ workId }: AdminWorkEditProps) {
         title={`تعديل مسودة: ${work.title}`}
         description="تُحمّل البيانات المحفوظة من الخادم، وتبقى تعديلاتك المحلية محفوظة عند تعذّر الحفظ."
       />
-      <AdminWorkForm key={work.id} mode="edit" initialWork={work} />
+      {detail.isError || detail.writeBlocked ? (
+        <section role="alert" dir="rtl">
+          <p>
+            البيانات المعروضة قديمة؛ تعذّر التحقق من أحدث نسخة. احتفظ بتعديلاتك
+            وأعد تحميل المسودة قبل الحفظ.
+          </p>
+          <button
+            type="button"
+            onClick={() =>
+              void (detail.writeBlocked
+                ? detail.retryAccess()
+                : detail.refetch())
+            }
+          >
+            إعادة تحميل المسودة
+          </button>
+        </section>
+      ) : null}
+      <AdminWorkForm
+        key={`${detail.actorId ?? "anonymous"}:${work.id}`}
+        mode="edit"
+        initialWork={work}
+        canSave={
+          !detail.writeBlocked &&
+          !detail.isError &&
+          !detail.isFetching &&
+          !detail.isPending
+        }
+      />
     </div>
   );
 }

@@ -280,6 +280,128 @@ describe("complete Work draft management with PostgreSQL", () => {
     ).rejects.toMatchObject({ code: "CONTENT_STALE_WRITE" });
   });
 
+  it("rejects an unavailable cover without saving the draft or a reference", async () => {
+    const actorUserId = await createAdmin();
+    const coverAssetId = await uploadAsset(actorUserId, "work_cover");
+    await database.mediaAsset.update({
+      where: { id: coverAssetId },
+      data: { status: "UNAVAILABLE" },
+    });
+    const id = randomUUID();
+    await expect(
+      works.createWork(
+        uniqueWorkBody({ id, coverAssetId, tags: ["Never saved"] }),
+        actorUserId,
+      ),
+    ).rejects.toMatchObject({ statusCode: 404, code: "NOT_FOUND" });
+    await expect(database.work.count({ where: { id } })).resolves.toBe(0);
+    await expect(
+      database.mediaReference.count({ where: { workId: id } }),
+    ).resolves.toBe(0);
+  });
+
+  it("rolls back all draft rows when a media event is written and the collaborator fails", async () => {
+    const actorUserId = await createAdmin();
+    const coverAssetId = await uploadAsset(actorUserId, "work_cover");
+    const category = await categories.createCategory({
+      displayName: "Atomic category",
+      slug: `atomic-${randomUUID()}`,
+    });
+    const id = randomUUID();
+    const failingWorks = new WorkManagementService(database, {
+      saveWorkReferences: async (...args) => {
+        await media.saveWorkReferences(...args);
+        throw new Error("injected failure after reference event");
+      },
+    });
+
+    await expect(
+      failingWorks.createWork(
+        uniqueWorkBody({
+          id,
+          tags: ["Atomic tag"],
+          categoryIds: [category.id],
+          coverAssetId,
+        }),
+        actorUserId,
+      ),
+    ).rejects.toThrow("injected failure after reference event");
+    await expect(database.work.count({ where: { id } })).resolves.toBe(0);
+    await expect(
+      database.workTag.count({ where: { workId: id } }),
+    ).resolves.toBe(0);
+    await expect(
+      database.workCategory.count({ where: { workId: id } }),
+    ).resolves.toBe(0);
+    await expect(
+      database.mediaReference.count({ where: { workId: id } }),
+    ).resolves.toBe(0);
+    await expect(
+      database.mediaReferenceEvent.count({
+        where: { reference: { workId: id } },
+      }),
+    ).resolves.toBe(0);
+    await expect(
+      database.publicationEvent.count({ where: { workId: id } }),
+    ).resolves.toBe(0);
+  });
+
+  it("refuses a published edit that removes required metadata, enabled categories, or its available cover without partial writes", async () => {
+    const actorUserId = await createAdmin();
+    const category = await categories.createCategory({
+      displayName: "Published eligibility",
+      slug: `published-eligibility-${randomUUID()}`,
+    });
+    const coverAssetId = await uploadAsset(actorUserId, "work_cover");
+    const work = await works.createWork(
+      uniqueWorkBody({
+        synopsis: "A sufficiently detailed synopsis for a published work.",
+        author: "Published author",
+        categoryIds: [category.id],
+        coverAssetId,
+        tags: ["Original"],
+      }),
+      actorUserId,
+    );
+    const { PublicationManagementService } =
+      await import("./publication-management.service.js");
+    const publication = new PublicationManagementService(database, {
+      currentTime: () => new Date(),
+      createIdentifier: randomUUID,
+    });
+    await publication.publishWork(work.id, {
+      expectedVersion: work.version,
+      targetState: "published",
+    });
+    const baseline = await works.getWork(work.id);
+    const beforeReferences = await database.mediaReference.findMany({
+      where: { workId: work.id },
+    });
+    for (const change of [
+      { synopsis: null },
+      { author: null },
+      { categoryIds: [] },
+      { coverAssetId: null },
+    ]) {
+      await expect(
+        works.updateWork(
+          work.id,
+          {
+            expectedVersion: baseline.version,
+            title: "Not committed",
+            tags: ["Changed"],
+            ...change,
+          },
+          actorUserId,
+        ),
+      ).rejects.toMatchObject({ statusCode: 409 });
+      expect(await works.getWork(work.id)).toEqual(baseline);
+      expect(
+        await database.mediaReference.findMany({ where: { workId: work.id } }),
+      ).toEqual(beforeReferences);
+    }
+  });
+
   it("rolls back metadata, tags, categories, references, and history after a failed asset association", async () => {
     const actorUserId = await createAdmin();
     const firstCategory = await categories.createCategory({

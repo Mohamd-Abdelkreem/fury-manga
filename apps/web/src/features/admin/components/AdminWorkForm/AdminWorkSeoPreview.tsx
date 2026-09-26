@@ -1,16 +1,22 @@
 import { Globe } from "lucide-react";
 
+import type { AdminWork } from "@fury/contracts";
+
 import type { FormValues } from "../../model/admin-work-form";
 import styles from "./AdminWorkForm.module.css";
 
 type Props = Readonly<{
   values: FormValues;
-  persistedSlug: string | null;
+  savedWork: AdminWork | null;
+  dirty: boolean;
 }>;
 
-export function AdminWorkSeoPreview({ values, persistedSlug }: Props) {
+export function AdminWorkSeoPreview({ values, savedWork, dirty }: Props) {
   return (
-    <section className={styles["formCard"]}>
+    <section
+      className={styles["formCard"]}
+      aria-label="معاينة البيانات المحفوظة"
+    >
       <div className={styles["sectionHeader"]}>
         <h2 className={styles["sectionTitle"]}>
           <Globe className={styles["sectionIcon"]} aria-hidden="true" />
@@ -18,19 +24,27 @@ export function AdminWorkSeoPreview({ values, persistedSlug }: Props) {
         </h2>
       </div>
       <div className={styles["seoPreviewCard"]}>
-        {persistedSlug === null ? (
+        {savedWork === null ? (
           <p className={styles["hint"]} role="status">
             لا يوجد رابط محفوظ بعد؛ سيظهر بعد حفظ المسودة. لا تُشتق الهوية من
-            العنوان.
+            العنوان. هذه معاينة غير محفوظة ولا توجد صفحة عامة بعد.
           </p>
         ) : (
           <span className={styles["seoUrl"]} dir="ltr">
-            {persistedSlug}
+            {savedWork.slug}
           </span>
         )}
-        <h3 className={styles["seoTitle"]}>{values.title || "عنوان العمل"}</h3>
+        {dirty && savedWork !== null ? (
+          <p className={styles["hint"]}>
+            تغييرات غير محفوظة؛ المعاينة تعرض نسخة الخادم.
+          </p>
+        ) : null}
+        <h3 className={styles["seoTitle"]}>
+          {savedWork === null ? values.title || "عنوان العمل" : savedWork.title}
+        </h3>
         <p className={styles["seoDescription"]}>
-          {values.synopsis || "لا توجد نبذة محفوظة في هذه المسودة."}
+          {(savedWork === null ? values.synopsis : savedWork.synopsis) ||
+            "لا توجد نبذة محفوظة في هذه المسودة."}
         </p>
       </div>
     </section>

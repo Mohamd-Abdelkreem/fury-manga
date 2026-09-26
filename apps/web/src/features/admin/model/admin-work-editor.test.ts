@@ -6,6 +6,8 @@ import {
   adoptServerWork,
   continueDraftAgainstServer,
   createWorkEditorState,
+  createWorkCommand,
+  updateWorkCommand,
   mediaAssetForSave,
   nullableEditorialValue,
   receiveWorkRefresh,
@@ -136,6 +138,72 @@ describe("admin Work editor refresh and draft state", () => {
         clearAttached: true,
       }),
     ).toBeUndefined();
+  });
+
+  it("shapes immutable create fields and nullable editorial/media values without adding edit-only version", () => {
+    const values = {
+      ...workFormValuesFromServer(work),
+      title: "New draft",
+      slug: "new-draft",
+      type: "text-story" as const,
+      author: "  ",
+    };
+    const unchanged = {
+      attachedAssetId: work.coverAssetId,
+      candidateAssetId: null,
+      clearAttached: false,
+    };
+    const removed = {
+      attachedAssetId: work.coverAssetId,
+      candidateAssetId: null,
+      clearAttached: true,
+    };
+    expect(
+      createWorkCommand(values, work.id, unchanged, removed),
+    ).toMatchObject({
+      id: work.id,
+      slug: "new-draft",
+      type: "text-story",
+      storyStatus: work.storyStatus,
+      title: "New draft",
+      author: null,
+      backgroundAssetId: null,
+    });
+    const body = createWorkCommand(values, work.id, unchanged, removed);
+    expect(body).not.toHaveProperty("coverAssetId");
+    expect(body).not.toHaveProperty("expectedVersion");
+    expect(body.backgroundAssetId).toBeNull();
+  });
+
+  it("shapes edit version and explicit clears without immutable slug/type", () => {
+    const values = workFormValuesFromServer(work);
+    const removed = {
+      attachedAssetId: work.coverAssetId,
+      candidateAssetId: null,
+      clearAttached: true,
+    };
+    const candidate = {
+      attachedAssetId: null,
+      candidateAssetId: "66666666-6666-4666-8666-666666666666",
+      clearAttached: false,
+    };
+    const body = updateWorkCommand(values, work.version, removed, candidate);
+    expect(body).toMatchObject({
+      expectedVersion: 2,
+      coverAssetId: null,
+      backgroundAssetId: candidate.candidateAssetId,
+      tags: work.tags,
+    });
+    expect(body).not.toHaveProperty("slug");
+    expect(body).not.toHaveProperty("type");
+    expect(
+      updateWorkCommand(
+        values,
+        3,
+        { ...removed, clearAttached: false },
+        { ...candidate, candidateAssetId: null },
+      ),
+    ).not.toHaveProperty("coverAssetId");
   });
 
   it("maps persisted type, saved category IDs, and private media IDs to form values", () => {

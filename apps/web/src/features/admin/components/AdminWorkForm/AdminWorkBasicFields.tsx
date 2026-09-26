@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useFormContext } from "react-hook-form";
 
 import type { AdminCategory } from "@fury/contracts";
@@ -20,14 +21,22 @@ export function AdminWorkBasicFields({ isEdit, retainedCategories }: Props) {
     setValue,
     formState: { errors },
   } = useFormContext<FormValues>();
-  const picker = useAdminCategoryPicker();
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [chosenCategories, setChosenCategories] = useState<
+    ReadonlyMap<string, AdminCategory>
+  >(() => new Map());
+  const picker = useAdminCategoryPicker(page, search);
   const values = watch();
   const selected = new Set(values.categoryIds);
   const categoriesById = new Map<string, AdminCategory>();
+  for (const category of chosenCategories.values()) {
+    if (selected.has(category.id)) categoriesById.set(category.id, category);
+  }
   for (const category of retainedCategories) {
     if (selected.has(category.id)) categoriesById.set(category.id, category);
   }
-  for (const category of picker.data ?? []) {
+  for (const category of picker.data?.items ?? []) {
     categoriesById.set(category.id, category);
   }
   const pickerCategories = [...categoriesById.values()].toSorted(
@@ -37,6 +46,14 @@ export function AdminWorkBasicFields({ isEdit, retainedCategories }: Props) {
     const next = new Set(values.categoryIds);
     if (checked) next.add(categoryId);
     else next.delete(categoryId);
+    setChosenCategories((current) => {
+      const updated = new Map(current);
+      if (checked) {
+        const category = categoriesById.get(categoryId);
+        if (category !== undefined) updated.set(categoryId, category);
+      } else updated.delete(categoryId);
+      return updated;
+    });
     setValue("categoryIds", [...next], {
       shouldDirty: true,
       shouldTouch: true,
@@ -242,6 +259,19 @@ export function AdminWorkBasicFields({ isEdit, retainedCategories }: Props) {
 
       <fieldset className={styles["field"]}>
         <legend className={styles["label"]}>التصنيفات المحفوظة</legend>
+        <label htmlFor="work-category-search" className={styles["label"]}>
+          ابحث عن تصنيف مفعّل
+        </label>
+        <input
+          id="work-category-search"
+          className={styles["input"]}
+          value={search}
+          maxLength={100}
+          onChange={(event) => {
+            setSearch(event.currentTarget.value);
+            setPage(1);
+          }}
+        />
         {picker.isPending ? (
           <p role="status">جارٍ تحميل التصنيفات المفعّلة…</p>
         ) : null}
@@ -293,6 +323,31 @@ export function AdminWorkBasicFields({ isEdit, retainedCategories }: Props) {
             );
           })}
         </div>
+        {picker.data !== undefined && picker.data.pagination.totalPages > 1 ? (
+          <div className={styles["actionButtonsGroup"]}>
+            <button
+              type="button"
+              disabled={page <= 1}
+              onClick={() => {
+                setPage(page - 1);
+              }}
+            >
+              التصنيفات السابقة
+            </button>
+            <span role="status">
+              صفحة {page} من {picker.data.pagination.totalPages}
+            </span>
+            <button
+              type="button"
+              disabled={!picker.data.pagination.hasNextPage}
+              onClick={() => {
+                setPage(page + 1);
+              }}
+            >
+              التصنيفات التالية
+            </button>
+          </div>
+        ) : null}
         {errors.categoryIds?.message ? (
           <p className={styles["errorMessage"]} role="alert">
             {errors.categoryIds.message}

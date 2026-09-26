@@ -1,5 +1,10 @@
 import type { AdminWork } from "@fury/contracts";
-import { Prisma, PublicationStatus, type DatabaseClient } from "@fury/database";
+import {
+  MediaAssetStatus,
+  Prisma,
+  PublicationStatus,
+  type DatabaseClient,
+} from "@fury/database";
 
 import { NotFoundException } from "../../core/errors/not-found.error.js";
 import type { PaginationQuery } from "../../core/pagination/pagination.js";
@@ -145,9 +150,7 @@ export class WorkManagementService {
     try {
       const updatedRecord = await this.database.$transaction(
         async (transaction) => {
-          if (data.categoryIds !== undefined) {
-            await lockCategoryEligibilityState(transaction);
-          }
+          await lockCategoryEligibilityState(transaction);
           await transaction.$queryRaw`
             SELECT "id" FROM "works" WHERE "id" = ${workId}::uuid FOR UPDATE
           `;
@@ -287,6 +290,30 @@ export class WorkManagementService {
           }
           const record = await findAdminWork(transaction, workId);
           if (record === null) throw new NotFoundException();
+          if (current.publicationStatus === PublicationStatus.PUBLISHED) {
+            const coverId = record.mediaReferences.find(
+              ({ slot }) => slot === "WORK_COVER",
+            )?.assetId;
+            const availableCover =
+              coverId === undefined
+                ? null
+                : await transaction.mediaAsset.findFirst({
+                    where: { id: coverId, status: MediaAssetStatus.AVAILABLE },
+                    select: { id: true },
+                  });
+            if (
+              record.synopsis === null ||
+              record.synopsis.trim().length < 20 ||
+              record.author === null ||
+              record.author.trim().length === 0 ||
+              !record.categories.some(({ category }) => category.enabled) ||
+              availableCover === null
+            ) {
+              throw new ContentConflictException(
+                "A published Work must retain its required metadata, enabled Category, and available cover.",
+              );
+            }
+          }
           return record;
         },
         { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },

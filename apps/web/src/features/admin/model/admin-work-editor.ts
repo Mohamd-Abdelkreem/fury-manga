@@ -1,4 +1,8 @@
-import type { AdminWork, CreateWorkBody } from "@fury/contracts";
+import type {
+  AdminWork,
+  CreateWorkBody,
+  UpdateWorkBody,
+} from "@fury/contracts";
 
 import {
   emptyWorkFormValues,
@@ -112,6 +116,51 @@ export const mediaAssetForSave = (
     return selection.candidateAssetId;
   }
   return undefined;
+};
+
+export const createWorkCommand = (
+  values: FormValues,
+  id: string,
+  cover: MediaDraftSelection,
+  background: MediaDraftSelection,
+): CreateWorkBody => {
+  const coverAssetId = mediaAssetForSave(cover);
+  const backgroundAssetId = mediaAssetForSave(background);
+  return {
+    id,
+    ...workCommonFieldsFromForm(values),
+    slug: values.slug,
+    type: values.type,
+    storyStatus: values.storyStatus,
+    ...(coverAssetId === undefined ? {} : { coverAssetId }),
+    ...(backgroundAssetId === undefined ? {} : { backgroundAssetId }),
+  };
+};
+
+export const updateWorkCommand = (
+  values: FormValues,
+  expectedVersion: number,
+  cover: MediaDraftSelection,
+  background: MediaDraftSelection,
+): UpdateWorkBody => {
+  const common = workCommonFieldsFromForm(values);
+  const coverAssetId = mediaAssetForSave(cover);
+  const backgroundAssetId = mediaAssetForSave(background);
+  return {
+    expectedVersion,
+    title: common.title,
+    storyStatus: values.storyStatus,
+    alternativeTitle: common.alternativeTitle,
+    synopsis: common.synopsis,
+    author: common.author,
+    artist: common.artist,
+    categoryIds: common.categoryIds,
+    tags: common.tags,
+    featuredHome: common.featuredHome,
+    featuredOrder: common.featuredOrder,
+    ...(coverAssetId === undefined ? {} : { coverAssetId }),
+    ...(backgroundAssetId === undefined ? {} : { backgroundAssetId }),
+  };
 };
 
 export const workMatchesCreateCommand = (

@@ -1597,10 +1597,125 @@ describe("real HTTP content boundary", () => {
       database.workCategory.findMany({ where: { workId } }),
     ).resolves.toMatchObject([{ categoryId: category.id }]);
     await expect(
+      database.mediaReference.findMany({
+        where: { workId, retiredAt: null },
+        select: { slot: true, assetId: true },
+        orderBy: { slot: "asc" },
+      }),
+    ).resolves.toEqual([
+      { slot: "WORK_COVER", assetId: coverAssetId },
+      { slot: "WORK_BACKGROUND", assetId: backgroundAssetId },
+    ]);
+    await expect(
       database.mediaReferenceEvent.count({
         where: { reference: { workId } },
       }),
     ).resolves.toBe(2);
+  });
+
+  it("rejects a published PATCH that would invalidate its cover or metadata without committing edits", async () => {
+    const admin = await createIdentity(UserRole.ADMIN);
+    const categoryResponse = await authorize(
+      request(app).post("/api/v1/content/admin/categories"),
+      admin.token,
+    ).send({ displayName: "Published guard", slug: `guard-${randomUUID()}` });
+    const category = parseSuccessData(
+      categoryResponse,
+      categoryDataSchema,
+    ).category;
+    const coverAssetId = await uploadWorkAsset(admin.user.id, "work_cover");
+    const createdResponse = await authorize(
+      request(app).post("/api/v1/content/admin/works"),
+      admin.token,
+    ).send({
+      title: "Protected work",
+      slug: `protected-${randomUUID()}`,
+      type: "manga",
+      storyStatus: "ongoing",
+      synopsis: "A sufficiently long published synopsis for this test.",
+      author: "Protected author",
+      categoryIds: [category.id],
+      tags: ["Original"],
+      coverAssetId,
+    });
+    const created = parseSuccessData(createdResponse, workDataSchema).work;
+    const publishedResponse = await authorize(
+      request(app).put(`/api/v1/content/admin/works/${created.id}/publication`),
+      admin.token,
+    ).send({ expectedVersion: created.version, targetState: "published" });
+    expect(publishedResponse.status).toBe(200);
+    const works = new WorkManagementService(database, media);
+    const baseline = await works.getWork(created.id);
+    const references = await database.mediaReference.findMany({
+      where: { workId: created.id },
+    });
+    for (const change of [{ coverAssetId: null }]) {
+      const response = await authorize(
+        request(app).patch(`/api/v1/content/admin/works/${created.id}`),
+        admin.token,
+      ).send({
+        expectedVersion: baseline.version,
+        title: "Unsaved edit",
+        tags: ["Changed"],
+        ...change,
+      });
+      expect(response.status).toBe(409);
+      expect(response.body).toMatchObject({
+        success: false,
+        code: "CONTENT_CONFLICT",
+      });
+      expect(await works.getWork(created.id)).toEqual(baseline);
+      expect(
+        await database.mediaReference.findMany({
+          where: { workId: created.id },
+        }),
+      ).toEqual(references);
+    }
+  });
+
+  it("distinguishes CSRF-rejected Work PATCH from revoked reader authority", async () => {
+    const isolatedWorkApp = createApp({
+      database,
+      logger: pino({ level: "silent" }),
+      emailDelivery,
+      mediaConfig,
+    });
+    const admin = await createIdentity(UserRole.ADMIN);
+    const ordinary = await createIdentity(UserRole.USER);
+    const createdResponse = await authorize(
+      request(isolatedWorkApp).post("/api/v1/content/admin/works"),
+      admin.token,
+    ).send({
+      title: "CSRF protected draft",
+      slug: `csrf-draft-${randomUUID()}`,
+      type: "manga",
+      storyStatus: "ongoing",
+    });
+    expect(createdResponse.status).toBe(201);
+    const created = parseSuccessData(createdResponse, workDataSchema).work;
+    const path = `/api/v1/content/admin/works/${created.id}`;
+    const rejected = await request(isolatedWorkApp)
+      .patch(path)
+      .set("Authorization", "Bearer " + admin.token)
+      .send({ expectedVersion: created.version, title: "Not saved" });
+    expect(rejected.status).toBe(403);
+    expect(parseErrorBody(rejected).code).toBe("FORBIDDEN");
+    const authorizedRead = await request(isolatedWorkApp)
+      .get(path)
+      .set("Authorization", "Bearer " + admin.token);
+    expect(authorizedRead.status).toBe(200);
+    expect(parseSuccessData(authorizedRead, workDataSchema).work).toMatchObject(
+      {
+        id: created.id,
+        title: created.title,
+        version: created.version,
+      },
+    );
+    const deniedRead = await request(isolatedWorkApp)
+      .get(path)
+      .set("Authorization", "Bearer " + ordinary.token);
+    expect(deniedRead.status).toBe(403);
+    expect(parseErrorBody(deniedRead).code).toBe("FORBIDDEN");
   });
 
   it("preserves P01 minimal work writes and rejects denied or CSRF-free management", async () => {
@@ -1707,6 +1822,42 @@ describe("real HTTP content boundary", () => {
       parseErrorBody(duplicateTag).errors?.map(({ field }) => field),
     ).toContain("body.tags.1");
 
+    const duplicateCategory = await authorize(
+      request(isolatedWorkApp).post("/api/v1/content/admin/works"),
+      admin.token,
+    ).send({
+      ...workBody,
+      id: randomUUID(),
+      slug: `invalid-categories-${randomUUID()}`,
+      categoryIds: [category.id, category.id],
+    });
+    expect(duplicateCategory.status).toBe(400);
+    expect(
+      parseErrorBody(duplicateCategory).errors?.map(({ field }) => field),
+    ).toContain("body.categoryIds.1");
+
+    const occupiedSlugId = randomUUID();
+    const duplicateSlug = await authorize(
+      request(isolatedWorkApp).post("/api/v1/content/admin/works"),
+      admin.token,
+    ).send({ ...workBody, id: occupiedSlugId, slug: created.slug });
+    expect(duplicateSlug.status).toBe(409);
+    expect(parseErrorBody(duplicateSlug).code).toBe("CONTENT_CONFLICT");
+    await expect(
+      database.work.findUnique({ where: { id: occupiedSlugId } }),
+    ).resolves.toBeNull();
+
+    const occupiedId = await authorize(
+      request(isolatedWorkApp).post("/api/v1/content/admin/works"),
+      admin.token,
+    ).send({
+      ...workBody,
+      title: "Different draft",
+      slug: `occupied-${randomUUID()}`,
+    });
+    expect(occupiedId.status).toBe(409);
+    expect(parseErrorBody(occupiedId).code).toBe("CONTENT_CONFLICT");
+
     const wrongClassAssetId = await uploadWorkAsset(
       admin.user.id,
       "work_background",
@@ -1726,6 +1877,51 @@ describe("real HTTP content boundary", () => {
     await expect(
       database.work.findUnique({ where: { id: failedCreateId } }),
     ).resolves.toBeNull();
+
+    const inaccessibleWorkId = randomUUID();
+    const inaccessibleCreate = await authorize(
+      request(isolatedWorkApp).post("/api/v1/content/admin/works"),
+      admin.token,
+    ).send({
+      ...workBody,
+      id: inaccessibleWorkId,
+      slug: `inaccessible-cover-${randomUUID()}`,
+      coverAssetId: randomUUID(),
+    });
+    expect(inaccessibleCreate.status).toBe(404);
+    expect(parseErrorBody(inaccessibleCreate).code).toBe("NOT_FOUND");
+    await expect(
+      database.work.findUnique({ where: { id: inaccessibleWorkId } }),
+    ).resolves.toBeNull();
+
+    const unavailableAssetId = await uploadWorkAsset(
+      admin.user.id,
+      "work_cover",
+    );
+    await database.mediaAsset.update({
+      where: { id: unavailableAssetId },
+      data: { status: "UNAVAILABLE" },
+    });
+    const unavailableWorkId = randomUUID();
+    const unavailableCreate = await authorize(
+      request(isolatedWorkApp).post("/api/v1/content/admin/works"),
+      admin.token,
+    ).send({
+      ...workBody,
+      id: unavailableWorkId,
+      slug: `unavailable-cover-${randomUUID()}`,
+      coverAssetId: unavailableAssetId,
+    });
+    expect(unavailableCreate.status).toBe(404);
+    expect(parseErrorBody(unavailableCreate).code).toBe("NOT_FOUND");
+    await expect(
+      database.work.findUnique({ where: { id: unavailableWorkId } }),
+    ).resolves.toBeNull();
+    await expect(
+      database.mediaReference.count({
+        where: { assetId: unavailableAssetId, workId: unavailableWorkId },
+      }),
+    ).resolves.toBe(0);
 
     const updatedResponse = await authorize(
       request(isolatedWorkApp).patch("/api/v1/content/admin/works/" + workId),

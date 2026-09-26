@@ -348,6 +348,29 @@ describe("OpenAPI document", () => {
     expect(schemas).toHaveProperty("UpdateWorkBody");
     expect(schemas).toHaveProperty("AdminWorkData");
     expect(schemas).toHaveProperty("AdminWorkListData");
+    expect(schemas?.["CreateWorkBody"]).toMatchObject({
+      type: "object",
+      additionalProperties: false,
+      required: ["title", "slug", "type", "storyStatus"],
+    });
+    expect(schemas?.["CreateWorkBody"]).toHaveProperty(
+      "properties.categoryIds",
+    );
+    expect(schemas?.["CreateWorkBody"]).toHaveProperty(
+      "properties.coverAssetId",
+    );
+    expect(schemas?.["CreateWorkBody"]).toHaveProperty("properties.tags");
+    expect(schemas?.["UpdateWorkBody"]).toMatchObject({
+      type: "object",
+      additionalProperties: false,
+      required: ["expectedVersion"],
+    });
+    expect(schemas?.["UpdateWorkBody"]).toHaveProperty(
+      "properties.alternativeTitle",
+    );
+    expect(schemas?.["UpdateWorkBody"]).toHaveProperty(
+      "properties.categoryIds",
+    );
     expect(schemas?.["AdminWork"]).toMatchObject({
       type: "object",
       additionalProperties: false,

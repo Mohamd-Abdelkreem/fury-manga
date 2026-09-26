@@ -13,12 +13,10 @@ import {
 } from "react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 
-import type {
-  AdminWork,
-  CreateWorkBody,
-  UpdateWorkBody,
-} from "@fury/contracts";
+import type { AdminWork, CreateWorkBody } from "@fury/contracts";
+import { useSession } from "@/features/auth/hooks/auth.hooks";
 
+import { SafeAdminContentError } from "../../api/admin-content.api";
 import {
   useCreateAdminWork,
   useUpdateAdminWork,
@@ -32,9 +30,9 @@ import {
 import {
   adoptServerWork,
   continueDraftAgainstServer,
-  mediaAssetForSave,
+  createWorkCommand,
   receiveWorkRefresh,
-  workCommonFieldsFromForm,
+  updateWorkCommand,
   workFormValuesFromServer,
   workMatchesCreateCommand,
   type MediaDraftSelection,
@@ -45,6 +43,7 @@ import { AdminWorkBasicFields } from "./AdminWorkBasicFields";
 import { AdminWorkMediaFields } from "./AdminWorkMediaFields";
 import { AdminWorkSeoPreview } from "./AdminWorkSeoPreview";
 import {
+  adminWorkFormErrorMap,
   adminWorkFormSchema,
   emptyWorkFormValues,
   type FormValues,
@@ -54,15 +53,42 @@ import styles from "./AdminWorkForm.module.css";
 interface AdminWorkFormProps {
   mode: "create" | "edit";
   initialWork?: AdminWork | undefined;
+  canSave?: boolean;
 }
 
-export function AdminWorkForm({ mode, initialWork }: AdminWorkFormProps) {
+export function AdminWorkForm(props: AdminWorkFormProps) {
+  const session = useSession();
+  const user = session.data?.user;
+  const actorId =
+    user?.role === "ADMIN" &&
+    user.status === "ACTIVE" &&
+    user.emailVerifiedAt !== null
+      ? user.id
+      : null;
+  if (actorId === null) {
+    return <p role="status">جارٍ التحقق من صلاحية الإدارة…</p>;
+  }
+  return (
+    <ActorWorkForm
+      key={`${actorId}:${props.mode}:${props.initialWork?.id ?? "new"}`}
+      {...props}
+    />
+  );
+}
+
+function ActorWorkForm({
+  mode,
+  initialWork,
+  canSave = true,
+}: AdminWorkFormProps) {
   const router = useRouter();
   const createWork = useCreateAdminWork();
   const updateWork = useUpdateAdminWork();
   const isEdit = mode === "edit" && initialWork !== undefined;
   const form = useForm<FormValues>({
-    resolver: zodResolver(adminWorkFormSchema),
+    resolver: zodResolver(adminWorkFormSchema, {
+      error: adminWorkFormErrorMap,
+    }),
     defaultValues: initialWork
       ? workFormValuesFromServer(initialWork)
       : emptyWorkFormValues(),
@@ -88,12 +114,38 @@ export function AdminWorkForm({ mode, initialWork }: AdminWorkFormProps) {
   const [isDiscardOpen, setIsDiscardOpen] = useState(false);
   const createId = useRef<string | null>(null);
   const lastCreateCommand = useRef<CreateWorkBody | null>(null);
+  const lastCreateDraft = useRef<string | null>(null);
+  const createConflictSeen = useRef(false);
+  const [confirmedCreateId, setConfirmedCreateId] = useState<string | null>(
+    null,
+  );
+  const submitLocked = useRef(false);
+  const readbackLocked = useRef(false);
+  const mounted = useRef(true);
+  const currentIdentity = useRef("");
+  const currentDraft = useRef("");
+  const draftRevision = useRef(0);
+  const [pendingEdit, setPendingEdit] = useState<{
+    identity: string;
+    draft: string;
+  } | null>(null);
+  const [preserveAfterSave, setPreserveAfterSave] = useState(false);
+  const currentCanSave = useRef(true);
+  const currentUnknown = useRef(false);
+  const currentConflict = useRef(false);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
   const [baseline, setBaseline] = useState({
     workId: initialWork?.id ?? null,
     version: initialWork?.version ?? null,
   });
-  useWatch({ control: form.control });
-  const values = getValues();
+  const syncedWorkVersion = useRef(initialWork?.version ?? null);
+  const watchedValues = useWatch({ control: form.control });
+  const values: FormValues = { ...getValues(), ...watchedValues };
   const attachedCoverId = values.coverAssetId;
   const attachedBackgroundId = values.backgroundAssetId;
   const mediaDirty =
@@ -101,7 +153,26 @@ export function AdminWorkForm({ mode, initialWork }: AdminWorkFormProps) {
     backgroundCandidateAssetId !== null ||
     clearCover ||
     clearBackground;
-  const editorDirty = formDirty || mediaDirty;
+  const draft = JSON.stringify({
+    values,
+    coverCandidateAssetId,
+    backgroundCandidateAssetId,
+    clearCover,
+    clearBackground,
+  });
+  const editorDirty =
+    formDirty ||
+    mediaDirty ||
+    preserveAfterSave ||
+    (pendingEdit?.identity === `${mode}:${initialWork?.id ?? "new"}` &&
+      pendingEdit.draft !== draft);
+  useEffect(() => {
+    currentIdentity.current = `${mode}:${initialWork?.id ?? "new"}`;
+    if (currentDraft.current !== draft) draftRevision.current += 1;
+    currentDraft.current = draft;
+    currentCanSave.current = canSave;
+    currentUnknown.current = createOutcomeUnknown;
+  });
   if (
     initialWork !== undefined &&
     !editorDirty &&
@@ -124,6 +195,11 @@ export function AdminWorkForm({ mode, initialWork }: AdminWorkFormProps) {
     if (initialWork === undefined) return;
     if (baseline.workId !== initialWork.id) return;
     if (editorDirty) return;
+    if (
+      syncedWorkVersion.current !== null &&
+      initialWork.version <= syncedWorkVersion.current
+    )
+      return;
     const previous: WorkEditorState = {
       workId: baseline.workId,
       baseVersion: baseline.version,
@@ -133,6 +209,7 @@ export function AdminWorkForm({ mode, initialWork }: AdminWorkFormProps) {
     };
     const refreshed = receiveWorkRefresh(previous, initialWork.id, initialWork);
     reset(refreshed.values);
+    syncedWorkVersion.current = initialWork.version;
   }, [baseline, editorDirty, getValues, initialWork, reset]);
 
   const onCoverSelected = useCallback((assetId: string | null) => {
@@ -195,139 +272,234 @@ export function AdminWorkForm({ mode, initialWork }: AdminWorkFormProps) {
     }
   };
 
+  useEffect(() => {
+    currentConflict.current = serverConflict !== null;
+  });
+  const canFinishSave = (identity: string) =>
+    mounted.current &&
+    currentCanSave.current &&
+    currentIdentity.current === identity;
+
   const onSubmit = (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
-    void form.handleSubmit(
-      async (values) => {
-        setFormMessage(null);
-        setCreateOutcomeUnknown(false);
-        const coverSelection: MediaDraftSelection = {
-          attachedAssetId: values.coverAssetId,
-          candidateAssetId: coverCandidateAssetId,
-          clearAttached: clearCover,
-        };
-        const backgroundSelection: MediaDraftSelection = {
-          attachedAssetId: values.backgroundAssetId,
-          candidateAssetId: backgroundCandidateAssetId,
-          clearAttached: clearBackground,
-        };
-        const coverAssetId = mediaAssetForSave(coverSelection);
-        const backgroundAssetId = mediaAssetForSave(backgroundSelection);
-        const commonFields = workCommonFieldsFromForm(values);
-
-        try {
-          if (mode === "create") {
-            createId.current ??= globalThis.crypto.randomUUID();
-            const body: CreateWorkBody = {
-              id: createId.current,
-              ...commonFields,
-              slug: values.slug,
-              type: values.type,
-              storyStatus: values.storyStatus,
-              ...(coverAssetId === undefined ? {} : { coverAssetId }),
-              ...(backgroundAssetId === undefined ? {} : { backgroundAssetId }),
-            };
-            lastCreateCommand.current = body;
-            const saved = await createWork.mutateAsync(body);
-            setFormMessage("حُفظت المسودة على الخادم.");
-            router.push(`/admin/works/${saved.id}/edit` as Route);
+    if (
+      submitLocked.current ||
+      readbackLocked.current ||
+      !currentCanSave.current ||
+      currentUnknown.current ||
+      currentConflict.current
+    )
+      return;
+    submitLocked.current = true;
+    void form
+      .handleSubmit(
+        async (values) => {
+          if (
+            !canFinishSave(`${mode}:${initialWork?.id ?? "new"}`) ||
+            currentUnknown.current ||
+            currentConflict.current
+          )
             return;
-          }
-
-          if (initialWork === undefined) {
-            setFormMessage(
-              "تعذر تحديد العمل المطلوب للتعديل. أعد تحميل التفاصيل.",
-            );
-            return;
-          }
-          const expectedVersion = baseline.version;
-          if (expectedVersion === null) {
-            setFormMessage(
-              "تعذر تحديد نسخة العمل الحالية. أعد تحميل التفاصيل.",
-            );
-            return;
-          }
-          const body: UpdateWorkBody = {
-            expectedVersion,
-            title: values.title,
-            storyStatus: values.storyStatus,
-            alternativeTitle: commonFields.alternativeTitle,
-            synopsis: commonFields.synopsis,
-            author: commonFields.author,
-            artist: commonFields.artist,
-            categoryIds: commonFields.categoryIds,
-            tags: commonFields.tags,
-            featuredHome: commonFields.featuredHome,
-            featuredOrder: commonFields.featuredOrder,
-            ...(coverAssetId === undefined ? {} : { coverAssetId }),
-            ...(backgroundAssetId === undefined ? {} : { backgroundAssetId }),
+          const submittedIdentity = currentIdentity.current;
+          const submittedDraft = currentDraft.current;
+          const submittedRevision = draftRevision.current;
+          setFormMessage(null);
+          const coverSelection: MediaDraftSelection = {
+            attachedAssetId: values.coverAssetId,
+            candidateAssetId: coverCandidateAssetId,
+            clearAttached: clearCover,
           };
-          const saved = await updateWork.mutateAsync({
-            workId: initialWork.id,
-            body,
-          });
-          setBaseline({ workId: saved.id, version: saved.version });
-          reset(workFormValuesFromServer(saved));
-          setCoverCandidateAssetId(null);
-          setBackgroundCandidateAssetId(null);
-          setClearCover(false);
-          setClearBackground(false);
-          setFormMessage("حُفظت التعديلات على المسودة.");
-        } catch (error: unknown) {
-          setFormMessage(adminWorkErrorMessage(error));
-          applySafeFieldErrors(error);
-          if (!isEdit && isAmbiguousAdminCreateResult(error)) {
-            setCreateOutcomeUnknown(true);
+          const backgroundSelection: MediaDraftSelection = {
+            attachedAssetId: values.backgroundAssetId,
+            candidateAssetId: backgroundCandidateAssetId,
+            clearAttached: clearBackground,
+          };
+          try {
+            if (mode === "create") {
+              createId.current ??= globalThis.crypto.randomUUID();
+              const body = createWorkCommand(
+                values,
+                createId.current,
+                coverSelection,
+                backgroundSelection,
+              );
+              lastCreateCommand.current = body;
+              lastCreateDraft.current = submittedDraft;
+              const saved = await createWork.mutateAsync(body);
+              if (!canFinishSave(submittedIdentity)) return;
+              if (
+                draftRevision.current !== submittedRevision ||
+                currentDraft.current !== submittedDraft
+              ) {
+                setConfirmedCreateId(saved.id);
+                currentUnknown.current = true;
+                setCreateOutcomeUnknown(true);
+                setFormMessage(
+                  "حُفظت النسخة المرسلة، لكن لديك تعديلات غير محفوظة. راجع المسودة المحفوظة قبل إرسال تعديل آخر.",
+                );
+                return;
+              }
+              setFormMessage("حُفظت المسودة على الخادم.");
+              router.push(`/admin/works/${saved.id}/edit` as Route);
+              return;
+            }
+
+            if (initialWork === undefined) {
+              setFormMessage(
+                "تعذر تحديد العمل المطلوب للتعديل. أعد تحميل التفاصيل.",
+              );
+              return;
+            }
+            const expectedVersion = baseline.version;
+            if (expectedVersion === null) {
+              setFormMessage(
+                "تعذر تحديد نسخة العمل الحالية. أعد تحميل التفاصيل.",
+              );
+              return;
+            }
+            const body = updateWorkCommand(
+              values,
+              expectedVersion,
+              coverSelection,
+              backgroundSelection,
+            );
+            setPendingEdit({
+              identity: submittedIdentity,
+              draft: submittedDraft,
+            });
+            const saved = await updateWork.mutateAsync({
+              workId: initialWork.id,
+              body,
+            });
+            if (
+              !canFinishSave(submittedIdentity) ||
+              saved.id !== initialWork.id
+            )
+              return;
+            setBaseline({ workId: saved.id, version: saved.version });
+            syncedWorkVersion.current = saved.version;
+            if (
+              draftRevision.current !== submittedRevision ||
+              currentDraft.current !== submittedDraft
+            ) {
+              setPreserveAfterSave(true);
+              setFormMessage(
+                "حُفظت النسخة المرسلة، لكن لديك تعديلات غير محفوظة في المحرر.",
+              );
+              return;
+            }
+            setPreserveAfterSave(false);
+            reset(workFormValuesFromServer(saved));
+            setCoverCandidateAssetId(null);
+            setBackgroundCandidateAssetId(null);
+            setClearCover(false);
+            setClearBackground(false);
+            setFormMessage("حُفظت التعديلات على المسودة.");
+          } catch (error: unknown) {
+            if (!canFinishSave(submittedIdentity)) return;
+            setFormMessage(adminWorkErrorMessage(error));
+            applySafeFieldErrors(error);
+            if (
+              !isEdit &&
+              (isAmbiguousAdminCreateResult(error) ||
+                (error instanceof SafeAdminContentError &&
+                  error.statusCode === 409))
+            ) {
+              if (
+                error instanceof SafeAdminContentError &&
+                error.statusCode === 409
+              ) {
+                createConflictSeen.current = true;
+              }
+              currentUnknown.current = true;
+              setCreateOutcomeUnknown(true);
+            }
           }
-        }
-      },
-      (errors) => {
-        const firstInvalid = [
-          "title",
-          "slug",
-          "alternativeTitle",
-          "synopsis",
-          "author",
-          "artist",
-          "categoryIds",
-          "tagsText",
-          "featuredOrderText",
-        ].find((field) => field in errors) as keyof FormValues | undefined;
-        if (firstInvalid !== undefined) setFocus(firstInvalid);
-      },
-    )(event);
+        },
+        (errors) => {
+          const firstInvalid = [
+            "title",
+            "slug",
+            "alternativeTitle",
+            "synopsis",
+            "author",
+            "artist",
+            "categoryIds",
+            "tagsText",
+            "featuredOrderText",
+          ].find((field) => field in errors) as keyof FormValues | undefined;
+          if (firstInvalid !== undefined) setFocus(firstInvalid);
+        },
+      )(event)
+      .finally(() => {
+        if (mounted.current) setPendingEdit(null);
+        submitLocked.current = false;
+      });
   };
 
   const checkUnknownCreate = async () => {
     const id = createId.current;
     const submitted = lastCreateCommand.current;
-    if (id === null || submitted === null) return;
+    if (
+      id === null ||
+      submitted === null ||
+      readbackLocked.current ||
+      submitLocked.current ||
+      !currentCanSave.current
+    )
+      return;
+    readbackLocked.current = true;
+    const identity = currentIdentity.current;
+    const draft = currentDraft.current;
     setIsCheckingCreate(true);
     setFormMessage(null);
     try {
       const saved = await createWork.readback(id);
+      if (!canFinishSave(identity)) return;
       if (!workMatchesCreateCommand(saved, submitted)) {
-        setCreateOutcomeUnknown(false);
+        currentUnknown.current = true;
+        setCreateOutcomeUnknown(true);
         setFormMessage(
           "يوجد تعارض في هوية العمل؛ لم نعتبر نتيجة القراءة نجاحًا ولم نغيّر مسودتك.",
         );
         return;
       }
+      setConfirmedCreateId(saved.id);
+      if (
+        currentDraft.current !== draft ||
+        currentDraft.current !== lastCreateDraft.current
+      ) {
+        setFormMessage(
+          "تأكد حفظ النسخة المرسلة، لكن لديك تعديلات غير محفوظة. افتح النسخة المحفوظة للمراجعة.",
+        );
+        return;
+      }
       reset(workFormValuesFromServer(saved));
+      currentUnknown.current = false;
       setCreateOutcomeUnknown(false);
       setFormMessage("تم العثور على المسودة المحفوظة بالمعرّف نفسه.");
       router.push(`/admin/works/${saved.id}/edit` as Route);
     } catch (error: unknown) {
+      if (!canFinishSave(identity)) return;
       if (isMissingAdminCreateReadback(error)) {
-        setCreateOutcomeUnknown(false);
-        setFormMessage(
-          "لم يُعثر على مسودة بهذا المعرّف. احتفظ بالحقول ثم أرسلها صراحةً باستخدام المعرّف نفسه.",
-        );
+        if (!createConflictSeen.current) {
+          currentUnknown.current = false;
+          setCreateOutcomeUnknown(false);
+          setFormMessage(
+            "لم يُعثر على مسودة بهذا المعرّف. احتفظ بالحقول ثم أرسلها صراحةً باستخدام المعرّف نفسه.",
+          );
+        } else {
+          setFormMessage(
+            "لم تحسم القراءة تعارض الحفظ. احتفظ بمسودتك وأعد التحقق من المعرّف قبل أي إرسال آخر.",
+          );
+        }
       } else {
         setFormMessage(adminWorkErrorMessage(error));
       }
     } finally {
-      setIsCheckingCreate(false);
+      readbackLocked.current = false;
+      if (mounted.current && currentIdentity.current === identity)
+        setIsCheckingCreate(false);
     }
   };
 
@@ -346,6 +518,9 @@ export function AdminWorkForm({ mode, initialWork }: AdminWorkFormProps) {
       version: serverConflict.version,
     });
     reset(adopted.values);
+    syncedWorkVersion.current = serverConflict.version;
+    setPreserveAfterSave(false);
+    setFormMessage(null);
     setResolvedConflictVersion(serverConflict.version);
     setCoverCandidateAssetId(null);
     setBackgroundCandidateAssetId(null);
@@ -451,14 +626,25 @@ export function AdminWorkForm({ mode, initialWork }: AdminWorkFormProps) {
         ) : null}
         {createOutcomeUnknown ? (
           <div role="status" aria-live="polite">
-            <p>نتيجة الإنشاء غير مؤكدة. لم نعد إرسال الطلب تلقائيًا.</p>
-            <button
-              type="button"
-              onClick={() => void checkUnknownCreate()}
-              disabled={isCheckingCreate}
-            >
-              تحقق من حالة الحفظ بالمعرّف نفسه
-            </button>
+            <p>
+              {confirmedCreateId === null
+                ? "نتيجة الإنشاء غير مؤكدة. لم نعد إرسال الطلب تلقائيًا."
+                : "تأكد حفظ النسخة المرسلة؛ تعديلاتك الأحدث لا تزال محلية."}
+            </p>
+            {confirmedCreateId !== null ? (
+              <Link href={`/admin/works/${confirmedCreateId}/edit` as Route}>
+                فتح النسخة المحفوظة للمراجعة
+              </Link>
+            ) : null}
+            {confirmedCreateId === null ? (
+              <button
+                type="button"
+                onClick={() => void checkUnknownCreate()}
+                disabled={isCheckingCreate}
+              >
+                تحقق من حالة الحفظ بالمعرّف نفسه
+              </button>
+            ) : null}
           </div>
         ) : null}
 
@@ -488,7 +674,8 @@ export function AdminWorkForm({ mode, initialWork }: AdminWorkFormProps) {
           />
           <AdminWorkSeoPreview
             values={values}
-            persistedSlug={initialWork?.slug ?? null}
+            savedWork={initialWork ?? null}
+            dirty={editorDirty}
           />
 
           <div className={styles["actionsBar"]}>
@@ -506,7 +693,12 @@ export function AdminWorkForm({ mode, initialWork }: AdminWorkFormProps) {
               <button
                 type="submit"
                 className={styles["saveDraftBtn"]}
-                disabled={isSaving}
+                disabled={
+                  isSaving ||
+                  !canSave ||
+                  createOutcomeUnknown ||
+                  serverConflict !== null
+                }
               >
                 {isSaving
                   ? "جارٍ حفظ المسودة…"

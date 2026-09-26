@@ -21,6 +21,6 @@ export const adminContentKeys = {
     [...categoryListScopeKey(actorId), query] as const,
   categoryDetail: (actorId: string, categoryId: string) =>
     [...categoriesKey(actorId), "detail", categoryId] as const,
-  categoryPicker: (actorId: string) =>
-    [...categoriesKey(actorId), "picker"] as const,
+  categoryPicker: (actorId: string, page = 1, search = "") =>
+    [...categoriesKey(actorId), "picker", { page, search }] as const,
 };

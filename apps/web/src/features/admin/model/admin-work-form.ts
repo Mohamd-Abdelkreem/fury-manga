@@ -98,6 +98,25 @@ export const adminWorkFormSchema = z
 
 export type FormValues = z.infer<typeof adminWorkFormSchema>;
 
+const FORM_FIELD_ERRORS: Readonly<Record<string, string>> = {
+  title: "أدخل عنوانًا من 1 إلى 200 حرف.",
+  slug: "استخدم رابطًا مختصرًا من حروف إنجليزية صغيرة وأرقام وشرطات فقط.",
+  alternativeTitle: "اختصر العنوان البديل إلى 200 حرف أو أقل.",
+  type: "اختر نوعًا صالحًا للعمل.",
+  storyStatus: "اختر حالة صالحة للقصة.",
+  synopsis: "اختصر النبذة إلى 5000 حرف أو أقل.",
+  author: "اختصر اسم المؤلف إلى 150 حرفًا أو أقل.",
+  artist: "اختصر اسم الرسام إلى 150 حرفًا أو أقل.",
+  categoryIds: "اختر 100 تصنيف محفوظ كحد أقصى.",
+  tagsText: "اختصر الوسوم إلى 1000 حرف أو أقل.",
+  featuredOrderText: "راجع موضع العرض المميز.",
+  coverAssetId: "اختر غلافًا محفوظًا صالحًا.",
+  backgroundAssetId: "اختر خلفية محفوظة صالحة.",
+};
+
+export const adminWorkFormErrorMap: z.core.$ZodErrorMap = (issue) =>
+  FORM_FIELD_ERRORS[String(issue.path?.[0])] ?? "راجع بيانات المسودة.";
+
 export const emptyWorkFormValues = (): FormValues => ({
   title: "",
   slug: "",

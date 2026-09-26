@@ -26,6 +26,12 @@ export type WorkFieldErrors = Readonly<{
   featuredOrderText?: string;
 }>;
 
+// A rejected unsafe request may be CSRF, not revocation of GET authority.
+export const isWriteSideAdminForbidden = (error: unknown): boolean =>
+  error instanceof SafeAdminContentError &&
+  error.statusCode === 403 &&
+  error.code === "FORBIDDEN";
+
 export const isTerminalAdminContentError = (
   error: unknown,
 ): error is SafeAdminContentError =>
