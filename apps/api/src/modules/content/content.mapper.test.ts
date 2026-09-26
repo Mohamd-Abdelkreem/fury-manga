@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { adminCategorySchema, adminWorkSchema } from "@fury/contracts";
 import {
   ChapterContentType,
   PublicationStatus,
@@ -8,17 +9,33 @@ import {
 } from "@fury/database";
 
 import {
+  CATEGORY_SELECT,
   PUBLIC_CHAPTER_SELECT,
   PUBLIC_WORK_SELECT,
+  WORK_SELECT,
+  mapAdminCategory,
   mapAdminChapter,
   mapAdminWork,
   mapPublicChapter,
   mapPublicWork,
+  type CategoryRecord,
   type ChapterRecord,
   type WorkRecord,
 } from "./content.mapper.js";
 
 const now = new Date("2026-09-22T00:00:00.000Z");
+
+const category: CategoryRecord = {
+  id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+  displayName: "Action",
+  slug: "action",
+  enabled: false,
+  displayPosition: 3,
+  version: 2,
+  createdAt: now,
+  updatedAt: now,
+  _count: { works: 4 },
+};
 
 const work: WorkRecord = {
   id: "11111111-1111-4111-8111-111111111111",
@@ -29,10 +46,18 @@ const work: WorkRecord = {
   publicationStatus: PublicationStatus.PUBLISHED,
   publishedAt: now,
   currentPublicationEventId: "22222222-2222-4222-8222-222222222222",
+  alternativeTitle: null,
+  synopsis: null,
+  author: null,
+  artist: null,
+  featuredHome: false,
+  featuredOrder: null,
   version: 1,
   createdAt: now,
   updatedAt: now,
   categories: [],
+  tags: [],
+  mediaReferences: [],
 };
 
 const chapter: ChapterRecord = {
@@ -88,5 +113,84 @@ describe("content allowlist mappers", () => {
     expect(mapAdminChapter(chapter)).not.toHaveProperty(
       "currentPublicationEventId",
     );
+  });
+
+  it("maps category state, position, and live usage without database metadata", () => {
+    expect(CATEGORY_SELECT).toHaveProperty("enabled", true);
+    expect(CATEGORY_SELECT).toHaveProperty("displayPosition", true);
+    expect(CATEGORY_SELECT).toHaveProperty("_count.select.works", true);
+    const mapped = mapAdminCategory(category);
+    expect(adminCategorySchema.parse(mapped)).toEqual({
+      id: category.id,
+      displayName: category.displayName,
+      slug: category.slug,
+      enabled: false,
+      displayPosition: 3,
+      worksCount: 4,
+      version: 2,
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
+    });
+    expect(mapped).not.toHaveProperty("_count");
+    expect(mapped).not.toHaveProperty("works");
+  });
+
+  it("selects rich admin editorial fields but keeps public metadata narrow", () => {
+    expect(WORK_SELECT).toMatchObject({
+      alternativeTitle: true,
+      synopsis: true,
+      author: true,
+      artist: true,
+      featuredHome: true,
+      featuredOrder: true,
+      tags: { orderBy: [{ position: "asc" }, { normalizedTag: "asc" }] },
+    });
+    expect(WORK_SELECT).toHaveProperty("mediaReferences");
+    expect(PUBLIC_WORK_SELECT).not.toHaveProperty("synopsis");
+    expect(PUBLIC_WORK_SELECT).not.toHaveProperty("author");
+    expect(PUBLIC_WORK_SELECT).not.toHaveProperty("tags");
+    expect(PUBLIC_WORK_SELECT).not.toHaveProperty("mediaReferences");
+
+    const mapped = mapAdminWork(work);
+    expect(mapped).toMatchObject({
+      alternativeTitle: null,
+      synopsis: null,
+      author: null,
+      artist: null,
+      featuredHome: false,
+      featuredOrder: null,
+      coverAssetId: null,
+      backgroundAssetId: null,
+      tags: [],
+    });
+    expect(adminWorkSchema.parse(mapped)).toEqual(mapped);
+    expect(mapped).not.toHaveProperty("relativeKey");
+    expect(mapped).not.toHaveProperty("currentPublicationEventId");
+  });
+
+  it("orders disabled retained Work categories by persisted display position", () => {
+    const later = {
+      ...category,
+      id: "77777777-7777-4777-8777-777777777777",
+      displayName: "A category",
+      displayPosition: 2,
+      enabled: false,
+    };
+    const earlier = {
+      ...category,
+      id: "88888888-8888-4888-8888-888888888888",
+      displayName: "Z category",
+      displayPosition: 1,
+      enabled: true,
+    };
+    const mapped = mapAdminWork({
+      ...work,
+      categories: [{ category: later }, { category: earlier }],
+    });
+    expect(mapped.categories.map(({ id }) => id)).toEqual([
+      earlier.id,
+      later.id,
+    ]);
+    expect(mapped.categories[1]?.enabled).toBe(false);
   });
 });

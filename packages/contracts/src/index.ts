@@ -50,6 +50,7 @@ export {
 export {
   adminCategoryListDataSchema,
   adminCategoryDataSchema,
+  adminCategoryMoveDataSchema,
   adminCategorySchema,
   adminChapterListDataSchema,
   adminChapterDataSchema,
@@ -60,6 +61,8 @@ export {
   adminWorkSchema,
   categoryIdParamsSchema,
   chapterContentTypeSchema,
+  categoryListQuerySchema,
+  categoryPositionBodySchema,
   contentErrorCodeSchema,
   contentOperationErrorCodeSchema,
   chapterPageInputSchema,
@@ -95,13 +98,17 @@ export {
   workChapterParamsSchema,
   workIdParamsSchema,
   workSlugParamsSchema,
+  workTagSchema,
   workTypeSchema,
 } from "./content/content.schema.ts";
 export type {
   AdminCategory,
+  AdminCategoryMove,
   AdminChapter,
   AdminWork,
   ChapterContentType,
+  CategoryListQuery,
+  CategoryPositionBody,
   ContentErrorCode,
   ContentOperationErrorCode,
   CreateCategoryBody,
@@ -119,6 +126,7 @@ export type {
   UpdateCategoryBody,
   UpdateChapterBody,
   UpdateWorkBody,
+  WorkTag,
   WorkType,
 } from "./content/content.schema.ts";
 export type {

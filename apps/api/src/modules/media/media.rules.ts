@@ -4,7 +4,7 @@ import type {
   MediaClass as ContractMediaClass,
   MediaReferenceTargetKind,
 } from "@fury/contracts";
-import type { UploadAdminCommand } from "./media.service.js";
+import type { UploadAdminCommand, WorkMediaField } from "./media.types.js";
 
 const adminClassMap: Record<UploadAdminCommand["mediaClass"], MediaClass> = {
   work_cover: MediaClass.WORK_COVER,
@@ -47,3 +47,6 @@ const referenceRules: Record<
 
 export const mediaReferenceRule = (targetKind: MediaReferenceTargetKind) =>
   referenceRules[targetKind];
+
+export const workMediaReferenceRule = (field: WorkMediaField) =>
+  referenceRules[field === "coverAssetId" ? "work_cover" : "work_background"];

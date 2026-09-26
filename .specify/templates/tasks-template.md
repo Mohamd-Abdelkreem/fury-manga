@@ -12,6 +12,23 @@ description: "Task list template for feature implementation"
 the evidence boundary required by the specification and constitution; capability-specific
 tests MUST NOT create new product scope.
 
+**Engineering and skill gate**: Before generating tasks, read every
+`docs/engineering/*.md` file and identify the applicable rule IDs. Tasks that change
+`*.service.ts` or `*.controller.ts` MUST include a B33 file-boundary check: only
+imports and the exported class at top level. Include a file-owner audit for touched
+API and web files: errors in feature errors, types in their owner, pure rules/form
+logic in feature model or rules, transport in api, query/cache lifecycle in hooks,
+and UI interaction in components. Add a review task after affected work that
+checks the `docs/engineering/code-style.md` review gate on the changed files:
+names, coherent functions, justified abstractions, duplicated knowledge, dead
+code, preserved behavior, boundary validation and error handling. The task MUST
+record concrete file/rule findings and fixes or a clean pass, plus fresh package
+type/lint/format outcomes and apply the matching installed skills
+(`clean-code-guard` for nontrivial production
+code, `test-guard` for test code, `docs-guard` for technical docs, and
+`vercel-react-best-practices` for React/Next.js code). Apply other matching skills by
+their stated scope; do not add irrelevant skill tasks.
+
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 
 ## Format: `[ID] [P?] [Story] Description`

@@ -20,6 +20,41 @@ export type ContentReadClient = Pick<
   "category" | "chapter" | "work"
 >;
 
+export type CategoryListFilters = Readonly<{
+  search?: string | undefined;
+  enabled?: boolean | undefined;
+}>;
+
+export const buildCategoryWhere = (
+  filters: CategoryListFilters,
+): Prisma.CategoryWhereInput => ({
+  ...(filters.enabled === undefined ? {} : { enabled: filters.enabled }),
+  ...(filters.search === undefined || filters.search.length === 0
+    ? {}
+    : {
+        OR: [
+          { displayName: { contains: filters.search, mode: "insensitive" } },
+          { slug: { contains: filters.search, mode: "insensitive" } },
+        ],
+      }),
+});
+
+export const lockCategoryEligibilityState = async (
+  transaction: Prisma.TransactionClient,
+): Promise<void> => {
+  await transaction.$queryRaw`
+    SELECT pg_advisory_xact_lock(5380033990110::BIGINT) IS NULL AS "locked"
+  `;
+};
+
+export const lockCategoryOrder = async (
+  transaction: Prisma.TransactionClient,
+): Promise<void> => {
+  await transaction.$queryRaw`
+    SELECT pg_advisory_xact_lock(5380033990109::BIGINT) IS NULL AS "locked"
+  `;
+};
+
 export const findAdminCategory = (
   database: ContentReadClient,
   categoryId: string,
@@ -51,9 +86,11 @@ export const findAdminChapter = (
 export const listAdminCategories = (
   database: ContentReadClient,
   pagination: PaginationQuery,
+  filters: CategoryListFilters = {},
 ): Promise<CategoryRecord[]> =>
   database.category.findMany({
-    orderBy: [{ createdAt: "desc" }, { id: "asc" }],
+    where: buildCategoryWhere(filters),
+    orderBy: [{ displayPosition: "asc" }, { id: "asc" }],
     skip: pagination.skip,
     take: pagination.take,
     select: CATEGORY_SELECT,

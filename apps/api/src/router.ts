@@ -39,9 +39,8 @@ export const createApiRouter = (
 
   const healthService = new HealthService(database, mediaStorage);
   const healthController = new HealthController(healthService);
-  const mediaController = new MediaController(
-    new MediaService(database, mediaStorage),
-  );
+  const mediaService = new MediaService(database, mediaStorage);
+  const mediaController = new MediaController(mediaService);
   const authenticationMiddleware = createAuthenticationMiddleware(database);
   const authController = new AuthController(
     new AuthService(database, emailService),
@@ -56,7 +55,7 @@ export const createApiRouter = (
   );
   const contentManagementController = new ContentManagementController(
     new CategoryManagementService(database),
-    new WorkManagementService(database),
+    new WorkManagementService(database, mediaService),
     new ChapterManagementService(database),
     new PublicationManagementService(database, publicationDependencies),
   );

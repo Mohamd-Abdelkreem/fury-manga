@@ -68,6 +68,62 @@ export const assertImmutableValue = (
   }
 };
 
+export const normalizeWorkTags = (tags: readonly string[]): string[] => {
+  const normalized = tags.map((tag) => tag.trim().normalize("NFC"));
+  const hasControl = normalized.some((tag) =>
+    Array.from(tag).some((character) => {
+      const code = character.codePointAt(0) ?? 0;
+      return (
+        (code < 32 && code !== 9 && code !== 10 && code !== 13) || code === 127
+      );
+    }),
+  );
+  if (
+    normalized.length > 20 ||
+    normalized.some((tag) => tag.length < 1 || tag.length > 40) ||
+    hasControl ||
+    new Set(normalized).size !== normalized.length
+  ) {
+    throw new ContentTypeConflictException("Work tags are invalid.");
+  }
+  return normalized;
+};
+
+export type WorkReadinessInput = Readonly<{
+  title: string;
+  synopsis: string | null;
+  author: string | null;
+  enabledCategoryCount: number;
+  hasAvailableCover: boolean;
+}>;
+
+export type WorkReadinessIssue =
+  "title" | "synopsis" | "author" | "categoryIds" | "coverAssetId";
+
+export const findWorkReadinessIssues = (
+  input: WorkReadinessInput,
+): WorkReadinessIssue[] => {
+  const issues: WorkReadinessIssue[] = [];
+  if (input.title.trim().length === 0) issues.push("title");
+  if (
+    input.synopsis === null ||
+    input.synopsis.trim().length < 20 ||
+    input.synopsis.length > 5_000
+  ) {
+    issues.push("synopsis");
+  }
+  if (
+    input.author === null ||
+    input.author.trim().length === 0 ||
+    input.author.length > 150
+  ) {
+    issues.push("author");
+  }
+  if (input.enabledCategoryCount < 1) issues.push("categoryIds");
+  if (!input.hasAvailableCover) issues.push("coverAssetId");
+  return issues;
+};
+
 export const assertPositiveChapterNumber = (value: number): void => {
   if (!Number.isSafeInteger(value) || value < 1 || value > 2_147_483_647) {
     throw new ContentTransitionConflictException(

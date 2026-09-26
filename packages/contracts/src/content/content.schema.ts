@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   commonHttpErrorCodeSchema,
   paginationMetaSchema,
+  paginationQuerySchema,
 } from "../http/http.schema.ts";
 
 const MAX_STRUCTURED_TEXT_BYTES = 512 * 1024;
@@ -28,16 +29,12 @@ const hasControlCharacter = (value: string): boolean => {
 const boundedNormalizedText = (maximum: number) =>
   z
     .string()
-    .transform(normalizeText)
-    .pipe(
-      z
-        .string()
-        .min(1)
-        .max(maximum)
-        .refine((value) => !value.includes("\u0000"), {
-          message: "must not contain null characters",
-        }),
-    );
+    .overwrite(normalizeText)
+    .min(1)
+    .max(maximum)
+    .refine((value) => !value.includes("\u0000"), {
+      message: "must not contain null characters",
+    });
 
 const safeTextLeafSchema = z
   .string()
@@ -87,6 +84,7 @@ export const contentErrorCodeSchema = z
     "CONTENT_TYPE_CONFLICT",
     "CONTENT_TRANSITION_CONFLICT",
     "CONTENT_STALE_WRITE",
+    "CONTENT_CATEGORY_IN_USE",
   ])
   .meta({ id: "ContentErrorCode" });
 export const contentOperationErrorCodeSchema = z
@@ -97,20 +95,99 @@ export const contentOperationErrorCodeSchema = z
   .meta({ id: "ContentOperationErrorCode" });
 
 export const contentIdSchema = z.uuid();
+const canonicalContentIdSchema = contentIdSchema.overwrite((id) =>
+  id.toLowerCase(),
+);
 export const contentTimestampSchema = z.iso.datetime({ offset: true });
 export const contentVersionSchema = z.number().int().min(0);
 export const expectedVersionSchema = contentVersionSchema;
 export const positiveIntegerSchema = z.number().int().min(1).max(2_147_483_647);
 export const contentSlugSchema = z
   .string()
-  .transform((value) => value.trim().normalize("NFC").toLowerCase())
-  .pipe(
-    z
-      .string()
-      .min(1)
-      .max(120)
-      .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/u),
-  );
+  .overwrite((value) => value.trim().normalize("NFC").toLowerCase())
+  .min(1)
+  .max(120)
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/u);
+
+const editorialText = (minimum: number, maximum: number) =>
+  z
+    .string()
+    .overwrite(normalizeText)
+    .min(minimum)
+    .max(maximum)
+    .refine((value) => !hasUnsupportedTextControl(value), {
+      message: "must not contain unsupported control characters",
+    });
+
+export const workTagSchema = editorialText(1, 40);
+const workTagsSchema = z
+  .array(workTagSchema)
+  .max(20)
+  .superRefine((tags, context) => {
+    const seen = new Set<string>();
+    tags.forEach((tag, index) => {
+      if (seen.has(tag)) {
+        context.addIssue({
+          code: "custom",
+          message: "tags must be unique after normalization",
+          path: [index],
+        });
+      }
+      seen.add(tag);
+    });
+  });
+
+const workCategoryIdsSchema = z
+  .array(canonicalContentIdSchema)
+  .max(100)
+  .superRefine((categoryIds, context) => {
+    const seen = new Set<string>();
+    categoryIds.forEach((categoryId, index) => {
+      if (seen.has(categoryId)) {
+        context.addIssue({
+          code: "custom",
+          message: "category IDs must be unique",
+          path: [index],
+        });
+      }
+      seen.add(categoryId);
+    });
+  });
+
+const featuredPairSchema = {
+  featuredHome: z.boolean().optional(),
+  featuredOrder: positiveIntegerSchema.nullable().optional(),
+};
+
+const addFeaturedPairIssues = (
+  value: Readonly<{
+    featuredHome?: boolean | undefined;
+    featuredOrder?: number | null | undefined;
+  }>,
+  context: z.RefinementCtx,
+): void => {
+  const hasHome = value.featuredHome !== undefined;
+  const hasOrder = value.featuredOrder !== undefined;
+  if (hasHome !== hasOrder) {
+    context.addIssue({
+      code: "custom",
+      message: "featuredHome and featuredOrder must be submitted together",
+      path: [hasHome ? "featuredOrder" : "featuredHome"],
+    });
+    return;
+  }
+  if (
+    hasHome &&
+    hasOrder &&
+    value.featuredHome !== (value.featuredOrder !== null)
+  ) {
+    context.addIssue({
+      code: "custom",
+      message: "featured order must match the featured preference",
+      path: ["featuredOrder"],
+    });
+  }
+};
 
 export const structuredTextInlineSchema = z
   .object({
@@ -163,8 +240,35 @@ export const structuredTextDocumentSchema = z
     { message: "structured text must not exceed 512 KiB" },
   );
 
+export const categoryListQuerySchema = z
+  .object({
+    ...paginationQuerySchema.shape,
+    page: paginationQuerySchema.shape.page.pipe(
+      z.number().int().min(1).max(100_000),
+    ),
+    search: z
+      .string()
+      .transform(normalizeText)
+      .pipe(
+        z
+          .string()
+          .max(100)
+          .refine((value) => !hasUnsupportedTextControl(value)),
+      )
+      .optional(),
+    enabled: z
+      .preprocess(
+        (value) =>
+          value === "true" ? true : value === "false" ? false : value,
+        z.boolean(),
+      )
+      .optional(),
+  })
+  .strict();
+
 export const createCategoryBodySchema = z
   .object({
+    id: contentIdSchema.optional(),
     displayName: boundedNormalizedText(100),
     slug: contentSlugSchema,
   })
@@ -174,22 +278,44 @@ export const updateCategoryBodySchema = z
   .object({
     expectedVersion: expectedVersionSchema,
     displayName: boundedNormalizedText(100).optional(),
+    enabled: z.boolean().optional(),
     slug: contentSlugSchema.optional(),
   })
   .strict()
   .refine(
-    (value) => value.displayName !== undefined || value.slug !== undefined,
+    (value) =>
+      value.displayName !== undefined ||
+      value.enabled !== undefined ||
+      value.slug !== undefined,
     { message: "at least one mutable or immutable field is required" },
   );
 
+export const categoryPositionBodySchema = z
+  .object({
+    expectedVersion: expectedVersionSchema,
+    targetPosition: positiveIntegerSchema,
+  })
+  .strict();
+
 export const createWorkBodySchema = z
   .object({
+    id: canonicalContentIdSchema.optional(),
     title: boundedNormalizedText(200),
     slug: contentSlugSchema,
     type: workTypeSchema,
     storyStatus: storyStatusSchema,
+    alternativeTitle: editorialText(1, 200).nullable().optional(),
+    synopsis: editorialText(20, 5_000).nullable().optional(),
+    author: editorialText(1, 150).nullable().optional(),
+    artist: editorialText(1, 150).nullable().optional(),
+    categoryIds: workCategoryIdsSchema.optional(),
+    tags: workTagsSchema.optional(),
+    coverAssetId: canonicalContentIdSchema.nullable().optional(),
+    backgroundAssetId: canonicalContentIdSchema.nullable().optional(),
+    ...featuredPairSchema,
   })
-  .strict();
+  .strict()
+  .superRefine(addFeaturedPairIssues);
 
 export const updateWorkBodySchema = z
   .object({
@@ -198,16 +324,41 @@ export const updateWorkBodySchema = z
     storyStatus: storyStatusSchema.optional(),
     slug: contentSlugSchema.optional(),
     type: workTypeSchema.optional(),
+    alternativeTitle: editorialText(1, 200).nullable().optional(),
+    synopsis: editorialText(20, 5_000).nullable().optional(),
+    author: editorialText(1, 150).nullable().optional(),
+    artist: editorialText(1, 150).nullable().optional(),
+    categoryIds: workCategoryIdsSchema.optional(),
+    tags: workTagsSchema.optional(),
+    coverAssetId: canonicalContentIdSchema.nullable().optional(),
+    backgroundAssetId: canonicalContentIdSchema.nullable().optional(),
+    ...featuredPairSchema,
   })
   .strict()
-  .refine(
-    (value) =>
-      value.title !== undefined ||
-      value.storyStatus !== undefined ||
-      value.slug !== undefined ||
-      value.type !== undefined,
-    { message: "at least one mutable or immutable field is required" },
-  );
+  .superRefine((value, context) => {
+    if (
+      value.title === undefined &&
+      value.storyStatus === undefined &&
+      value.slug === undefined &&
+      value.type === undefined &&
+      value.alternativeTitle === undefined &&
+      value.synopsis === undefined &&
+      value.author === undefined &&
+      value.artist === undefined &&
+      value.categoryIds === undefined &&
+      value.tags === undefined &&
+      value.coverAssetId === undefined &&
+      value.backgroundAssetId === undefined &&
+      value.featuredHome === undefined &&
+      value.featuredOrder === undefined
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "at least one mutable or immutable field is required",
+      });
+    }
+    addFeaturedPairIssues(value, context);
+  });
 
 export const replaceWorkCategoriesBodySchema = z
   .object({
@@ -350,6 +501,9 @@ export const adminCategorySchema = z
     id: contentIdSchema,
     displayName: z.string().min(1).max(100),
     slug: contentSlugSchema,
+    enabled: z.boolean(),
+    displayPosition: positiveIntegerSchema,
+    worksCount: z.number().int().min(0),
     version: contentVersionSchema,
     createdAt: contentTimestampSchema,
     updatedAt: contentTimestampSchema,
@@ -360,17 +514,27 @@ export const adminWorkSchema = z
   .object({
     id: contentIdSchema,
     title: z.string().min(1).max(200),
+    alternativeTitle: z.string().max(200).nullable(),
+    synopsis: z.string().max(5_000).nullable(),
+    author: z.string().min(1).max(150).nullable(),
+    artist: z.string().min(1).max(150).nullable(),
     slug: contentSlugSchema,
     type: workTypeSchema,
     storyStatus: storyStatusSchema,
     publicationStatus: publicationStatusSchema,
     publishedAt: contentTimestampSchema.nullable(),
+    featuredHome: z.boolean(),
+    featuredOrder: positiveIntegerSchema.nullable(),
+    coverAssetId: contentIdSchema.nullable(),
+    backgroundAssetId: contentIdSchema.nullable(),
+    tags: z.array(z.string().min(1).max(40)).max(20),
     version: contentVersionSchema,
     createdAt: contentTimestampSchema,
     updatedAt: contentTimestampSchema,
-    categories: z.array(adminCategorySchema),
+    categories: z.array(adminCategorySchema).max(100),
   })
-  .strict();
+  .strict()
+  .superRefine(addFeaturedPairIssues);
 
 export const adminChapterPageSchema = z
   .object({
@@ -403,6 +567,12 @@ export const publicChapterDataSchema = z
   .strict();
 export const adminCategoryDataSchema = z
   .object({ category: adminCategorySchema })
+  .strict();
+export const adminCategoryMoveDataSchema = z
+  .object({
+    category: adminCategorySchema,
+    displacedCategory: adminCategorySchema.nullable(),
+  })
   .strict();
 export const adminWorkDataSchema = z.object({ work: adminWorkSchema }).strict();
 export const adminChapterDataSchema = z
@@ -450,10 +620,13 @@ export type ContentOperationErrorCode = z.infer<
 export type StructuredTextDocument = z.infer<
   typeof structuredTextDocumentSchema
 >;
+export type CategoryListQuery = z.infer<typeof categoryListQuerySchema>;
 export type CreateCategoryBody = z.infer<typeof createCategoryBodySchema>;
 export type UpdateCategoryBody = z.infer<typeof updateCategoryBodySchema>;
+export type CategoryPositionBody = z.infer<typeof categoryPositionBodySchema>;
 export type CreateWorkBody = z.infer<typeof createWorkBodySchema>;
 export type UpdateWorkBody = z.infer<typeof updateWorkBodySchema>;
+export type WorkTag = z.infer<typeof workTagSchema>;
 export type ReplaceWorkCategoriesBody = z.infer<
   typeof replaceWorkCategoriesBodySchema
 >;
@@ -466,6 +639,7 @@ export type PublicCategory = z.infer<typeof publicCategorySchema>;
 export type PublicWork = z.infer<typeof publicWorkSchema>;
 export type PublicChapter = z.infer<typeof publicChapterSchema>;
 export type AdminCategory = z.infer<typeof adminCategorySchema>;
+export type AdminCategoryMove = z.infer<typeof adminCategoryMoveDataSchema>;
 export type AdminWork = z.infer<typeof adminWorkSchema>;
 export type AdminChapter = z.infer<typeof adminChapterSchema>;
 export type PublicationTransition = z.infer<typeof publicationTransitionSchema>;

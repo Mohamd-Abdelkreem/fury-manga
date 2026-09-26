@@ -1,5 +1,7 @@
 import {
   categoryIdParamsSchema,
+  categoryListQuerySchema,
+  categoryPositionBodySchema,
   createCategoryBodySchema,
   createChapterBodySchema,
   createWorkBodySchema,
@@ -15,6 +17,8 @@ import {
   workSlugParamsSchema,
 } from "@fury/contracts";
 import type {
+  CategoryListQuery,
+  CategoryPositionBody,
   CreateCategoryBody,
   CreateChapterBody,
   CreateWorkBody,
@@ -27,6 +31,8 @@ import type {
 
 export {
   categoryIdParamsSchema,
+  categoryListQuerySchema,
+  categoryPositionBodySchema,
   createCategoryBodySchema,
   createChapterBodySchema,
   createWorkBodySchema,
@@ -42,6 +48,8 @@ export {
   workSlugParamsSchema,
 };
 
+export type CategoryListQueryDto = CategoryListQuery;
+export type CategoryPositionBodyDto = CategoryPositionBody;
 export type CreateCategoryBodyDto = CreateCategoryBody;
 export type UpdateCategoryBodyDto = UpdateCategoryBody;
 export type CreateWorkBodyDto = CreateWorkBody;

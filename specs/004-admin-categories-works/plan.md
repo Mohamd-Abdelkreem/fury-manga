@@ -122,6 +122,17 @@ Actual focused scripts: `pnpm --filter @fury/contracts test`, `pnpm --filter @fu
 7. **PASS**: FR-to-layer evidence and commands explicit; no fresh app evidence claimed.
 8. **PASS**: User edits preserved, docs-only checks/stop point and unauthorized actions explicit.
 
+### Code-quality review addendum (constitution v1.3.0)
+
+At each remaining P03 checkpoint and the final T084 review, apply
+`docs/engineering/code-style.md` to the files named by this plan and the tasks.
+Check B12/B33 and F01 file ownership, class-only service/controller boundaries,
+dependency direction, clear names, coherent functions, justified abstractions,
+duplicated knowledge, dead code, preserved behavior, validation and error paths.
+Use applicable installed guard skills and record concrete file/rule findings and
+fixes, or a clean pass, alongside fresh package type/lint/format results. This
+review covers the accepted P03 scope and does not claim prior reviewer acceptance.
+
 ## Project Structure
 
 ```text

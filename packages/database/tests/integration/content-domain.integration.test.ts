@@ -22,7 +22,7 @@ const insertWork = async (
 describe("content-domain PostgreSQL invariants", () => {
   beforeEach(async () => {
     await pool.query(
-      "TRUNCATE media_reference_events, media_references, upload_attempts, media_assets, publication_events, chapter_pages, chapters, work_categories, categories, works",
+      "TRUNCATE media_reference_events, media_references, upload_attempts, media_assets, publication_events, chapter_pages, chapters, work_tags, work_categories, categories, works",
     );
   });
 
@@ -243,6 +243,346 @@ describe("content-domain PostgreSQL invariants", () => {
     ).resolves.toMatchObject({ rows: [{ count: 0 }] });
   });
 
+  it("appends legacy category inserts and enforces positive gapless positions", async () => {
+    const insertCategory = (slug: string) =>
+      pool.query<{ display_position: number; enabled: boolean }>(
+        `INSERT INTO categories (display_name, slug, updated_at)
+         VALUES ($1, $2, CURRENT_TIMESTAMP)
+         RETURNING display_position, enabled`,
+        [slug, slug],
+      );
+
+    const first = await insertCategory("legacy-first");
+    const second = await insertCategory("legacy-second");
+    const third = await insertCategory("legacy-third");
+    expect([
+      first.rows[0]?.display_position,
+      second.rows[0]?.display_position,
+      third.rows[0]?.display_position,
+    ]).toEqual([1, 2, 3]);
+    expect([
+      first.rows[0]?.enabled,
+      second.rows[0]?.enabled,
+      third.rows[0]?.enabled,
+    ]).toEqual([true, true, true]);
+
+    await expect(
+      pool.query(
+        `INSERT INTO categories (display_name, slug, display_position, updated_at)
+         VALUES ('Invalid Position', 'invalid-position', 0, CURRENT_TIMESTAMP)`,
+      ),
+    ).rejects.toMatchObject({ code: "23514" });
+    await expect(
+      pool.query(
+        `INSERT INTO categories (display_name, slug, display_position, updated_at)
+         VALUES ('Position Gap', 'position-gap', 5, CURRENT_TIMESTAMP)`,
+      ),
+    ).rejects.toMatchObject({ code: "23514" });
+    await expect(
+      pool.query("DELETE FROM categories WHERE slug = 'legacy-third'"),
+    ).rejects.toMatchObject({ code: "23514" });
+
+    const categories = await pool.query<{
+      id: string;
+      display_position: number;
+    }>("SELECT id, display_position FROM categories ORDER BY display_position");
+    const firstId = categories.rows[0]?.id;
+    const secondId = categories.rows[1]?.id;
+    if (firstId === undefined || secondId === undefined) {
+      throw new Error("Expected category fixtures to exist.");
+    }
+
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      await client.query(
+        'SET CONSTRAINTS "categories_display_position_key" DEFERRED',
+      );
+      await client.query(
+        "UPDATE categories SET display_position = 2 WHERE id = $1",
+        [firstId],
+      );
+      await client.query(
+        "UPDATE categories SET display_position = 1 WHERE id = $1",
+        [secondId],
+      );
+      await client.query("COMMIT");
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
+
+    const reordered = await pool.query<{ display_position: number }>(
+      "SELECT display_position FROM categories ORDER BY display_position",
+    );
+    expect(
+      reordered.rows.map(({ display_position }) => display_position),
+    ).toEqual([1, 2, 3]);
+  });
+
+  it("stores nullable editorial fields and ordered unique normalized tags", async () => {
+    const workId = await insertWork("editorial-fields");
+    const emptyDraft = await pool.query<{
+      alternative_title: string | null;
+      synopsis: string | null;
+      author: string | null;
+      artist: string | null;
+      featured_home: boolean;
+      featured_order: number | null;
+    }>(
+      `SELECT alternative_title, synopsis, author, artist,
+              featured_home, featured_order
+         FROM works WHERE id = $1`,
+      [workId],
+    );
+    expect(emptyDraft.rows[0]).toEqual({
+      alternative_title: null,
+      synopsis: null,
+      author: null,
+      artist: null,
+      featured_home: false,
+      featured_order: null,
+    });
+
+    await expect(
+      pool.query("UPDATE works SET synopsis = 'too short' WHERE id = $1", [
+        workId,
+      ]),
+    ).rejects.toMatchObject({ code: "23514" });
+    await expect(
+      pool.query("UPDATE works SET author = '' WHERE id = $1", [workId]),
+    ).rejects.toMatchObject({ code: "23514" });
+    await expect(
+      pool.query("UPDATE works SET alternative_title = '  ' WHERE id = $1", [
+        workId,
+      ]),
+    ).rejects.toMatchObject({ code: "23514" });
+    await expect(
+      pool.query("UPDATE works SET artist = '' WHERE id = $1", [workId]),
+    ).rejects.toMatchObject({ code: "23514" });
+    await expect(
+      pool.query("UPDATE works SET featured_home = true WHERE id = $1", [
+        workId,
+      ]),
+    ).rejects.toMatchObject({ code: "23514" });
+    await expect(
+      pool.query("UPDATE works SET featured_order = 1 WHERE id = $1", [workId]),
+    ).rejects.toMatchObject({ code: "23514" });
+
+    await pool.query(
+      `INSERT INTO work_tags (work_id, normalized_tag, position)
+       VALUES ($1, 'Adventure', 1), ($1, 'Drama', 2)`,
+      [workId],
+    );
+    const tags = await pool.query<{
+      normalized_tag: string;
+      position: number;
+    }>(
+      `SELECT normalized_tag, position FROM work_tags
+        WHERE work_id = $1 ORDER BY position, normalized_tag`,
+      [workId],
+    );
+    expect(tags.rows).toEqual([
+      { normalized_tag: "Adventure", position: 1 },
+      { normalized_tag: "Drama", position: 2 },
+    ]);
+
+    await expect(
+      pool.query(
+        "INSERT INTO work_tags (work_id, normalized_tag, position) VALUES ($1, 'Adventure', 3)",
+        [workId],
+      ),
+    ).rejects.toMatchObject({ code: "23505" });
+    await expect(
+      pool.query(
+        "INSERT INTO work_tags (work_id, normalized_tag, position) VALUES ($1, 'Mystery', 2)",
+        [workId],
+      ),
+    ).rejects.toMatchObject({ code: "23505" });
+    await expect(
+      pool.query(
+        "INSERT INTO work_tags (work_id, normalized_tag, position) VALUES ($1, '  Mystery', 3)",
+        [workId],
+      ),
+    ).rejects.toMatchObject({ code: "23514" });
+    await expect(
+      pool.query(
+        "INSERT INTO work_tags (work_id, normalized_tag, position) VALUES ($1, 'Cafe\u0301', 3)",
+        [workId],
+      ),
+    ).rejects.toMatchObject({ code: "23514" });
+    await expect(
+      pool.query(
+        "INSERT INTO work_tags (work_id, normalized_tag, position) VALUES ($1, 'Mystery', 0)",
+        [workId],
+      ),
+    ).rejects.toMatchObject({ code: "23514" });
+  });
+
+  it("enforces the per-work tag limit for direct and concurrent writes", async () => {
+    const workId = await insertWork("editorial-tag-limit");
+    await pool.query(
+      `INSERT INTO work_tags (work_id, normalized_tag, position)
+       SELECT $1, 'tag-' || position, position
+         FROM generate_series(1, 20) AS positions(position)`,
+      [workId],
+    );
+
+    const savedTags = await pool.query<{
+      normalized_tag: string;
+      position: number;
+    }>(
+      `SELECT normalized_tag, position FROM work_tags
+        WHERE work_id = $1 ORDER BY position`,
+      [workId],
+    );
+    expect(savedTags.rows).toHaveLength(20);
+    expect(savedTags.rows.map(({ position }) => position)).toEqual(
+      Array.from({ length: 20 }, (_, index) => index + 1),
+    );
+
+    await expect(
+      pool.query(
+        `INSERT INTO work_tags (work_id, normalized_tag, position)
+         VALUES ($1, 'tag-21', 21)`,
+        [workId],
+      ),
+    ).rejects.toMatchObject({
+      code: "23514",
+      constraint: "ck_work_tags_position_within_work_limit",
+    });
+
+    const unchangedTags = await pool.query<{
+      normalized_tag: string;
+      position: number;
+    }>(
+      `SELECT normalized_tag, position FROM work_tags
+        WHERE work_id = $1 ORDER BY position`,
+      [workId],
+    );
+    expect(unchangedTags.rows).toEqual(savedTags.rows);
+
+    const concurrentWorkId = await insertWork("editorial-tag-limit-race");
+    await pool.query(
+      `INSERT INTO work_tags (work_id, normalized_tag, position)
+       SELECT $1, 'race-' || position, position
+         FROM generate_series(1, 19) AS positions(position)`,
+      [concurrentWorkId],
+    );
+    const competingWrites = await Promise.allSettled(
+      ["race-first", "race-second"].map((tag) =>
+        pool.query(
+          `INSERT INTO work_tags (work_id, normalized_tag, position)
+           VALUES ($1, $2, 20)`,
+          [concurrentWorkId, tag],
+        ),
+      ),
+    );
+    const winners = competingWrites.filter(
+      (result) => result.status === "fulfilled",
+    );
+    const losers = competingWrites.filter(
+      (result) => result.status === "rejected",
+    );
+    expect(winners).toHaveLength(1);
+    expect(losers).toHaveLength(1);
+    const loser = losers[0];
+    if (loser?.status !== "rejected") {
+      throw new Error("Expected one concurrent tag position claim to lose.");
+    }
+    expect(loser.reason).toMatchObject({
+      code: "23505",
+      constraint: "work_tags_work_id_position_key",
+    });
+
+    const finalCount = await pool.query<{ count: number }>(
+      "SELECT count(*)::int AS count FROM work_tags WHERE work_id = $1",
+      [concurrentWorkId],
+    );
+    expect(finalCount.rows[0]?.count).toBe(20);
+  });
+
+  it("uniquely places published featured works while retaining inactive preferences", async () => {
+    const publishFeaturedWork = async (slug: string): Promise<string> => {
+      const workId = await insertWork(slug);
+      await pool.query(
+        "UPDATE works SET featured_home = true, featured_order = 1 WHERE id = $1",
+        [workId],
+      );
+      const client = await pool.connect();
+      try {
+        await client.query("BEGIN");
+        const event = await client.query<{ id: string }>(
+          `INSERT INTO publication_events (work_id)
+           VALUES ($1) RETURNING id`,
+          [workId],
+        );
+        const publication = event.rows[0];
+        if (publication === undefined) {
+          throw new Error("Expected publication event to be created.");
+        }
+        await client.query(
+          `UPDATE works
+              SET publication_status = 'published',
+                  published_at = (
+                    SELECT occurred_at FROM publication_events WHERE id = $2
+                  ),
+                  current_publication_event_id = $2
+            WHERE id = $1`,
+          [workId, publication.id],
+        );
+        await client.query("COMMIT");
+        return workId;
+      } catch (error) {
+        await client.query("ROLLBACK");
+        throw error;
+      } finally {
+        client.release();
+      }
+    };
+
+    await publishFeaturedWork("featured-winner");
+    const competingDraft = await insertWork("featured-draft");
+    await pool.query(
+      "UPDATE works SET featured_home = true, featured_order = 1 WHERE id = $1",
+      [competingDraft],
+    );
+    await expect(publishFeaturedWork("featured-loser")).rejects.toMatchObject({
+      code: "23505",
+    });
+
+    const archived = await insertWork("featured-archived");
+    await pool.query(
+      `UPDATE works SET publication_status = 'archived',
+                        featured_home = true, featured_order = 1
+        WHERE id = $1`,
+      [archived],
+    );
+    const retained = await pool.query<{
+      publication_status: string;
+      featured_home: boolean;
+      featured_order: number | null;
+    }>(
+      `SELECT publication_status, featured_home, featured_order
+         FROM works WHERE id IN ($1, $2) ORDER BY slug`,
+      [competingDraft, archived],
+    );
+    expect(retained.rows).toEqual([
+      {
+        publication_status: "archived",
+        featured_home: true,
+        featured_order: 1,
+      },
+      {
+        publication_status: "draft",
+        featured_home: true,
+        featured_order: 1,
+      },
+    ]);
+  });
+
   it("persists all six foundational records across a new connection", async () => {
     const workId = await insertWork();
     const category = await pool.query<{ id: string }>(
@@ -278,5 +618,193 @@ describe("content-domain PostgreSQL invariants", () => {
     } finally {
       await reconnected.end();
     }
+  });
+
+  it("appends concurrent categories and preserves distinct usage across states", async () => {
+    const created = await Promise.all(
+      ["category-a", "category-b", "category-c"].map((slug) =>
+        pool.query<{ id: string; enabled: boolean; display_position: number }>(
+          "INSERT INTO categories (display_name, slug, updated_at) VALUES ($1, $1, CURRENT_TIMESTAMP) RETURNING id, enabled, display_position",
+          [slug],
+        ),
+      ),
+    );
+    const categoryIds = created.map((result) => result.rows[0]?.id ?? "");
+    expect(
+      created.flatMap((result) => result.rows).map(({ enabled }) => enabled),
+    ).toEqual([true, true, true]);
+    const positions = await pool.query<{ display_position: number }>(
+      "SELECT display_position FROM categories ORDER BY display_position",
+    );
+    expect(
+      positions.rows.map(({ display_position }) => display_position),
+    ).toEqual([1, 2, 3]);
+
+    const draft = await insertWork("category-usage-draft");
+    const published = await insertWork("category-usage-published");
+    const archived = await insertWork("category-usage-archived");
+    const publication = await pool.query<{ id: string }>(
+      "INSERT INTO publication_events (work_id) VALUES ($1) RETURNING id",
+      [published],
+    );
+    const publicationId = publication.rows[0]?.id ?? "";
+    await pool.query(
+      "UPDATE works SET publication_status = 'published', published_at = (SELECT occurred_at FROM publication_events WHERE id = $2), current_publication_event_id = $2 WHERE id = $1",
+      [published, publicationId],
+    );
+    await pool.query(
+      "UPDATE works SET publication_status = 'archived', published_at = NULL, current_publication_event_id = NULL WHERE id = $1",
+      [archived],
+    );
+    await pool.query(
+      "INSERT INTO work_categories (work_id, category_id) VALUES ($1, $2), ($3, $2), ($4, $2), ($1, $5)",
+      [draft, categoryIds[0], published, archived, categoryIds[1]],
+    );
+    const usage = await pool.query<{ count: string }>(
+      "SELECT count(DISTINCT work_id)::text AS count FROM work_categories WHERE category_id = $1",
+      [categoryIds[0]],
+    );
+    expect(usage.rows[0]?.count).toBe("3");
+  });
+
+  it("serializes concurrent order swaps and admits one duplicate-slug creator", async () => {
+    await pool.query(
+      "INSERT INTO categories (display_name, slug, updated_at) VALUES ('First', 'concurrent-first', CURRENT_TIMESTAMP), ('Second', 'concurrent-second', CURRENT_TIMESTAMP)",
+    );
+    const ids = await pool.query<{ id: string }>(
+      "SELECT id FROM categories ORDER BY display_position",
+    );
+    const firstId = ids.rows[0]?.id ?? "";
+    const secondId = ids.rows[1]?.id ?? "";
+
+    const swap = async (): Promise<void> => {
+      const client = await pool.connect();
+      try {
+        await client.query("BEGIN");
+        await client.query(
+          "SELECT pg_advisory_xact_lock(5380033990109::BIGINT)",
+        );
+        await client.query(
+          'SET CONSTRAINTS "categories_display_position_key" DEFERRED',
+        );
+        await client.query(
+          "UPDATE categories SET display_position = CASE WHEN id = $1 THEN 2 ELSE 1 END WHERE id IN ($1, $2)",
+          [firstId, secondId],
+        );
+        await client.query("COMMIT");
+      } catch (error: unknown) {
+        await client.query("ROLLBACK");
+        throw error;
+      } finally {
+        client.release();
+      }
+    };
+    const duplicateSlug = () =>
+      pool.query(
+        "INSERT INTO categories (display_name, slug, updated_at) VALUES ('Duplicate', 'concurrent-slug', CURRENT_TIMESTAMP)",
+      );
+    const [firstCreate, secondCreate] = await Promise.allSettled([
+      duplicateSlug(),
+      duplicateSlug(),
+    ]);
+    await Promise.all([swap(), swap()]);
+
+    expect([firstCreate.status, secondCreate.status].sort()).toEqual([
+      "fulfilled",
+      "rejected",
+    ]);
+    const ordered = await pool.query<{ id: string; display_position: number }>(
+      "SELECT id, display_position FROM categories ORDER BY display_position",
+    );
+    expect(ordered.rows).toEqual([
+      { id: secondId, display_position: 1 },
+      { id: firstId, display_position: 2 },
+      expect.objectContaining({ display_position: 3 }),
+    ]);
+  });
+
+  it("persists rich draft metadata, ordered tags, and up to 100 distinct categories", async () => {
+    const workId = await insertWork("rich-draft", "text-story");
+    const categories = await Promise.all(
+      ["first", "second"].map((slug) =>
+        pool.query<{ id: string }>(
+          "INSERT INTO categories (display_name, slug, updated_at) VALUES ($1, $1, CURRENT_TIMESTAMP) RETURNING id",
+          [slug],
+        ),
+      ),
+    );
+    const categoryIds = categories.map((result) => result.rows[0]?.id ?? "");
+    await pool.query(
+      `UPDATE works
+          SET alternative_title = 'عنوان بديل', synopsis = $2,
+              author = 'Author', artist = 'Artist',
+              featured_home = true, featured_order = 3, version = 2
+        WHERE id = $1`,
+      [workId, "A complete persisted synopsis longer than twenty characters."],
+    );
+    await pool.query(
+      `INSERT INTO work_tags (work_id, normalized_tag, position)
+       VALUES ($1, 'First tag', 1), ($1, 'Second tag', 2)`,
+      [workId],
+    );
+    await pool.query(
+      "INSERT INTO work_categories (work_id, category_id) VALUES ($1, $2), ($1, $3)",
+      [workId, categoryIds[0], categoryIds[1]],
+    );
+
+    const saved = await pool.query<{
+      alternative_title: string | null;
+      synopsis: string | null;
+      author: string | null;
+      artist: string | null;
+      featured_home: boolean;
+      featured_order: number | null;
+      version: number;
+    }>(
+      `SELECT alternative_title, synopsis, author, artist,
+              featured_home, featured_order, version
+         FROM works WHERE id = $1`,
+      [workId],
+    );
+    expect(saved.rows[0]).toEqual({
+      alternative_title: "عنوان بديل",
+      synopsis: "A complete persisted synopsis longer than twenty characters.",
+      author: "Author",
+      artist: "Artist",
+      featured_home: true,
+      featured_order: 3,
+      version: 2,
+    });
+    const tags = await pool.query<{
+      normalized_tag: string;
+      position: number;
+    }>(
+      "SELECT normalized_tag, position FROM work_tags WHERE work_id = $1 ORDER BY position",
+      [workId],
+    );
+    expect(tags.rows).toEqual([
+      { normalized_tag: "First tag", position: 1 },
+      { normalized_tag: "Second tag", position: 2 },
+    ]);
+    const workCategories = await pool.query<{ category_id: string }>(
+      "SELECT category_id FROM work_categories WHERE work_id = $1 ORDER BY category_id",
+      [workId],
+    );
+    expect(
+      workCategories.rows.map(({ category_id }) => category_id).sort(),
+    ).toEqual([...categoryIds].sort());
+
+    await expect(
+      pool.query(
+        "INSERT INTO work_categories (work_id, category_id) VALUES ($1, $2)",
+        [workId, categoryIds[0]],
+      ),
+    ).rejects.toMatchObject({ code: "23505" });
+    await expect(
+      pool.query(
+        "INSERT INTO work_tags (work_id, normalized_tag, position) VALUES ($1, 'Third tag', 2)",
+        [workId],
+      ),
+    ).rejects.toMatchObject({ code: "23505" });
   });
 });

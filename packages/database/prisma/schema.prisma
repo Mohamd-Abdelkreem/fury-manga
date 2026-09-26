@@ -151,17 +151,24 @@ model RefreshToken {
 model Work {
   id                        String            @id @default(uuid()) @db.Uuid
   title                     String            @db.VarChar(200)
+  alternativeTitle          String?           @map("alternative_title") @db.VarChar(200)
+  synopsis                  String?           @db.VarChar(5000)
+  author                    String?           @db.VarChar(150)
+  artist                    String?           @db.VarChar(150)
   slug                      String            @unique @db.VarChar(120)
   type                      WorkType
   storyStatus               StoryStatus       @map("story_status")
   publicationStatus         PublicationStatus @default(DRAFT) @map("publication_status")
   publishedAt               DateTime?         @map("published_at") @db.Timestamptz(6)
   currentPublicationEventId String?           @unique @map("current_publication_event_id") @db.Uuid
+  featuredHome              Boolean           @default(false) @map("featured_home")
+  featuredOrder             Int?              @map("featured_order")
   version                   Int               @default(0)
   createdAt                 DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt                 DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   categories        WorkCategory[]
+  tags              WorkTag[]
   chapters          Chapter[]
   publicationEvents PublicationEvent[]
   mediaReferences   MediaReference[]
@@ -172,15 +179,19 @@ model Work {
 }
 
 model Category {
-  id          String   @id @default(uuid()) @db.Uuid
-  displayName String   @map("display_name") @db.VarChar(100)
-  slug        String   @unique @db.VarChar(120)
-  version     Int      @default(0)
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id              String   @id @default(uuid()) @db.Uuid
+  displayName     String   @map("display_name") @db.VarChar(100)
+  slug            String   @unique @db.VarChar(120)
+  enabled         Boolean  @default(true)
+  displayPosition Int      @default(dbgenerated("next_category_display_position()")) @map("display_position")
+  version         Int      @default(0)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   works WorkCategory[]
 
+  @@unique([displayPosition], map: "categories_display_position_key")
+  @@index([enabled, displayPosition, id], map: "categories_enabled_position_idx")
   @@index([createdAt(sort: Desc), id], map: "categories_created_idx")
   @@map("categories")
 }
@@ -196,6 +207,18 @@ model WorkCategory {
   @@id([workId, categoryId])
   @@index([categoryId, workId], map: "work_categories_category_work_idx")
   @@map("work_categories")
+}
+
+model WorkTag {
+  workId        String @map("work_id") @db.Uuid
+  normalizedTag String @map("normalized_tag") @db.VarChar(40)
+  position      Int
+
+  work Work @relation(fields: [workId], references: [id], onDelete: Restrict)
+
+  @@id([workId, normalizedTag])
+  @@unique([workId, position], map: "work_tags_work_id_position_key")
+  @@map("work_tags")
 }
 
 model Chapter {

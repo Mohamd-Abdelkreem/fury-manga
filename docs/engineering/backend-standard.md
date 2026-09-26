@@ -74,7 +74,11 @@ when shared. Do not import the database package into the browser to obtain enums
 code and safe message. Important domain distinctions need distinct documented codes;
 frontend branching/localization uses codes. Never expose Prisma/provider details
 or stack traces to clients. Preserve detailed diagnostics only in appropriately
-redacted server logs.
+redacted server logs. Put reusable feature error classes in the owning
+`<feature>.errors.ts` (or an existing feature-local errors owner). Services throw
+these errors; do not hide domain error construction in a service helper or scatter
+HTTP status and error-code factories among use-case methods. Keep technical adapter
+failures in the relevant infrastructure or feature error owner.
 
 **B13 — Existence privacy.** Define 404 versus 403 per resource authority policy;
 use 404 for cross-owner resources when existence must remain private. Apply the
@@ -164,6 +168,11 @@ persistence types stay with their owning query or mapper. Helpers used only by a
 service or controller belong inside that class as private methods, grouped after
 its public methods under a `// Helper methods` comment. Independently owned pure
 mappers and query helpers stay in their feature-local files as in B03 and B04.
+Before extracting a helper, choose its owner by responsibility: domain validation
+and decisions belong with feature rules or the service use case; request/response
+projection belongs with mappers; reusable technical transforms belong with their
+infrastructure adapter. A `// Helper methods` section is for class-private behavior,
+not a substitute for a dedicated error, type, rule, query or mapper owner.
 
 **B34 — Dependency injection.** Composition supplies database/providers and relevant
 clock, identifier, audit or encryption dependencies. Avoid hidden mutable singletons.

@@ -251,4 +251,167 @@ describe("P02 media persistence invariants", () => {
       ),
     ).rejects.toMatchObject({ code: "23503" });
   });
+
+  it("serializes stale reference replacements and rolls back dependent editorial writes", async () => {
+    const actorId = await createUser();
+    const workId = randomUUID();
+    ownedWorks.push(workId);
+    await pool.query(
+      `INSERT INTO works
+        (id, title, slug, type, story_status, updated_at)
+       VALUES ($1, 'Original title', $2, 'manga', 'ongoing', CURRENT_TIMESTAMP)`,
+      [workId, `atomic-work-${workId}`],
+    );
+    const assets = await Promise.all(
+      Array.from({ length: 3 }, () => createPendingAsset(actorId)),
+    );
+    for (const assetId of assets) {
+      await pool.query(
+        `UPDATE media_assets SET
+          content_type = 'image/jpeg', byte_length = 10, width = 600,
+          height = 800, sha256 = repeat('a', 64), status = 'available',
+          available_at = CURRENT_TIMESTAMP
+         WHERE id = $1`,
+        [assetId],
+      );
+    }
+    const [originalAsset, firstCandidate, secondCandidate] = assets;
+    if (
+      originalAsset === undefined ||
+      firstCandidate === undefined ||
+      secondCandidate === undefined
+    ) {
+      throw new Error("Expected three isolated media assets.");
+    }
+    const referenceId = randomUUID();
+    await pool.query(
+      `INSERT INTO media_references (id, asset_id, work_id, slot, updated_at)
+       VALUES ($1, $2, $3, 'work_cover', CURRENT_TIMESTAMP)`,
+      [referenceId, originalAsset, workId],
+    );
+    await pool.query(
+      `INSERT INTO media_reference_events
+        (reference_id, actor_user_id, action, to_asset_id, result_version)
+       VALUES ($1, $2, 'bound', $3, 0)`,
+      [referenceId, actorId, originalAsset],
+    );
+
+    const replace = async (assetId: string): Promise<boolean> => {
+      const client = await pool.connect();
+      try {
+        await client.query("BEGIN");
+        const updated = await client.query<{ version: number }>(
+          `UPDATE media_references
+              SET asset_id = $2, version = version + 1,
+                  updated_at = CURRENT_TIMESTAMP
+            WHERE id = $1 AND asset_id = $3 AND version = 0 AND retired_at IS NULL
+            RETURNING version`,
+          [referenceId, assetId, originalAsset],
+        );
+        const row = updated.rows[0];
+        if (row === undefined) {
+          await client.query("ROLLBACK");
+          return false;
+        }
+        await client.query(
+          `INSERT INTO media_reference_events
+            (reference_id, actor_user_id, action, from_asset_id, to_asset_id, result_version)
+           VALUES ($1, $2, 'replaced', $3, $4, $5)`,
+          [referenceId, actorId, originalAsset, assetId, row.version],
+        );
+        await client.query("COMMIT");
+        return true;
+      } catch (error: unknown) {
+        await client.query("ROLLBACK");
+        throw error;
+      } finally {
+        client.release();
+      }
+    };
+    const winners = await Promise.all([
+      replace(firstCandidate),
+      replace(secondCandidate),
+    ]);
+    expect(winners.filter(Boolean)).toHaveLength(1);
+    expect(winners.filter((winner) => !winner)).toHaveLength(1);
+
+    const authoritative = await pool.query<{
+      asset_id: string;
+      version: number;
+    }>("SELECT asset_id, version FROM media_references WHERE id = $1", [
+      referenceId,
+    ]);
+    const winnerAsset = authoritative.rows[0]?.asset_id;
+    expect([firstCandidate, secondCandidate]).toContain(winnerAsset);
+    expect(authoritative.rows[0]?.version).toBe(1);
+
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      await client.query(
+        "UPDATE works SET title = 'Uncommitted title', version = version + 1 WHERE id = $1",
+        [workId],
+      );
+      await client.query(
+        "UPDATE media_references SET asset_id = $2, version = version + 1 WHERE id = $1",
+        [
+          referenceId,
+          winnerAsset === firstCandidate ? secondCandidate : firstCandidate,
+        ],
+      );
+      await client.query(
+        `INSERT INTO media_reference_events
+          (reference_id, actor_user_id, action, from_asset_id, to_asset_id, result_version)
+         VALUES ($1, $2, 'replaced', $3, $4, 2)`,
+        [
+          referenceId,
+          actorId,
+          winnerAsset,
+          winnerAsset === firstCandidate ? secondCandidate : firstCandidate,
+        ],
+      );
+      await expect(
+        client.query(
+          `INSERT INTO media_reference_events
+            (reference_id, actor_user_id, action, from_asset_id, to_asset_id, result_version)
+           VALUES ($1, $2, 'replaced', $3, $4, 2)`,
+          [
+            referenceId,
+            actorId,
+            winnerAsset,
+            winnerAsset === firstCandidate ? secondCandidate : firstCandidate,
+          ],
+        ),
+      ).rejects.toMatchObject({ code: "23505" });
+      await client.query("ROLLBACK");
+    } catch (error: unknown) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
+
+    await expect(
+      pool.query("SELECT title, version FROM works WHERE id = $1", [workId]),
+    ).resolves.toMatchObject({
+      rows: [{ title: "Original title", version: 0 }],
+    });
+    await expect(
+      pool.query(
+        "SELECT asset_id, version FROM media_references WHERE id = $1",
+        [referenceId],
+      ),
+    ).resolves.toMatchObject({ rows: [{ asset_id: winnerAsset, version: 1 }] });
+    await expect(
+      pool.query(
+        "SELECT action, result_version FROM media_reference_events WHERE reference_id = $1 ORDER BY result_version",
+        [referenceId],
+      ),
+    ).resolves.toMatchObject({
+      rows: [
+        { action: "bound", result_version: 0 },
+        { action: "replaced", result_version: 1 },
+      ],
+    });
+  });
 });

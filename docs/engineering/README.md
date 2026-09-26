@@ -29,21 +29,22 @@ responsibility that no current owner can reasonably hold.
 
 ## Dependency and folder ownership
 
-| Area                   | Responsibility                                                                  | Does not own                             |
-| ---------------------- | ------------------------------------------------------------------------------- | ---------------------------------------- |
-| Web app/routes         | Route composition, metadata, framework boundaries                               | Prisma or backend authorization          |
-| Web feature/api        | Contract-aware requests through the existing central transport                  | Rendering or a second HTTP/session stack |
-| Web feature/hooks      | Query/mutation lifecycle and scoped cache effects                               | Component layout                         |
-| Web feature/model      | Feature types, key factories, pure transforms and state transitions             | A duplicate server-state global store    |
-| Web feature/components | Accessible UI and transient interaction                                         | Direct HTTP requests                     |
-| API composition        | Construct dependencies and mount modules                                        | Business rules for each endpoint         |
-| API routes/middleware  | Protocol wiring, parsing and request authority                                  | Persistence/business orchestration       |
-| API controllers        | Translate validated HTTP context to use cases and envelopes                     | Queries/transactions                     |
-| API services           | Business rules, authority close to data, transaction and side-effect sequencing | Provider SDK mechanics                   |
-| API queries/mappers    | Deliberate DB selections and explicit output projections                        | HTTP status selection in query helpers   |
-| Shared contracts       | Browser-safe wire schemas/types                                                 | Prisma/Express/provider secrets          |
-| Database package       | Schema, migration, client and persistence types                                 | UI/HTTP objects                          |
-| Infrastructure         | Provider, logging and technical adapters                                        | Product-specific permission decisions    |
+| Area                   | Responsibility                                                                           | Does not own                                         |
+| ---------------------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| Web app/routes         | Route composition, metadata, framework boundaries                                        | Prisma or backend authorization                      |
+| Web feature/api        | Contract-aware requests through the existing central transport                           | Rendering or a second HTTP/session stack             |
+| Web feature/hooks      | Query/mutation lifecycle and scoped cache effects                                        | Component layout                                     |
+| Web feature/model      | Feature types, form schemas, pure transforms, error classification and state transitions | Components or a duplicate server-state store         |
+| Web feature/components | Accessible UI and transient interaction                                                  | Direct HTTP requests                                 |
+| API composition        | Construct dependencies and mount modules                                                 | Business rules for each endpoint                     |
+| API routes/middleware  | Protocol wiring, parsing and request authority                                           | Persistence/business orchestration                   |
+| API controllers        | Translate validated HTTP context to use cases and envelopes                              | Queries/transactions                                 |
+| API services           | Business rules, authority close to data, transaction and side-effect sequencing          | Provider SDK mechanics or reusable error definitions |
+| API feature errors     | Stable domain error classes and safe status/code mapping                                 | Use-case sequencing or provider details              |
+| API queries/mappers    | Deliberate DB selections and explicit output projections                                 | HTTP status selection in query helpers               |
+| Shared contracts       | Browser-safe wire schemas/types                                                          | Prisma/Express/provider secrets                      |
+| Database package       | Schema, migration, client and persistence types                                          | UI/HTTP objects                                      |
+| Infrastructure         | Provider, logging and technical adapters                                                 | Product-specific permission decisions                |
 
 Use these responsibilities within the existing tree. Do not relocate working code
 just to create every pictured folder. No universal repository layer, base service,
@@ -51,6 +52,11 @@ event bus or DI framework is required. Pure rules remain feature-local until act
 independent consumers justify sharing.
 
 ## Read according to the task
+
+For Spec Kit workflows, the project constitution requires reading every Markdown file
+in this directory before planning, task generation, implementation, or review. Use the
+table below to identify which rules apply to the accepted change after that intake.
+For work outside Spec Kit, use the table to select the guides to read.
 
 | Requested change          | Read deeply                                                             |
 | ------------------------- | ----------------------------------------------------------------------- |

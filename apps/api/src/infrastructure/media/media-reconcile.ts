@@ -1,5 +1,3 @@
-import { createHash } from "node:crypto";
-
 import {
   MediaAssetStatus,
   UploadAttemptState,
@@ -8,6 +6,7 @@ import {
 } from "@fury/database";
 
 import type { MediaStorage } from "./media-storage.js";
+import { mediaSha256 } from "./media-digest.js";
 
 export type MediaReconcileReport = Readonly<{
   inspected: number;
@@ -19,14 +18,11 @@ export type MediaReconcileReport = Readonly<{
   removedOrphanStages: number;
 }>;
 
-const digest = (bytes: Buffer): string =>
-  createHash("sha256").update(bytes).digest("hex");
-
 const bytesMatch = (asset: MediaAsset, bytes: Buffer): boolean =>
   asset.byteLength !== null &&
   asset.sha256 !== null &&
   bytes.length === asset.byteLength &&
-  digest(bytes) === asset.sha256;
+  mediaSha256(bytes) === asset.sha256;
 
 export class MediaReconciler {
   constructor(

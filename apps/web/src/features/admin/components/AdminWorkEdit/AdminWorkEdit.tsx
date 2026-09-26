@@ -1,9 +1,9 @@
 "use client";
 
-import React from "react";
 import Link from "next/link";
-import { AlertCircle, ArrowLeft, BookOpen } from "lucide-react";
-import { useAdminData } from "../../context/admin-context";
+
+import { useAdminWorkDetail } from "../../hooks/admin-content.hooks";
+import { adminWorkErrorMessage } from "../../model/admin-content.errors";
 import { AdminPageHeader } from "../AdminPageHeader/AdminPageHeader";
 import { AdminWorkForm } from "../AdminWorkForm/AdminWorkForm";
 
@@ -12,74 +12,41 @@ interface AdminWorkEditProps {
 }
 
 export function AdminWorkEdit({ workId }: AdminWorkEditProps) {
-  const { getWork } = useAdminData();
-  const work = getWork(workId);
+  const detail = useAdminWorkDetail(workId);
+  const work = detail.data;
 
-  if (!work) {
+  if (!detail.sessionReady) {
+    return <p role="status">جارٍ التحقق من صلاحية الإدارة…</p>;
+  }
+  if (!detail.available) {
+    return <p role="alert">يلزم حساب مدير نشط وموثق لإدارة مسودات الأعمال.</p>;
+  }
+  if (detail.denied) {
     return (
-      <div>
-        <AdminPageHeader
-          breadcrumbs={[
-            { label: "لوحة الإدارة", href: "/admin/dashboard" },
-            { label: "الأعمال", href: "/admin/works" },
-            { label: "عمل غير موجود" },
-          ]}
-          title="العمل المطلوب غير موجود"
-        />
-
-        <div
-          style={{
-            background: "var(--card)",
-            border: "1px solid var(--border)",
-            borderRadius: "0.875rem",
-            padding: "3.5rem 1.5rem",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "1.25rem",
-            textAlign: "center",
-          }}
-          role="alert"
-        >
-          <AlertCircle size={48} color="var(--primary)" aria-hidden="true" />
-          <h2
-            style={{
-              fontSize: "1.25rem",
-              fontWeight: 800,
-              color: "#fff",
-              margin: 0,
-            }}
-          >
-            تعذّر العثور على العمل المطلوب
-          </h2>
-          <p
-            style={{
-              fontSize: "0.875rem",
-              color: "var(--muted-foreground)",
-              maxWidth: "28rem",
-              margin: 0,
-              lineHeight: 1.6,
-            }}
-          >
-            لم نتمكن من العثور على عمل بالمعرّف &ldquo;{workId}&rdquo;. قد يكون
-            تم حذفه أو أن المعرّف في الرابط غير صحيح.
-          </p>
-          <Link
-            href={"/admin/works"}
-            className="button button--small"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.5rem",
-            }}
-          >
-            <ArrowLeft size={14} aria-hidden="true" />
-            <span>العودة لقائمة الأعمال</span>
-          </Link>
-        </div>
-      </div>
+      <section role="alert" dir="rtl">
+        <p>تعذّر الوصول إلى مسودات الأعمال بهذه الجلسة.</p>
+        <button type="button" onClick={() => void detail.retryAccess()}>
+          إعادة التحقق من صلاحية الإدارة
+        </button>
+      </section>
     );
+  }
+  if (detail.isPending) {
+    return <p role="status">جارٍ تحميل بيانات العمل المحفوظة…</p>;
+  }
+  if (detail.isError) {
+    return (
+      <section role="alert" dir="rtl">
+        <p>{adminWorkErrorMessage(detail.error)}</p>
+        <button type="button" onClick={() => void detail.refetch()}>
+          إعادة تحميل المسودة
+        </button>
+        <Link href="/admin/works">العودة إلى الأعمال</Link>
+      </section>
+    );
+  }
+  if (work === undefined || work.id !== workId) {
+    return <p role="status">جارٍ مطابقة العمل المطلوب…</p>;
   }
 
   return (
@@ -88,19 +55,12 @@ export function AdminWorkEdit({ workId }: AdminWorkEditProps) {
         breadcrumbs={[
           { label: "لوحة الإدارة", href: "/admin/dashboard" },
           { label: "الأعمال", href: "/admin/works" },
-          { label: work.title, href: `/admin/works/${work.id}/chapters` },
-          { label: "تعديل البيانات" },
+          { label: work.title },
         ]}
-        title={`تعديل: ${work.title}`}
-        description="تعديل البيانات الأساسية للعمل، التصنيفات، وسائط الغلاف، وإدارة خيارات النشر والأرشفة."
-        secondaryAction={{
-          label: "إدارة الفصول",
-          href: `/admin/works/${work.id}/chapters`,
-          icon: BookOpen,
-        }}
+        title={`تعديل مسودة: ${work.title}`}
+        description="تُحمّل البيانات المحفوظة من الخادم، وتبقى تعديلاتك المحلية محفوظة عند تعذّر الحفظ."
       />
-
-      <AdminWorkForm mode="edit" initialWork={work} />
+      <AdminWorkForm key={work.id} mode="edit" initialWork={work} />
     </div>
   );
 }

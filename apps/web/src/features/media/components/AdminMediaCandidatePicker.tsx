@@ -2,7 +2,7 @@
 
 import type { MediaClass } from "@fury/contracts";
 import Image from "next/image";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   useAdminMediaCandidate,
@@ -34,9 +34,13 @@ const messageForError = (code: string | null): string =>
 export function AdminMediaCandidatePicker({
   mediaClass,
   label,
+  initialAssetId,
+  onAssetSelected,
 }: Readonly<{
   mediaClass: AdminClass;
   label: string;
+  initialAssetId?: string | null;
+  onAssetSelected?: (assetId: string | null) => void;
 }>) {
   const { state, select, cancel, clear, load, checkAttempt, retry, available } =
     useAdminMediaCandidate(mediaClass);
@@ -44,6 +48,12 @@ export function AdminMediaCandidatePicker({
   const inputRef = useRef<HTMLInputElement>(null);
   const statusRef = useRef<HTMLDivElement>(null);
   const messageRef = useRef<HTMLParagraphElement>(null);
+  const initialAsset = useRef(initialAssetId ?? null);
+  const [previewSource, setPreviewSource] = useState<
+    "attached" | "candidate" | "preview" | "none"
+  >("none");
+  const candidateSelectionPending = useRef(false);
+  const lastSelectedCandidate = useRef<string | null>(null);
   const busy =
     state.phase === "uploading" ||
     state.phase === "processing" ||
@@ -60,6 +70,27 @@ export function AdminMediaCandidatePicker({
     }
   }, [state.phase]);
 
+  useEffect(() => {
+    const assetId = initialAsset.current;
+    if (assetId !== null) {
+      initialAsset.current = null;
+      setPreviewSource("attached");
+      void load(assetId);
+    }
+  }, [load]);
+
+  useEffect(() => {
+    if (
+      candidateSelectionPending.current &&
+      state.phase === "accepted" &&
+      state.assetId !== null
+    ) {
+      candidateSelectionPending.current = false;
+      lastSelectedCandidate.current = state.assetId;
+      onAssetSelected?.(state.assetId);
+    }
+  }, [onAssetSelected, state.assetId, state.phase]);
+
   return (
     <div dir="rtl">
       <label>
@@ -75,7 +106,11 @@ export function AdminMediaCandidatePicker({
           disabled={!available || busy}
           onChange={(event) => {
             const file = event.currentTarget.files?.[0];
-            if (file !== undefined) void select(file);
+            if (file !== undefined) {
+              candidateSelectionPending.current = true;
+              setPreviewSource("candidate");
+              void select(file);
+            }
             event.currentTarget.value = "";
           }}
         />
@@ -155,13 +190,21 @@ export function AdminMediaCandidatePicker({
       {state.phase === "accepted" ? (
         <div role="status" aria-live="polite">
           <p ref={messageRef} tabIndex={-1}>
-            حُفظت الصورة في الوسائط فقط. لم تُحفظ بيانات العمل أو الفصل أو
-            الهدية.
+            {previewSource === "candidate"
+              ? "حُفظت الصورة في الوسائط فقط. لم تُحفظ بيانات العمل أو الفصل أو الهدية."
+              : previewSource === "attached"
+                ? "هذه معاينة خاصة للوسيط المرتبط بالعمل المحفوظ؛ لم يتغير الربط."
+                : "هذه معاينة خاصة للوسيط؛ لم يتغير الربط المحفوظ."}
           </p>
           <button
             type="button"
             onClick={() => {
+              candidateSelectionPending.current = false;
+              const hadCandidate = lastSelectedCandidate.current !== null;
+              lastSelectedCandidate.current = null;
+              setPreviewSource("none");
               clear();
+              if (hadCandidate) onAssetSelected?.(null);
               inputRef.current?.focus();
             }}
           >
@@ -204,10 +247,25 @@ export function AdminMediaCandidatePicker({
                   <button
                     type="button"
                     onClick={() => {
+                      setPreviewSource("preview");
                       void load(asset.id);
                     }}
                   >
                     معاينة الوسيط
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPreviewSource("candidate");
+                      void load(asset.id).then((loaded) => {
+                        if (loaded) {
+                          lastSelectedCandidate.current = asset.id;
+                          onAssetSelected?.(asset.id);
+                        }
+                      });
+                    }}
+                  >
+                    اختيار هذا الوسيط
                   </button>
                 </li>
               ))}

@@ -11,8 +11,8 @@ const schema = readFileSync(
   "utf8",
 );
 
-describe("P02 Prisma schema", () => {
-  it("adds private media identities without later product models", () => {
+describe("P03 Prisma schema", () => {
+  it("adds editorial tags without changing the P01/P02 model identities", () => {
     const models = [...schema.matchAll(/^model\s+(\w+)/gmu)].map(
       (match) => match[1],
     );
@@ -25,6 +25,7 @@ describe("P02 Prisma schema", () => {
       "Work",
       "Category",
       "WorkCategory",
+      "WorkTag",
       "Chapter",
       "ChapterPage",
       "PublicationEvent",
@@ -47,6 +48,28 @@ describe("P02 Prisma schema", () => {
       "MediaReferenceSlot",
       "MediaReferenceAction",
     ]);
+  });
+
+  it("declares additive nullable work metadata and category ordering", () => {
+    const work = schema.match(/^model Work \{[\s\S]*?^\}/mu)?.[0] ?? "";
+    const category = schema.match(/^model Category \{[\s\S]*?^\}/mu)?.[0] ?? "";
+    const tag = schema.match(/^model WorkTag \{[\s\S]*?^\}/mu)?.[0] ?? "";
+
+    expect(work).toMatch(/^\s{2}alternativeTitle\s+String\?/mu);
+    expect(work).toMatch(/^\s{2}synopsis\s+String\?/mu);
+    expect(work).toMatch(/^\s{2}author\s+String\?/mu);
+    expect(work).toMatch(/^\s{2}artist\s+String\?/mu);
+    expect(work).toMatch(/^\s{2}featuredHome\s+Boolean\s+@default\(false\)/mu);
+    expect(work).toMatch(/^\s{2}featuredOrder\s+Int\?/mu);
+    expect(work).toMatch(/^\s{2}tags\s+WorkTag\[\]/mu);
+    expect(category).toMatch(/^\s{2}enabled\s+Boolean\s+@default\(true\)/mu);
+    expect(category).toMatch(
+      /^\s{2}displayPosition\s+Int\s+@default\(dbgenerated\(/mu,
+    );
+    expect(category).toContain("@@unique([displayPosition]");
+    expect(tag).toContain("normalizedTag");
+    expect(tag).toContain("@@id([workId, normalizedTag])");
+    expect(tag).toContain("@@unique([workId, position]");
   });
 
   it("keeps account/session ownership and excludes later product domains", () => {

@@ -46,6 +46,10 @@ _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 Record `PASS`, `N/A` with a capability reason, or a blocking violation for each gate.
 
+- **Engineering and skill intake**: read every `docs/engineering/*.md` file; list the
+  applicable B/F rules, installed matching skills, and required review timing. For
+  touched service/controller files, include B33's imports-plus-class boundary.
+
 - **Scope and reality**: PLAN.md phase/dependencies, current executable baseline,
   preserved behavior/user edits, fixture or local sources to replace, exclusions, and
   exit gate are explicit.
@@ -55,7 +59,12 @@ Record `PASS`, `N/A` with a capability reason, or a blocking violation for each 
 - **Contract agreement**: shared `@fury/contracts` Zod schemas and exact HTTP/OpenAPI/
   adapter/test agreement are identified.
 - **Architecture**: existing API and web owners are named; new abstractions and
-  dependencies have a concrete scoped justification.
+  dependencies have a concrete scoped justification. Class-only helpers remain inside
+  service/controller classes under `// Helper methods`. Audit touched files for
+  misplaced domain errors, types, pure rules, form schemas, transport projection,
+  query/cache logic and component behavior; name the responsible owner for each.
+  Include `docs/engineering/code-style.md` review of names, function scope,
+  dependency direction, duplicated knowledge, dead code and failure boundaries.
 - **Data and races**: invariants, constraints/indexes, transactions, duplicate/stale/
   retry/history/deletion/side-effect semantics, forward migration, existing-data
   strategy, and recovery evidence are defined where applicable.
@@ -64,6 +73,7 @@ Record `PASS`, `N/A` with a capability reason, or a blocking violation for each 
   addressed where applicable.
 - **Evidence**: requirements map to meaningful unit, contract, real PostgreSQL,
   real-HTTP-stack, component/hook, browser/device, deployment, or documentation checks.
+  Record applicable skill guard passes and actual type/lint/format outcomes.
 - **Change safety**: git status, user-owned changes, review and stop gates,
   documentation, unauthorized external actions, and final reporting are explicit.
 

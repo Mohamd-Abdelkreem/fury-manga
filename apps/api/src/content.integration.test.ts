@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import pino from "pino";
+import sharp from "sharp";
 import request, { type Response as SupertestResponse } from "supertest";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { z } from "zod";
@@ -11,6 +12,8 @@ import type { z } from "zod";
 import {
   accountResponseSchemas,
   adminCategoryDataSchema as categoryDataSchema,
+  adminCategoryListDataSchema,
+  adminCategoryMoveDataSchema,
   adminChapterDataSchema as chapterDataSchema,
   adminWorkDataSchema as workDataSchema,
   contentOperationErrorCodeSchema,
@@ -26,6 +29,10 @@ import { createDatabaseClient, UserRole, UserStatus } from "@fury/database";
 
 import { createApp } from "./app.js";
 import { createMediaConfig } from "./core/config/media.config.js";
+import { MediaStorage } from "./infrastructure/media/media-storage.js";
+import { PublicationManagementService } from "./modules/content/publication-management.service.js";
+import { WorkManagementService } from "./modules/content/work-management.service.js";
+import { MediaService } from "./modules/media/media.service.js";
 import { rateLimitConfig } from "./core/config/rate-limit.config.js";
 import type { EmailDelivery } from "./infrastructure/email/email-delivery.js";
 import type { EmailSendRequest } from "./infrastructure/email/email-delivery.js";
@@ -42,6 +49,7 @@ const mediaFixtureRoot = mkdtempSync(join(tmpdir(), "fury-content-media-"));
 const mediaRoot = join(mediaFixtureRoot, "persistent");
 mkdirSync(mediaRoot);
 const mediaConfig = createMediaConfig(mediaRoot);
+const media = new MediaService(database, new MediaStorage(mediaConfig));
 const delivered: EmailSendRequest[] = [];
 const emailDelivery: EmailDelivery = {
   provider: "console",
@@ -134,6 +142,30 @@ const authorize = (test: request.Test, token: string): request.Test =>
     .set("Cookie", "csrfToken=" + csrfToken)
     .set("x-csrf-token", csrfToken);
 
+const uploadWorkAsset = async (
+  actorUserId: string,
+  mediaClass: "work_cover" | "work_background",
+): Promise<string> => {
+  const uploaded = await media.uploadAdmin({
+    actorUserId,
+    attemptId: randomUUID(),
+    mediaClass,
+    source: await sharp({
+      create: {
+        width: mediaClass === "work_cover" ? 600 : 1_200,
+        height: mediaClass === "work_cover" ? 800 : 675,
+        channels: 3,
+        background: mediaClass === "work_cover" ? "blue" : "green",
+      },
+    })
+      .jpeg()
+      .toBuffer(),
+    declaredType: "image/jpeg",
+    sourceName: `${mediaClass}.jpg`,
+  });
+  return uploaded.asset.id;
+};
+
 const createIllustratedAggregate = async (token: string) => {
   const categoryResponse = await authorize(
     request(app).post("/api/v1/content/admin/categories"),
@@ -182,7 +214,7 @@ describe("real HTTP content boundary", () => {
   beforeEach(async () => {
     delivered.length = 0;
     await database.$executeRawUnsafe(
-      "TRUNCATE media_reference_events, media_references, upload_attempts, media_assets, publication_events, chapter_pages, chapters, work_categories, categories, works, refresh_tokens, users",
+      "TRUNCATE media_reference_events, media_references, upload_attempts, media_assets, publication_events, chapter_pages, chapters, work_tags, work_categories, categories, works, refresh_tokens, users",
     );
   });
 
@@ -226,6 +258,43 @@ describe("real HTTP content boundary", () => {
     expect(mismatched.status).toBe(403);
     expect(parseErrorBody(mismatched).code).toBe("FORBIDDEN");
     await expect(database.category.count()).resolves.toBe(0);
+  });
+
+  it("requires matching CSRF before validating category position commands", async () => {
+    const identity = await createIdentity(UserRole.ADMIN);
+    const categoryApp = createApp({
+      database,
+      logger: pino({ level: "silent" }),
+      emailDelivery,
+      mediaConfig,
+    });
+    const created = await authorize(
+      request(categoryApp).post("/api/v1/content/admin/categories"),
+      identity.token,
+    ).send({ displayName: "Order", slug: "order" });
+    const category = parseSuccessData(created, categoryDataSchema).category;
+    const path =
+      "/api/v1/content/admin/categories/" + category.id + "/position";
+    const command = { expectedVersion: 0, targetPosition: 1 };
+
+    const missing = await request(categoryApp)
+      .put(path)
+      .set("Authorization", "Bearer " + identity.token)
+      .send(command);
+    const mismatched = await request(categoryApp)
+      .put(path)
+      .set("Authorization", "Bearer " + identity.token)
+      .set("Cookie", "csrfToken=" + csrfToken)
+      .set("x-csrf-token", "different-token")
+      .send(command);
+
+    expect(missing.status).toBe(403);
+    expect(parseErrorBody(missing).code).toBe("FORBIDDEN");
+    expect(mismatched.status).toBe(403);
+    expect(parseErrorBody(mismatched).code).toBe("FORBIDDEN");
+    await expect(
+      database.category.findUnique({ where: { id: category.id } }),
+    ).resolves.toMatchObject({ enabled: true, displayPosition: 1, version: 0 });
   });
 
   it("keeps every management family server-authoritative before lookup", async () => {
@@ -307,6 +376,16 @@ describe("real HTTP content boundary", () => {
         path: "/api/v1/content/admin/categories",
         body: { displayName: "Extra Category", slug: "extra-category" },
         successStatus: 201,
+        missing: false,
+      },
+      {
+        method: "put",
+        path:
+          "/api/v1/content/admin/categories/" +
+          aggregate.categoryId +
+          "/position",
+        body: { expectedVersion: 0, targetPosition: 1 },
+        successStatus: 200,
         missing: false,
       },
       {
@@ -666,6 +745,149 @@ describe("real HTTP content boundary", () => {
       .set("Authorization", "Bearer " + identity.token);
     expect(missing.status).toBe(404);
     expect(parseErrorBody(missing).code).toBe("NOT_FOUND");
+  });
+
+  it("manages saved category filters, state, usage, and adjacent order over HTTP", async () => {
+    const identity = await createIdentity(UserRole.ADMIN);
+    const categoryApp = createApp({
+      database,
+      logger: pino({ level: "silent" }),
+      emailDelivery,
+      mediaConfig,
+    });
+    const firstId = "88888888-8888-4888-8888-888888888888";
+    const firstResponse = await authorize(
+      request(categoryApp).post("/api/v1/content/admin/categories"),
+      identity.token,
+    ).send({ id: firstId, displayName: "Filter One", slug: "filter-one" });
+    const first = parseSuccessData(firstResponse, categoryDataSchema).category;
+    const secondResponse = await authorize(
+      request(categoryApp).post("/api/v1/content/admin/categories"),
+      identity.token,
+    ).send({ displayName: "Filter Two", slug: "filter-two" });
+    const second = parseSuccessData(
+      secondResponse,
+      categoryDataSchema,
+    ).category;
+    expect(first).toMatchObject({
+      id: firstId,
+      enabled: true,
+      displayPosition: 1,
+      worksCount: 0,
+    });
+    expect(second.displayPosition).toBe(2);
+
+    const works = new WorkManagementService(database);
+    const work = await works.createWork({
+      title: "Category Usage Work",
+      slug: "category-usage-work",
+      type: "manga",
+      storyStatus: "ongoing",
+    });
+    const assigned = await works.replaceWorkCategories(work.id, {
+      expectedVersion: work.version,
+      categoryIds: [first.id],
+    });
+    const publications = new PublicationManagementService(database, {
+      currentTime: () => new Date(),
+      createIdentifier: randomUUID,
+    });
+    await publications.publishWork(work.id, {
+      expectedVersion: assigned.version,
+      targetState: "published",
+    });
+
+    const usageResponse = await request(categoryApp)
+      .get("/api/v1/content/admin/categories/" + first.id)
+      .set("Authorization", "Bearer " + identity.token);
+    expect(
+      parseSuccessData(usageResponse, categoryDataSchema).category,
+    ).toMatchObject({
+      enabled: true,
+      displayPosition: 1,
+      worksCount: 1,
+    });
+
+    const filtered = await request(categoryApp)
+      .get(
+        "/api/v1/content/admin/categories?page=1&limit=25&search=FILTER&enabled=true",
+      )
+      .set("Authorization", "Bearer " + identity.token);
+    const filteredData = parseSuccessData(
+      filtered,
+      adminCategoryListDataSchema,
+    );
+    expect(filteredData.items.map(({ slug }) => slug)).toEqual([
+      "filter-one",
+      "filter-two",
+    ]);
+    expect(filteredData.pagination.total).toBe(2);
+    expect(filtered.body).toMatchObject({
+      paginationMeta: filteredData.pagination,
+    });
+
+    const moved = await authorize(
+      request(categoryApp).put(
+        "/api/v1/content/admin/categories/" + second.id + "/position",
+      ),
+      identity.token,
+    ).send({ expectedVersion: second.version, targetPosition: 1 });
+    expect(moved.status).toBe(200);
+    expect(parseSuccessData(moved, adminCategoryMoveDataSchema)).toMatchObject({
+      category: { id: second.id, displayPosition: 1, version: 1 },
+      displacedCategory: { id: first.id, displayPosition: 2, version: 1 },
+    });
+
+    const stale = await authorize(
+      request(categoryApp).put(
+        "/api/v1/content/admin/categories/" + second.id + "/position",
+      ),
+      identity.token,
+    ).send({ expectedVersion: second.version, targetPosition: 2 });
+    expect(stale.status).toBe(409);
+    expect(parseErrorBody(stale).code).toBe("CONTENT_STALE_WRITE");
+
+    const invalidPosition = await authorize(
+      request(categoryApp).put(
+        "/api/v1/content/admin/categories/" + second.id + "/position",
+      ),
+      identity.token,
+    ).send({ expectedVersion: 1, targetPosition: 3 });
+    expect(invalidPosition.status).toBe(400);
+    expect(parseErrorBody(invalidPosition)).toMatchObject({
+      code: "VALIDATION_ERROR",
+      errors: [expect.objectContaining({ field: "body.targetPosition" })],
+    });
+
+    const renamed = await authorize(
+      request(categoryApp).patch(
+        "/api/v1/content/admin/categories/" + second.id,
+      ),
+      identity.token,
+    ).send({
+      expectedVersion: 1,
+      displayName: "Renamed Filter",
+      enabled: false,
+    });
+    expect(
+      parseSuccessData(renamed, categoryDataSchema).category,
+    ).toMatchObject({
+      displayName: "Renamed Filter",
+      enabled: false,
+      displayPosition: 1,
+      version: 2,
+    });
+    const refused = await authorize(
+      request(categoryApp).patch(
+        "/api/v1/content/admin/categories/" + first.id,
+      ),
+      identity.token,
+    ).send({ expectedVersion: 1, enabled: false });
+    expect(refused.status).toBe(409);
+    expect(parseErrorBody(refused).code).toBe("CONTENT_CATEGORY_IN_USE");
+    await expect(
+      database.workCategory.count({ where: { categoryId: first.id } }),
+    ).resolves.toBe(1);
   });
 
   it("returns the same success for simultaneous identical category replacements", async () => {
@@ -1227,6 +1449,10 @@ describe("real HTTP content boundary", () => {
           "/publication",
       ),
     ).send({ expectedVersion: chapter.version, targetState: "published" });
+    expect(repeatedChapterResponse.body).toMatchObject({
+      success: true,
+      statusCode: 200,
+    });
     const repeatedChapter = parseSuccessData(
       repeatedChapterResponse,
       transitionDataSchema,
@@ -1283,5 +1509,265 @@ describe("real HTTP content boundary", () => {
         where: { OR: [{ workId: work.id }, { chapterId: chapter.id }] },
       }),
     ).resolves.toBe(2);
+  });
+
+  it("creates and reloads a rich Work draft through the ADMIN HTTP contract", async () => {
+    const admin = await createIdentity(UserRole.ADMIN);
+    const categoryResponse = await authorize(
+      request(app).post("/api/v1/content/admin/categories"),
+      admin.token,
+    ).send({
+      displayName: "Editorial Category",
+      slug: `editorial-${randomUUID()}`,
+    });
+    const category = parseSuccessData(
+      categoryResponse,
+      categoryDataSchema,
+    ).category;
+    const coverAssetId = await uploadWorkAsset(admin.user.id, "work_cover");
+    const backgroundAssetId = await uploadWorkAsset(
+      admin.user.id,
+      "work_background",
+    );
+    const workId = randomUUID();
+    const body = {
+      id: workId,
+      title: "HTTP rich draft",
+      slug: `http-rich-${randomUUID()}`,
+      type: "manga",
+      storyStatus: "ongoing",
+      alternativeTitle: "HTTP alternate",
+      synopsis: "A sufficiently detailed synopsis for a complete draft.",
+      author: "HTTP author",
+      artist: "HTTP artist",
+      categoryIds: [category.id],
+      tags: [" Café ", "Adventure"],
+      coverAssetId,
+      backgroundAssetId,
+      featuredHome: true,
+      featuredOrder: 2,
+    };
+    const createdResponse = await authorize(
+      request(app).post("/api/v1/content/admin/works"),
+      admin.token,
+    ).send(body);
+    expect(createdResponse.status).toBe(201);
+    expect(successEnvelopeSchema.parse(createdResponse.body).requestId).toBe(
+      createdResponse.headers["x-request-id"],
+    );
+    const created = parseSuccessData(createdResponse, workDataSchema).work;
+    expect(created).toMatchObject({
+      id: workId,
+      title: body.title,
+      type: "manga",
+      publicationStatus: "draft",
+      alternativeTitle: "HTTP alternate",
+      synopsis: body.synopsis,
+      author: "HTTP author",
+      artist: "HTTP artist",
+      featuredHome: true,
+      featuredOrder: 2,
+      coverAssetId,
+      backgroundAssetId,
+      tags: ["Café", "Adventure"],
+      categories: [{ id: category.id, enabled: true }],
+    });
+    const reloadedResponse = await authorize(
+      request(app).get("/api/v1/content/admin/works/" + workId),
+      admin.token,
+    );
+    expect(reloadedResponse.status).toBe(200);
+    expect(parseSuccessData(reloadedResponse, workDataSchema).work).toEqual(
+      created,
+    );
+    const publicDraft = await request(app).get(
+      "/api/v1/content/works/" + created.slug,
+    );
+    expect(publicDraft.status).toBe(404);
+    await expect(
+      database.workTag.findMany({
+        where: { workId },
+        orderBy: { position: "asc" },
+      }),
+    ).resolves.toMatchObject([
+      { normalizedTag: "Café", position: 1 },
+      { normalizedTag: "Adventure", position: 2 },
+    ]);
+    await expect(
+      database.workCategory.findMany({ where: { workId } }),
+    ).resolves.toMatchObject([{ categoryId: category.id }]);
+    await expect(
+      database.mediaReferenceEvent.count({
+        where: { reference: { workId } },
+      }),
+    ).resolves.toBe(2);
+  });
+
+  it("preserves P01 minimal work writes and rejects denied or CSRF-free management", async () => {
+    const admin = await createIdentity(UserRole.ADMIN);
+    const ordinary = await createIdentity(UserRole.USER);
+    const pending = await createIdentity(
+      UserRole.USER,
+      UserStatus.PENDING_VERIFICATION,
+      false,
+    );
+    const suspended = await createIdentity(UserRole.USER, UserStatus.SUSPENDED);
+    const minimalBody = {
+      title: "P01 minimal HTTP Work",
+      slug: `p01-minimal-${randomUUID()}`,
+      type: "text-story",
+      storyStatus: "completed",
+    };
+    const missingCsrf = await request(app)
+      .post("/api/v1/content/admin/works")
+      .set("Authorization", "Bearer " + admin.token)
+      .send(minimalBody);
+    const forbidden = await authorize(
+      request(app).post("/api/v1/content/admin/works"),
+      ordinary.token,
+    ).send(minimalBody);
+    const pendingResponse = await authorize(
+      request(app).post("/api/v1/content/admin/works"),
+      pending.token,
+    ).send(minimalBody);
+    const suspendedResponse = await authorize(
+      request(app).post("/api/v1/content/admin/works"),
+      suspended.token,
+    ).send(minimalBody);
+    expect(parseErrorBody(missingCsrf).code).toBe("FORBIDDEN");
+    expect(parseErrorBody(forbidden).code).toBe("FORBIDDEN");
+    expect(parseErrorBody(pendingResponse).code).toBe("UNAUTHORIZED");
+    expect(parseErrorBody(suspendedResponse).code).toBe("UNAUTHORIZED");
+    const createdResponse = await authorize(
+      request(app).post("/api/v1/content/admin/works"),
+      admin.token,
+    ).send(minimalBody);
+    expect(createdResponse.status).toBe(201);
+    expect(
+      parseSuccessData(createdResponse, workDataSchema).work,
+    ).toMatchObject({
+      title: minimalBody.title,
+      alternativeTitle: null,
+      synopsis: null,
+      author: null,
+      artist: null,
+      featuredHome: false,
+      featuredOrder: null,
+      coverAssetId: null,
+      backgroundAssetId: null,
+      tags: [],
+      categories: [],
+      publicationStatus: "draft",
+    });
+  });
+
+  it("rejects invalid rich writes and rolls back wrong-class media or stale edits", async () => {
+    const isolatedWorkApp = createApp({
+      database,
+      logger: pino({ level: "silent" }),
+      emailDelivery,
+      mediaConfig,
+    });
+    const admin = await createIdentity(UserRole.ADMIN);
+    const categoryResponse = await authorize(
+      request(isolatedWorkApp).post("/api/v1/content/admin/categories"),
+      admin.token,
+    ).send({ displayName: "Editable", slug: `editable-${randomUUID()}` });
+    const category = parseSuccessData(
+      categoryResponse,
+      categoryDataSchema,
+    ).category;
+    const workId = randomUUID();
+    const workBody = {
+      id: workId,
+      title: "Draft before edits",
+      slug: `draft-${randomUUID()}`,
+      type: "text-story",
+      storyStatus: "ongoing",
+      categoryIds: [category.id],
+      tags: ["Original"],
+    };
+    const createdResponse = await authorize(
+      request(isolatedWorkApp).post("/api/v1/content/admin/works"),
+      admin.token,
+    ).send(workBody);
+    const created = parseSuccessData(createdResponse, workDataSchema).work;
+
+    const duplicateTag = await authorize(
+      request(isolatedWorkApp).post("/api/v1/content/admin/works"),
+      admin.token,
+    ).send({
+      ...workBody,
+      id: randomUUID(),
+      slug: `invalid-tags-${randomUUID()}`,
+      tags: ["Same", " Same "],
+    });
+    expect(duplicateTag.status).toBe(400);
+    expect(
+      parseErrorBody(duplicateTag).errors?.map(({ field }) => field),
+    ).toContain("body.tags.1");
+
+    const wrongClassAssetId = await uploadWorkAsset(
+      admin.user.id,
+      "work_background",
+    );
+    const failedCreateId = randomUUID();
+    const failedCreate = await authorize(
+      request(isolatedWorkApp).post("/api/v1/content/admin/works"),
+      admin.token,
+    ).send({
+      ...workBody,
+      id: failedCreateId,
+      slug: `wrong-class-${randomUUID()}`,
+      coverAssetId: wrongClassAssetId,
+    });
+    expect(failedCreate.status).toBe(404);
+    expect(parseErrorBody(failedCreate).code).toBe("NOT_FOUND");
+    await expect(
+      database.work.findUnique({ where: { id: failedCreateId } }),
+    ).resolves.toBeNull();
+
+    const updatedResponse = await authorize(
+      request(isolatedWorkApp).patch("/api/v1/content/admin/works/" + workId),
+      admin.token,
+    ).send({
+      expectedVersion: created.version,
+      title: "Saved edit",
+      synopsis: null,
+      categoryIds: [],
+      tags: ["Updated"],
+    });
+    expect(updatedResponse.status).toBe(200);
+    const updated = parseSuccessData(updatedResponse, workDataSchema).work;
+    expect(updated).toMatchObject({
+      title: "Saved edit",
+      synopsis: null,
+      categories: [],
+      tags: ["Updated"],
+      version: created.version + 1,
+    });
+
+    const stale = await authorize(
+      request(isolatedWorkApp).patch("/api/v1/content/admin/works/" + workId),
+      admin.token,
+    ).send({
+      expectedVersion: created.version,
+      title: "Stale attempted edit",
+      tags: ["Must roll back"],
+    });
+    expect(stale.status).toBe(409);
+    expect(parseErrorBody(stale).code).toBe("CONTENT_STALE_WRITE");
+    const immutable = await authorize(
+      request(isolatedWorkApp).patch("/api/v1/content/admin/works/" + workId),
+      admin.token,
+    ).send({ expectedVersion: updated.version, slug: "changed-identity" });
+    expect(immutable.status).toBe(409);
+    expect(parseErrorBody(immutable).code).toBe("CONTENT_IMMUTABLE");
+    await expect(
+      database.workTag.findMany({ where: { workId } }),
+    ).resolves.toMatchObject([{ normalizedTag: "Updated", position: 1 }]);
+    await expect(
+      database.workCategory.findMany({ where: { workId } }),
+    ).resolves.toHaveLength(0);
   });
 });

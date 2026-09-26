@@ -45,3 +45,30 @@ export class ContentStaleWriteException extends ContentException {
     this.name = "ContentStaleWriteException";
   }
 }
+
+export class ContentCategoryInUseException extends ContentException {
+  constructor(
+    message = "The Category cannot be disabled while it is required by a published Work.",
+  ) {
+    super("CONTENT_CATEGORY_IN_USE", message);
+    this.name = "ContentCategoryInUseException";
+  }
+}
+
+export class ContentInvalidCategoryPositionException extends AppError {
+  constructor() {
+    super(
+      "Choose the current or an adjacent Category position.",
+      HTTP_STATUS.BAD_REQUEST,
+      "VALIDATION_ERROR",
+      true,
+      [
+        {
+          field: "body.targetPosition",
+          message: "Choose the current or an adjacent Category position.",
+        },
+      ],
+    );
+    this.name = "ContentInvalidCategoryPositionException";
+  }
+}

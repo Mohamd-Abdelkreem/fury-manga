@@ -6,6 +6,8 @@ import type { CategoryManagementService } from "./category-management.service.js
 import type { ChapterManagementService } from "./chapter-management.service.js";
 import {
   categoryIdParamsSchema,
+  categoryListQuerySchema,
+  categoryPositionBodySchema,
   createCategoryBodySchema,
   createChapterBodySchema,
   createWorkBodySchema,
@@ -33,8 +35,12 @@ export class ContentManagementController {
     request: Request,
     response: Response,
   ): Promise<Response> => {
-    const pagination = this.paginationFrom(request);
-    const responseData = await this.categories.listCategories(pagination);
+    const query = categoryListQuerySchema.parse(request.validated?.query);
+    const pagination = parsePagination(query);
+    const responseData = await this.categories.listCategories(
+      pagination,
+      query,
+    );
     const message = "Categories loaded.";
     const requestPath = request.path;
     const requestId = request.requestId;
@@ -109,6 +115,27 @@ export class ContentManagementController {
     );
   };
 
+  moveCategory = async (
+    request: Request,
+    response: Response,
+  ): Promise<Response> => {
+    const { categoryId } = categoryIdParamsSchema.parse(
+      request.validated?.params,
+    );
+    const body = categoryPositionBodySchema.parse(request.validated?.body);
+    const responseData = await this.categories.moveCategory(categoryId, body);
+    const message = "Category position updated.";
+    const requestPath = request.path;
+    const requestId = request.requestId;
+    return ResponseHelper.ok(
+      response,
+      responseData,
+      message,
+      requestPath,
+      requestId,
+    );
+  };
+
   listWorks = async (
     request: Request,
     response: Response,
@@ -132,7 +159,8 @@ export class ContentManagementController {
     response: Response,
   ): Promise<Response> => {
     const body = createWorkBodySchema.parse(request.validated?.body);
-    const work = await this.works.createWork(body);
+    const actorUserId = request.user?.id ?? "";
+    const work = await this.works.createWork(body, actorUserId);
     const responseData = { work };
     const message = "Work created.";
     const requestPath = request.path;
@@ -168,7 +196,8 @@ export class ContentManagementController {
   ): Promise<Response> => {
     const { workId } = workIdParamsSchema.parse(request.validated?.params);
     const body = updateWorkBodySchema.parse(request.validated?.body);
-    const work = await this.works.updateWork(workId, body);
+    const actorUserId = request.user?.id ?? "";
+    const work = await this.works.updateWork(workId, body, actorUserId);
     const responseData = { work };
     const message = "Work updated.";
     const requestPath = request.path;

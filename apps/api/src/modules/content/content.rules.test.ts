@@ -6,7 +6,10 @@ import {
   WorkType,
 } from "@fury/database";
 
-import { ContentImmutableException } from "./content.errors.js";
+import {
+  ContentImmutableException,
+  ContentTypeConflictException,
+} from "./content.errors.js";
 import {
   assertChapterPageSequence,
   assertImmutableValue,
@@ -14,6 +17,8 @@ import {
   assertPublicationTransition,
   assertStructuredTextDocument,
   deriveChapterContentType,
+  findWorkReadinessIssues,
+  normalizeWorkTags,
 } from "./content.rules.js";
 
 describe("content rules", () => {
@@ -89,5 +94,39 @@ describe("content rules", () => {
         PublicationStatus.PUBLISHED,
       );
     }).toThrow();
+  });
+
+  it("normalizes ordered work tags and rejects duplicates after NFC and trim", () => {
+    expect(normalizeWorkTags([" Café ", "Adventure"])).toEqual([
+      "Café",
+      "Adventure",
+    ]);
+    expect(() => {
+      normalizeWorkTags(["Café", "Cafe\u0301"]);
+    }).toThrow(ContentTypeConflictException);
+    expect(() => {
+      normalizeWorkTags(["Adventure", " Adventure "]);
+    }).toThrow(ContentTypeConflictException);
+  });
+
+  it("reports only missing publication-readiness inputs", () => {
+    expect(
+      findWorkReadinessIssues({
+        title: "Work",
+        synopsis: "s".repeat(20),
+        author: "Author",
+        enabledCategoryCount: 1,
+        hasAvailableCover: true,
+      }),
+    ).toEqual([]);
+    expect(
+      findWorkReadinessIssues({
+        title: " ",
+        synopsis: "too short",
+        author: null,
+        enabledCategoryCount: 0,
+        hasAvailableCover: false,
+      }),
+    ).toEqual(["title", "synopsis", "author", "categoryIds", "coverAssetId"]);
   });
 });

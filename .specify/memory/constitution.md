@@ -1,5 +1,49 @@
 <!--
-Sync Impact Report
+Sync Impact Report (2026-09-26)
+- Version change: 1.2.0 -> 1.3.0 (mandatory code-quality review at Spec Kit gates)
+- Modified principles: IV. Clean Architecture and Maintainable Code;
+  VII. Evidence-Driven Testing and Completion
+- Added sections: none; expanded Architecture and Evidence constitution checks
+- Removed sections: none
+- Templates: updated plan-template.md and tasks-template.md; reviewed spec-template.md
+  and checklist-template.md with no change; synchronized 004 plan.md and T084
+- Runtime guidance updated: docs/engineering/code-style.md and Spec Kit analyze,
+  converge, and implement skill instructions
+- Follow-up TODOs: pre-existing functional jwt.service.ts naming/ownership remains
+  outside the 004 feature scope
+-->
+
+<!--
+Sync Impact Report (2026-09-26, historical)
+- Version change: 1.1.0 -> 1.2.0 (mandatory file-owner review for Spec Kit)
+- Modified principles: IV. Clean Architecture and Maintainable Code
+- Added sections: none; expanded Architecture constitution check
+- Removed sections: none
+- Templates: updated plan-template.md and tasks-template.md; reviewed spec-template.md
+  and checklist-template.md with no change
+- Runtime guidance updated: docs/engineering/README.md, backend-standard.md,
+  frontend-standard.md
+- Follow-up TODOs: pre-existing functional jwt.service.ts naming/ownership remains
+  outside the 004 feature scope
+-->
+
+<!--
+Sync Impact Report (2026-09-26, historical)
+- Version change: 1.0.0 -> 1.1.0 (expanded mandatory intake and review gates)
+- Modified principles: IV. Clean Architecture and Maintainable Code;
+  VII. Evidence-Driven Testing and Completion
+- Added sections: none; expanded Applicability and Delivery Workflow
+- Removed sections: none
+- Templates: updated plan-template.md and tasks-template.md; reviewed spec-template.md
+  and checklist-template.md with no change; commands/ is absent
+- Runtime guidance updated: AGENTS.md and docs/engineering/README.md
+- Follow-up TODOs: reconcile existing top-level declarations in
+  apps/api/src/modules/media/media.service.ts and
+  apps/api/src/infrastructure/security/jwt.service.ts during their scoped work
+-->
+
+<!--
+Sync Impact Report (2026-09-22, historical)
 - Version change: unratified placeholder template -> 1.0.0
 - Modified principles:
   - Placeholder Principle 1 -> I. Source of Truth and Scope Discipline
@@ -93,11 +137,34 @@ runtime validation, documentation, and consumers.
 - Express controllers MUST remain thin. Services MUST own use-case invariants and
   sequencing; complex queries MUST stay feature-local; composition MUST construct
   dependencies; external providers MUST sit behind injected adapters.
+- In every `*.service.ts` and `*.controller.ts`, top-level code MUST contain only imports
+  and the exported class. Constants, types, helper functions, and executable statements
+  MUST NOT sit outside that class. Class-only helpers MUST be private methods after
+  public methods under `// Helper methods`; independently owned types and pure rules
+  MUST live in their responsible feature files, as required by B33.
+- Before implementing or accepting a feature, agents MUST inspect each touched file
+  for misplaced responsibilities and select the owner by behavior and dependency
+  direction. Reusable domain errors MUST live in the feature's `*.errors.ts`, module
+  types in `*.types.ts`, independent pure rules and transforms in their responsible
+  feature or infrastructure modules, and API queries/mappers in their feature owners.
+  A private class helper MUST NOT replace a dedicated error or rule owner. On the web,
+  form schemas, normalization, command shaping, and error classification MUST live
+  in feature `model`; transport projection MUST live in `api`, query/cache lifecycle
+  in `hooks`, and rendering/transient interaction in `components`. A model MUST NOT
+  import a component. Spec Kit converge and implementation reviews MUST record and
+  task any violated owner before declaring completion.
 - Next.js pages and client boundaries MUST remain thin. Components MUST NOT call Axios
   directly. React Query MUST own server state; component state and React Hook Form MUST
   own transient interaction and drafts.
 - SOLID, DRY, KISS, and YAGNI MUST be applied through concrete responsibilities. Small,
   clear duplication MUST be preferred over premature cross-feature coupling.
+- Every review of changed production code MUST apply the `docs/engineering/code-style.md`
+  review gate to the files in scope: verify file ownership and dependency direction,
+  intention-revealing names, coherent functions, justified abstractions, duplicated
+  knowledge, dead code, boundary validation, error handling, and preserved behavior.
+  Findings MUST cite a concrete file and rule with the required correction. Reviewers
+  MUST NOT turn subjective style preferences into blocking tasks without a specific
+  rule violation or maintainability/correctness risk.
 
 Architecture exists to make authority, failure, and ownership visible to maintainers.
 
@@ -150,6 +217,19 @@ interaction model, without manufacturing certainty.
   warning suppression, and stale or cached results MUST NOT be used to claim success.
 - Completion reports MUST name freshly executed commands, outcomes, warnings, and
   unverified production, browser, or device boundaries.
+- Before completion, agents MUST apply available skills that match the changed artifact:
+  `clean-code-guard` after nontrivial production code, `test-guard` after test code,
+  `docs-guard` after technical documentation, and `vercel-react-best-practices` when
+  writing or reviewing React/Next.js code. Other installed skills MUST be applied when
+  their stated scope matches the work. Agents MUST read the skill instructions, perform
+  their review, and fix applicable findings; listing a skill without using it is not
+  compliance. If a named skill is unavailable, report that boundary and perform the
+  corresponding repository review directly.
+- Spec Kit artifact analysis MUST check that plan/tasks include the applicable code
+  style, file-owner, skill and verification gates. Spec Kit converge MUST inspect
+  in-scope code against those gates and append a traceable task for each actionable
+  constitutional violation. Implementation reviews MUST record the guard-pass result
+  and fresh package checks before marking review tasks complete.
 
 Evidence must match the layer and strength of the claim being accepted.
 
@@ -176,6 +256,15 @@ This constitution governs the Node.js 24, pnpm 11, TypeScript 5.9 monorepo: Next
 `@fury/contracts`, and Prisma 7/PostgreSQL in `@fury/database`. Repository manifests,
 configuration, root `AGENTS.md`, applicable nested guidance, and the engineering
 reference map MUST be re-read when relevant because versions and paths may change.
+
+Before any Spec Kit specification, plan, task generation, implementation, or review,
+agents MUST read every Markdown file in `docs/engineering/`, including the reference
+map, not only the files selected by the current feature. They MUST then identify and
+apply the rules relevant to the accepted scope; reading all files does not authorize
+unrelated implementation. The agent MUST also inspect the current session's installed
+skill catalog and read each applicable skill before using it. A plan or review MUST
+record the applicable engineering rule IDs and skill gates; implementation MUST check
+the resulting code against them before claiming completion.
 
 Capability-specific rules apply only when a feature touches that capability. Media,
 advertising, credential URLs, external providers, concurrency control, migrations,
@@ -207,7 +296,14 @@ with a capability reason, or a blocking violation for each check below:
    behavior, plus coordinated API, OpenAPI, adapter, and contract-test changes.
 4. **Architecture**: assign responsibilities to existing controller/service/query/
    mapper/composition and page/feature-api/hook/component owners; justify every new
-   abstraction or dependency against a concrete need.
+   abstraction or dependency against a concrete need. Verify B33's class-only
+   service/controller file boundary where those files are touched. Inspect touched
+   files for misplaced errors, types, pure rules, form schemas, transport, query/cache
+   logic, and component behavior; move each to its responsible owner or record a
+   blocking task for Spec Kit converge.
+   Apply the `code-style.md` review gate to the named files: names, function scope,
+   dependency direction, justified abstractions, duplicated knowledge, dead code,
+   boundary and error behavior must have concrete findings or a clean pass.
 5. **Data and races**: identify invariants, constraints/indexes, transaction and
    concurrency strategy, duplicate/stale/retry/history/deletion/side-effect semantics,
    forward migration, existing-data handling, and recovery evidence where applicable.
@@ -215,9 +311,13 @@ with a capability reason, or a blocking violation for each check below:
    states, draft/cache/access behavior, accessibility, responsive and reduced-motion
    checks, and installed Next.js documentation consulted when framework behavior changes.
 7. **Evidence**: map every material requirement and risk to the correct automated,
-   PostgreSQL, HTTP-stack, component/hook, browser, deployment, or documentation check.
+   PostgreSQL, HTTP-stack, component/hook, browser, deployment, or documentation check;
+   record matching skill guard passes and actual type/lint/format outcomes.
 8. **Change safety**: record git status, review/stop gates, documentation updates,
    unauthorized external actions excluded, and the format of the final evidence report.
+9. **Engineering and skill intake**: confirm every `docs/engineering/*.md` file was read,
+   list applicable B/F rule IDs, identify matching installed skills and when their
+   guard passes run, and record any unavailable skill without claiming it was applied.
 
 A blocking violation MUST be resolved in the plan or the feature MUST return for an
 accepted specification or constitutional amendment. Complexity Tracking MUST explain
@@ -241,4 +341,4 @@ perform the Constitution Check. Unresolved non-compliance MUST block acceptance 
 the constitution itself is amended. Reviews MUST use the current worktree and fresh
 checks rather than inherited claims.
 
-**Version**: 1.0.0 | **Ratified**: 2026-09-22 | **Last Amended**: 2026-09-22
+**Version**: 1.3.0 | **Ratified**: 2026-09-22 | **Last Amended**: 2026-09-26

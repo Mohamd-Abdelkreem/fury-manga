@@ -5,6 +5,7 @@ import {
   accountResponseSchemas,
   adminCategoryDataSchema,
   adminCategoryListDataSchema,
+  adminCategoryMoveDataSchema,
   adminCategorySchema,
   adminChapterDataSchema,
   adminChapterListDataSchema,
@@ -13,6 +14,8 @@ import {
   adminWorkListDataSchema,
   adminWorkSchema,
   categoryIdParamsSchema,
+  categoryListQuerySchema,
+  categoryPositionBodySchema,
   chapterContentTypeSchema,
   contentErrorCodeSchema,
   contentOperationErrorCodeSchema,
@@ -62,6 +65,7 @@ import {
   workChapterParamsSchema,
   workIdParamsSchema,
   workSlugParamsSchema,
+  workTagSchema,
   workTypeSchema,
 } from "@fury/contracts";
 
@@ -260,17 +264,22 @@ export const buildOpenApiDocument = () =>
         ErrorEnvelope: errorEnvelopeSchema,
         CommonHttpErrorCode: commonHttpErrorCodeSchema,
         WorkType: workTypeSchema,
+        WorkTag: workTagSchema,
         StoryStatus: storyStatusSchema,
         PublicationStatus: publicationStatusSchema,
         ChapterContentType: chapterContentTypeSchema,
         ContentErrorCode: contentErrorCodeSchema,
         ContentOperationErrorCode: contentOperationErrorCodeSchema,
+        CreateWorkBody: createWorkBodySchema,
+        UpdateWorkBody: updateWorkBodySchema,
         StructuredTextDocument: structuredTextDocumentSchema,
         PublicCategory: publicCategorySchema,
         PublicWork: publicWorkSchema,
         PublicChapter: publicChapterSchema,
         AdminCategory: adminCategorySchema,
         AdminWork: adminWorkSchema,
+        AdminWorkData: adminWorkDataSchema,
+        AdminWorkListData: adminWorkListDataSchema,
         AdminChapter: adminChapterSchema,
         PublicationTransition: publicationTransitionSchema,
       },
@@ -506,7 +515,7 @@ export const buildOpenApiDocument = () =>
         get: {
           summary: "List Categories for content management",
           security: adminReadSecurity,
-          requestParams: { query: paginationQuerySchema },
+          requestParams: { query: categoryListQuerySchema },
           responses: {
             "200": successResponse(
               "Administrative Category list",
@@ -553,7 +562,27 @@ export const buildOpenApiDocument = () =>
             "409": contentConflict([
               "CONTENT_IMMUTABLE",
               "CONTENT_STALE_WRITE",
+              "CONTENT_CATEGORY_IN_USE",
             ]),
+            ...adminContentErrors,
+          },
+        },
+      },
+      "/content/admin/categories/{categoryId}/position": {
+        put: {
+          summary: "Move a Category one adjacent position",
+          description:
+            "Swaps only the requested adjacent display position using expectedVersion.",
+          security: adminWriteSecurity,
+          requestParams: { path: categoryIdParamsSchema },
+          requestBody: jsonBody(categoryPositionBodySchema),
+          responses: {
+            "200": successResponse(
+              "Category position updated",
+              adminCategoryMoveDataSchema,
+            ),
+            "404": contentNotFound,
+            "409": contentConflict(["CONTENT_CONFLICT", "CONTENT_STALE_WRITE"]),
             ...adminContentErrors,
           },
         },
@@ -572,11 +601,14 @@ export const buildOpenApiDocument = () =>
           },
         },
         post: {
-          summary: "Create a Work",
+          summary: "Create a Work draft",
+          description:
+            "Accepts the minimal P01 body and optional editorial fields. An optional UUID permits authorized identity reconciliation after an unknown acknowledgement.",
           security: adminWriteSecurity,
           requestBody: jsonBody(createWorkBodySchema),
           responses: {
             "201": successResponse("Work created", adminWorkDataSchema),
+            "404": contentNotFound,
             "409": contentConflict(["CONTENT_CONFLICT"]),
             ...adminContentErrors,
           },
@@ -596,7 +628,7 @@ export const buildOpenApiDocument = () =>
         patch: {
           summary: "Update a Work",
           description:
-            "Uses expectedVersion; slug and canonical Work type are immutable.",
+            "Uses expectedVersion; omitted metadata is unchanged, nullable fields clear explicitly, and slug and canonical Work type are immutable.",
           security: adminWriteSecurity,
           requestParams: { path: workIdParamsSchema },
           requestBody: jsonBody(updateWorkBodySchema),
@@ -604,6 +636,7 @@ export const buildOpenApiDocument = () =>
             "200": successResponse("Work updated", adminWorkDataSchema),
             "404": contentNotFound,
             "409": contentConflict([
+              "CONTENT_CONFLICT",
               "CONTENT_IMMUTABLE",
               "CONTENT_STALE_WRITE",
             ]),

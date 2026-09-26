@@ -1,8 +1,10 @@
 # Project engineering instructions
 
 Use this portable baseline for the existing TypeScript/Next.js/Express monorepo.
-Read [the reference map](docs/engineering/README.md), then only the guides relevant
-to the requested change. General standards do not define the project's features.
+For Spec Kit work, read every Markdown file in `docs/engineering/`, starting with
+[the reference map](docs/engineering/README.md), then apply the rules relevant to the
+requested change. For other work, read the map and the relevant guides. General
+standards do not define the project's features.
 
 ## Establish scope from this checkout
 
@@ -30,6 +32,14 @@ within scope. An old source pattern does not override an explicit adopted standa
 The rule IDs are stable review references. Embedded code examples illustrate the
 pattern; their fictional entity/package names are not dependencies to install.
 Never add an example feature merely because it appears in documentation.
+
+Inspect the available skill catalog for each task. Read and apply the matching skill
+instructions, including `clean-code-guard` after nontrivial production code,
+`test-guard` after test changes, `docs-guard` after technical documentation, and
+`vercel-react-best-practices` for React/Next.js work. Apply other installed skills
+when their stated scope matches. Do not claim a guard pass without performing it.
+For `*.service.ts` and `*.controller.ts`, B33 allows only imports and the exported
+class at top level; put class-only helpers inside the class after public methods.
 
 ## Ownership and completion
 

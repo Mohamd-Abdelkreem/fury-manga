@@ -24,6 +24,7 @@ const expectedPaths = [
   "/content/works/{workSlug}/chapters/{chapterNumber}",
   "/content/admin/categories",
   "/content/admin/categories/{categoryId}",
+  "/content/admin/categories/{categoryId}/position",
   "/content/admin/works",
   "/content/admin/works/{workId}",
   "/content/admin/works/{workId}/categories",
@@ -48,6 +49,7 @@ const contentOperations = [
   ["/content/admin/categories", "post", "201"],
   ["/content/admin/categories/{categoryId}", "get", "200"],
   ["/content/admin/categories/{categoryId}", "patch", "200"],
+  ["/content/admin/categories/{categoryId}/position", "put", "200"],
   ["/content/admin/works", "get", "200"],
   ["/content/admin/works", "post", "201"],
   ["/content/admin/works/{workId}", "get", "200"],
@@ -70,13 +72,18 @@ const conflictCodesByOperation = [
   [
     "/content/admin/categories/{categoryId}",
     "patch",
-    ["CONTENT_IMMUTABLE", "CONTENT_STALE_WRITE"],
+    ["CONTENT_IMMUTABLE", "CONTENT_STALE_WRITE", "CONTENT_CATEGORY_IN_USE"],
+  ],
+  [
+    "/content/admin/categories/{categoryId}/position",
+    "put",
+    ["CONTENT_CONFLICT", "CONTENT_STALE_WRITE"],
   ],
   ["/content/admin/works", "post", ["CONTENT_CONFLICT"]],
   [
     "/content/admin/works/{workId}",
     "patch",
-    ["CONTENT_IMMUTABLE", "CONTENT_STALE_WRITE"],
+    ["CONTENT_CONFLICT", "CONTENT_IMMUTABLE", "CONTENT_STALE_WRITE"],
   ],
   ["/content/admin/works/{workId}/categories", "put", ["CONTENT_STALE_WRITE"]],
   [
@@ -288,6 +295,11 @@ describe("OpenAPI document", () => {
       type: "string",
       enum: ["manga", "manhwa", "manhua", "comics", "novel", "text-story"],
     });
+    expect(schemas?.["WorkTag"]).toMatchObject({
+      type: "string",
+      minLength: 1,
+      maxLength: 40,
+    });
     expect(schemas?.["StructuredTextDocument"]).toMatchObject({
       type: "object",
       additionalProperties: false,
@@ -312,6 +324,7 @@ describe("OpenAPI document", () => {
         "CONTENT_TYPE_CONFLICT",
         "CONTENT_TRANSITION_CONFLICT",
         "CONTENT_STALE_WRITE",
+        "CONTENT_CATEGORY_IN_USE",
       ],
     });
     for (const [path, method, expectedCodes] of conflictCodesByOperation) {
@@ -323,6 +336,32 @@ describe("OpenAPI document", () => {
     expect(
       document.paths?.["/content/works/{workSlug}"]?.get?.responses,
     ).toHaveProperty("404");
+  });
+
+  it("documents rich strict Work drafts, legacy compatibility, and private admin fields", () => {
+    const document = buildOpenApiDocument();
+    const schemas = document.components?.schemas;
+    const create = document.paths?.["/content/admin/works"]?.post;
+    const update = document.paths?.["/content/admin/works/{workId}"]?.patch;
+
+    expect(schemas).toHaveProperty("CreateWorkBody");
+    expect(schemas).toHaveProperty("UpdateWorkBody");
+    expect(schemas).toHaveProperty("AdminWorkData");
+    expect(schemas).toHaveProperty("AdminWorkListData");
+    expect(schemas?.["AdminWork"]).toMatchObject({
+      type: "object",
+      additionalProperties: false,
+    });
+    expect(schemas?.["AdminWork"]).toHaveProperty("properties.synopsis");
+    expect(schemas?.["AdminWork"]).toHaveProperty("properties.coverAssetId");
+    expect(schemas?.["PublicWork"]).not.toHaveProperty("properties.synopsis");
+    expect(schemas?.["PublicWork"]).not.toHaveProperty("properties.tags");
+    expect(create?.security).toEqual([{ BearerAuth: [], CsrfHeader: [] }]);
+    expect(create?.description).toContain("minimal P01 body");
+    expect(create?.responses).toHaveProperty("404");
+    expect(update?.security).toEqual([{ BearerAuth: [], CsrfHeader: [] }]);
+    expect(update?.description).toContain("nullable fields clear explicitly");
+    expect(update?.responses).toHaveProperty("404");
   });
 
   it("documents exact shared codes for every common P01 failure", () => {

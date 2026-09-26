@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { extname } from "node:path";
 
 import sharp from "sharp";
@@ -6,6 +5,7 @@ import sharp from "sharp";
 import { MEDIA_SOURCE_BYTE_LIMITS, type MediaClass } from "@fury/contracts";
 
 import { AppError } from "../../core/errors/app.error.js";
+import { mediaSha256 } from "./media-digest.js";
 
 type ImageFormat = "jpeg" | "png" | "webp";
 type MediaBounds = Readonly<{
@@ -244,6 +244,6 @@ export const validateImage = async (
     contentType: expected.contentType,
     width,
     height,
-    sha256: createHash("sha256").update(bytes).digest("hex"),
+    sha256: mediaSha256(bytes),
   };
 };

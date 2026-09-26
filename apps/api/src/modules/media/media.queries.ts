@@ -3,6 +3,7 @@ import {
   MediaScope,
   type DatabaseClient,
   type MediaReferenceSlot,
+  type Prisma,
 } from "@fury/database";
 
 export const findActorUploadAttempt = (
@@ -46,8 +47,13 @@ export const findActiveMediaReference = (
     },
   });
 
+type MediaReferenceTargetClient = Pick<
+  Prisma.TransactionClient,
+  "chapterPage" | "work"
+>;
+
 export const mediaReferenceTargetExists = async (
-  database: DatabaseClient,
+  database: MediaReferenceTargetClient,
   slot: MediaReferenceSlot,
   targetId: string,
 ): Promise<boolean> => {

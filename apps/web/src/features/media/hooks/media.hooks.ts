@@ -332,21 +332,23 @@ const useMediaCandidate = (
     }
   };
 
-  const load = async (assetId: string) => {
-    if (upload.actorId === null) return;
+  const load = async (assetId: string): Promise<boolean> => {
+    const actorId = upload.actorId;
+    if (actorId === null) return false;
     clear();
     const generation = current.current.generation;
     const controller = createReadController();
     try {
       const asset = await queryClient.fetchQuery<MediaAssetDto>({
-        queryKey: mediaKeys.asset(upload.actorId, assetId),
+        queryKey: mediaKeys.asset(actorId, assetId),
         queryFn: () => mediaApi.getAsset(assetId, controller.signal),
         staleTime: 30_000,
       });
-      if (generation !== current.current.generation) return;
+      if (generation !== current.current.generation) return false;
       await accept(asset.id, generation, controller);
+      return true;
     } catch (error) {
-      if (generation !== current.current.generation) return;
+      if (generation !== current.current.generation) return false;
       setState({
         ...initialCandidate,
         phase: "error",
@@ -354,6 +356,7 @@ const useMediaCandidate = (
           error instanceof SafeMediaError ? error.code : "MEDIA_UNAVAILABLE",
         retryMode: null,
       });
+      return false;
     } finally {
       if (current.current.readController === controller)
         current.current.readController = null;

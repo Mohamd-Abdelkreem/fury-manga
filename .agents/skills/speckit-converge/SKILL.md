@@ -132,6 +132,11 @@ Load only the minimal necessary context from each artifact:
 **From constitution (if not an unfilled template):**
 
 - Principle names and MUST/SHOULD normative statements
+- Read the required `docs/engineering/*.md` intake, then apply the
+  `docs/engineering/code-style.md` review gate and relevant B/F rules to the
+  code-scope map. Use the installed `clean-code-guard` and
+  `vercel-react-best-practices` skills when their stated scopes match; record an
+  unavailable skill as a review boundary.
 
 ### 3. Build the Intent Inventory
 
@@ -149,6 +154,13 @@ Create an internal model (do not echo raw artifacts):
 
 For each item in the intent inventory, inspect the current code in scope and produce a
 `Finding` only where there is a gap. Classify every finding by **gap type**:
+
+For each in-scope production file, inspect its responsibility and immediate callers:
+correct error/type/rule/query/mapper/API/hook/component owner, dependency direction,
+clear names, coherent functions, justified abstractions, duplicated knowledge,
+dead code, preserved behavior, boundary validation and error handling. Compare
+against the constitution and `code-style.md`. A concrete violation is a finding
+with a file, rule and correction; mere formatting preference is not a gap.
 
 - **`missing`**: the required work is absent from the code entirely.
 - **`partial`**: the work exists but does not yet fully satisfy the requirement /

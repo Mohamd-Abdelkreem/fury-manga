@@ -23,9 +23,12 @@ export const CATEGORY_SELECT = {
   id: true,
   displayName: true,
   slug: true,
+  enabled: true,
+  displayPosition: true,
   version: true,
   createdAt: true,
   updatedAt: true,
+  _count: { select: { works: true } },
 } as const satisfies Prisma.CategorySelect;
 
 export const WORK_SELECT = {
@@ -37,11 +40,26 @@ export const WORK_SELECT = {
   publicationStatus: true,
   publishedAt: true,
   currentPublicationEventId: true,
+  alternativeTitle: true,
+  synopsis: true,
+  author: true,
+  artist: true,
+  featuredHome: true,
+  featuredOrder: true,
   version: true,
   createdAt: true,
   updatedAt: true,
   categories: {
     select: { category: { select: CATEGORY_SELECT } },
+  },
+  tags: {
+    select: { normalizedTag: true },
+    orderBy: [{ position: "asc" }, { normalizedTag: "asc" }],
+  },
+  mediaReferences: {
+    where: { retiredAt: null },
+    select: { assetId: true, slot: true },
+    orderBy: [{ slot: "asc" }, { id: "asc" }],
   },
 } as const satisfies Prisma.WorkSelect;
 
@@ -136,6 +154,9 @@ export const mapAdminCategory = (record: CategoryRecord): AdminCategory => ({
   id: record.id,
   displayName: record.displayName,
   slug: record.slug,
+  enabled: record.enabled,
+  displayPosition: record.displayPosition,
+  worksCount: record._count.works,
   version: record.version,
   createdAt: record.createdAt.toISOString(),
   updatedAt: record.updatedAt.toISOString(),
@@ -162,18 +183,40 @@ const orderedCategories = <
         left.id.localeCompare(right.id),
     );
 
+const orderedAdminWorkCategories = (record: WorkRecord): CategoryRecord[] =>
+  record.categories
+    .map(({ category }) => category)
+    .toSorted(
+      (left, right) =>
+        left.displayPosition - right.displayPosition ||
+        left.id.localeCompare(right.id),
+    );
+
 export const mapAdminWork = (record: WorkRecord): AdminWork => ({
   id: record.id,
   title: record.title,
+  alternativeTitle: record.alternativeTitle,
+  synopsis: record.synopsis,
+  author: record.author,
+  artist: record.artist,
   slug: record.slug,
   type: workTypeMap[record.type],
   storyStatus: storyStatusMap[record.storyStatus],
   publicationStatus: publicationStatusMap[record.publicationStatus],
   publishedAt: record.publishedAt?.toISOString() ?? null,
+  featuredHome: record.featuredHome,
+  featuredOrder: record.featuredOrder,
+  coverAssetId:
+    record.mediaReferences.find(({ slot }) => slot === "WORK_COVER")?.assetId ??
+    null,
+  backgroundAssetId:
+    record.mediaReferences.find(({ slot }) => slot === "WORK_BACKGROUND")
+      ?.assetId ?? null,
+  tags: record.tags.map(({ normalizedTag }) => normalizedTag),
   version: record.version,
   createdAt: record.createdAt.toISOString(),
   updatedAt: record.updatedAt.toISOString(),
-  categories: orderedCategories(record).map(mapAdminCategory),
+  categories: orderedAdminWorkCategories(record).map(mapAdminCategory),
 });
 
 export const mapPublicWork = (record: PublicWorkRecord): PublicWork => {

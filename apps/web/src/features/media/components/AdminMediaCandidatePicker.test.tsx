@@ -1,4 +1,4 @@
-﻿import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -160,6 +160,74 @@ describe("administrator media candidate picker", () => {
       assetId,
       expect.any(AbortSignal),
     );
+  });
+
+  it("loads attached private media without staging it and stages a saved candidate explicitly", async () => {
+    const assetId = "43afae94-0e94-45e9-ab76-100f889d0777";
+    const onAssetSelected = vi.fn();
+    mediaApiMock.listAdmin.mockResolvedValue({
+      items: [
+        {
+          id: assetId,
+          width: 600,
+          height: 800,
+          createdAt: "2026-09-24T08:00:00.000Z",
+        },
+      ],
+    });
+    mediaApiMock.getAsset.mockResolvedValue({ id: assetId });
+    const { container } = render(
+      <AdminMediaCandidatePicker
+        mediaClass="work_cover"
+        label="رفع غلاف جديد"
+        initialAssetId={assetId}
+        onAssetSelected={onAssetSelected}
+      />,
+      { wrapper },
+    );
+
+    expect(
+      await screen.findByRole("img", { name: "معاينة رفع غلاف جديد" }),
+    ).toBeVisible();
+    expect(mediaApiMock.readContent).toHaveBeenCalledWith(
+      assetId,
+      expect.any(AbortSignal),
+    );
+    expect(onAssetSelected).not.toHaveBeenCalled();
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: "اختيار هذا الوسيط" }),
+    );
+    await waitFor(() => {
+      expect(onAssetSelected).toHaveBeenCalledWith(assetId);
+    });
+    expect(container.querySelector('[dir="rtl"]')).toBeInTheDocument();
+  });
+
+  it("reports an uploaded candidate separately from its later parent binding", async () => {
+    const onAssetSelected = vi.fn();
+    mediaApiMock.upload.mockResolvedValue({ id: "asset-uploaded" });
+    render(
+      <AdminMediaCandidatePicker
+        mediaClass="work_cover"
+        label="رفع غلاف جديد"
+        onAssetSelected={onAssetSelected}
+      />,
+      { wrapper },
+    );
+    fireEvent.change(screen.getByLabelText("رفع غلاف جديد"), {
+      target: {
+        files: [new File(["cover"], "cover.jpg", { type: "image/jpeg" })],
+      },
+    });
+    await screen.findByText(/حُفظت الصورة في الوسائط فقط/u);
+    await waitFor(() => {
+      expect(onAssetSelected).toHaveBeenCalledWith("asset-uploaded");
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: /إزالة المعاينة المحلية/u }),
+    );
+    expect(onAssetSelected).toHaveBeenLastCalledWith(null);
   });
 
   it("keeps a rejected candidate visible and starts a new attempt for the same file", async () => {

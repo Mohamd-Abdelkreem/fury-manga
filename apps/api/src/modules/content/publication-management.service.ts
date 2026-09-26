@@ -13,6 +13,7 @@ import {
   ContentTransitionConflictException,
 } from "./content.errors.js";
 import { mapPublicationStatus } from "./content.mapper.js";
+import { lockCategoryEligibilityState } from "./content.queries.js";
 import {
   assertPublicationTransition,
   toDatabasePublicationStatus,
@@ -58,6 +59,9 @@ export class PublicationManagementService {
     try {
       const transition = await this.database.$transaction(
         async (transaction) => {
+          if (target === PublicationStatus.PUBLISHED) {
+            await lockCategoryEligibilityState(transaction);
+          }
           await transaction.$queryRaw`
             SELECT "id"
             FROM "works"
@@ -79,6 +83,19 @@ export class PublicationManagementService {
           assertPublicationTransition(current.publicationStatus, target);
           if (current.version !== command.expectedVersion) {
             throw new ContentStaleWriteException();
+          }
+          if (target === PublicationStatus.PUBLISHED) {
+            const [categoryCount, enabledCategoryCount] = await Promise.all([
+              transaction.workCategory.count({ where: { workId } }),
+              transaction.workCategory.count({
+                where: { workId, category: { is: { enabled: true } } },
+              }),
+            ]);
+            if (categoryCount > 0 && enabledCategoryCount === 0) {
+              throw new ContentTransitionConflictException(
+                "A Work with Categories requires an enabled Category before publication.",
+              );
+            }
           }
           const publication = await this.buildPublicationWrite(
             transaction,

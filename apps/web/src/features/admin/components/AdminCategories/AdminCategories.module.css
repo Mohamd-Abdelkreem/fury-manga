@@ -37,6 +37,22 @@
   color: var(--foreground);
   font: inherit;
 }
+.filter {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--muted-foreground);
+  font-size: 0.85rem;
+}
+.filter select {
+  min-height: 2.75rem;
+  padding-inline: 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--popover);
+  color: var(--foreground);
+  font: inherit;
+}
 .primary,
 .actions button,
 .order button,
@@ -130,6 +146,48 @@
 .empty p {
   margin: 0;
 }
+.status,
+.statusPanel {
+  display: grid;
+  min-height: 8rem;
+  place-content: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  color: var(--muted-foreground);
+  text-align: center;
+}
+.statusPanel p {
+  margin: 0;
+}
+.statusPanel button {
+  min-height: 2.5rem;
+  padding-inline: 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--secondary);
+  color: var(--foreground);
+  font: inherit;
+}
+.backgroundStatus {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.85rem;
+}
+.error,
+.dialog [role="alert"],
+.dialog label span {
+  color: #ff9b9b;
+  font-size: 0.85rem;
+}
+.error {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(255, 71, 71, 0.35);
+  border-radius: 0.5rem;
+  background: rgba(255, 71, 71, 0.08);
+}
 .backdrop {
   position: fixed;
   inset: 0;
@@ -179,4 +237,19 @@
     align-items: stretch;
     flex-direction: column;
   }
+  .filter {
+    justify-content: space-between;
+  }
+}
+
+.primary:focus-visible,
+.actions button:focus-visible,
+.order button:focus-visible,
+.filter select:focus-visible,
+.search input:focus-visible,
+.dialog button:focus-visible,
+.dialog input:focus-visible,
+.statusPanel button:focus-visible {
+  outline: 2px solid #ff8585;
+  outline-offset: 2px;
 }

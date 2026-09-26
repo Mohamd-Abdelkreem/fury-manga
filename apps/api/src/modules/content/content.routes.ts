@@ -10,6 +10,8 @@ import {
 import type { ContentManagementController } from "./content-management.controller.js";
 import {
   categoryIdParamsSchema,
+  categoryListQuerySchema,
+  categoryPositionBodySchema,
   createCategoryBodySchema,
   createChapterBodySchema,
   createWorkBodySchema,
@@ -62,7 +64,7 @@ export const contentRoutes = (
   admin.use(authenticationMiddleware, authorizeAdmin);
   admin.get(
     "/categories",
-    validationMiddleware({ query: paginationQuerySchema }),
+    validationMiddleware({ query: categoryListQuerySchema }),
     managementController.listCategories,
   );
   admin.post(
@@ -84,6 +86,15 @@ export const contentRoutes = (
       body: updateCategoryBodySchema,
     }),
     managementController.updateCategory,
+  );
+  admin.put(
+    "/categories/:categoryId/position",
+    csrfMiddleware,
+    validationMiddleware({
+      params: categoryIdParamsSchema,
+      body: categoryPositionBodySchema,
+    }),
+    managementController.moveCategory,
   );
   admin.get(
     "/works",

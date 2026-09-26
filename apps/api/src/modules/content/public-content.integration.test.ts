@@ -27,7 +27,7 @@ const pagination = { page: 1, limit: 25, skip: 0, take: 25 };
 describe("PublicContentService with PostgreSQL", () => {
   beforeEach(async () => {
     await database.$executeRawUnsafe(
-      "TRUNCATE media_reference_events, media_references, upload_attempts, media_assets, publication_events, chapter_pages, chapters, work_categories, categories, works",
+      "TRUNCATE media_reference_events, media_references, upload_attempts, media_assets, publication_events, chapter_pages, chapters, work_tags, work_categories, categories, works",
     );
   });
 
