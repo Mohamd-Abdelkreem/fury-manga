@@ -15,6 +15,7 @@ import {
   adminCategoryListDataSchema,
   adminCategoryMoveDataSchema,
   adminChapterDataSchema as chapterDataSchema,
+  adminChapterListDataSchema,
   adminWorkDataSchema as workDataSchema,
   adminWorkListDataSchema,
   contentOperationErrorCodeSchema,
@@ -169,6 +170,27 @@ const uploadWorkAsset = async (
   return uploaded.asset.id;
 };
 
+const uploadChapterAsset = async (actorUserId: string): Promise<string> => {
+  const uploaded = await media.uploadAdmin({
+    actorUserId,
+    attemptId: randomUUID(),
+    mediaClass: "chapter_page",
+    source: await sharp({
+      create: {
+        width: 600,
+        height: 900,
+        channels: 3,
+        background: "blue",
+      },
+    })
+      .jpeg()
+      .toBuffer(),
+    declaredType: "image/jpeg",
+    sourceName: "chapter-page.jpg",
+  });
+  return uploaded.asset.id;
+};
+
 const createIllustratedAggregate = async (
   token: string,
   actorUserId: string,
@@ -212,10 +234,16 @@ const createIllustratedAggregate = async (
   expect(prepared.status).toBe(200);
   const preparedWork = parseSuccessData(prepared, workDataSchema).work;
 
+  const firstPageAssetId = await uploadChapterAsset(actorUserId);
+  const secondPageAssetId = await uploadChapterAsset(actorUserId);
   const chapterResponse = await authorize(
     request(app).post("/api/v1/content/admin/works/" + workId + "/chapters"),
     token,
-  ).send({ number: 1, pages: [{ position: 2 }, { position: 1 }] });
+  ).send({
+    number: 1,
+    title: "HTTP Chapter",
+    pages: [{ assetId: firstPageAssetId }, { assetId: secondPageAssetId }],
+  });
   expect(chapterResponse.status).toBe(201);
   const chapter = parseSuccessData(chapterResponse, chapterDataSchema).chapter;
 
@@ -554,14 +582,14 @@ describe("real HTTP content boundary", () => {
       {
         method: "post",
         path: "/api/v1/content/admin/works/" + aggregate.workId + "/chapters",
-        body: { number: 2, pages: [{ position: 1 }] },
+        body: { number: 2, title: "Additional Chapter" },
         successStatus: 201,
         missing: false,
       },
       {
         method: "post",
         path: "/api/v1/content/admin/works/" + missingId + "/chapters",
-        body: { number: 1, pages: [{ position: 1 }] },
+        body: { number: 1, title: "Missing Work Chapter" },
         successStatus: 404,
         missing: true,
       },
@@ -819,6 +847,19 @@ describe("real HTTP content boundary", () => {
       expect.objectContaining({ position: 1 }),
       expect.objectContaining({ position: 2 }),
     ]);
+    const chapterList = await request(app)
+      .get(`/api/v1/content/admin/works/${aggregate.workId}/chapters`)
+      .set("Authorization", `Bearer ${identity.token}`);
+    expect(chapterList.status).toBe(200);
+    expect(
+      parseSuccessData(chapterList, adminChapterListDataSchema).items,
+    ).toMatchObject([
+      {
+        id: aggregate.chapterId,
+        title: "HTTP Chapter",
+        readyForPublication: true,
+      },
+    ]);
 
     await database.$disconnect();
     await database.$connect();
@@ -831,6 +872,286 @@ describe("real HTTP content boundary", () => {
       categories: [{ categoryId: aggregate.categoryId }],
       chapters: [{ id: aggregate.chapterId }],
     });
+  });
+
+  it("serves scoped Chapter summaries with validated filters and bounded pages", async () => {
+    const admin = await createIdentity(UserRole.ADMIN);
+    const aggregate = await createIllustratedAggregate(
+      admin.token,
+      admin.user.id,
+    );
+    const path = `/api/v1/content/admin/works/${aggregate.workId}/chapters`;
+    for (const [number, title] of [
+      [2, "Café second"],
+      [3, "Third"],
+    ] as const) {
+      const created = await authorize(
+        request(app).post(path),
+        admin.token,
+      ).send({ number, title });
+      expect(created.status).toBe(201);
+    }
+    const other = await authorize(
+      request(app).post("/api/v1/content/admin/works"),
+      admin.token,
+    ).send({
+      title: "Other",
+      slug: "other",
+      type: "manga",
+      storyStatus: "ongoing",
+    });
+    const otherWorkId = parseSuccessData(other, workDataSchema).work.id;
+    await authorize(
+      request(app).post(`/api/v1/content/admin/works/${otherWorkId}/chapters`),
+      admin.token,
+    ).send({ number: 4, title: "Café elsewhere" });
+
+    const first = await request(app)
+      .get(path + "?page=1&limit=2&sort=number_desc")
+      .set("Authorization", "Bearer " + admin.token);
+    expect(first.status).toBe(200);
+    const data = parseSuccessData(first, adminChapterListDataSchema);
+    expect(data.items.map(({ number }) => number)).toEqual([3, 2]);
+    expect(data.pagination).toMatchObject({
+      total: 3,
+      totalPages: 2,
+      hasNextPage: true,
+    });
+    expect(data.items[0]).not.toHaveProperty("pages");
+    expect(data.items[0]).not.toHaveProperty("textContent");
+
+    const searched = await request(app)
+      .get(path + "?search=caf%C3%A9&publicationStatus=draft")
+      .set("Authorization", "Bearer " + admin.token);
+    expect(
+      parseSuccessData(searched, adminChapterListDataSchema),
+    ).toMatchObject({
+      items: [{ number: 2 }],
+      pagination: { total: 1 },
+    });
+    const overrun = await request(app)
+      .get(path + "?page=9&limit=2")
+      .set("Authorization", "Bearer " + admin.token);
+    expect(parseSuccessData(overrun, adminChapterListDataSchema)).toMatchObject(
+      {
+        items: [],
+        pagination: { total: 3, totalPages: 2 },
+      },
+    );
+    const invalid = await request(app)
+      .get(path + "?sort=unknown")
+      .set("Authorization", "Bearer " + admin.token);
+    expect(invalid.status).toBe(400);
+    const missing = await request(app)
+      .get("/api/v1/content/admin/works/" + randomUUID() + "/chapters")
+      .set("Authorization", "Bearer " + admin.token);
+    expect(missing.status).toBe(404);
+    const ordinary = await createIdentity(UserRole.USER);
+    expect(
+      (
+        await request(app)
+          .get(path)
+          .set("Authorization", "Bearer " + ordinary.token)
+      ).status,
+    ).toBe(403);
+  });
+
+  it("keeps a private Chapter and its page asset behind ADMIN, parent, and CSRF authority", async () => {
+    const admin = await createIdentity(UserRole.ADMIN);
+    const ordinary = await createIdentity(UserRole.USER);
+    const aggregate = await createIllustratedAggregate(
+      admin.token,
+      admin.user.id,
+    );
+    const path = `/api/v1/content/admin/works/${aggregate.workId}/chapters/${aggregate.chapterId}`;
+    const storedPage = await database.chapterPage.findFirstOrThrow({
+      where: { chapterId: aggregate.chapterId, retiredAt: null },
+      include: { mediaReferences: { where: { retiredAt: null } } },
+    });
+    const assetId = storedPage.mediaReferences[0]?.assetId;
+    if (assetId === undefined) throw new Error("Missing saved page asset.");
+    const deniedRead = await request(app)
+      .get(path)
+      .set("Authorization", "Bearer " + ordinary.token);
+    expect(deniedRead.status).toBe(403);
+    expect(JSON.stringify(deniedRead.body)).not.toContain(assetId);
+    expect((await request(app).get(path)).status).toBe(401);
+    const wrongParent = await request(app)
+      .get(
+        `/api/v1/content/admin/works/${randomUUID()}/chapters/${aggregate.chapterId}`,
+      )
+      .set("Authorization", "Bearer " + admin.token);
+    expect(wrongParent.status).toBe(404);
+    const noCsrf = await request(app)
+      .patch(path)
+      .set("Authorization", "Bearer " + admin.token)
+      .send({ expectedVersion: aggregate.chapterVersion, title: "Unsafe" });
+    expect(noCsrf.status).toBe(403);
+    const malformed = await authorize(
+      request(app).patch(path),
+      admin.token,
+    ).send({
+      expectedVersion: aggregate.chapterVersion,
+      title: "Valid",
+      privateFlag: true,
+    });
+    expect(malformed.status).toBe(400);
+    const directMedia = await request(app)
+      .get(`/api/v1/media/assets/${assetId}/content`)
+      .set("Authorization", "Bearer " + ordinary.token);
+    expect(directMedia.status).toBe(404);
+    expect(parseErrorBody(directMedia).code).toBe("NOT_FOUND");
+    expect(JSON.stringify(directMedia.body)).not.toContain("relativeKey");
+    const publicDraft = await request(app).get(
+      "/api/v1/content/works/http-work/chapters",
+    );
+    expect(publicDraft.status).toBe(404);
+    await expect(
+      database.chapter.findUniqueOrThrow({
+        where: { id: aggregate.chapterId },
+      }),
+    ).resolves.toMatchObject({
+      title: "HTTP Chapter",
+      version: aggregate.chapterVersion,
+    });
+  });
+
+  it("keeps Chapter-page reference writes inside Chapter save after authority", async () => {
+    const admin = await createIdentity(UserRole.ADMIN);
+    const aggregate = await createIllustratedAggregate(
+      admin.token,
+      admin.user.id,
+    );
+    const reference = await database.mediaReference.findFirstOrThrow({
+      where: {
+        chapterPage: { chapterId: aggregate.chapterId },
+        retiredAt: null,
+      },
+    });
+    const unknownTarget = randomUUID();
+    const genericCreate = await authorize(
+      request(app).post("/api/v1/media/references"),
+      admin.token,
+    ).send({
+      targetKind: "chapter_page",
+      targetId: unknownTarget,
+      assetId: reference.assetId,
+    });
+    expect(genericCreate.status).toBe(409);
+    expect(errorEnvelopeSchema.parse(genericCreate.body).code).toBe(
+      "MEDIA_TARGET_CONFLICT",
+    );
+
+    const replacement = await authorize(
+      request(app).put(`/api/v1/media/references/${reference.id}`),
+      admin.token,
+    ).send({
+      assetId: reference.assetId,
+      expectedAssetId: reference.assetId,
+      expectedVersion: 0,
+    });
+    expect(replacement.status).toBe(409);
+    expect(errorEnvelopeSchema.parse(replacement.body).code).toBe(
+      "MEDIA_TARGET_CONFLICT",
+    );
+    const retirement = await authorize(
+      request(app).delete(`/api/v1/media/references/${reference.id}`),
+      admin.token,
+    ).send({ expectedAssetId: reference.assetId, expectedVersion: 0 });
+    expect(retirement.status).toBe(409);
+    expect(errorEnvelopeSchema.parse(retirement.body).code).toBe(
+      "MEDIA_TARGET_CONFLICT",
+    );
+
+    const ordinary = await createIdentity(UserRole.USER);
+    const denied = await authorize(
+      request(app).put(`/api/v1/media/references/${reference.id}`),
+      ordinary.token,
+    ).send({
+      assetId: reference.assetId,
+      expectedAssetId: reference.assetId,
+      expectedVersion: 0,
+    });
+    expect(denied.status).toBe(403);
+    const absent = await authorize(
+      request(app).put(`/api/v1/media/references/${randomUUID()}`),
+      admin.token,
+    ).send({
+      assetId: reference.assetId,
+      expectedAssetId: reference.assetId,
+      expectedVersion: 0,
+    });
+    expect(absent.status).toBe(404);
+    await expect(
+      database.mediaReference.findUniqueOrThrow({
+        where: { id: reference.id },
+      }),
+    ).resolves.toMatchObject({
+      assetId: reference.assetId,
+      version: 0,
+      retiredAt: null,
+    });
+  });
+
+  it("persists the complete illustrated page set only after Chapter save", async () => {
+    const admin = await createIdentity(UserRole.ADMIN);
+    const aggregate = await createIllustratedAggregate(
+      admin.token,
+      admin.user.id,
+    );
+    const chapterPath = `/api/v1/content/admin/works/${aggregate.workId}/chapters/${aggregate.chapterId}`;
+    const readChapter = async () => {
+      const response = await request(app)
+        .get(chapterPath)
+        .set("Authorization", `Bearer ${admin.token}`);
+      expect(response.status).toBe(200);
+      return parseSuccessData(response, chapterDataSchema).chapter;
+    };
+    const original = await readChapter();
+    const [first, second] = original.pages;
+    if (first === undefined || second === undefined)
+      throw new Error("Missing fixture pages");
+    const candidateAssetId = await uploadChapterAsset(admin.user.id);
+    expect((await readChapter()).pages).toEqual(original.pages);
+
+    const reorder = await authorize(
+      request(app).patch(chapterPath),
+      admin.token,
+    ).send({
+      expectedVersion: original.version,
+      pages: [
+        { id: second.id, assetId: second.assetId },
+        { id: first.id, assetId: first.assetId },
+      ],
+    });
+    expect(reorder.status).toBe(200);
+    expect((await readChapter()).pages.map(({ id }) => id)).toEqual([
+      second.id,
+      first.id,
+    ]);
+
+    const replaceAndRemove = await authorize(
+      request(app).patch(chapterPath),
+      admin.token,
+    ).send({
+      expectedVersion: original.version + 1,
+      pages: [{ id: second.id, assetId: candidateAssetId }],
+    });
+    expect(replaceAndRemove.status).toBe(200);
+    await database.$disconnect();
+    await database.$connect();
+    expect((await readChapter()).pages).toMatchObject([
+      { id: second.id, position: 1, assetId: candidateAssetId },
+    ]);
+    const retired = await database.chapterPage.findUniqueOrThrow({
+      where: { id: first.id },
+    });
+    expect(retired.retiredAt).toBeInstanceOf(Date);
+    await expect(
+      database.mediaReferenceEvent.count({
+        where: { reference: { chapterPageId: { in: [first.id, second.id] } } },
+      }),
+    ).resolves.toBe(4);
   });
 
   it("returns stable immutable, validation, and authorized not-found outcomes", async () => {
@@ -1145,6 +1466,10 @@ describe("real HTTP content boundary", () => {
       publicChapter,
       publicChapterDataSchema,
     );
+    expect(publicChapterBody.chapter.title).toBe("HTTP Chapter");
+    expect(Object.keys(publicChapterBody.chapter).sort()).toEqual(
+      ["id", "workId", "number", "title", "contentType", "publishedAt"].sort(),
+    );
     expect(publicChapterBody.chapter).not.toHaveProperty("pages");
     expect(publicChapterBody.chapter).not.toHaveProperty("textContent");
     const publicWorks = await request(app).get("/api/v1/content/works");
@@ -1160,9 +1485,60 @@ describe("real HTTP content boundary", () => {
     expect(
       parseSuccessData(publicChapters, publicChapterListDataSchema),
     ).toMatchObject({
-      items: [{ id: aggregate.chapterId, workId: aggregate.workId }],
+      items: [
+        {
+          id: aggregate.chapterId,
+          workId: aggregate.workId,
+          title: "HTTP Chapter",
+        },
+      ],
       pagination: { total: 1 },
     });
+
+    const savedPage = await database.chapterPage.findFirstOrThrow({
+      where: { chapterId: aggregate.chapterId, retiredAt: null },
+      include: { mediaReferences: { where: { retiredAt: null } } },
+    });
+    const savedAssetId = savedPage.mediaReferences[0]?.assetId;
+    if (savedAssetId === undefined)
+      throw new Error("Expected a saved page image.");
+    await database.mediaAsset.update({
+      where: { id: savedAssetId },
+      data: { status: "UNAVAILABLE" },
+    });
+    const hiddenChapter = await request(app).get(
+      "/api/v1/content/works/http-work/chapters/1",
+    );
+    const absentChapter = await request(app).get(
+      "/api/v1/content/works/http-work/chapters/99",
+    );
+    expect({
+      status: hiddenChapter.status,
+      code: parseErrorBody(hiddenChapter).code,
+    }).toEqual({
+      status: absentChapter.status,
+      code: parseErrorBody(absentChapter).code,
+    });
+    const hiddenList = await request(app).get(
+      "/api/v1/content/works/http-work/chapters",
+    );
+    expect(
+      parseSuccessData(hiddenList, publicChapterListDataSchema).pagination
+        .total,
+    ).toBe(0);
+    await database.mediaAsset.update({
+      where: { id: savedAssetId },
+      data: { status: "AVAILABLE" },
+    });
+    const repairedChapter = await request(app).get(
+      "/api/v1/content/works/http-work/chapters/1",
+    );
+    expect(repairedChapter.status).toBe(200);
+    expect(
+      await database.publicationEvent.count({
+        where: { chapterId: aggregate.chapterId },
+      }),
+    ).toBe(1);
 
     const repeated = await authorize(
       request(app).put(
@@ -1217,7 +1593,7 @@ describe("real HTTP content boundary", () => {
     const chapter = await authorize(
       request(app).post("/api/v1/content/admin/works/" + workId + "/chapters"),
       identity.token,
-    ).send({ number: 1 });
+    ).send({ number: 1, title: "Empty Chapter" });
     const chapterId = parseSuccessData(chapter, chapterDataSchema).chapter.id;
 
     const rejected = await authorize(
@@ -1231,7 +1607,7 @@ describe("real HTTP content boundary", () => {
       identity.token,
     ).send({ expectedVersion: 0, targetState: "published" });
     expect(rejected.status).toBe(409);
-    expect(parseErrorBody(rejected).code).toBe("CONTENT_TRANSITION_CONFLICT");
+    expect(parseErrorBody(rejected).code).toBe("CONTENT_NOT_READY");
     await expect(database.publicationEvent.count()).resolves.toBe(0);
     await expect(
       database.chapter.findUniqueOrThrow({ where: { id: chapterId } }),
@@ -1329,7 +1705,11 @@ describe("real HTTP content boundary", () => {
     const chapterResponse = await authorize(
       request(app).post("/api/v1/content/admin/works/" + workId + "/chapters"),
       identity.token,
-    ).send({ number: 1, textContent: firstDocument });
+    ).send({
+      number: 1,
+      title: "Structured Chapter",
+      textContent: firstDocument,
+    });
     expect(chapterResponse.status).toBe(201);
     const chapter = parseSuccessData(
       chapterResponse,
@@ -1387,6 +1767,96 @@ describe("real HTTP content boundary", () => {
     ).resolves.toMatchObject({ textContent: secondDocument, version: 1 });
   });
 
+  it("creates and reloads a complete text document, then clears it to a private draft", async () => {
+    const identity = await createIdentity(UserRole.ADMIN);
+    const workResponse = await authorize(
+      request(app).post("/api/v1/content/admin/works"),
+      identity.token,
+    ).send({
+      title: "Text Journey Work",
+      slug: "text-journey-work",
+      type: "novel",
+      storyStatus: "ongoing",
+    });
+    const workId = parseSuccessData(workResponse, workDataSchema).work.id;
+    const basePath = `/api/v1/content/admin/works/${workId}/chapters`;
+    const draftResponse = await authorize(
+      request(app).post(basePath),
+      identity.token,
+    ).send({ number: 1, title: "Text Journey", textContent: null });
+    expect(draftResponse.status).toBe(201);
+    const draft = parseSuccessData(draftResponse, chapterDataSchema).chapter;
+    expect(draft).toMatchObject({ contentType: "text", textContent: null });
+    const chapterPath = `${basePath}/${draft.id}`;
+    const document = {
+      version: 1,
+      blocks: [
+        { type: "heading", level: 2, text: "Opening" },
+        { type: "heading", level: 3, text: "Details" },
+        {
+          type: "paragraph",
+          content: [
+            { text: "Bold", bold: true },
+            { text: "Italic", italic: true },
+            { text: "Link", href: "/stories/example" },
+          ],
+        },
+        { type: "list", ordered: true, items: ["First", "Second"] },
+        { type: "list", ordered: false, items: ["One", "Two"] },
+      ],
+    };
+    const savedResponse = await authorize(
+      request(app).patch(chapterPath),
+      identity.token,
+    ).send({ expectedVersion: 0, textContent: document });
+    expect(savedResponse.status).toBe(200);
+    const reloadedResponse = await authorize(
+      request(app).get(chapterPath),
+      identity.token,
+    );
+    expect(
+      parseSuccessData(reloadedResponse, chapterDataSchema).chapter,
+    ).toMatchObject({
+      textContent: document,
+      version: 1,
+    });
+    for (const textContent of [
+      { version: 1, blocks: [{ type: "quote", text: "unsupported" }] },
+      {
+        version: 1,
+        blocks: [
+          { type: "paragraph", content: [{ text: "x", html: "<b>x</b>" }] },
+        ],
+      },
+      { version: 1, blocks: [] },
+    ]) {
+      const rejected = await authorize(
+        request(app).patch(chapterPath),
+        identity.token,
+      ).send({ expectedVersion: 1, textContent });
+      expect(rejected.status).toBe(400);
+      expect(parseErrorBody(rejected).code).toBe("VALIDATION_ERROR");
+    }
+    const unknown = await authorize(
+      request(app).patch(chapterPath),
+      identity.token,
+    ).send({ expectedVersion: 1, textContent: document, html: "<script />" });
+    expect(unknown.status).toBe(400);
+    const beforeClear = await database.chapter.findUniqueOrThrow({
+      where: { id: draft.id },
+    });
+    expect(beforeClear).toMatchObject({ textContent: document, version: 1 });
+    const cleared = await authorize(
+      request(app).patch(chapterPath),
+      identity.token,
+    ).send({ expectedVersion: 1, textContent: null });
+    expect(cleared.status).toBe(200);
+    expect(parseSuccessData(cleared, chapterDataSchema).chapter).toMatchObject({
+      textContent: null,
+      version: 2,
+    });
+  });
+
   it("distinguishes omitted illustrated pages from invalid submitted representations", async () => {
     const identity = await createIdentity(UserRole.ADMIN);
     const workResponse = await authorize(
@@ -1403,19 +1873,18 @@ describe("real HTTP content boundary", () => {
     const omitted = await authorize(
       request(app).post("/api/v1/content/admin/works/" + workId + "/chapters"),
       identity.token,
-    ).send({ number: 1 });
+    ).send({ number: 1, title: "Empty Illustrated Chapter" });
     expect(omitted.status).toBe(201);
     expect(parseSuccessData(omitted, chapterDataSchema).chapter.pages).toEqual(
       [],
     );
 
     for (const body of [
-      { number: 2, pages: [] },
-      { number: 0 },
-      { number: 1.5 },
-      { number: 2_147_483_648 },
-      { number: 2, contentType: "illustrated" },
-      { number: 2, pages: null },
+      { number: 0, title: "Invalid" },
+      { number: 1.5, title: "Invalid" },
+      { number: 2_147_483_648, title: "Invalid" },
+      { number: 2, title: "Invalid", contentType: "illustrated" },
+      { number: 2, title: "Invalid", pages: null },
     ]) {
       const rejected = await authorize(
         request(app).post(
@@ -1432,6 +1901,7 @@ describe("real HTTP content boundary", () => {
       identity.token,
     ).send({
       number: 2,
+      title: "Mismatched Chapter",
       textContent: {
         version: 1,
         blocks: [{ type: "paragraph", content: [{ text: "text" }] }],
@@ -1540,7 +2010,7 @@ describe("real HTTP content boundary", () => {
     };
     const chapterResponse = await authorizeAgent(
       agent.post("/api/v1/content/admin/works/" + work.id + "/chapters"),
-    ).send({ number: 1, textContent: document });
+    ).send({ number: 1, title: "Acceptance Chapter", textContent: document });
     expect(chapterResponse.status).toBe(201);
     const chapter = parseSuccessData(
       chapterResponse,

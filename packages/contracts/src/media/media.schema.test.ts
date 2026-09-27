@@ -285,6 +285,20 @@ describe("private media wire contracts", () => {
     }
   });
 
+  it("keeps the Chapter-page handoff conflict in the safe media error vocabulary", () => {
+    expect(mediaOperationErrorCodeSchema.parse("MEDIA_TARGET_CONFLICT")).toBe(
+      "MEDIA_TARGET_CONFLICT",
+    );
+    expect(
+      mediaReferenceCreateSchema.safeParse({
+        targetKind: "chapter_page",
+        targetId: asset.id,
+        assetId: asset.id,
+        workId: asset.id,
+      }).success,
+    ).toBe(false);
+  });
+
   it("keeps active reference and retirement projections strict", () => {
     const reference = {
       id: "55aec196-95e6-4763-a5a7-d43fb6cc9553",

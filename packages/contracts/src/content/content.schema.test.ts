@@ -5,6 +5,9 @@ import {
   adminCategoryMoveDataSchema,
   adminCategorySchema,
   adminChapterSchema,
+  adminChapterListDataSchema,
+  adminChapterListQuerySchema,
+  adminChapterSummarySchema,
   adminWorkDataSchema,
   adminWorkListDataSchema,
   adminWorkListItemSchema,
@@ -125,14 +128,18 @@ describe("content request contracts", () => {
   });
 
   it("distinguishes omitted illustrated pages from an explicit empty set", () => {
-    expect(createChapterBodySchema.safeParse({ number: 1 }).success).toBe(true);
     expect(
-      createChapterBodySchema.safeParse({ number: 1, pages: [] }).success,
-    ).toBe(false);
+      createChapterBodySchema.safeParse({ number: 1, title: "فصل" }).success,
+    ).toBe(true);
+    expect(
+      createChapterBodySchema.safeParse({ number: 1, title: "فصل", pages: [] })
+        .success,
+    ).toBe(true);
     expect(
       createChapterBodySchema.safeParse({
         number: 1,
-        pages: [{ position: 2 }, { position: 1 }],
+        title: "فصل",
+        pages: [{ assetId: firstId }, { assetId: secondId }],
       }).success,
     ).toBe(true);
   });
@@ -164,6 +171,34 @@ describe("content request contracts", () => {
     expect(
       structuredTextDocumentSchema.safeParse({ version: 1, blocks: [] })
         .success,
+    ).toBe(false);
+  });
+
+  it("distinguishes an incomplete text draft from an invalid empty document", () => {
+    expect(
+      createChapterBodySchema.parse({
+        number: 1,
+        title: "Text draft",
+        textContent: null,
+      }),
+    ).toEqual({ number: 1, title: "Text draft", textContent: null });
+    expect(
+      updateChapterBodySchema.parse({ expectedVersion: 0, textContent: null }),
+    ).toEqual({ expectedVersion: 0, textContent: null });
+    expect(
+      createChapterBodySchema.safeParse({
+        number: 1,
+        title: "Text draft",
+        textContent: { version: 1, blocks: [] },
+      }).success,
+    ).toBe(false);
+    expect(
+      createChapterBodySchema.safeParse({
+        number: 1,
+        title: "Text draft",
+        textContent: null,
+        pages: [],
+      }).success,
     ).toBe(false);
   });
 
@@ -270,38 +305,81 @@ describe("content request contracts", () => {
     expect(
       createChapterBodySchema.safeParse({
         number: 1,
+        title: "Chapter",
         textContent: validStructuredText,
-        pages: [{ position: 1 }],
+        pages: [{ assetId: firstId }],
       }).success,
     ).toBe(false);
     expect(
       updateChapterBodySchema.safeParse({ expectedVersion: 0, pages: [] })
         .success,
-    ).toBe(false);
+    ).toBe(true);
     expect(
-      createChapterBodySchema.safeParse({ number: 2_147_483_648 }).success,
+      createChapterBodySchema.safeParse({
+        number: 2_147_483_648,
+        title: "Chapter",
+      }).success,
     ).toBe(false);
     expect(
       createChapterBodySchema.safeParse({
         number: 1,
+        title: "Chapter",
         pages: Array.from({ length: 501 }, (_, index) => ({
-          position: index + 1,
+          assetId: index % 2 === 0 ? firstId : secondId,
         })),
       }).success,
     ).toBe(false);
 
-    const duplicate = createChapterBodySchema.safeParse({
-      number: 1,
-      pages: [{ position: 1 }, { position: 1 }],
+    const duplicate = updateChapterBodySchema.safeParse({
+      expectedVersion: 0,
+      pages: [
+        { id: firstId, assetId: secondId },
+        { id: firstId, assetId: secondId },
+      ],
     });
     expect(duplicate.success).toBe(false);
     if (!duplicate.success) {
       expect(duplicate.error.issues).toEqual(
         expect.arrayContaining([
-          expect.objectContaining({ path: ["pages", 1, "position"] }),
+          expect.objectContaining({ path: ["pages", 1, "id"] }),
         ]),
       );
     }
+  });
+
+  it("normalizes title and rejects invalid page and privileged fields", () => {
+    expect(
+      createChapterBodySchema.parse({
+        number: 1,
+        title: "  Cafe\u0301  ",
+        pages: [{ assetId: firstId }],
+      }).title,
+    ).toBe("Café");
+    for (const title of ["", "   ", "x".repeat(201), "bad\u0000title"]) {
+      expect(
+        createChapterBodySchema.safeParse({ number: 1, title }).success,
+      ).toBe(false);
+    }
+    expect(
+      createChapterBodySchema.safeParse({
+        number: 1,
+        title: "Chapter",
+        pages: [{ assetId: firstId, position: 1 }],
+      }).success,
+    ).toBe(false);
+    expect(
+      createChapterBodySchema.safeParse({
+        number: 1,
+        title: "Chapter",
+        pages: [{ id: secondId, assetId: firstId }],
+      }).success,
+    ).toBe(false);
+    expect(
+      updateChapterBodySchema.safeParse({
+        expectedVersion: 0,
+        title: "Revised",
+      }).success,
+    ).toBe(true);
   });
 });
 
@@ -311,31 +389,102 @@ describe("content response allowlists", () => {
       id: firstId,
       workId: secondId,
       number: 1,
+      title: "Chapter",
       contentType: "illustrated",
       publishedAt: "2026-09-22T00:00:00.000Z",
     };
     expect(publicChapterSchema.safeParse(chapter).success).toBe(true);
+    expect(
+      publicChapterSchema.safeParse({ ...chapter, title: undefined }).success,
+    ).toBe(false);
     expect(
       publicChapterSchema.safeParse({ ...chapter, pages: [] }).success,
     ).toBe(false);
   });
 
   it("requires the documented nullable content representation for admin Chapters", () => {
+    const chapter = {
+      id: firstId,
+      workId: secondId,
+      number: 1,
+      title: "Chapter",
+      contentType: "illustrated",
+      publicationStatus: "draft",
+      publishedAt: null,
+      version: 0,
+      createdAt: "2026-09-22T00:00:00.000Z",
+      updatedAt: "2026-09-22T00:00:00.000Z",
+      textContent: null,
+      pages: [],
+      readyForPublication: false,
+    };
+    expect(adminChapterSchema.safeParse(chapter).success).toBe(true);
     expect(
-      adminChapterSchema.safeParse({
-        id: firstId,
-        workId: secondId,
-        number: 1,
-        contentType: "illustrated",
-        publicationStatus: "draft",
-        publishedAt: null,
-        version: 0,
-        createdAt: "2026-09-22T00:00:00.000Z",
-        updatedAt: "2026-09-22T00:00:00.000Z",
-        textContent: null,
-        pages: [],
+      adminChapterListDataSchema.safeParse({
+        items: [chapter],
+        pagination: {
+          page: 1,
+          limit: 25,
+          total: 1,
+          totalPages: 1,
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
       }).success,
-    ).toBe(true);
+    ).toBe(false);
+  });
+
+  it("bounds and normalizes Work-scoped Chapter list filters", () => {
+    expect(
+      adminChapterListQuerySchema.parse({
+        search: "  Cafe\u0301  ",
+        sort: "published_desc",
+      }),
+    ).toEqual({ page: 1, limit: 25, search: "Café", sort: "published_desc" });
+    for (const query of [
+      { page: "100001" },
+      { limit: "101" },
+      { sort: "views" },
+      { publicationStatus: "scheduled" },
+      { search: "x".repeat(201) },
+      { search: "bad\u0000text" },
+      { unknown: "value" },
+    ])
+      expect(adminChapterListQuerySchema.safeParse(query).success).toBe(false);
+  });
+
+  it("keeps list summaries free of Chapter bodies and private page associations", () => {
+    const summary = {
+      id: firstId,
+      workId: secondId,
+      number: 1,
+      title: "Chapter",
+      contentType: "text",
+      publicationStatus: "draft",
+      publishedAt: null,
+      version: 0,
+      createdAt: "2026-09-22T00:00:00.000Z",
+      updatedAt: "2026-09-22T00:00:00.000Z",
+      readyForPublication: false,
+    };
+    expect(adminChapterSummarySchema.parse(summary)).toEqual(summary);
+    expect(
+      adminChapterSummarySchema.safeParse({ ...summary, textContent: null })
+        .success,
+    ).toBe(false);
+    expect(
+      adminChapterListDataSchema.safeParse({
+        items: [{ ...summary, pages: [] }],
+        pagination: {
+          page: 1,
+          limit: 25,
+          total: 1,
+          totalPages: 1,
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
+      }).success,
+    ).toBe(false);
   });
 });
 

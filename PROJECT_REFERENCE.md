@@ -1,8 +1,10 @@
 # Project reference
 
 This is the implemented architecture and operations reference for the
-authentication foundation, P01 content domain, P02 private media, and P03
-category/work administration.
+authentication foundation, P01 content domain, P02 private media, P03
+category/work administration, and the current P04 admin Chapter checkpoint.
+P04's staged synthetic enforcement and public title contract are implemented;
+real-data deployment and reviewer acceptance remain pending.
 
 ## Boundaries
 
@@ -182,6 +184,16 @@ fixtures are not migrated or seeded. Schema
 correction requires a later forward migration or a verified coordinated backup
 restore, never editing applied history.
 
+The P04 expand migration adds nullable legacy Chapter titles and retained
+Chapter-page rows. Admin Chapter create/update now requires a normalized title;
+text and illustrated drafts save through versioned Chapter commands. The
+illustrated command replaces the active ordered page set atomically, retaining
+retired page/reference history. Chapter publication checks current text or
+page/media readiness and appends an event only for a real transition. Public
+Chapter list/detail/count share the eligibility predicate and expose the title
+only after the separate enforcement migration. See the
+[P04 upgrade procedure](docs/operations/p04-chapter-upgrade.md).
+
 ## Media module
 
 `src/modules/media` owns actor and class authority, upload-attempt idempotency,
@@ -211,11 +223,13 @@ pending uploads or rejects incomplete ones, completes interrupted removal,
 marks damaged assets unavailable, and restores availability only for exact
 stored length/hash matches. See `docs/operations/media-backup-restore.md`.
 
-Admin Work screens now use P03 UUIDs and bind accepted P02 cover/background
-candidates only after a confirmed editorial save. Chapter screens still use
-fixture identities and local preview actions. P02 does not bind profile avatars,
-expose public/reader media, persist chapter authoring, or implement automatic
-garbage collection.
+Admin Work screens use P03 UUIDs and bind accepted P02 cover/background
+candidates only after a confirmed editorial save. Admin Chapter screens use
+persisted Work-scoped Chapter identities, private candidate uploads and saved
+preview. Chapter-page associations are written only by Chapter save; generic
+`chapter_page` reference writes return `MEDIA_TARGET_CONFLICT` after ADMIN
+authority. P02 does not bind profile avatars, expose public/reader media, or
+implement automatic garbage collection.
 
 ## Generic utilities
 
@@ -281,9 +295,10 @@ Content integration additionally uses the real Express middleware stack and
 PostgreSQL for ADMIN authority/CSRF, strict contracts, duplicate and stale
 outcomes, transaction rollback, concurrent publication, hidden-state privacy,
 allowlisted public metadata, and the registration-to-public text-story journey.
-The web contribution is type-only: admin Work and lowercase role types derive
-from `@fury/contracts`; rendered fixtures, Arabic labels, controls, routes, and
-mock actions remain unchanged and non-authoritative.
+The web Chapter feature uses shared contract types, a safe adapter, actor/Work/
+Chapter-scoped React Query keys, and persistent access denial. The Chapter
+editor, preview and list use saved server results; unrelated admin fixtures and
+the public fixture reader remain non-authoritative.
 
 Logout, logout-all, password change, and password reset revoke refresh records,
 not already-issued stateless access JWTs. An access JWT can therefore remain

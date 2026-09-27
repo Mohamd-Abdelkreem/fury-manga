@@ -7,6 +7,10 @@ import type {
 import { structuredTextDocumentSchema } from "@fury/contracts";
 import {
   ChapterContentType,
+  MediaAssetStatus,
+  MediaClass,
+  MediaReferenceSlot,
+  MediaScope,
   PublicationStatus,
   StoryStatus,
   WorkType,
@@ -131,6 +135,70 @@ export const assertWorkReady = (input: WorkReadinessInput): void => {
   if (issues.length > 0) throw new ContentNotReadyException(issues);
 };
 
+export type ChapterReadinessInput = Readonly<{
+  title: string | null;
+  number: number;
+  contentType: ChapterContentType;
+  textContent: unknown;
+  pages: readonly Readonly<{
+    position: number;
+    mediaReferences: readonly Readonly<{
+      slot: MediaReferenceSlot;
+      asset: Readonly<{
+        status: MediaAssetStatus;
+        mediaClass: MediaClass;
+        scope: MediaScope;
+      }>;
+    }>[];
+  }>[];
+}>;
+
+const hasReadyIllustratedPages = (
+  pages: ChapterReadinessInput["pages"],
+): boolean => {
+  if (pages.length === 0 || pages.length > 500) return false;
+  return pages
+    .toSorted((a, b) => a.position - b.position)
+    .every((page, index) => {
+      if (page.position !== index + 1 || page.mediaReferences.length !== 1)
+        return false;
+      const reference = page.mediaReferences[0];
+      if (reference === undefined) return false;
+      return (
+        reference.slot === MediaReferenceSlot.CHAPTER_PAGE &&
+        reference.asset.status === MediaAssetStatus.AVAILABLE &&
+        reference.asset.mediaClass === MediaClass.CHAPTER_PAGE &&
+        reference.asset.scope === MediaScope.ADMIN
+      );
+    });
+};
+
+export const findChapterReadinessIssues = (
+  input: ChapterReadinessInput,
+): string[] => {
+  const issues: string[] = [];
+  if (input.title === null || !validChapterTitle(input.title))
+    issues.push("title");
+  if (
+    !Number.isSafeInteger(input.number) ||
+    input.number < 1 ||
+    input.number > 2_147_483_647
+  )
+    issues.push("number");
+  if (input.contentType === ChapterContentType.TEXT) {
+    if (!structuredTextDocumentSchema.safeParse(input.textContent).success)
+      issues.push("textContent");
+  } else if (!hasReadyIllustratedPages(input.pages)) {
+    issues.push("pages");
+  }
+  return issues;
+};
+
+export const assertChapterReady = (input: ChapterReadinessInput): void => {
+  const issues = findChapterReadinessIssues(input);
+  if (issues.length > 0) throw new ContentNotReadyException(issues, "Chapter");
+};
+
 export const assertFeaturedPositionAvailable = (
   featuredHome: boolean,
   featuredOrder: number | null,
@@ -160,28 +228,39 @@ export function assertStructuredTextDocument(
 }
 
 export const assertChapterPageSequence = (
-  pages: readonly Readonly<{ position: number }>[],
+  pages: readonly Readonly<{ id?: string | undefined; assetId: string }>[],
 ): void => {
-  const positions = new Set<number>();
-  if (pages.length < 1 || pages.length > 500) {
+  const ids = new Set<string>();
+  if (pages.length > 500) {
     throw new ContentTypeConflictException(
-      "Submitted illustrated page sequences must contain 1 to 500 pages.",
+      "Submitted illustrated page sequences must contain at most 500 pages.",
     );
   }
-  for (const { position } of pages) {
-    if (
-      !Number.isSafeInteger(position) ||
-      position < 1 ||
-      position > 2_147_483_647 ||
-      positions.has(position)
-    ) {
+  for (const { id } of pages) {
+    if (id !== undefined && ids.has(id)) {
       throw new ContentTypeConflictException(
-        "Illustrated page positions must be unique positive integers.",
+        "Illustrated page IDs must be unique.",
       );
     }
-    positions.add(position);
+    if (id !== undefined) ids.add(id);
   }
 };
+
+export const normalizeChapterTitle = (value: string): string => {
+  const title = value.trim().normalize("NFC");
+  if (!validChapterTitle(title)) {
+    throw new ContentTypeConflictException("Chapter title is invalid.");
+  }
+  return title;
+};
+
+const validChapterTitle = (title: string): boolean =>
+  title.trim().length > 0 &&
+  title.length <= 200 &&
+  !Array.from(title).some((character) => {
+    const code = character.codePointAt(0) ?? 0;
+    return code < 32 || code === 127;
+  });
 
 const transitionKey = (
   current: PublicationStatus,

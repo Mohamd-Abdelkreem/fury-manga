@@ -119,3 +119,121 @@ describe("Work publication transactions", () => {
     });
   }
 });
+
+describe("Chapter publication transactions", () => {
+  it("rejects incomplete Chapters without an event or version change", async () => {
+    const work = await works.createWork({
+      title: "Incomplete Chapter Work",
+      slug: `chapter-incomplete-${randomUUID()}`,
+      type: "manga",
+      storyStatus: "ongoing",
+    });
+    const chapter = await database.chapter.create({
+      data: {
+        workId: work.id,
+        number: 1,
+        title: "Incomplete",
+        contentType: "ILLUSTRATED",
+      },
+    });
+    await expect(
+      publications.publishChapter(work.id, chapter.id, {
+        expectedVersion: 0,
+        targetState: "published",
+      }),
+    ).rejects.toMatchObject({
+      code: "CONTENT_NOT_READY",
+      errors: [{ field: "body.pages" }],
+    });
+    expect(
+      await database.chapter.findUniqueOrThrow({ where: { id: chapter.id } }),
+    ).toMatchObject({
+      publicationStatus: "DRAFT",
+      version: 0,
+    });
+    expect(
+      await database.publicationEvent.count({
+        where: { chapterId: chapter.id },
+      }),
+    ).toBe(0);
+  });
+
+  it("uses authoritative identity for retries and a new event for a later republish", async () => {
+    const work = await works.createWork({
+      title: "Text Publication Work",
+      slug: `chapter-publish-${randomUUID()}`,
+      type: "text-story",
+      storyStatus: "ongoing",
+    });
+    const chapter = await database.chapter.create({
+      data: {
+        workId: work.id,
+        number: 1,
+        title: "Ready text",
+        contentType: "TEXT",
+        textContent: {
+          version: 1,
+          blocks: [{ type: "paragraph", content: [{ text: "A story." }] }],
+        },
+      },
+    });
+    const command = { expectedVersion: 0, targetState: "published" as const };
+    const [first, retry] = await Promise.all([
+      publications.publishChapter(work.id, chapter.id, command),
+      publications.publishChapter(work.id, chapter.id, command),
+    ]);
+    expect([first.transitioned, retry.transitioned].sort()).toEqual([
+      false,
+      true,
+    ]);
+    expect(first.publicationEventId).toBe(retry.publicationEventId);
+    expect(
+      await database.publicationEvent.count({
+        where: { chapterId: chapter.id },
+      }),
+    ).toBe(1);
+    await expect(
+      publications.publishChapter(work.id, chapter.id, {
+        expectedVersion: 0,
+        targetState: "archived",
+      }),
+    ).rejects.toMatchObject({ code: "CONTENT_STALE_WRITE" });
+    const draft = await publications.publishChapter(work.id, chapter.id, {
+      expectedVersion: 1,
+      targetState: "draft",
+    });
+    const republished = await publications.publishChapter(work.id, chapter.id, {
+      expectedVersion: draft.version,
+      targetState: "published",
+    });
+    expect(republished.publicationEventId).not.toBe(first.publicationEventId);
+    expect(
+      await database.publicationEvent.count({
+        where: { chapterId: chapter.id },
+      }),
+    ).toBe(2);
+    const archived = await publications.publishChapter(work.id, chapter.id, {
+      expectedVersion: republished.version,
+      targetState: "archived",
+    });
+    await expect(
+      publications.publishChapter(work.id, chapter.id, {
+        expectedVersion: archived.version,
+        targetState: "published",
+      }),
+    ).rejects.toMatchObject({ code: "CONTENT_TRANSITION_CONFLICT" });
+    const restored = await publications.publishChapter(work.id, chapter.id, {
+      expectedVersion: archived.version,
+      targetState: "draft",
+    });
+    expect(restored).toMatchObject({
+      publicationStatus: "draft",
+      publicationEventId: null,
+    });
+    expect(
+      await database.publicationEvent.count({
+        where: { chapterId: chapter.id },
+      }),
+    ).toBe(2);
+  });
+});

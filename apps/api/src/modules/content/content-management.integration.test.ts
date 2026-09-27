@@ -1,12 +1,13 @@
 import { createDatabaseClient } from "@fury/database";
 import type { StructuredTextDocument } from "@fury/contracts";
 import { randomUUID } from "node:crypto";
-import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import {
   ContentImmutableException,
   ContentStaleWriteException,
   ContentTransitionConflictException,
+  ContentNotReadyException,
   ContentTypeConflictException,
 } from "./content.errors.js";
 import { CategoryManagementService } from "./category-management.service.js";
@@ -44,6 +45,42 @@ const service = {
 
 const pagination = { page: 1, limit: 25, skip: 0, take: 25 };
 const fixtureActorIds: string[] = [];
+let chapterActorId: string;
+
+beforeAll(async () => {
+  chapterActorId = randomUUID();
+  fixtureActorIds.push(chapterActorId);
+  await database.user.create({
+    data: {
+      id: chapterActorId,
+      email: `chapter-${chapterActorId}@example.test`,
+      fullName: "Chapter Admin",
+      passwordHash: "test-hash",
+      role: "ADMIN",
+      status: "ACTIVE",
+      emailVerifiedAt: new Date(),
+    },
+  });
+});
+
+const createPageAsset = async (): Promise<string> => {
+  const asset = await database.mediaAsset.create({
+    data: {
+      mediaClass: "CHAPTER_PAGE",
+      scope: "ADMIN",
+      uploadedByUserId: chapterActorId,
+      relativeKey: `chapter-${randomUUID()}`,
+      contentType: "image/webp",
+      byteLength: 100,
+      width: 10,
+      height: 10,
+      sha256: "a".repeat(64),
+      status: "AVAILABLE",
+      availableAt: new Date(),
+    },
+  });
+  return asset.id;
+};
 
 const makeReady = async (workId: string): Promise<void> => {
   fixtureActorIds.push(await prepareWorkForPublication(database, workId));
@@ -74,6 +111,141 @@ describe("focused content management services with PostgreSQL", () => {
     await database.$disconnect();
   });
 
+  it("lists one Work's filtered Chapter summaries with stable pages and truthful totals", async () => {
+    const work = await works.createWork({
+      title: "List Work",
+      slug: `list-${randomUUID()}`,
+      type: "text-story",
+      storyStatus: "ongoing",
+    });
+    const otherWork = await works.createWork({
+      title: "Other Work",
+      slug: `other-${randomUUID()}`,
+      type: "text-story",
+      storyStatus: "ongoing",
+    });
+    const saved = [];
+    for (let number = 1; number <= 5; number += 1) {
+      saved.push(
+        await chapters.createChapter(
+          work.id,
+          {
+            number,
+            title: number === 3 ? "Café middle" : `Chapter ${String(number)}`,
+            textContent: firstTextDocument,
+          },
+          chapterActorId,
+        ),
+      );
+    }
+    await chapters.createChapter(
+      otherWork.id,
+      { number: 9, title: "Café other", textContent: firstTextDocument },
+      chapterActorId,
+    );
+    const second = saved[1];
+    const fourth = saved[3];
+    if (second === undefined || fourth === undefined)
+      throw new Error("Expected Chapter fixtures.");
+    await publications.publishChapter(work.id, second.id, {
+      expectedVersion: 0,
+      targetState: "published",
+    });
+    await publications.publishChapter(work.id, fourth.id, {
+      expectedVersion: 0,
+      targetState: "archived",
+    });
+    for (const [index, chapter] of saved.entries()) {
+      await database.chapter.update({
+        where: { id: chapter.id },
+        data: { updatedAt: new Date(Date.UTC(2026, 8, index + 1)) },
+      });
+    }
+
+    const first = await chapters.listChapters(
+      work.id,
+      { page: 1, limit: 2, skip: 0, take: 2 },
+      { page: 1, limit: 2, sort: "number_desc" },
+    );
+    expect(first.items.map(({ number }) => number)).toEqual([5, 4]);
+    expect(first.pagination).toMatchObject({
+      total: 5,
+      totalPages: 3,
+      hasNextPage: true,
+    });
+    expect(first.items[0]).not.toHaveProperty("textContent");
+    expect(first.items[0]).not.toHaveProperty("pages");
+    const overrun = await chapters.listChapters(
+      work.id,
+      { page: 9, limit: 2, skip: 16, take: 2 },
+      { page: 9, limit: 2, sort: "number_desc" },
+    );
+    expect(overrun).toMatchObject({
+      items: [],
+      pagination: { total: 5, totalPages: 3 },
+    });
+    const titleMatch = await chapters.listChapters(work.id, pagination, {
+      page: 1,
+      limit: 25,
+      sort: "number_asc",
+      search: "café",
+    });
+    expect(titleMatch.items.map(({ number }) => number)).toEqual([3]);
+    const numberMatch = await chapters.listChapters(work.id, pagination, {
+      page: 1,
+      limit: 25,
+      sort: "number_asc",
+      search: "2",
+    });
+    expect(numberMatch.items.map(({ number }) => number)).toEqual([2]);
+    const published = await chapters.listChapters(work.id, pagination, {
+      page: 1,
+      limit: 25,
+      sort: "published_desc",
+      publicationStatus: "published",
+    });
+    expect(published.items.map(({ number }) => number)).toEqual([2]);
+    expect(published.pagination.total).toBe(1);
+    const dates = await chapters.listChapters(work.id, pagination, {
+      page: 1,
+      limit: 25,
+      sort: "published_desc",
+    });
+    expect(dates.items.map(({ number }) => number)[0]).toBe(2);
+    expect(
+      dates.items.slice(1).every(({ publishedAt }) => publishedAt === null),
+    ).toBe(true);
+    const updated = await chapters.listChapters(work.id, pagination, {
+      page: 1,
+      limit: 25,
+      sort: "updated_desc",
+    });
+    expect(updated.items.map(({ number }) => number)).toEqual([5, 4, 3, 2, 1]);
+    const empty = await chapters.listChapters(work.id, pagination, {
+      page: 1,
+      limit: 25,
+      sort: "number_asc",
+      search: "missing",
+    });
+    expect(empty).toMatchObject({ items: [], pagination: { total: 0 } });
+    const emptyWork = await works.createWork({
+      title: "Empty Work",
+      slug: `empty-${randomUUID()}`,
+      type: "text-story",
+      storyStatus: "ongoing",
+    });
+    await expect(
+      chapters.listChapters(emptyWork.id, pagination, {
+        page: 1,
+        limit: 25,
+        sort: "number_asc",
+      }),
+    ).resolves.toMatchObject({
+      items: [],
+      pagination: { total: 0, totalPages: 0 },
+    });
+  });
+
   it("creates durable records and preserves idempotent category replacement", async () => {
     const category = await service.createCategory({
       displayName: "Action",
@@ -93,10 +265,17 @@ describe("focused content management services with PostgreSQL", () => {
       expectedVersion: 0,
       categoryIds: [category.id],
     });
-    const chapter = await service.createChapter(work.id, {
-      number: 1,
-      pages: [{ position: 2 }, { position: 1 }],
-    });
+    const firstPageAssetId = await createPageAsset();
+    const secondPageAssetId = await createPageAsset();
+    const chapter = await service.createChapter(
+      work.id,
+      {
+        number: 1,
+        title: "Durable Chapter",
+        pages: [{ assetId: firstPageAssetId }, { assetId: secondPageAssetId }],
+      },
+      chapterActorId,
+    );
 
     expect(assigned.version).toBe(1);
     expect(repeated.version).toBe(1);
@@ -210,28 +389,43 @@ describe("focused content management services with PostgreSQL", () => {
       type: "manga",
       storyStatus: "ongoing",
     });
-    const chapter = await service.createChapter(work.id, {
-      number: 1,
-      pages: [{ position: 1 }],
-    });
+    const firstPageAssetId = await createPageAsset();
+    const replacementAssetId = await createPageAsset();
+    const chapter = await service.createChapter(
+      work.id,
+      {
+        number: 1,
+        title: "Rollback Chapter",
+        pages: [{ assetId: firstPageAssetId }],
+      },
+      chapterActorId,
+    );
+
+    const originalPage = chapter.pages[0];
+    if (originalPage === undefined) throw new Error("Missing fixture page");
 
     await database.$executeRawUnsafe(
-      "CREATE FUNCTION fail_test_chapter_page_insert() RETURNS TRIGGER LANGUAGE plpgsql AS 'BEGIN IF NEW.position = 3 THEN RAISE EXCEPTION ''forced page failure''; END IF; RETURN NEW; END;'",
+      "CREATE FUNCTION fail_test_chapter_page_insert() RETURNS TRIGGER LANGUAGE plpgsql AS 'BEGIN RAISE EXCEPTION ''forced reference failure''; END;'",
     );
     await database.$executeRawUnsafe(
-      "CREATE TRIGGER fail_test_chapter_page_insert_trigger BEFORE INSERT ON chapter_pages FOR EACH ROW EXECUTE FUNCTION fail_test_chapter_page_insert()",
+      "CREATE TRIGGER fail_test_chapter_page_insert_trigger BEFORE INSERT ON media_reference_events FOR EACH ROW EXECUTE FUNCTION fail_test_chapter_page_insert()",
     );
     try {
       await expect(
-        service.updateChapter(work.id, chapter.id, {
-          expectedVersion: 0,
-          number: 2,
-          pages: [{ position: 3 }],
-        }),
+        service.updateChapter(
+          work.id,
+          chapter.id,
+          {
+            expectedVersion: 0,
+            number: 2,
+            pages: [{ id: originalPage.id, assetId: replacementAssetId }],
+          },
+          chapterActorId,
+        ),
       ).rejects.toBeDefined();
     } finally {
       await database.$executeRawUnsafe(
-        "DROP TRIGGER fail_test_chapter_page_insert_trigger ON chapter_pages",
+        "DROP TRIGGER fail_test_chapter_page_insert_trigger ON media_reference_events",
       );
       await database.$executeRawUnsafe(
         "DROP FUNCTION fail_test_chapter_page_insert()",
@@ -246,6 +440,211 @@ describe("focused content management services with PostgreSQL", () => {
     });
   });
 
+  it("reorders, replaces and removes illustrated pages with durable identity and history", async () => {
+    const work = await service.createWork({
+      title: "Page History Work",
+      slug: "page-history-work",
+      type: "manga",
+      storyStatus: "ongoing",
+    });
+    const firstAsset = await createPageAsset();
+    const secondAsset = await createPageAsset();
+    const replacementAsset = await createPageAsset();
+    const created = await service.createChapter(
+      work.id,
+      {
+        number: 1,
+        title: "History Chapter",
+        pages: [{ assetId: firstAsset }, { assetId: secondAsset }],
+      },
+      chapterActorId,
+    );
+    const [first, second] = created.pages;
+    if (first === undefined || second === undefined)
+      throw new Error("Missing fixture pages");
+    const reordered = await service.updateChapter(
+      work.id,
+      created.id,
+      {
+        expectedVersion: 0,
+        pages: [
+          { id: second.id, assetId: secondAsset },
+          { id: first.id, assetId: firstAsset },
+        ],
+      },
+      chapterActorId,
+    );
+    expect(
+      reordered.pages.map(({ id, position }) => ({ id, position })),
+    ).toEqual([
+      { id: second.id, position: 1 },
+      { id: first.id, position: 2 },
+    ]);
+    const replaced = await service.updateChapter(
+      work.id,
+      created.id,
+      {
+        expectedVersion: 1,
+        pages: [{ id: second.id, assetId: replacementAsset }],
+      },
+      chapterActorId,
+    );
+    expect(replaced.pages).toMatchObject([
+      { id: second.id, assetId: replacementAsset, position: 1 },
+    ]);
+    await database.$disconnect();
+    await database.$connect();
+    await expect(
+      service.getChapter(work.id, created.id),
+    ).resolves.toMatchObject({
+      version: 2,
+      pages: [{ id: second.id, assetId: replacementAsset, position: 1 }],
+    });
+    const retiredPage = await database.chapterPage.findUniqueOrThrow({
+      where: { id: first.id },
+    });
+    expect(retiredPage.chapterId).toBe(created.id);
+    expect(retiredPage.retiredAt).toBeInstanceOf(Date);
+    const references = await database.mediaReference.findMany({
+      where: { chapterPageId: { in: [first.id, second.id] } },
+      orderBy: { chapterPageId: "asc" },
+    });
+    expect(references).toHaveLength(2);
+    expect(
+      references.find(({ chapterPageId }) => chapterPageId === first.id)
+        ?.retiredAt,
+    ).toBeInstanceOf(Date);
+    expect(
+      references.find(({ chapterPageId }) => chapterPageId === second.id)
+        ?.assetId,
+    ).toBe(replacementAsset);
+    await expect(
+      database.mediaReferenceEvent.count({
+        where: { referenceId: { in: references.map(({ id }) => id) } },
+      }),
+    ).resolves.toBe(4);
+  });
+
+  it("accepts one concurrent page revision and rejects the stale contender", async () => {
+    const work = await service.createWork({
+      title: "Concurrent Pages",
+      slug: "concurrent-pages",
+      type: "manga",
+      storyStatus: "ongoing",
+    });
+    const assetId = await createPageAsset();
+    const chapter = await service.createChapter(
+      work.id,
+      {
+        number: 1,
+        title: "Concurrent Chapter",
+        pages: [{ assetId }],
+      },
+      chapterActorId,
+    );
+    const page = chapter.pages[0];
+    if (page === undefined) throw new Error("Missing fixture page");
+    const command = { expectedVersion: 0, pages: [{ id: page.id, assetId }] };
+    const outcomes = await Promise.allSettled([
+      service.updateChapter(work.id, chapter.id, command, chapterActorId),
+      service.updateChapter(work.id, chapter.id, command, chapterActorId),
+    ]);
+    expect(
+      outcomes.filter(({ status }) => status === "fulfilled"),
+    ).toHaveLength(1);
+    expect(outcomes.filter(({ status }) => status === "rejected")).toHaveLength(
+      1,
+    );
+    const rejected = outcomes.find(({ status }) => status === "rejected");
+    if (rejected?.status !== "rejected")
+      throw new Error("Missing rejected save");
+    expect(rejected.reason).toBeInstanceOf(ContentStaleWriteException);
+    await expect(
+      service.getChapter(work.id, chapter.id),
+    ).resolves.toMatchObject({
+      version: 1,
+      pages: [{ id: page.id, assetId }],
+    });
+  });
+
+  it("rejects foreign page identity and unavailable or wrong-class media without committing", async () => {
+    const work = await service.createWork({
+      title: "Asset Validation Work",
+      slug: "asset-validation-work",
+      type: "manga",
+      storyStatus: "ongoing",
+    });
+    const foreignAssetId = await createPageAsset();
+    const assetId = await createPageAsset();
+    const other = await service.createChapter(
+      work.id,
+      {
+        number: 1,
+        title: "Other Chapter",
+        pages: [{ assetId: foreignAssetId }],
+      },
+      chapterActorId,
+    );
+    const draft = await service.createChapter(
+      work.id,
+      {
+        number: 2,
+        title: "Target Chapter",
+        pages: [],
+      },
+      chapterActorId,
+    );
+    const foreignPage = other.pages[0];
+    if (foreignPage === undefined) throw new Error("Missing fixture page");
+    await expect(
+      service.updateChapter(
+        work.id,
+        draft.id,
+        {
+          expectedVersion: 0,
+          pages: [{ id: foreignPage.id, assetId }],
+        },
+        chapterActorId,
+      ),
+    ).rejects.toMatchObject({ statusCode: 404 });
+    for (const status of ["PENDING", "UNAVAILABLE"] as const) {
+      await database.mediaAsset.update({
+        where: { id: assetId },
+        data: { status },
+      });
+      await expect(
+        service.updateChapter(
+          work.id,
+          draft.id,
+          {
+            expectedVersion: 0,
+            pages: [{ assetId }],
+          },
+          chapterActorId,
+        ),
+      ).rejects.toMatchObject({ statusCode: 404 });
+    }
+    await database.mediaAsset.update({
+      where: { id: assetId },
+      data: { status: "AVAILABLE", mediaClass: "WORK_COVER" },
+    });
+    await expect(
+      service.updateChapter(
+        work.id,
+        draft.id,
+        {
+          expectedVersion: 0,
+          pages: [{ assetId }],
+        },
+        chapterActorId,
+      ),
+    ).rejects.toMatchObject({ statusCode: 404 });
+    await expect(service.getChapter(work.id, draft.id)).resolves.toMatchObject({
+      version: 0,
+      pages: [],
+    });
+  });
+
   it("creates and replaces only the representation derived from the parent Work", async () => {
     const textWork = await service.createWork({
       title: "Text Work",
@@ -253,10 +652,15 @@ describe("focused content management services with PostgreSQL", () => {
       type: "text-story",
       storyStatus: "ongoing",
     });
-    const textChapter = await service.createChapter(textWork.id, {
-      number: 1,
-      textContent: firstTextDocument,
-    });
+    const textChapter = await service.createChapter(
+      textWork.id,
+      {
+        number: 1,
+        title: "Text Chapter",
+        textContent: firstTextDocument,
+      },
+      chapterActorId,
+    );
     const updatedTextChapter = await service.updateChapter(
       textWork.id,
       textChapter.id,
@@ -264,6 +668,7 @@ describe("focused content management services with PostgreSQL", () => {
         expectedVersion: 0,
         textContent: secondTextDocument,
       },
+      chapterActorId,
     );
     expect(updatedTextChapter).toMatchObject({
       contentType: "text",
@@ -273,10 +678,15 @@ describe("focused content management services with PostgreSQL", () => {
     });
 
     await expect(
-      service.createChapter(textWork.id, {
-        number: 2,
-        pages: [{ position: 1 }],
-      }),
+      service.createChapter(
+        textWork.id,
+        {
+          number: 2,
+          title: "Wrong Representation",
+          pages: [{ assetId: randomUUID() }],
+        },
+        chapterActorId,
+      ),
     ).rejects.toBeInstanceOf(ContentTypeConflictException);
 
     const illustratedWork = await service.createWork({
@@ -286,52 +696,179 @@ describe("focused content management services with PostgreSQL", () => {
       storyStatus: "ongoing",
     });
     await expect(
-      service.createChapter(illustratedWork.id, {
-        number: 1,
-        textContent: firstTextDocument,
-      }),
+      service.createChapter(
+        illustratedWork.id,
+        {
+          number: 1,
+          title: "Wrong Representation",
+          textContent: firstTextDocument,
+        },
+        chapterActorId,
+      ),
     ).rejects.toBeInstanceOf(ContentTypeConflictException);
     await expect(database.chapter.count()).resolves.toBe(1);
   });
 
-  it("rejects empty, duplicate, and stale illustrated replacements without change", async () => {
+  it("reloads an incomplete text draft and rejects an invalid edit without changing its revision", async () => {
+    const work = await service.createWork({
+      title: "Text Draft Work",
+      slug: "text-draft-work",
+      type: "novel",
+      storyStatus: "ongoing",
+    });
+    const draft = await service.createChapter(
+      work.id,
+      { number: 1, title: "Draft", textContent: null },
+      chapterActorId,
+    );
+    expect(draft).toMatchObject({ contentType: "text", textContent: null });
+    const completeDocument = {
+      version: 1,
+      blocks: [
+        { type: "heading", level: 2, text: "Opening" },
+        {
+          type: "paragraph",
+          content: [
+            { text: "Read", bold: true },
+            { text: " more", href: "/stories" },
+          ],
+        },
+        { type: "list", ordered: true, items: ["First", "Second"] },
+      ],
+    } satisfies StructuredTextDocument;
+    const saved = await service.updateChapter(
+      work.id,
+      draft.id,
+      { expectedVersion: 0, textContent: completeDocument },
+      chapterActorId,
+    );
+    expect(saved.textContent).toEqual(completeDocument);
+    await database.$disconnect();
+    await database.$connect();
+    await expect(service.getChapter(work.id, draft.id)).resolves.toMatchObject({
+      textContent: completeDocument,
+      version: 1,
+    });
+    await expect(
+      service.updateChapter(
+        work.id,
+        draft.id,
+        {
+          expectedVersion: 1,
+          textContent: {
+            version: 1,
+            blocks: [{ type: "heading", level: 2, text: "" }],
+          },
+        },
+        chapterActorId,
+      ),
+    ).rejects.toBeInstanceOf(ContentTypeConflictException);
+    await expect(service.getChapter(work.id, draft.id)).resolves.toMatchObject({
+      textContent: completeDocument,
+      version: 1,
+    });
+    const cleared = await service.updateChapter(
+      work.id,
+      draft.id,
+      { expectedVersion: 1, textContent: null },
+      chapterActorId,
+    );
+    expect(cleared).toMatchObject({ textContent: null, version: 2 });
+    const restored = await service.updateChapter(
+      work.id,
+      draft.id,
+      { expectedVersion: 2, textContent: completeDocument },
+      chapterActorId,
+    );
+    await service.publishChapter(work.id, draft.id, {
+      expectedVersion: restored.version,
+      targetState: "published",
+    });
+    await expect(
+      service.updateChapter(
+        work.id,
+        draft.id,
+        { expectedVersion: restored.version + 1, textContent: null },
+        chapterActorId,
+      ),
+    ).rejects.toMatchObject({ code: "CONTENT_NOT_READY" });
+    await expect(service.getChapter(work.id, draft.id)).resolves.toMatchObject({
+      textContent: completeDocument,
+      version: restored.version + 1,
+    });
+  });
+
+  it("keeps empty drafts and rejects duplicate or stale illustrated edits", async () => {
     const work = await service.createWork({
       title: "Representation Work",
       slug: "representation-work",
       type: "manga",
       storyStatus: "ongoing",
     });
-    const emptyDraft = await service.createChapter(work.id, { number: 1 });
+    const emptyDraft = await service.createChapter(
+      work.id,
+      {
+        number: 1,
+        title: "Incomplete Chapter",
+      },
+      chapterActorId,
+    );
     expect(emptyDraft.pages).toEqual([]);
 
-    await expect(
-      service.updateChapter(work.id, emptyDraft.id, {
+    const cleared = await service.updateChapter(
+      work.id,
+      emptyDraft.id,
+      {
         expectedVersion: 0,
         pages: [],
-      }),
-    ).rejects.toBeInstanceOf(ContentTypeConflictException);
+      },
+      chapterActorId,
+    );
+    expect(cleared.pages).toEqual([]);
 
-    const ready = await service.updateChapter(work.id, emptyDraft.id, {
-      expectedVersion: 0,
-      pages: [{ position: 2 }, { position: 1 }],
-    });
-    expect(ready.pages.map(({ position }) => position)).toEqual([1, 2]);
-    await expect(
-      service.updateChapter(work.id, emptyDraft.id, {
+    const firstAssetId = await createPageAsset();
+    const secondAssetId = await createPageAsset();
+    const ready = await service.updateChapter(
+      work.id,
+      emptyDraft.id,
+      {
         expectedVersion: 1,
-        pages: [{ position: 1 }, { position: 1 }],
-      }),
+        pages: [{ assetId: firstAssetId }, { assetId: secondAssetId }],
+      },
+      chapterActorId,
+    );
+    expect(ready.pages.map(({ position }) => position)).toEqual([1, 2]);
+    const readyFirstPage = ready.pages[0];
+    if (readyFirstPage === undefined) throw new Error("Missing fixture page");
+    await expect(
+      service.updateChapter(
+        work.id,
+        emptyDraft.id,
+        {
+          expectedVersion: 2,
+          pages: [
+            { id: readyFirstPage.id, assetId: firstAssetId },
+            { id: readyFirstPage.id, assetId: secondAssetId },
+          ],
+        },
+        chapterActorId,
+      ),
     ).rejects.toBeInstanceOf(ContentTypeConflictException);
     await expect(
-      service.updateChapter(work.id, emptyDraft.id, {
-        expectedVersion: 0,
-        pages: [{ position: 3 }],
-      }),
+      service.updateChapter(
+        work.id,
+        emptyDraft.id,
+        {
+          expectedVersion: 0,
+          pages: [{ id: readyFirstPage.id, assetId: firstAssetId }],
+        },
+        chapterActorId,
+      ),
     ).rejects.toBeInstanceOf(ContentStaleWriteException);
     await expect(
       service.getChapter(work.id, emptyDraft.id),
     ).resolves.toMatchObject({
-      version: 1,
+      version: 2,
       pages: [{ position: 1 }, { position: 2 }],
     });
   });
@@ -344,20 +881,33 @@ describe("focused content management services with PostgreSQL", () => {
       storyStatus: "ongoing",
     });
     await makeReady(work.id);
-    const emptyChapter = await service.createChapter(work.id, { number: 1 });
+    const emptyChapter = await service.createChapter(
+      work.id,
+      {
+        number: 1,
+        title: "Publication Chapter",
+      },
+      chapterActorId,
+    );
 
     await expect(
       service.publishChapter(work.id, emptyChapter.id, {
         expectedVersion: 0,
         targetState: "published",
       }),
-    ).rejects.toBeInstanceOf(ContentTransitionConflictException);
+    ).rejects.toBeInstanceOf(ContentNotReadyException);
     await expect(database.publicationEvent.count()).resolves.toBe(0);
 
-    const readyChapter = await service.updateChapter(work.id, emptyChapter.id, {
-      expectedVersion: 0,
-      pages: [{ position: 1 }],
-    });
+    const pageAssetId = await createPageAsset();
+    const readyChapter = await service.updateChapter(
+      work.id,
+      emptyChapter.id,
+      {
+        expectedVersion: 0,
+        pages: [{ assetId: pageAssetId }],
+      },
+      chapterActorId,
+    );
     const publishedWork = await service.publishWork(work.id, {
       expectedVersion: 0,
       targetState: "published",
@@ -483,10 +1033,16 @@ describe("focused content management services with PostgreSQL", () => {
       storyStatus: "ongoing",
     });
     await makeReady(work.id);
-    const chapter = await service.createChapter(work.id, {
-      number: 1,
-      pages: [{ position: 1 }],
-    });
+    const pageAssetId = await createPageAsset();
+    const chapter = await service.createChapter(
+      work.id,
+      {
+        number: 1,
+        title: "Recovery Chapter",
+        pages: [{ assetId: pageAssetId }],
+      },
+      chapterActorId,
+    );
     const publishedWork = await service.publishWork(work.id, {
       expectedVersion: 0,
       targetState: "published",

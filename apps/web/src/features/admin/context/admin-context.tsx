@@ -10,7 +10,6 @@ import React, {
 import {
   INITIAL_ADMIN_ACTIVITY,
   INITIAL_ADMIN_AD_PLACEMENTS,
-  INITIAL_ADMIN_CHAPTERS,
   INITIAL_ADMIN_COMMENTS,
   INITIAL_ADMIN_CONTACT_MESSAGES,
   INITIAL_ADMIN_GIFTS,
@@ -24,7 +23,6 @@ import {
 import type {
   AdminActivityEvent,
   AdminAdPlacement,
-  AdminChapter,
   AdminComment,
   AdminContactMessage,
   AdminContactStatus,
@@ -37,10 +35,7 @@ import type {
   AdminUser,
   AdminUserDetail,
   AdminUserSummary,
-  AdminWork,
 } from "../types/admin.types";
-import type { TextBlock } from "../../text-stories/data/textStories";
-import { useAdminWorkActions } from "../hooks/use-admin-work-actions";
 import { useAdminUserActions } from "../hooks/use-admin-user-actions";
 import { useAdminGiftActions } from "../hooks/use-admin-gift-actions";
 import { useAdminModerationActions } from "../hooks/use-admin-moderation-actions";
@@ -49,7 +44,6 @@ import { useAdminAdActions } from "../hooks/use-admin-ad-actions";
 import { deriveAdminMetrics } from "../model/admin-metrics";
 
 interface AdminContextType {
-  chapters: Record<string, AdminChapter[]>;
   metrics: AdminDashboardMetrics;
   activities: AdminActivityEvent[];
   user: AdminUserSummary;
@@ -61,29 +55,6 @@ interface AdminContextType {
   contactMessages: AdminContactMessage[];
   adPlacements: AdminAdPlacement[];
   globalAdsEnabled: boolean;
-
-  getWork: (id: string) => AdminWork | undefined;
-  getChapters: (workId: string) => AdminChapter[];
-  getChapter: (workId: string, chapterId: string) => AdminChapter | undefined;
-  createChapter: (
-    workId: string,
-    chapterData: Omit<
-      AdminChapter,
-      "id" | "workId" | "views" | "publishedAt" | "updatedAt"
-    > & {
-      pages?: string[] | undefined;
-      textContent?: string | undefined;
-      textBlocks?: TextBlock[] | undefined;
-    },
-  ) => AdminChapter;
-  updateChapter: (
-    workId: string,
-    chapterId: string,
-    updates: Partial<AdminChapter>,
-  ) => AdminChapter | undefined;
-  toggleChapterPublish: (workId: string, chapterId: string) => void;
-  archiveChapter: (workId: string, chapterId: string) => void;
-  restoreChapter: (workId: string, chapterId: string) => void;
 
   getUser: (userId: string) => AdminUserDetail | undefined;
   suspendUser: (userId: string, reason: string) => void;
@@ -148,9 +119,6 @@ interface AdminContextType {
 const AdminContext = createContext<AdminContextType | null>(null);
 
 export function AdminDataProvider({ children }: { children: ReactNode }) {
-  const [chapters, setChapters] = useState<Record<string, AdminChapter[]>>(
-    INITIAL_ADMIN_CHAPTERS,
-  );
   const [activities, setActivities] = useState<AdminActivityEvent[]>(
     INITIAL_ADMIN_ACTIVITY,
   );
@@ -177,27 +145,11 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
   );
 
   const metrics = useMemo(
-    () => deriveAdminMetrics({ chapters, users, reports, contactMessages }),
-    [chapters, users, reports, contactMessages],
+    () => deriveAdminMetrics({ users, reports, contactMessages }),
+    [users, reports, contactMessages],
   );
 
   const user = INITIAL_ADMIN_USER;
-
-  const {
-    getWork,
-    getChapters,
-    getChapter,
-    createChapter,
-    updateChapter,
-    toggleChapterPublish,
-    archiveChapter,
-    restoreChapter,
-  } = useAdminWorkActions({
-    chapters,
-    setChapters,
-    setActivities,
-    actorName: user.name,
-  });
 
   const { getUser, suspendUser, reactivateUser } = useAdminUserActions({
     setUsers,
@@ -263,7 +215,6 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(
     () => ({
-      chapters,
       metrics,
       activities,
       user,
@@ -275,14 +226,6 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
       contactMessages,
       adPlacements,
       globalAdsEnabled,
-      getWork,
-      getChapters,
-      getChapter,
-      createChapter,
-      updateChapter,
-      toggleChapterPublish,
-      archiveChapter,
-      restoreChapter,
       getUser,
       suspendUser,
       reactivateUser,
@@ -309,7 +252,6 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
       updateAdPlacement,
     }),
     [
-      chapters,
       metrics,
       activities,
       user,
@@ -321,14 +263,6 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
       contactMessages,
       adPlacements,
       globalAdsEnabled,
-      getWork,
-      getChapters,
-      getChapter,
-      createChapter,
-      updateChapter,
-      toggleChapterPublish,
-      archiveChapter,
-      restoreChapter,
       getUser,
       suspendUser,
       reactivateUser,

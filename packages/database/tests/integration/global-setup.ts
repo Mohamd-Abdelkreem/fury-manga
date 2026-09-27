@@ -34,6 +34,7 @@ export default async function setup(): Promise<() => Promise<void>> {
     .start();
   const databaseUrl = container.getConnectionUri();
   process.env["DATABASE_URL"] = databaseUrl;
+  process.env["TEST_DATABASE_CONTAINER_ID"] = container.getId();
 
   try {
     await deployMigrations(databaseUrl);
@@ -44,6 +45,7 @@ export default async function setup(): Promise<() => Promise<void>> {
 
   return async () => {
     delete process.env["DATABASE_URL"];
+    delete process.env["TEST_DATABASE_CONTAINER_ID"];
     await container.stop();
   };
 }

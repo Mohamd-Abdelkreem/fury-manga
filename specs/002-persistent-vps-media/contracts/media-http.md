@@ -54,10 +54,31 @@ List query is strict. `scope` is required; `mediaClass` is optional only if cons
 
 `POST /references` body is strict `{targetKind, targetId, assetId}`; target ID is an existing P01 Work or illustrated ChapterPage. `GET /references` requires exactly `targetKind,targetId` and returns null only for a valid authorized target with no active reference. Binding rejects class mismatch, unavailable assets, or an existing different active reference. `PUT /references/:referenceId` body is strict `{assetId, expectedAssetId, expectedVersion}` and changes only the active asset pointer after the new asset is available. `DELETE /references/:referenceId` body is strict `{expectedAssetId, expectedVersion}`; it retires only the matching active reference. A stale version/current identity yields `409 VERSION_CONFLICT`; a conflicting target/bind yields `409 MEDIA_TARGET_CONFLICT`. A newly referenced asset cannot be physically removed by a stale delete. No endpoint saves/publishes the parent Work/Chapter/Gift or selects an avatar for the profile.
 
+**P04 Chapter-page write cutover:** The generic reference read and private asset
+upload/lookup routes remain available to authorized ADMINs. Generic `POST
+/references` with `targetKind: "chapter_page"` now returns safe `409
+MEDIA_TARGET_CONFLICT` after ADMIN/CSRF/validation, without target lookup.
+Generic `PUT` and `DELETE /references/:referenceId` classify an authorized
+reference ID first: active or retired Chapter-page references return the same
+safe 409 without changing a parent, asset, or event; unknown IDs retain the
+non-disclosing 404. Work cover/background reference writes retain their P02
+behavior. Chapter POST/PATCH owns page binding, replacement, ordering, and
+retirement in one Chapter transaction. This is a breaking write-authority
+change for older editorial clients; stop their independent Chapter-page writes
+before enabling the P04 admin contract. Public media delivery is still absent.
+
 ## Stable media error codes and safety
 
 Add a shared `mediaOperationErrorCodeSchema` extending existing common codes with `MEDIA_INVALID_FILE`, `MEDIA_UNSUPPORTED_TYPE`, `MEDIA_LIMIT_EXCEEDED`, `UPLOAD_IN_PROGRESS`, `UPLOAD_ATTEMPT_CONFLICT`, `UPLOAD_INCOMPLETE`, `MEDIA_IN_USE`, `MEDIA_TARGET_CONFLICT`, `VERSION_CONFLICT`, `MEDIA_UNAVAILABLE`. `UPLOAD_INCOMPLETE` is a safe terminal attempt reason, not a successful asset response. `MEDIA_IN_USE` is the required referenced-removal conflict and never queues deletion. Internal/IO/decode faults become safe `503 SERVICE_UNAVAILABLE` or `MEDIA_UNAVAILABLE` for an authorized known asset, with redacted request ID only. No original name, storage key/root, hash, another owner, raw exception, or request body appears in outputs/logs/cache. Multipart data and blob errors must be normalized to safe feature errors before React Query retains them.
 
 ## Compatibility and OpenAPI
 
-All routes and schemas are additive to P01. Existing work/chapter/account/public response shapes and auth transport remain unchanged. Old clients ignore new media routes; new clients use them only when the server advertises/deploys the P02 boundary. Register every route in `apps/api/src/infrastructure/openapi/openapi.ts`, including multipart requestBody, UUID header, bearer/CSRF security, binary response, exact error statuses, and JSON envelopes. Schema/mapper, OpenAPI route, central adapter, real Express, and browser tests must agree. A P03/P04/P10 consumer will need a separately reviewed compatibility change before exposing media in parent DTOs.
+The original P02 routes and schemas were additive to P01. The P04 Chapter-page
+generic write restriction above is a later breaking authority change; old
+editorial clients must use Chapter save instead. Existing public Chapter output
+remains title-free until P04's populated legacy gate. Register every route in
+`apps/api/src/infrastructure/openapi/openapi.ts`, including multipart requestBody,
+UUID header, bearer/CSRF security, binary response, exact error statuses, and
+JSON envelopes. Schema/mapper, OpenAPI route, central adapter, real Express, and
+browser tests must agree. A future public/reader media consumer still needs its
+own reviewed delivery contract.

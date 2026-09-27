@@ -1,6 +1,7 @@
 import type {
   AdminCategory,
   AdminChapter,
+  AdminChapterSummary,
   AdminWork,
   AdminWorkListItem,
   ChapterContentType as ContractChapterContentType,
@@ -19,6 +20,8 @@ import {
   WorkType,
 } from "@fury/database";
 import type { Prisma } from "@fury/database";
+
+import { findChapterReadinessIssues } from "./content.rules.js";
 
 export const CATEGORY_SELECT = {
   id: true,
@@ -109,6 +112,7 @@ export const CHAPTER_SELECT = {
   id: true,
   workId: true,
   number: true,
+  title: true,
   contentType: true,
   publicationStatus: true,
   publishedAt: true,
@@ -117,13 +121,43 @@ export const CHAPTER_SELECT = {
   createdAt: true,
   updatedAt: true,
   textContent: true,
-  pages: { select: { id: true, position: true } },
+  pages: {
+    where: { retiredAt: null },
+    select: {
+      id: true,
+      position: true,
+      mediaReferences: {
+        where: { retiredAt: null },
+        select: {
+          id: true,
+          assetId: true,
+          version: true,
+          slot: true,
+          asset: { select: { status: true, mediaClass: true, scope: true } },
+        },
+      },
+    },
+  },
+} as const satisfies Prisma.ChapterSelect;
+
+export const CHAPTER_SUMMARY_SELECT = {
+  id: true,
+  workId: true,
+  number: true,
+  title: true,
+  contentType: true,
+  publicationStatus: true,
+  publishedAt: true,
+  version: true,
+  createdAt: true,
+  updatedAt: true,
 } as const satisfies Prisma.ChapterSelect;
 
 export const PUBLIC_CHAPTER_SELECT = {
   id: true,
   workId: true,
   number: true,
+  title: true,
   contentType: true,
   publishedAt: true,
 } as const satisfies Prisma.ChapterSelect;
@@ -145,6 +179,9 @@ export type PublicWorkRecord = Prisma.WorkGetPayload<{
 }>;
 export type ChapterRecord = Prisma.ChapterGetPayload<{
   select: typeof CHAPTER_SELECT;
+}>;
+export type ChapterSummaryRecord = Prisma.ChapterGetPayload<{
+  select: typeof CHAPTER_SUMMARY_SELECT;
 }>;
 export type PublicChapterRecord = Prisma.ChapterGetPayload<{
   select: typeof PUBLIC_CHAPTER_SELECT;
@@ -281,27 +318,65 @@ export const mapPublicWork = (record: PublicWorkRecord): PublicWork => {
   };
 };
 
-export const mapAdminChapter = (record: ChapterRecord): AdminChapter => ({
-  id: record.id,
-  workId: record.workId,
-  number: record.number,
-  contentType: chapterContentTypeMap[record.contentType],
-  publicationStatus: publicationStatusMap[record.publicationStatus],
-  publishedAt: record.publishedAt?.toISOString() ?? null,
-  version: record.version,
-  createdAt: record.createdAt.toISOString(),
-  updatedAt: record.updatedAt.toISOString(),
-  textContent:
-    record.textContent === null
-      ? null
-      : structuredTextDocumentSchema.parse(record.textContent),
-  pages: record.pages
-    .map(({ id, position }) => ({ id, position }))
+export const mapAdminChapter = (record: ChapterRecord): AdminChapter => {
+  const pages = record.pages
+    .map(({ id, position, mediaReferences }) => {
+      const reference = mediaReferences[0];
+      if (reference === undefined || mediaReferences.length !== 1) {
+        throw new Error("Chapter page requires legacy media remediation.");
+      }
+      return {
+        id,
+        position,
+        assetId: reference.assetId,
+        assetStatus:
+          reference.asset.status === "AVAILABLE"
+            ? ("available" as const)
+            : ("unavailable" as const),
+      };
+    })
     .toSorted(
       (left, right) =>
         left.position - right.position || left.id.localeCompare(right.id),
-    ),
-});
+    );
+  return {
+    id: record.id,
+    workId: record.workId,
+    number: record.number,
+    title: record.title,
+    contentType: chapterContentTypeMap[record.contentType],
+    publicationStatus: publicationStatusMap[record.publicationStatus],
+    publishedAt: record.publishedAt?.toISOString() ?? null,
+    version: record.version,
+    createdAt: record.createdAt.toISOString(),
+    updatedAt: record.updatedAt.toISOString(),
+    textContent:
+      record.textContent === null
+        ? null
+        : structuredTextDocumentSchema.parse(record.textContent),
+    pages,
+    readyForPublication: findChapterReadinessIssues(record).length === 0,
+  };
+};
+
+export const mapAdminChapterSummary = (
+  record: ChapterSummaryRecord,
+  readyForPublication: boolean,
+): AdminChapterSummary => {
+  return {
+    id: record.id,
+    workId: record.workId,
+    number: record.number,
+    title: record.title,
+    contentType: chapterContentTypeMap[record.contentType],
+    publicationStatus: publicationStatusMap[record.publicationStatus],
+    publishedAt: record.publishedAt?.toISOString() ?? null,
+    version: record.version,
+    createdAt: record.createdAt.toISOString(),
+    updatedAt: record.updatedAt.toISOString(),
+    readyForPublication,
+  };
+};
 
 export const mapPublicChapter = (
   record: PublicChapterRecord,
@@ -313,6 +388,7 @@ export const mapPublicChapter = (
     id: record.id,
     workId: record.workId,
     number: record.number,
+    title: record.title,
     contentType: chapterContentTypeMap[record.contentType],
     publishedAt: record.publishedAt.toISOString(),
   };

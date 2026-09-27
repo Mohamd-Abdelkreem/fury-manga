@@ -1,12 +1,10 @@
 import {
-  INITIAL_ADMIN_CHAPTERS,
   INITIAL_ADMIN_CONTACT_MESSAGES,
   INITIAL_ADMIN_METRICS,
   INITIAL_ADMIN_REPORTS,
   INITIAL_ADMIN_USERS,
 } from "../data/adminFixtures";
 import type {
-  AdminChapter,
   AdminContactMessage,
   AdminDashboardMetrics,
   AdminReport,
@@ -14,20 +12,10 @@ import type {
 } from "../types/admin.types";
 
 type DashboardRecords = {
-  chapters: Readonly<Record<string, AdminChapter[]>>;
   users: readonly AdminUser[];
   reports: readonly AdminReport[];
   contactMessages: readonly AdminContactMessage[];
 };
-
-function publishedChapterCount(chapters: DashboardRecords["chapters"]) {
-  return Object.values(chapters).reduce(
-    (count, workChapters) =>
-      count +
-      workChapters.filter((chapter) => chapter.status === "published").length,
-    0,
-  );
-}
 
 function openReportCount(reports: DashboardRecords["reports"]) {
   return reports.filter(
@@ -44,11 +32,7 @@ export function deriveAdminMetrics(
 ): AdminDashboardMetrics {
   // The dashboard totals include records beyond the interactive fixture sample.
   return {
-    publishedChapters: countDelta(
-      publishedChapterCount(records.chapters),
-      publishedChapterCount(INITIAL_ADMIN_CHAPTERS),
-      INITIAL_ADMIN_METRICS.publishedChapters,
-    ),
+    publishedChapters: INITIAL_ADMIN_METRICS.publishedChapters,
     activeUsers: countDelta(
       records.users.filter((user) => user.status === "active").length,
       INITIAL_ADMIN_USERS.filter((user) => user.status === "active").length,

@@ -2,6 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import {
   ChapterContentType,
+  MediaAssetStatus,
+  MediaClass,
+  MediaReferenceSlot,
+  MediaScope,
   PublicationStatus,
   WorkType,
 } from "@fury/database";
@@ -22,10 +26,66 @@ import {
   assertStructuredTextDocument,
   deriveChapterContentType,
   findWorkReadinessIssues,
+  findChapterReadinessIssues,
+  normalizeChapterTitle,
   normalizeWorkTags,
 } from "./content.rules.js";
 
 describe("content rules", () => {
+  it("requires consecutive available Chapter pages and a valid text document", () => {
+    const asset = {
+      status: MediaAssetStatus.AVAILABLE,
+      mediaClass: MediaClass.CHAPTER_PAGE,
+      scope: MediaScope.ADMIN,
+    };
+    const readyPage = {
+      position: 1,
+      mediaReferences: [
+        {
+          slot: MediaReferenceSlot.CHAPTER_PAGE,
+          asset,
+        },
+      ],
+    };
+    const illustrated = {
+      title: "Chapter",
+      number: 1,
+      contentType: ChapterContentType.ILLUSTRATED,
+      textContent: null,
+      pages: [readyPage],
+    };
+    expect(findChapterReadinessIssues(illustrated)).toEqual([]);
+    expect(
+      findChapterReadinessIssues({
+        ...illustrated,
+        pages: [{ ...readyPage, position: 2 }],
+      }),
+    ).toEqual(["pages"]);
+    expect(
+      findChapterReadinessIssues({
+        ...illustrated,
+        pages: [
+          {
+            ...readyPage,
+            mediaReferences: [
+              {
+                slot: MediaReferenceSlot.CHAPTER_PAGE,
+                asset: { ...asset, status: MediaAssetStatus.UNAVAILABLE },
+              },
+            ],
+          },
+        ],
+      }),
+    ).toEqual(["pages"]);
+    expect(
+      findChapterReadinessIssues({
+        ...illustrated,
+        contentType: ChapterContentType.TEXT,
+        pages: [],
+        textContent: { version: 1, blocks: [] },
+      }),
+    ).toEqual(["textContent"]);
+  });
   it.each([
     [WorkType.MANGA, ChapterContentType.ILLUSTRATED],
     [WorkType.MANHWA, ChapterContentType.ILLUSTRATED],
@@ -61,6 +121,18 @@ describe("content rules", () => {
     }).toThrow();
   });
 
+  it("normalizes Chapter titles and bounds the page set at the service boundary", () => {
+    expect(normalizeChapterTitle("  Cafe\u0301  ")).toBe("Café");
+    expect(() => normalizeChapterTitle("   ")).toThrow(
+      ContentTypeConflictException,
+    );
+    expect(() => {
+      assertChapterPageSequence(
+        Array.from({ length: 501 }, (_, index) => ({ assetId: String(index) })),
+      );
+    }).toThrow(ContentTypeConflictException);
+  });
+
   it("validates complete chapter representations at the service boundary", () => {
     expect(() => {
       assertStructuredTextDocument({
@@ -75,13 +147,41 @@ describe("content rules", () => {
       });
     }).toThrow();
     expect(() => {
-      assertChapterPageSequence([{ position: 2 }, { position: 1 }]);
+      assertStructuredTextDocument({
+        version: 1,
+        blocks: [
+          {
+            type: "paragraph",
+            content: [{ text: "Safe", href: "/stories/example" }],
+          },
+        ],
+      });
+    }).not.toThrow();
+    expect(() => {
+      assertStructuredTextDocument({
+        version: 1,
+        blocks: [
+          {
+            type: "paragraph",
+            content: [{ text: "Unsafe", href: "//example.com" }],
+          },
+        ],
+      });
+    }).toThrow(ContentTypeConflictException);
+    expect(() => {
+      assertChapterPageSequence([
+        { assetId: "asset-a" },
+        { assetId: "asset-b" },
+      ]);
     }).not.toThrow();
     expect(() => {
       assertChapterPageSequence([]);
-    }).toThrow();
+    }).not.toThrow();
     expect(() => {
-      assertChapterPageSequence([{ position: 1 }, { position: 1 }]);
+      assertChapterPageSequence([
+        { id: "page-a", assetId: "asset-a" },
+        { id: "page-a", assetId: "asset-b" },
+      ]);
     }).toThrow();
   });
 

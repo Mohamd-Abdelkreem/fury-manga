@@ -69,17 +69,38 @@ const SAFE_FIELD_PATHS = new Set([
   "body.featuredHome",
   "body.featuredOrder",
   "body.targetState",
+  "body.number",
+  "body.pages",
+  "body.textContent",
+  "body.textContent.blocks",
   "params.categoryId",
   "params.workId",
+  "params.chapterId",
   "query.page",
   "query.limit",
   "query.search",
+  "query.publicationStatus",
+  "query.sort",
   "query.enabled",
 ]);
 
-const isSafeFieldPath = (field: string): boolean =>
-  SAFE_FIELD_PATHS.has(field) ||
-  /^body\.(?:tags|categoryIds)\.\d+$/u.test(field);
+const isSafeFieldPath = (field: string): boolean => {
+  if (SAFE_FIELD_PATHS.has(field)) return true;
+  const indexed =
+    /^body\.(pages|textContent\.blocks)\.(\d{1,3})(?:\.(id|assetId|content|text|href))?$/u.exec(
+      field,
+    );
+  if (indexed !== null)
+    return (
+      Number(indexed[2]) < 500 &&
+      (indexed[1] === "pages"
+        ? indexed[3] === undefined ||
+          indexed[3] === "id" ||
+          indexed[3] === "assetId"
+        : indexed[3] !== "id" && indexed[3] !== "assetId")
+    );
+  return /^body\.(?:tags|categoryIds)\.\d{1,3}$/u.test(field);
+};
 
 export class SafeAdminContentError extends Error {
   readonly code: SafeContentErrorCode;
@@ -104,6 +125,7 @@ export class SafeAdminContentError extends Error {
 }
 
 const projectError = (error: unknown): SafeAdminContentError => {
+  if (error instanceof SafeAdminContentError) return error;
   if (axios.isCancel(error)) {
     return new SafeAdminContentError("CANCELLED", 0, "");
   }
@@ -127,7 +149,7 @@ const projectError = (error: unknown): SafeAdminContentError => {
               ?.map(({ field }) => field)
               .filter(isSafeFieldPath) ?? [],
           ),
-        ),
+        ).slice(0, 20),
       );
     }
   }
@@ -143,7 +165,9 @@ const projectError = (error: unknown): SafeAdminContentError => {
   );
 };
 
-const safeRequest = async <T>(request: () => Promise<T>): Promise<T> => {
+export const safeContentRequest = async <T>(
+  request: () => Promise<T>,
+): Promise<T> => {
   try {
     return await request();
   } catch (error: unknown) {
@@ -151,8 +175,11 @@ const safeRequest = async <T>(request: () => Promise<T>): Promise<T> => {
   }
 };
 
-const readSuccessData = (value: unknown): unknown =>
+export const readContentSuccessData = (value: unknown): unknown =>
   successEnvelopeSchema.parse(value).data;
+
+const safeRequest = safeContentRequest;
+const readSuccessData = readContentSuccessData;
 
 export const adminContentApi = {
   listWorks(

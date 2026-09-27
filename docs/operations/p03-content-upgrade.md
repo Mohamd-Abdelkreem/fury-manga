@@ -2,6 +2,11 @@
 
 This procedure is for an isolated copy of a populated P01/P02 database and its matching private media directory. It does not authorize a production inventory, repair, migration, or restore. Preserve a coordinated PostgreSQL and media backup using [the P02 procedure](media-backup-restore.md) before staging the upgrade.
 
+Complete and record the P03 published-Work readiness gate before a populated
+P04 Chapter upgrade. The later [P04 procedure](p04-chapter-upgrade.md) adds its
+own Chapter title/page/media inventory and staged enforcement decision; a P03
+zero-row result does not clear that separate gate.
+
 Migration `20260925010000_p03_editorial_foundation` (A) adds nullable Work
 editorial fields, Work tags and featured constraints, then backfills category
 positions by `(created_at, id)` without creating missing synopsis, author or

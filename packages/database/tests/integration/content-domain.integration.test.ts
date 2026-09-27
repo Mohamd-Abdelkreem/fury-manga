@@ -64,7 +64,247 @@ const insertWork = async (
   return result.rows[0]?.id ?? "";
 };
 
+const insertChapterPageAsset = async (): Promise<{
+  actorId: string;
+  assetId: string;
+}> => {
+  const actorId = randomUUID();
+  fixtureUserIds.push(actorId);
+  await pool.query(
+    "INSERT INTO users (id, email, password_hash, full_name, status, email_verified_at, updated_at) VALUES ($1, $2, 'hash', 'Admin', 'ACTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+    [actorId, `page-${actorId}@example.test`],
+  );
+  const assetId = randomUUID();
+  await pool.query(
+    "INSERT INTO media_assets (id, media_class, scope, uploaded_by_user_id, relative_key, content_type, byte_length, width, height, sha256, status, available_at) VALUES ($1, 'chapter_page', 'admin', $2, $3, 'image/webp', 100, 10, 10, $4, 'available', CURRENT_TIMESTAMP)",
+    [assetId, actorId, `page-${assetId}`, "a".repeat(64)],
+  );
+  return { actorId, assetId };
+};
+
+const insertActivePages = async (
+  chapterId: string,
+  positions: number[],
+  assetId: string,
+): Promise<{ pageId: string; referenceId: string }[]> => {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const pages: { pageId: string; referenceId: string }[] = [];
+    for (const position of positions) {
+      const page = await client.query<{ id: string }>(
+        "INSERT INTO chapter_pages (chapter_id, position) VALUES ($1, $2) RETURNING id",
+        [chapterId, position],
+      );
+      const pageId = page.rows[0]?.id;
+      if (!pageId) throw new Error("Inserted page ID is required.");
+      const reference = await client.query<{ id: string }>(
+        "INSERT INTO media_references (asset_id, chapter_page_id, slot, updated_at) VALUES ($1, $2, 'chapter_page', CURRENT_TIMESTAMP) RETURNING id",
+        [assetId, pageId],
+      );
+      const referenceId = reference.rows[0]?.id;
+      if (!referenceId) throw new Error("Inserted reference ID is required.");
+      pages.push({ pageId, referenceId });
+    }
+    await client.query("COMMIT");
+    return pages;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
 describe("content-domain PostgreSQL invariants", () => {
+  it("allows a retired page position to be reused while retaining its identity", async () => {
+    const workId = await insertWork(`page-sequence-${randomUUID()}`);
+    const chapter = await pool.query<{ id: string }>(
+      "INSERT INTO chapters (work_id, number, title, content_type, updated_at) VALUES ($1, 1, 'Chapter', 'illustrated', CURRENT_TIMESTAMP) RETURNING id",
+      [workId],
+    );
+    const chapterId = chapter.rows[0]?.id;
+    const { assetId } = await insertChapterPageAsset();
+    const first = await insertActivePages(chapterId ?? "", [1], assetId);
+    const firstId = first[0]?.pageId;
+    await expect(
+      pool.query(
+        "INSERT INTO chapter_pages (chapter_id, position) VALUES ($1, 1)",
+        [chapterId],
+      ),
+    ).rejects.toMatchObject({ code: "23505" });
+    await pool.query(
+      "UPDATE chapter_pages SET retired_at = CURRENT_TIMESTAMP WHERE id = $1",
+      [firstId],
+    );
+    const replacement = await insertActivePages(chapterId ?? "", [1], assetId);
+    expect(replacement[0]?.pageId).not.toBe(firstId);
+    const rows = await pool.query<{ id: string; retired_at: Date | null }>(
+      "SELECT id, retired_at FROM chapter_pages WHERE chapter_id = $1 ORDER BY retired_at NULLS FIRST",
+      [chapterId],
+    );
+    expect(rows.rows).toHaveLength(2);
+    expect(
+      rows.rows.find(({ id }) => id === firstId)?.retired_at,
+    ).toBeInstanceOf(Date);
+    expect(
+      rows.rows.find(({ id }) => id === replacement[0]?.pageId)?.retired_at,
+    ).toBeNull();
+  });
+
+  it("retains retired page references and events when a later page-set write rolls back", async () => {
+    const workId = await insertWork(`page-history-${randomUUID()}`);
+    const chapter = await pool.query<{ id: string }>(
+      "INSERT INTO chapters (work_id, number, title, content_type, updated_at) VALUES ($1, 1, 'Chapter', 'illustrated', CURRENT_TIMESTAMP) RETURNING id",
+      [workId],
+    );
+    const chapterId = chapter.rows[0]?.id;
+    const { actorId, assetId } = await insertChapterPageAsset();
+    const pages = await insertActivePages(chapterId ?? "", [1], assetId);
+    const pageId = pages[0]?.pageId;
+    const referenceId = pages[0]?.referenceId;
+    await pool.query(
+      "INSERT INTO media_reference_events (reference_id, actor_user_id, action, to_asset_id, result_version) VALUES ($1, $2, 'bound', $3, 0)",
+      [referenceId, actorId, assetId],
+    );
+
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      await client.query(
+        "UPDATE chapters SET version = version + 1 WHERE id = $1",
+        [chapterId],
+      );
+      await client.query(
+        "UPDATE chapter_pages SET retired_at = CURRENT_TIMESTAMP WHERE id = $1",
+        [pageId],
+      );
+      await client.query(
+        "UPDATE media_references SET retired_at = CURRENT_TIMESTAMP, version = version + 1 WHERE id = $1",
+        [referenceId],
+      );
+      await expect(
+        client.query(
+          "INSERT INTO media_reference_events (reference_id, actor_user_id, action, from_asset_id, result_version) VALUES ($1, $2, 'retired', $3, 0)",
+          [referenceId, actorId, assetId],
+        ),
+      ).rejects.toMatchObject({ code: "23505" });
+      await client.query("ROLLBACK");
+    } finally {
+      client.release();
+    }
+
+    const beforeRetirement = await pool.query<{
+      version: number;
+      page_retired_at: Date | null;
+      reference_retired_at: Date | null;
+      event_count: string;
+    }>(
+      `SELECT c.version, p.retired_at AS page_retired_at,
+              r.retired_at AS reference_retired_at,
+              COUNT(e.id)::text AS event_count
+         FROM chapters c JOIN chapter_pages p ON p.chapter_id = c.id
+         JOIN media_references r ON r.chapter_page_id = p.id
+         JOIN media_reference_events e ON e.reference_id = r.id
+        WHERE c.id = $1 GROUP BY c.version, p.retired_at, r.retired_at`,
+      [chapterId],
+    );
+    expect(beforeRetirement.rows).toEqual([
+      {
+        version: 0,
+        page_retired_at: null,
+        reference_retired_at: null,
+        event_count: "1",
+      },
+    ]);
+
+    await pool.query(
+      "UPDATE chapter_pages SET retired_at = CURRENT_TIMESTAMP WHERE id = $1",
+      [pageId],
+    );
+    await pool.query(
+      "UPDATE media_references SET retired_at = CURRENT_TIMESTAMP, version = version + 1 WHERE id = $1",
+      [referenceId],
+    );
+    await pool.query(
+      "INSERT INTO media_reference_events (reference_id, actor_user_id, action, from_asset_id, result_version) VALUES ($1, $2, 'retired', $3, 1)",
+      [referenceId, actorId, assetId],
+    );
+    const retained = await pool.query<{
+      page_id: string;
+      reference_id: string;
+      actions: string[];
+    }>(
+      `SELECT p.id AS page_id, r.id AS reference_id,
+              ARRAY_AGG(e.action::text ORDER BY e.result_version) AS actions
+         FROM chapter_pages p JOIN media_references r ON r.chapter_page_id = p.id
+         JOIN media_reference_events e ON e.reference_id = r.id
+        WHERE p.id = $1 AND p.retired_at IS NOT NULL AND r.retired_at IS NOT NULL
+        GROUP BY p.id, r.id`,
+      [pageId],
+    );
+    expect(retained.rows).toEqual([
+      {
+        page_id: pageId,
+        reference_id: referenceId,
+        actions: ["bound", "retired"],
+      },
+    ]);
+  });
+
+  it("accepts only one Chapter number when two writers create it concurrently", async () => {
+    const workId = await insertWork(`number-race-${randomUUID()}`);
+    const command =
+      "INSERT INTO chapters (work_id, number, title, content_type, updated_at) VALUES ($1, 1, 'Racing Chapter', 'illustrated', CURRENT_TIMESTAMP)";
+    const outcomes = await Promise.allSettled([
+      pool.query(command, [workId]),
+      pool.query(command, [workId]),
+    ]);
+    expect(
+      outcomes.filter(({ status }) => status === "fulfilled"),
+    ).toHaveLength(1);
+    const rejected = outcomes.find(({ status }) => status === "rejected");
+    if (rejected?.status !== "rejected")
+      throw new Error("Missing rejected insert");
+    expect(rejected.reason).toMatchObject({ code: "23505" });
+    const count = await pool.query<{ total: string }>(
+      "SELECT COUNT(*)::text AS total FROM chapters WHERE work_id = $1 AND number = 1",
+      [workId],
+    );
+    expect(count.rows[0]?.total).toBe("1");
+  });
+
+  it("persists null text for private drafts while rejecting a published null body", async () => {
+    const workId = await insertWork(`null-text-${randomUUID()}`, "text-story");
+    const chapter = await pool.query<{ id: string }>(
+      "INSERT INTO chapters (work_id, number, title, content_type, text_content, updated_at) VALUES ($1, 1, 'Draft', 'text', NULL, CURRENT_TIMESTAMP) RETURNING id",
+      [workId],
+    );
+    const chapterId = chapter.rows[0]?.id;
+    expect(
+      (
+        await pool.query<{ text_content: null }>(
+          "SELECT text_content FROM chapters WHERE id = $1",
+          [chapterId],
+        )
+      ).rows,
+    ).toEqual([{ text_content: null }]);
+    await expect(
+      pool.query(
+        "UPDATE chapters SET publication_status = 'published', published_at = CURRENT_TIMESTAMP WHERE id = $1",
+        [chapterId],
+      ),
+    ).rejects.toMatchObject({ code: "23514" });
+    expect(
+      (
+        await pool.query<{ publication_status: string }>(
+          "SELECT publication_status FROM chapters WHERE id = $1",
+          [chapterId],
+        )
+      ).rows[0]?.publication_status,
+    ).toBe("draft");
+  });
+
   it("retains true zero chapter counts and stable ID ties for saved Works", async () => {
     const firstId = await insertWork(`list-first-${randomUUID()}`);
     const secondId = await insertWork(`list-second-${randomUUID()}`);
@@ -73,7 +313,7 @@ describe("content-domain PostgreSQL invariants", () => {
       ["2026-01-01T00:00:00.000Z", [firstId, secondId]],
     );
     await pool.query(
-      "INSERT INTO chapters (work_id, number, content_type, updated_at) VALUES ($1, 1, 'illustrated', CURRENT_TIMESTAMP)",
+      "INSERT INTO chapters (work_id, number, title, content_type, updated_at) VALUES ($1, 1, 'Chapter', 'illustrated', CURRENT_TIMESTAMP)",
       [secondId],
     );
     const rows = await pool.query<{ id: string; chapter_count: string }>(
@@ -362,14 +602,12 @@ describe("content-domain PostgreSQL invariants", () => {
   it("allows an empty illustrated draft and enforces chapter/page ordering facts", async () => {
     const workId = await insertWork();
     const chapter = await pool.query<{ id: string }>(
-      "INSERT INTO chapters (work_id, number, content_type, updated_at) VALUES ($1, 1, 'illustrated', CURRENT_TIMESTAMP) RETURNING id",
+      "INSERT INTO chapters (work_id, number, title, content_type, updated_at) VALUES ($1, 1, 'Chapter', 'illustrated', CURRENT_TIMESTAMP) RETURNING id",
       [workId],
     );
     const chapterId = chapter.rows[0]?.id ?? "";
-    await pool.query(
-      "INSERT INTO chapter_pages (chapter_id, position) VALUES ($1, 2), ($1, 1)",
-      [chapterId],
-    );
+    const { assetId } = await insertChapterPageAsset();
+    await insertActivePages(chapterId, [2, 1], assetId);
 
     const pages = await pool.query<{ position: number }>(
       "SELECT position FROM chapter_pages WHERE chapter_id = $1 ORDER BY position ASC, id ASC",
@@ -384,13 +622,13 @@ describe("content-domain PostgreSQL invariants", () => {
     ).rejects.toMatchObject({ code: "23505" });
     await expect(
       pool.query(
-        "INSERT INTO chapters (work_id, number, content_type, updated_at) VALUES ($1, 0, 'illustrated', CURRENT_TIMESTAMP)",
+        "INSERT INTO chapters (work_id, number, title, content_type, updated_at) VALUES ($1, 0, 'Chapter', 'illustrated', CURRENT_TIMESTAMP)",
         [workId],
       ),
     ).rejects.toMatchObject({ code: "23514" });
     await expect(
       pool.query(
-        "INSERT INTO chapters (work_id, number, content_type, updated_at) VALUES ($1, 1, 'illustrated', CURRENT_TIMESTAMP)",
+        "INSERT INTO chapters (work_id, number, title, content_type, updated_at) VALUES ($1, 1, 'Chapter', 'illustrated', CURRENT_TIMESTAMP)",
         [workId],
       ),
     ).rejects.toMatchObject({ code: "23505" });
@@ -407,7 +645,7 @@ describe("content-domain PostgreSQL invariants", () => {
     const textWorkId = await insertWork("text", "text-story");
     await expect(
       pool.query(
-        "INSERT INTO chapters (work_id, number, content_type, text_content, updated_at) VALUES ($1, 1, 'text', $2::jsonb, CURRENT_TIMESTAMP)",
+        "INSERT INTO chapters (work_id, number, title, content_type, text_content, updated_at) VALUES ($1, 1, 'Chapter', 'text', $2::jsonb, CURRENT_TIMESTAMP)",
         [illustratedWorkId, JSON.stringify({ version: 1, blocks: [] })],
       ),
     ).rejects.toMatchObject({ code: "23514" });
@@ -434,7 +672,7 @@ describe("content-domain PostgreSQL invariants", () => {
     ).rejects.toMatchObject({ code: "23514" });
 
     const textChapter = await pool.query<{ id: string }>(
-      "INSERT INTO chapters (work_id, number, content_type, text_content, updated_at) VALUES ($1, 1, 'text', $2::jsonb, CURRENT_TIMESTAMP) RETURNING id",
+      "INSERT INTO chapters (work_id, number, title, content_type, text_content, updated_at) VALUES ($1, 1, 'Chapter', 'text', $2::jsonb, CURRENT_TIMESTAMP) RETURNING id",
       [textWorkId, JSON.stringify({ version: 1, blocks: [] })],
     );
     const textChapterId = textChapter.rows[0]?.id ?? "";
@@ -455,7 +693,7 @@ describe("content-domain PostgreSQL invariants", () => {
   it("couples publication state to immutable one-target history and readiness", async () => {
     const workId = await insertWork("publication-invariants");
     const chapter = await pool.query<{ id: string }>(
-      "INSERT INTO chapters (work_id, number, content_type, updated_at) VALUES ($1, 1, 'illustrated', CURRENT_TIMESTAMP) RETURNING id",
+      "INSERT INTO chapters (work_id, number, title, content_type, updated_at) VALUES ($1, 1, 'Chapter', 'illustrated', CURRENT_TIMESTAMP) RETURNING id",
       [workId],
     );
     const chapterId = chapter.rows[0]?.id ?? "";
@@ -887,14 +1125,12 @@ describe("content-domain PostgreSQL invariants", () => {
       [workId, categoryId],
     );
     const chapter = await pool.query<{ id: string }>(
-      "INSERT INTO chapters (work_id, number, content_type, updated_at) VALUES ($1, 1, 'illustrated', CURRENT_TIMESTAMP) RETURNING id",
+      "INSERT INTO chapters (work_id, number, title, content_type, updated_at) VALUES ($1, 1, 'Chapter', 'illustrated', CURRENT_TIMESTAMP) RETURNING id",
       [workId],
     );
     const chapterId = chapter.rows[0]?.id ?? "";
-    await pool.query(
-      "INSERT INTO chapter_pages (chapter_id, position) VALUES ($1, 1)",
-      [chapterId],
-    );
+    const { assetId } = await insertChapterPageAsset();
+    await insertActivePages(chapterId, [1], assetId);
     const publication = await pool.query<{ id: string }>(
       "INSERT INTO publication_events (work_id) VALUES ($1) RETURNING id",
       [workId],

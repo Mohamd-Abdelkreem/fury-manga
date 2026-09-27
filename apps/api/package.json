@@ -9,6 +9,7 @@
     "build": "pnpm clean && tsc -p tsconfig.build.json",
     "start": "node --enable-source-maps dist/server.js",
     "media:reconcile": "node --conditions=development --import tsx src/media-reconcile.ts",
+    "chapter:inventory": "node --conditions=development --import tsx src/chapter-inventory.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "check-types": "tsc --noEmit",

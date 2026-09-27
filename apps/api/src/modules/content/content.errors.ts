@@ -56,9 +56,12 @@ export class ContentCategoryInUseException extends ContentException {
 }
 
 export class ContentNotReadyException extends AppError {
-  constructor(fields: readonly string[]) {
+  constructor(
+    fields: readonly string[],
+    resource: "Work" | "Chapter" = "Work",
+  ) {
     super(
-      "The Work is not ready for publication.",
+      `The ${resource} is not ready for publication.`,
       HTTP_STATUS.CONFLICT,
       "CONTENT_NOT_READY",
       true,

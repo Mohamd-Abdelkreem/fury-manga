@@ -12,7 +12,7 @@ import {
   createChapterBodySchema,
   createWorkBodySchema,
   adminWorkListQuerySchema,
-  paginationQuerySchema,
+  adminChapterListQuerySchema,
   publicationCommandBodySchema,
   replaceWorkCategoriesBodySchema,
   updateCategoryBodySchema,
@@ -238,8 +238,13 @@ export class ContentManagementController {
     response: Response,
   ): Promise<Response> => {
     const { workId } = workIdParamsSchema.parse(request.validated?.params);
-    const pagination = this.paginationFrom(request);
-    const responseData = await this.chapters.listChapters(workId, pagination);
+    const query = adminChapterListQuerySchema.parse(request.validated?.query);
+    const pagination = parsePagination(query);
+    const responseData = await this.chapters.listChapters(
+      workId,
+      pagination,
+      query,
+    );
     const message = "Chapters loaded.";
     const requestPath = request.path;
     const requestId = request.requestId;
@@ -258,7 +263,12 @@ export class ContentManagementController {
   ): Promise<Response> => {
     const { workId } = workIdParamsSchema.parse(request.validated?.params);
     const body = createChapterBodySchema.parse(request.validated?.body);
-    const chapter = await this.chapters.createChapter(workId, body);
+    const actorUserId = request.user?.id ?? "";
+    const chapter = await this.chapters.createChapter(
+      workId,
+      body,
+      actorUserId,
+    );
     const responseData = { chapter };
     const message = "Chapter created.";
     const requestPath = request.path;
@@ -301,7 +311,13 @@ export class ContentManagementController {
       request.validated?.params,
     );
     const body = updateChapterBodySchema.parse(request.validated?.body);
-    const chapter = await this.chapters.updateChapter(workId, chapterId, body);
+    const actorUserId = request.user?.id ?? "";
+    const chapter = await this.chapters.updateChapter(
+      workId,
+      chapterId,
+      body,
+      actorUserId,
+    );
     const responseData = { chapter };
     const message = "Chapter updated.";
     const requestPath = request.path;
@@ -360,12 +376,4 @@ export class ContentManagementController {
       requestId,
     );
   };
-
-  // Helper methods
-
-  private paginationFrom(request: Request) {
-    const query = paginationQuerySchema.parse(request.validated?.query);
-    const pagination = parsePagination(query);
-    return pagination;
-  }
 }

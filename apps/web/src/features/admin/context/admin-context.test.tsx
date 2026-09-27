@@ -43,8 +43,8 @@ function FixtureBoundaryProbe() {
   const context = useAdminData();
   return (
     <>
-      <output data-testid="chapter-count">
-        {context.getChapters("trait-hoarder").length}
+      <output data-testid="chapter-state-present">
+        {String("chapters" in context || "getChapters" in context)}
       </output>
       <output data-testid="work-state-present">
         {String("works" in context)}
@@ -57,15 +57,15 @@ function FixtureBoundaryProbe() {
 }
 
 describe("admin fixture state", () => {
-  it("keeps chapter presentation fixtures without exposing replacement work state", () => {
+  it("excludes Chapter state and Work replacement state from the fixture context", () => {
     render(
       <AdminDataProvider>
         <FixtureBoundaryProbe />
       </AdminDataProvider>,
     );
-    expect(
-      Number(screen.getByTestId("chapter-count").textContent),
-    ).toBeGreaterThan(0);
+    expect(screen.getByTestId("chapter-state-present")).toHaveTextContent(
+      "false",
+    );
     expect(screen.getByTestId("work-state-present")).toHaveTextContent("false");
     expect(screen.getByTestId("work-actions-present")).toHaveTextContent(
       "false",

@@ -4,7 +4,14 @@
 
 **Created**: 2026-09-26
 
-**Status**: Draft
+**Status**: Accepted for isolated synthetic-data implementation; deployment acceptance remains open.
+
+**Implementation checkpoint (2026-09-27)**: The baseline below records the
+pre-P04 state used for planning. Local admin authoring, management, publication,
+and title-bearing public metadata are now implemented. The separate enforcement
+migration passed an isolated synthetic populated database/media rehearsal; see
+[evidence.md](evidence.md). The owner accepted this synthetic implementation gate
+on 2026-09-27; deployment acceptance and real-data recovery remain separate.
 
 **Input**: Roadmap phase P04 — Persistent Chapter Authoring and Publishing.
 
@@ -12,7 +19,7 @@
 
 ## Scope and Current Reality
 
-- **Dependencies and accepted gates**: P04 depends on the P02 private media platform and P03 persistent Work administration, built on P01 content and existing authentication. These foundations exist in this checkout. Their complete exit gates have not been asserted as accepted here, and this P04 specification and reviewer readiness checklist remain unaccepted. Under PLAN.md §10, implementation starts only after those dispositions are recorded; browser/device/deployment/backup/recovery evidence is not inferred from executable code.
+- **Dependencies and accepted gates**: P04 depends on the P02 private media platform and P03 persistent Work administration, built on P01 content and existing authentication. These foundations exist in this checkout. Their formal release exits and reviewer-owned readiness checklists remain unaccepted. The owner authorized isolated synthetic-data P04 implementation on 2026-09-27 as a development-only override; real deployment acceptance still requires the independent dispositions and actual recovery evidence. Browser/device/deployment/backup/recovery evidence is not inferred from executable code.
 - **Executable baseline**: The content service persists Chapter identity, number, Work-derived type, structured text, page positions, publication state, and publication identity. It can list/read administrative Chapters and serve published Chapter metadata beneath eligible published Works. The media platform accepts private Chapter-page image candidates and supports reference changes. Chapter records lack editorial titles, current page positions are not joined to accepted images through Chapter authoring, and public Chapter output does not deliver reader content.
 - **Behavior and user changes to preserve**: Keep the approved Arabic-first RTL Chapter list/form layout, order controls, preview dialog shell, state actions, confirmation patterns, responsive behavior, and established authentication. Keep admin preview distinct from public reading.
 - **Fixture, local-only, or placeholder sources affected**: The three admin Chapter screens use fixture Works/Chapters and local admin-context actions. Their save and state controls update local state only; the illustrated editor starts with sample paths, upload only creates independent candidates, and the text editor stores Markdown-like input with a separate approximation of preview. Preview links can lead to the fixture reader. P04 replaces only these Chapter-owned sources and actions with confirmed persistent Chapter and media state.
@@ -20,6 +27,10 @@
 - **Phase exit gate**: An authorized admin creates, publishes, reloads, and previews one illustrated and one text Chapter from saved data. Page order is stable and unique; text uses only the approved safe format; repeat publication adds no event; public Chapter metadata exposes only published Chapters under published eligible Works; excluded actions are absent.
 
 ## Clarifications
+
+### Session 2026-09-27
+
+- Q: No real deployment database or matching backup exists yet. What evidence can close P04 implementation tasks? → A: Use generated, representative P01–P03 Chapters and private media on an isolated PostgreSQL database; back up and restore the database and matching media, stage expand → explicit synthetic remediation → zero-violation inventory → separate enforce migration, then verify the public title cutover and browser journey. Mark implementation tasks only after their synthetic acceptance checks pass. These generated editorial values belong solely to the disposable test dataset; they are not decisions for any future real Chapters. P00–P03 reviewer/readiness dispositions and real deployment, backup, rollback, physical-device, and production-data checks remain open release gates and must never be inferred from this prototype acceptance.
 
 ### Session 2026-09-26
 

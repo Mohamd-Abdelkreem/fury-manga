@@ -16,6 +16,7 @@ import {
   createChapterBodySchema,
   createWorkBodySchema,
   adminWorkListQuerySchema,
+  adminChapterListQuerySchema,
   paginationQuerySchema,
   publicationCommandBodySchema,
   publicChapterParamsSchema,
@@ -135,7 +136,7 @@ export const contentRoutes = (
     "/works/:workId/chapters",
     validationMiddleware({
       params: workIdParamsSchema,
-      query: paginationQuerySchema,
+      query: adminChapterListQuerySchema,
     }),
     managementController.listChapters,
   );

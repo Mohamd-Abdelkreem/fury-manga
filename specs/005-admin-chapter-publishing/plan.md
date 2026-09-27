@@ -2,7 +2,15 @@
 
 **Checkout branch**: `004-admin-categories-works` (the Spec Kit pointer is `005-admin-chapter-publishing`; no branch was created) | **Date**: 2026-09-26 | **Spec**: [spec.md](spec.md)
 
-**PLAN.md phase**: P04 — Persistent Chapter Authoring and Publishing | **Dependency state**: P01 content, P02 private media, P03 Work administration, and existing authentication have executable code; required P02/P03 exit-gate dispositions and P04 specification/reviewer acceptance are not recorded. PLAN.md §10 blocks implementation until the dependency gates pass. Browser/device/deployment/backup/rollback evidence remains separate from code completion.
+**PLAN.md phase**: P04 — Persistent Chapter Authoring and Publishing | **Dependency state**: P01 content, P02 private media, P03 Work administration, and existing authentication have executable code. The owner accepted isolated synthetic-data implementation on 2026-09-27; P00–P03 reviewer exits and real deployment acceptance remain open. Browser/device/deployment/backup/rollback evidence is not inferred from code completion.
+
+**Implementation checkpoint (2026-09-27)**: The plan's baseline and gate table
+remain design-time records. Local admin Chapter authoring, management,
+publication, and title-bearing public availability filtering are implemented.
+Phase 8 exercised an earlier isolated browser journey; a synthetic restored
+database/media rehearsal now covers the staged migration. Real-data remediation,
+reviewer acceptance, and deployment recovery evidence remain open in
+[evidence.md](evidence.md).
 
 ## Summary
 
@@ -111,7 +119,7 @@ Current P01/P02/P03 tests establish their narrower foundations only. P04 needs f
 
 Use the actual root/package scripts: `pnpm --filter @fury/contracts test`, `pnpm --filter @fury/database db:validate`, `pnpm --filter @fury/api test`, `pnpm --filter @fury/api test:integration`, `pnpm --filter @fury/web test`, `pnpm --filter @fury/api check-types`, `pnpm --filter @fury/web check-types`, and `pnpm format:check`. Focus individual Vitest files through the existing package scripts during development. After integrated implementation and needed local services: `pnpm verify` (which includes database format/validate/generate, format/lint/types/unit/integration/build/output and `git diff --check`). Do not weaken checks or report historical green results. No app test is required for this docs-only planning turn; formatting/reference and docs-guard checks are required now.
 
-This plan records design, not implementation acceptance. The existing [tasks.md](tasks.md) must stop at T001 until P02/P03 exit gates and the P04 reviewer disposition are recorded. Actual browser/device/deployment/backup/rollback evidence is required before any production-ready claim. No external message, commit, push or deployment is implied by this artifact revision.
+The 2026-09-27 owner clarification permits a development-only P04 implementation and task exit using a generated, populated P01–P03 database and matching synthetic private media, restored together and staged through expand, documented synthetic editorial remediation, zero-violation inventory, and separate enforcement. This is an execution override for the unaccepted P00–P03 reviewer exits, not a reviewer disposition or permission to migrate an existing deployment. Fresh PostgreSQL, HTTP, browser and full-repository checks remain required. Record real deployment, backup/media restore, rollback, physical-device and reviewer boundaries as unverified; do not claim production readiness. No external message, commit, push or deployment is implied.
 
 ## Complexity Tracking
 

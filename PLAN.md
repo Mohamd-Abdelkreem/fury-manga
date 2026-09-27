@@ -732,6 +732,16 @@ P14 executes these end to end; each owner phase adds its portion earlier.
 - Documentation claims are updated against implemented code.
 - Acceptance evidence is saved in the feature record before the phase is declared complete.
 
+**P04 experimental implementation decision (2026-09-27):** The owner authorized
+completion of P04 implementation tasks against an isolated PostgreSQL database
+populated with generated representative Chapters and matching synthetic private
+media. A paired backup/restore, staged migration, zero-violation inventory,
+contract/API/UI agreement, and browser checks must pass before those tasks are
+marked. This is an explicit development execution override of §10's prerequisite
+acceptance sequence; it does not mark P00–P03 reviewer exits complete or satisfy
+§11 for a real deployment. Repeat data-specific inventory, editorial decisions,
+backup/media restore, rollback and rollout checks when a deployment dataset exists.
+
 ## 12. Owner-provided launch inputs
 
 These are not reasons to keep production placeholders. They must exist before P14 approval:

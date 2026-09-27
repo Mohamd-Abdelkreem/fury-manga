@@ -67,6 +67,110 @@ afterEach(() => {
 });
 
 describe("administrator media service", () => {
+  it("routes Chapter-page reference writes through the parent Chapter", async () => {
+    const adminId = await createActor();
+    const userId = await createActor("USER");
+    const work = await database.work.create({
+      data: {
+        title: "Chapter reference owner",
+        slug: `chapter-owner-${randomUUID()}`,
+        type: "MANGA",
+        storyStatus: "ONGOING",
+      },
+    });
+    const chapter = await database.chapter.create({
+      data: {
+        workId: work.id,
+        number: 1,
+        title: "Chapter",
+        contentType: "ILLUSTRATED",
+      },
+    });
+    const asset = await database.mediaAsset.create({
+      data: {
+        mediaClass: "CHAPTER_PAGE",
+        scope: "ADMIN",
+        uploadedByUserId: adminId,
+        relativeKey: `chapter-${randomUUID()}`,
+        contentType: "image/webp",
+        byteLength: 100,
+        width: 10,
+        height: 10,
+        sha256: "a".repeat(64),
+        status: "AVAILABLE",
+        availableAt: new Date(),
+      },
+    });
+    const command = {
+      targetKind: "chapter_page" as const,
+      targetId: randomUUID(),
+      assetId: asset.id,
+    };
+    await expect(service.bindReference(adminId, command)).rejects.toMatchObject(
+      {
+        statusCode: 409,
+        code: "MEDIA_TARGET_CONFLICT",
+      },
+    );
+    await expect(service.bindReference(userId, command)).rejects.toMatchObject({
+      statusCode: 403,
+      code: "FORBIDDEN",
+    });
+    const { page, reference } = await database.$transaction(
+      async (transaction) => {
+        const page = await transaction.chapterPage.create({
+          data: { chapterId: chapter.id, position: 1 },
+        });
+        const reference = await transaction.mediaReference.create({
+          data: {
+            assetId: asset.id,
+            chapterPageId: page.id,
+            slot: "CHAPTER_PAGE",
+          },
+        });
+        return { page, reference };
+      },
+    );
+    const replace = {
+      assetId: asset.id,
+      expectedAssetId: asset.id,
+      expectedVersion: 0,
+    };
+    const retire = { expectedAssetId: asset.id, expectedVersion: 0 };
+    await expect(
+      service.replaceReference(adminId, reference.id, replace),
+    ).rejects.toMatchObject({ statusCode: 409, code: "MEDIA_TARGET_CONFLICT" });
+    await expect(
+      service.retireReference(adminId, reference.id, retire),
+    ).rejects.toMatchObject({ statusCode: 409, code: "MEDIA_TARGET_CONFLICT" });
+    await database.$transaction(async (transaction) => {
+      await transaction.chapterPage.update({
+        where: { id: page.id },
+        data: { retiredAt: new Date() },
+      });
+      await transaction.mediaReference.update({
+        where: { id: reference.id },
+        data: { retiredAt: new Date() },
+      });
+    });
+    await expect(
+      service.replaceReference(adminId, reference.id, replace),
+    ).rejects.toMatchObject({ statusCode: 409, code: "MEDIA_TARGET_CONFLICT" });
+    await expect(
+      service.retireReference(adminId, reference.id, retire),
+    ).rejects.toMatchObject({ statusCode: 409, code: "MEDIA_TARGET_CONFLICT" });
+    await expect(
+      service.replaceReference(adminId, randomUUID(), replace),
+    ).rejects.toMatchObject({ statusCode: 404, code: "NOT_FOUND" });
+    await expect(
+      service.retireReference(userId, reference.id, retire),
+    ).rejects.toMatchObject({ statusCode: 403, code: "FORBIDDEN" });
+    const unchanged = await database.mediaReference.findUniqueOrThrow({
+      where: { id: reference.id },
+    });
+    expect(unchanged).toMatchObject({ assetId: asset.id, version: 0 });
+  });
+
   it("keeps avatar upload, lookup, listing, and removal within its active owner", async () => {
     const ownerId = await createActor("USER");
     const otherUserId = await createActor("USER");

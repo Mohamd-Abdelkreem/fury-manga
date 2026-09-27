@@ -88,6 +88,41 @@ describe("administrator media candidate picker", () => {
     expect(input).toHaveFocus();
   });
 
+  it("emits each accepted Chapter-page candidate for ordered parent editing", async () => {
+    const selected: string[] = [];
+    mediaApiMock.upload
+      .mockResolvedValueOnce({ id: "page-asset-one" })
+      .mockResolvedValueOnce({ id: "page-asset-two" });
+    render(
+      <AdminMediaCandidatePicker
+        mediaClass="chapter_page"
+        label="ارفع صفحة"
+        onAssetSelected={(assetId) => {
+          if (assetId !== null) selected.push(assetId);
+        }}
+      />,
+      { wrapper },
+    );
+    const input = screen.getByLabelText("ارفع صفحة");
+    fireEvent.change(input, {
+      target: {
+        files: [new File(["first"], "first.jpg", { type: "image/jpeg" })],
+      },
+    });
+    await waitFor(() => {
+      expect(selected).toEqual(["page-asset-one"]);
+    });
+    fireEvent.change(input, {
+      target: {
+        files: [new File(["second"], "second.jpg", { type: "image/jpeg" })],
+      },
+    });
+    await waitFor(() => {
+      expect(selected).toEqual(["page-asset-one", "page-asset-two"]);
+    });
+    expect(screen.getByText(/حُفظت الصورة في الوسائط فقط/)).toBeInTheDocument();
+  });
+
   it("keeps the temporary preview visible during processing and aborts", async () => {
     let reportProgress: ((percent: number) => void) | undefined;
     mediaApiMock.upload.mockImplementation(

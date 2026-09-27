@@ -32,6 +32,14 @@ export function AdminPagination({
 
   const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+  const firstVisiblePage = Math.max(
+    1,
+    Math.min(currentPage - 2, totalPages - 4),
+  );
+  const visiblePages = Array.from(
+    { length: Math.min(5, totalPages) },
+    (_, index) => firstVisiblePage + index,
+  );
 
   // In RTL, the "Next" page in sequence is pointing to the Left visually, or Next is logically forward!
   // ChevronRight is toward the previous (right side in RTL) and ChevronLeft is forward (left side in RTL).
@@ -56,7 +64,7 @@ export function AdminPagination({
           <ChevronRight className={styles["arrowIcon"]} aria-hidden="true" />
         </button>
 
-        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+        {visiblePages.map((page) => {
           const isActive = page === currentPage;
           return (
             <button
