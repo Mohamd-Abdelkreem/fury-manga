@@ -1,32 +1,41 @@
 "use client";
 
-import React, { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
-import { positiveIntegerSchema } from "@fury/contracts";
+import { Eye, Save } from "lucide-react";
+import { ZodError } from "zod";
+import type { PublicationStatus } from "@fury/contracts";
+import { cn } from "@/lib/utils";
+
+import { SafeAdminContentError } from "../../api/admin-content.api";
 import {
-  ArrowRight,
-  BookOpen,
-  Eye,
-  FileText,
-  Image as ImageIcon,
-  Info,
-  Save,
-  Send,
-} from "lucide-react";
-import { useAdminData } from "../../context/admin-context";
-import type {
-  AdminContentType,
-  AdminPublishStatus,
-} from "../../types/admin.types";
-import { AdminNoticeBanner } from "../AdminNoticeBanner/AdminNoticeBanner";
-import { AdminStatusBadge } from "../AdminStatusBadge/AdminStatusBadge";
+  adminChapterErrorMessage,
+  chapterFieldErrors,
+} from "../../model/admin-content.errors";
+import { useAdminWorkDetail } from "../../hooks/admin-content.hooks";
+import {
+  useAdminChapterDetail,
+  useSaveAdminChapter,
+  usePublishAdminChapter,
+} from "../../hooks/admin-chapter.hooks";
+import { AdminConfirmDialog } from "../AdminConfirmDialog/AdminConfirmDialog";
+import {
+  createIllustratedChapterCommand,
+  savedChapterPages,
+  updateIllustratedChapterCommand,
+  type EditableChapterPage,
+} from "../../model/admin-chapter-editor";
+import {
+  createTextChapterCommand,
+  savedTextBlocks as readSavedTextBlocks,
+  updateTextChapterCommand,
+  type EditableTextBlock,
+} from "../../model/admin-chapter-text";
 import { IllustratedChapterEditor } from "./IllustratedChapterEditor";
 import { TextChapterEditor } from "./TextChapterEditor";
 import { ChapterPreviewModal } from "./ChapterPreviewModal";
-import { cn } from "@/lib/utils";
 import styles from "./AdminChapterForm.module.css";
 
 interface AdminChapterFormProps {
@@ -36,534 +45,611 @@ interface AdminChapterFormProps {
 
 export function AdminChapterForm({ workId, chapterId }: AdminChapterFormProps) {
   const router = useRouter();
-  const { getWork, getChapter, getChapters, createChapter, updateChapter } =
-    useAdminData();
-
-  const work = getWork(workId);
-  const existingChapter =
-    chapterId !== undefined ? getChapter(workId, chapterId) : undefined;
-  const isEdit = existingChapter !== undefined;
-
-  const chaptersList = getChapters(workId);
-  const nextChapterNumber =
-    chaptersList.length > 0
-      ? Math.max(...chaptersList.map((c) => c.number)) + 1
-      : 1;
-
-  // Form State
-  const [number, setNumber] = useState<number>(() =>
-    isEdit ? existingChapter.number : nextChapterNumber,
+  const work = useAdminWorkDetail(workId);
+  const detail = useAdminChapterDetail(workId, chapterId);
+  const save = useSaveAdminChapter();
+  const publication = usePublishAdminChapter();
+  const [publicationTarget, setPublicationTarget] =
+    useState<PublicationStatus | null>(null);
+  const [number, setNumber] = useState(1);
+  const [title, setTitle] = useState("");
+  const [pages, setPages] = useState<EditableChapterPage[]>([]);
+  const [savedPages, setSavedPages] = useState<EditableChapterPage[]>([]);
+  const [textBlocks, setTextBlocks] = useState<EditableTextBlock[]>([]);
+  const [savedTextBlocks, setSavedTextBlocks] = useState<EditableTextBlock[]>(
+    [],
   );
-  const [title, setTitle] = useState<string>(() =>
-    isEdit ? existingChapter.title : "",
-  );
-  const [contentType, setContentType] = useState<AdminContentType>(() => {
-    if (isEdit) return existingChapter.contentType;
-    if (work?.type === "novel" || work?.type === "text-story") return "text";
-    return "illustrated";
-  });
-  const [status, setStatus] = useState<AdminPublishStatus>(() =>
-    isEdit ? existingChapter.status : "draft",
-  );
-  const [pages, setPages] = useState<string[]>(() => {
-    if (isEdit && existingChapter.pages) return existingChapter.pages;
-    if (contentType === "illustrated") {
-      return ["/anime/341452.jpg", "/anime/603242.jpg"];
-    }
-    return [];
-  });
-  const [textContent, setTextContent] = useState<string>(() => {
-    if (isEdit && existingChapter.textContent)
-      return existingChapter.textContent;
-    return "";
-  });
-
-  const [errors, setErrors] = useState<{
-    number?: string | undefined;
-    title?: string | undefined;
+  const [savedNumber, setSavedNumber] = useState(1);
+  const [savedTitle, setSavedTitle] = useState("");
+  const [message, setMessage] = useState("");
+  const [needsReconcile, setNeedsReconcile] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<{
+    number?: string;
+    title?: string;
+    textContent?: string;
+    pages?: string;
   }>({});
-  const [notice, setNotice] = useState<{
-    type: "success" | "error" | "info";
-    message: string;
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [loadedRevision, setLoadedRevision] = useState<{
+    chapterId: string;
+    version: number;
+    actorId: string | null;
   } | null>(null);
-  const [isPreviewOpen, setIsPreviewOpen] = useState<boolean>(false);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const editRevision = useRef(0);
+  const activeActor = useRef(work.actorId);
+  const hasUnsavedChanges =
+    number !== savedNumber ||
+    title !== savedTitle ||
+    JSON.stringify(pages) !== JSON.stringify(savedPages) ||
+    JSON.stringify(textBlocks) !== JSON.stringify(savedTextBlocks);
+  const previousRevision = loadedRevision;
+  const serverRevisionChanged =
+    detail.data !== undefined &&
+    detail.data.id === chapterId &&
+    detail.data.workId === workId &&
+    previousRevision?.chapterId === detail.data.id &&
+    previousRevision.actorId === work.actorId &&
+    detail.data.version > previousRevision.version &&
+    (hasUnsavedChanges || save.isPending);
+  const requiresComparison = needsReconcile || serverRevisionChanged;
 
-  if (!work) {
+  useEffect(() => {
+    activeActor.current = work.actorId;
+    return () => {
+      activeActor.current = null;
+    };
+  }, [work.actorId]);
+
+  const incoming = detail.data;
+  if (
+    incoming !== undefined &&
+    incoming.id === chapterId &&
+    incoming.workId === workId &&
+    work.actorId !== null &&
+    work.actorId === detail.actorId &&
+    (loadedRevision?.chapterId !== incoming.id ||
+      loadedRevision.actorId !== work.actorId ||
+      (incoming.version > loadedRevision.version &&
+        !hasUnsavedChanges &&
+        !save.isPending))
+  ) {
+    setLoadedRevision({
+      chapterId: incoming.id,
+      version: incoming.version,
+      actorId: work.actorId,
+    });
+    setNumber(incoming.number);
+    setTitle(incoming.title);
+    setPages(savedChapterPages(incoming));
+    setSavedPages(savedChapterPages(incoming));
+    setTextBlocks(readSavedTextBlocks(incoming));
+    setSavedTextBlocks(readSavedTextBlocks(incoming));
+    setSavedNumber(incoming.number);
+    setSavedTitle(incoming.title);
+    setNeedsReconcile(false);
+  }
+
+  const changePages = (next: EditableChapterPage[]) => {
+    editRevision.current += 1;
+    setPages(next);
+  };
+
+  const changeTextBlocks = (next: EditableTextBlock[]) => {
+    editRevision.current += 1;
+    setTextBlocks(next);
+  };
+
+  const handleSave = async () => {
+    if (
+      save.isPending ||
+      publication.isPending ||
+      work.data === undefined ||
+      work.denied ||
+      detail.denied ||
+      work.isError ||
+      detail.isError ||
+      requiresComparison ||
+      work.actorId === null ||
+      activeActor.current !== work.actorId
+    )
+      return;
+    setMessage("");
+    setFieldErrors({});
+    setNeedsReconcile(false);
+    const editing = chapterId !== undefined;
+    const chapter = detail.data;
+    if (editing && chapter === undefined) return;
+    const actorAtSubmit = work.actorId;
+    const revisionAtSubmit = editRevision.current;
+    try {
+      const textWork =
+        work.data.type === "novel" || work.data.type === "text-story";
+      const saved =
+        editing && chapter !== undefined
+          ? await save.mutateAsync({
+              operation: "update",
+              workId,
+              chapterId: chapter.id,
+              body: textWork
+                ? updateTextChapterCommand(chapter, number, title, textBlocks)
+                : updateIllustratedChapterCommand(
+                    chapter,
+                    number,
+                    title,
+                    pages,
+                  ),
+            })
+          : await save.mutateAsync({
+              operation: "create",
+              workId,
+              body: textWork
+                ? createTextChapterCommand(number, title, textBlocks)
+                : createIllustratedChapterCommand(number, title, pages),
+            });
+      if (activeActor.current !== actorAtSubmit) return;
+      setSavedPages(savedChapterPages(saved));
+      setSavedTextBlocks(readSavedTextBlocks(saved));
+      setSavedNumber(saved.number);
+      setSavedTitle(saved.title);
+      if (editRevision.current === revisionAtSubmit) {
+        setNumber(saved.number);
+        setTitle(saved.title);
+        setPages(savedChapterPages(saved));
+        setTextBlocks(readSavedTextBlocks(saved));
+      }
+      setLoadedRevision({
+        chapterId: saved.id,
+        version: saved.version,
+        actorId: actorAtSubmit,
+      });
+      setMessage("حُفظت مسودة الفصل على الخادم.");
+      if (!editing) {
+        router.replace(
+          `/admin/works/${workId}/chapters/${saved.id}/edit` as Route,
+        );
+      }
+    } catch (error: unknown) {
+      if (activeActor.current !== actorAtSubmit) return;
+      if (error instanceof ZodError) {
+        const fields = new Set(error.issues.map(({ path }) => path[0]));
+        setFieldErrors({
+          ...(fields.has("number")
+            ? { number: "أدخل رقم فصل صحيحاً أكبر من صفر." }
+            : {}),
+          ...(fields.has("title")
+            ? { title: "أدخل عنواناً صالحاً للفصل." }
+            : {}),
+          ...(fields.has("textContent")
+            ? {
+                textContent: "راجع المقاطع والروابط؛ لا يمكن حفظ نص غير مكتمل.",
+              }
+            : {}),
+        });
+        setMessage("راجع بيانات الفصل قبل الحفظ.");
+        return;
+      }
+      if (error instanceof SafeAdminContentError) {
+        setFieldErrors(chapterFieldErrors(error));
+        setNeedsReconcile(
+          error.code === "CONTENT_STALE_WRITE" ||
+            error.code === "NETWORK_ERROR" ||
+            error.code === "SERVICE_UNAVAILABLE" ||
+            error.code === "INTERNAL_SERVER_ERROR" ||
+            error.code === "HTTP_ERROR",
+        );
+        setMessage(adminChapterErrorMessage(error));
+        return;
+      }
+      setMessage("تعذر تأكيد حفظ الفصل. بقيت تعديلاتك في النموذج.");
+    }
+  };
+
+  const reconcileSavedChapter = async () => {
+    const actorAtRead = work.actorId;
+    let latest;
+    try {
+      latest = await detail.retryAccess();
+    } catch {
+      setMessage(
+        "تعذر قراءة النسخة المحفوظة. احتفظ بتعديلاتك وأعد المحاولة لاحقًا.",
+      );
+      return;
+    }
+    if (actorAtRead === null || activeActor.current !== actorAtRead) return;
+    setLoadedRevision({
+      chapterId: latest.id,
+      version: latest.version,
+      actorId: actorAtRead,
+    });
+    setSavedNumber(latest.number);
+    setSavedTitle(latest.title);
+    setSavedPages(savedChapterPages(latest));
+    setSavedTextBlocks(readSavedTextBlocks(latest));
+    setNeedsReconcile(false);
+    setMessage(
+      "حُمّلت النسخة المحفوظة للمقارنة. بقيت تعديلاتك الحالية كما هي.",
+    );
+  };
+
+  const confirmPublication = async () => {
+    const chapter = detail.data;
+    const targetState = publicationTarget;
+    if (
+      chapter === undefined ||
+      targetState === null ||
+      work.denied ||
+      detail.denied ||
+      work.isError ||
+      detail.isError ||
+      publication.isPending ||
+      save.isPending ||
+      hasUnsavedChanges ||
+      requiresComparison
+    )
+      return;
+    setMessage("");
+    const actorAtSubmit = work.actorId;
+    try {
+      const confirmed = await publication.mutateAsync({
+        workId,
+        chapterId: chapter.id,
+        body: { expectedVersion: chapter.version, targetState },
+      });
+      if (actorAtSubmit === null || activeActor.current !== actorAtSubmit)
+        return;
+      setMessage(
+        confirmed.transition.transitioned
+          ? "تم تأكيد تغيير حالة الفصل المحفوظة."
+          : "حالة الفصل محفوظة بالفعل.",
+      );
+    } catch (error: unknown) {
+      if (actorAtSubmit === null || activeActor.current !== actorAtSubmit)
+        return;
+      setNeedsReconcile(true);
+      setMessage(adminChapterErrorMessage(error));
+    } finally {
+      if (actorAtSubmit !== null && activeActor.current === actorAtSubmit)
+        setPublicationTarget(null);
+    }
+  };
+
+  if (
+    !work.sessionReady ||
+    (work.available && work.isPending && !work.denied) ||
+    (chapterId !== undefined &&
+      detail.actorId !== null &&
+      detail.isPending &&
+      !detail.denied)
+  ) {
+    return <p role="status">جارٍ تحميل بيانات الفصل…</p>;
+  }
+  if (
+    !work.available ||
+    work.denied ||
+    detail.denied ||
+    work.isError ||
+    detail.isError ||
+    work.data === undefined ||
+    (chapterId !== undefined &&
+      (detail.data === undefined ||
+        detail.data.id !== chapterId ||
+        detail.data.workId !== workId ||
+        detail.actorId !== work.actorId))
+  ) {
     return (
-      <div className={styles["container"]}>
-        <div className={styles["card"]}>
-          <div className={styles["emptyState"]}>
-            <p className={styles["emptyStateTitle"]}>العمل غير موجود</p>
-            <p className={styles["emptyStateText"]}>
-              تعذر العثور على العمل المطلوب بالمعرّف المذكور.
-            </p>
-            <Link href="/admin/works" className={styles["btnPrimary"]}>
-              العودة لقائمة الأعمال
-            </Link>
-          </div>
-        </div>
-      </div>
+      <section className={styles["card"]} role="alert">
+        <p>تعذر تحميل العمل أو الفصل. تحقق من الصلاحية وأعد المحاولة.</p>
+        <button
+          type="button"
+          className={cn(styles["btn"], styles["btnSecondary"])}
+          onClick={() => {
+            void work.retryAccess().catch((error: unknown) => {
+              setMessage(adminChapterErrorMessage(error));
+            });
+            if (chapterId !== undefined) {
+              void detail.retryAccess().catch((error: unknown) => {
+                setMessage(adminChapterErrorMessage(error));
+              });
+            }
+          }}
+        >
+          إعادة المحاولة
+        </button>
+        {message && <p role="status">{message}</p>}
+      </section>
     );
   }
 
-  const validate = (): boolean => {
-    const nextErrors: {
-      number?: string | undefined;
-      title?: string | undefined;
-    } = {};
-    if (!positiveIntegerSchema.safeParse(number).success) {
-      nextErrors.number = "يجب إدخال رقم فصل صحيح أكبر من صفر.";
-    }
-    if (!title.trim()) {
-      nextErrors.title = "يرجى كتابة عنوان للفصل.";
-    }
-    setErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
-  };
-
-  const handleSave = (publishNow = false) => {
-    if (!validate()) {
-      setNotice({
-        type: "error",
-        message: "يرجى تصحيح الأخطاء في النموذج قبل الحفظ.",
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-    const effectiveStatus: AdminPublishStatus = publishNow
-      ? "published"
-      : status;
-
-    if (isEdit && chapterId !== undefined) {
-      updateChapter(workId, chapterId, {
-        number,
-        title: title.trim(),
-        contentType,
-        status: effectiveStatus,
-        pages: contentType === "illustrated" ? pages : undefined,
-        textContent: contentType === "text" ? textContent : undefined,
-      });
-      setNotice({
-        type: "success",
-        message: "تم تحديث الفصل في المعاينة المحلية فقط؛ لم يُحفظ على الخادم.",
-      });
-    } else {
-      createChapter(workId, {
-        number,
-        title: title.trim(),
-        contentType,
-        status: effectiveStatus,
-        pages: contentType === "illustrated" ? pages : undefined,
-        textContent: contentType === "text" ? textContent : undefined,
-      });
-      setNotice({
-        type: "success",
-        message:
-          "تمت إضافة الفصل إلى المعاينة المحلية فقط؛ لم يُحفظ على الخادم.",
-      });
-    }
-
-    setIsSubmitting(false);
-
-    setTimeout(() => {
-      router.push(`/admin/works/${workId}/chapters` as Route);
-    }, 900);
-  };
-
+  const illustrated =
+    work.data.type !== "novel" && work.data.type !== "text-story";
+  const chapterState = detail.data?.publicationStatus;
   return (
-    <div className={styles["container"]}>
-      {/* Header & Breadcrumbs */}
+    <main className={styles["container"]} dir="rtl">
       <div className={styles["header"]}>
         <nav className={styles["breadcrumbs"]} aria-label="مسار التنقل">
-          <Link href="/admin/dashboard" className={styles["breadcrumbLink"]}>
-            لوحة الإدارة
-          </Link>
-          <span className={styles["breadcrumbSeparator"]}>/</span>
           <Link href="/admin/works" className={styles["breadcrumbLink"]}>
-            إدارة الأعمال
+            الأعمال
           </Link>
-          <span className={styles["breadcrumbSeparator"]}>/</span>
+          <span aria-hidden="true">/</span>
           <Link
-            href={`/admin/works/${work.id}/chapters` as Route}
+            href={`/admin/works/${workId}/chapters` as Route}
             className={styles["breadcrumbLink"]}
           >
-            {work.title}
+            {work.data.title}
           </Link>
-          <span className={styles["breadcrumbSeparator"]}>/</span>
-          <span className={styles["breadcrumbCurrent"]}>
-            {isEdit ? `تعديل الفصل ${String(number)}` : "إضافة فصل جديد"}
-          </span>
         </nav>
-
         <div className={styles["headerMain"]}>
           <div className={styles["titleArea"]}>
-            <div className={styles["titleRow"]}>
-              <h1 className={styles["title"]}>
-                {isEdit
-                  ? `تعديل الفصل ${String(number)}: ${existingChapter.title}`
-                  : `إضافة فصل جديد إلى "${work.title}"`}
-              </h1>
-              {isEdit && <AdminStatusBadge kind="publish" status={status} />}
-            </div>
+            <h1 className={styles["title"]}>
+              {chapterId === undefined
+                ? illustrated
+                  ? "إضافة فصل مصور"
+                  : "إضافة فصل نصي"
+                : illustrated
+                  ? "تحرير فصل مصور"
+                  : "تحرير فصل نصي"}
+            </h1>
             <p className={styles["subtitle"]}>
-              {isEdit
-                ? "تحديث صفحات الفصل، النصوص، وإدارة حالة النشر."
-                : "أدخل بيانات الفصل ورقم التسلسل وجهّز المحتوى المصور أو النصي."}
+              {illustrated
+                ? "نوع الفصل مستمد من نوع العمل. تُحفظ الصفحات بالترتيب المعروض."
+                : "نوع الفصل مستمد من نوع العمل. تُحفظ المقاطع النصية بالترتيب المعروض."}
             </p>
           </div>
-
           <div className={styles["actionsArea"]}>
+            {chapterId !== undefined && chapterState !== undefined ? (
+              <>
+                {chapterState === "draft" ? (
+                  <button
+                    type="button"
+                    className={cn(styles["btn"], styles["btnSecondary"])}
+                    disabled={
+                      publication.isPending ||
+                      save.isPending ||
+                      hasUnsavedChanges ||
+                      requiresComparison ||
+                      !detail.data?.readyForPublication
+                    }
+                    onClick={() => {
+                      setPublicationTarget("published");
+                    }}
+                  >
+                    نشر الفصل
+                  </button>
+                ) : chapterState === "published" ? (
+                  <button
+                    type="button"
+                    className={cn(styles["btn"], styles["btnSecondary"])}
+                    disabled={
+                      publication.isPending ||
+                      save.isPending ||
+                      hasUnsavedChanges ||
+                      requiresComparison
+                    }
+                    onClick={() => {
+                      setPublicationTarget("draft");
+                    }}
+                  >
+                    إلغاء النشر
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className={cn(styles["btn"], styles["btnSecondary"])}
+                    disabled={
+                      publication.isPending ||
+                      save.isPending ||
+                      hasUnsavedChanges ||
+                      requiresComparison
+                    }
+                    onClick={() => {
+                      setPublicationTarget("draft");
+                    }}
+                  >
+                    استعادة الفصل
+                  </button>
+                )}
+                {chapterState !== "archived" ? (
+                  <button
+                    type="button"
+                    className={cn(styles["btn"], styles["btnSecondary"])}
+                    disabled={
+                      publication.isPending ||
+                      save.isPending ||
+                      hasUnsavedChanges ||
+                      requiresComparison
+                    }
+                    onClick={() => {
+                      setPublicationTarget("archived");
+                    }}
+                  >
+                    أرشفة الفصل
+                  </button>
+                ) : null}
+              </>
+            ) : null}
             <button
               type="button"
+              className={cn(styles["btn"], styles["btnSecondary"])}
               onClick={() => {
-                setIsPreviewOpen(true);
+                setPreviewOpen(true);
               }}
-              className={styles["btnSecondary"]}
             >
-              <Eye style={{ width: "1rem", height: "1rem" }} />
-              معاينة القارئ
+              <Eye aria-hidden="true" /> معاينة خاصة
             </button>
             <button
               type="button"
+              className={cn(styles["btn"], styles["btnPrimary"])}
+              disabled={
+                save.isPending || publication.isPending || requiresComparison
+              }
               onClick={() => {
-                handleSave(false);
+                void handleSave();
               }}
-              disabled={isSubmitting}
-              className={styles["btnSecondary"]}
             >
-              <Save style={{ width: "1rem", height: "1rem" }} />
-              حفظ كمسودة
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                handleSave(true);
-              }}
-              disabled={isSubmitting}
-              className={styles["btnPrimary"]}
-            >
-              <Send style={{ width: "1rem", height: "1rem" }} />
-              حفظ ونشر
+              <Save aria-hidden="true" />{" "}
+              {save.isPending ? "جارٍ الحفظ…" : "حفظ المسودة"}
             </button>
           </div>
         </div>
       </div>
 
-      {notice && (
-        <AdminNoticeBanner
-          title={notice.type === "error" ? "تنبيه" : "معاينة محلية"}
-          description={notice.message}
-          variant={notice.type === "error" ? "warning" : "success"}
-          onDismiss={() => {
-            setNotice(null);
-          }}
-        />
-      )}
-
-      {/* Main Form Layout */}
       <div className={styles["layoutGrid"]}>
         <div className={styles["mainColumn"]}>
-          {/* Section 1: Basic Info */}
-          <div className={styles["card"]}>
+          <section className={styles["card"]}>
             <div className={styles["cardHeader"]}>
-              <h2 className={styles["cardTitle"]}>
-                <BookOpen className={styles["cardIcon"]} />
-                البيانات الأساسية للفصل
-              </h2>
+              <h2 className={styles["cardTitle"]}>بيانات الفصل</h2>
             </div>
-
             <div className={styles["fieldsGrid2"]}>
               <div className={styles["field"]}>
-                <label htmlFor="chapter-number" className={styles["label"]}>
+                <label className={styles["label"]} htmlFor="chapter-number">
                   رقم الفصل
-                  <span className={styles["requiredMark"]}>*</span>
                 </label>
                 <input
                   id="chapter-number"
+                  className={styles["input"]}
                   type="number"
-                  step="1"
-                  min="1"
-                  max="2147483647"
-                  aria-invalid={errors.number !== undefined}
+                  min={1}
+                  max={2147483647}
+                  step={1}
+                  aria-invalid={fieldErrors.number !== undefined}
                   aria-describedby={
-                    errors.number ? "chapter-number-error" : undefined
+                    fieldErrors.number === undefined
+                      ? undefined
+                      : "chapter-number-error"
                   }
-                  className={cn(
-                    styles["input"],
-                    errors.number && styles["inputError"],
-                  )}
-                  value={isNaN(number) ? "" : number}
-                  onChange={(e) => {
-                    setNumber(parseFloat(e.target.value));
+                  value={Number.isNaN(number) ? "" : number}
+                  onChange={(event) => {
+                    editRevision.current += 1;
+                    setNumber(Number(event.target.value));
                   }}
-                  placeholder="مثال: 44"
                 />
-                {errors.number && (
-                  <span
-                    id="chapter-number-error"
-                    className={styles["errorText"]}
-                  >
-                    {errors.number}
-                  </span>
-                )}
+                {fieldErrors.number ? (
+                  <p id="chapter-number-error" className={styles["errorText"]}>
+                    {fieldErrors.number}
+                  </p>
+                ) : null}
               </div>
-
               <div className={styles["field"]}>
-                <label htmlFor="chapter-title" className={styles["label"]}>
+                <label className={styles["label"]} htmlFor="chapter-title">
                   عنوان الفصل
-                  <span className={styles["requiredMark"]}>*</span>
                 </label>
                 <input
                   id="chapter-title"
+                  className={styles["input"]}
                   type="text"
-                  className={cn(
-                    styles["input"],
-                    errors.title && styles["inputError"],
-                  )}
+                  maxLength={200}
+                  aria-invalid={fieldErrors.title !== undefined}
+                  aria-describedby={
+                    fieldErrors.title === undefined
+                      ? undefined
+                      : "chapter-title-error"
+                  }
                   value={title}
-                  onChange={(e) => {
-                    setTitle(e.target.value);
+                  onChange={(event) => {
+                    editRevision.current += 1;
+                    setTitle(event.target.value);
                   }}
-                  placeholder="مثال: استيقاظ السمة النادرة"
                 />
-                {errors.title && (
-                  <span className={styles["errorText"]}>{errors.title}</span>
-                )}
+                {fieldErrors.title ? (
+                  <p id="chapter-title-error" className={styles["errorText"]}>
+                    {fieldErrors.title}
+                  </p>
+                ) : null}
               </div>
             </div>
-
-            <div className={styles["field"]}>
-              <label className={styles["label"]}>
-                نوع محتوى الفصل
-                <span className={styles["requiredMark"]}>*</span>
-              </label>
-              <div className={styles["contentTypeSelector"]}>
-                <div
-                  className={cn(
-                    styles["typeOption"],
-                    contentType === "illustrated" && styles["typeOptionActive"],
-                  )}
-                  onClick={() => {
-                    setContentType("illustrated");
-                  }}
-                  role="radio"
-                  aria-checked={contentType === "illustrated"}
-                  tabIndex={0}
-                >
-                  <ImageIcon
-                    style={{
-                      width: "1.25rem",
-                      height: "1.25rem",
-                      color:
-                        contentType === "illustrated"
-                          ? "var(--primary)"
-                          : "rgba(255,255,255,0.5)",
-                    }}
-                  />
-                  <div className={styles["typeOptionText"]}>
-                    <span className={styles["typeOptionTitle"]}>فصل مصور</span>
-                    <span className={styles["typeOptionDesc"]}>
-                      مانغا، مانهوا، كوميكس (رفع وترتيب صفحات صور)
-                    </span>
-                  </div>
-                </div>
-
-                <div
-                  className={cn(
-                    styles["typeOption"],
-                    contentType === "text" && styles["typeOptionActive"],
-                  )}
-                  onClick={() => {
-                    setContentType("text");
-                  }}
-                  role="radio"
-                  aria-checked={contentType === "text"}
-                  tabIndex={0}
-                >
-                  <FileText
-                    style={{
-                      width: "1.25rem",
-                      height: "1.25rem",
-                      color:
-                        contentType === "text"
-                          ? "var(--primary)"
-                          : "rgba(255,255,255,0.5)",
-                    }}
-                  />
-                  <div className={styles["typeOptionText"]}>
-                    <span className={styles["typeOptionTitle"]}>فصل نصي</span>
-                    <span className={styles["typeOptionDesc"]}>
-                      روايات وقصص نصية (محرر غني بالعناوين والفقرات)
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Section 2: Editor (Illustrated or Text) */}
-          {contentType === "illustrated" ? (
-            <IllustratedChapterEditor pages={pages} onChange={setPages} />
+          </section>
+          {illustrated ? (
+            <>
+              <IllustratedChapterEditor pages={pages} onChange={changePages} />
+              {fieldErrors.pages ? (
+                <p className={styles["errorText"]} role="alert">
+                  {fieldErrors.pages}
+                </p>
+              ) : null}
+            </>
           ) : (
-            <TextChapterEditor
-              content={textContent}
-              onChange={setTextContent}
-            />
+            <>
+              <TextChapterEditor
+                blocks={textBlocks}
+                onChange={changeTextBlocks}
+              />
+              {fieldErrors.textContent ? (
+                <p className={styles["errorText"]} role="alert">
+                  {fieldErrors.textContent}
+                </p>
+              ) : null}
+            </>
           )}
         </div>
-
-        {/* Sidebar */}
-        <div className={styles["sidebarColumn"]}>
-          {/* Work Summary Card */}
+        <aside className={styles["sidebarColumn"]}>
           <div className={styles["card"]}>
-            <div className={styles["cardHeader"]}>
-              <h3
-                className={styles["cardTitle"]}
-                style={{ fontSize: "0.9375rem" }}
-              >
-                العمل التابع له
-              </h3>
-            </div>
-            <div className={styles["workSummaryCard"]}>
-              <div className={styles["workCoverThumb"]}>
-                <Image
-                  src={work.coverImage}
-                  alt={work.title}
-                  fill
-                  sizes="60px"
-                  style={{ objectFit: "cover" }}
-                  unoptimized
-                />
-              </div>
-              <div className={styles["workSummaryInfo"]}>
-                <h4 className={styles["workSummaryTitle"]}>{work.title}</h4>
-                <p className={styles["workSummaryMeta"]}>
-                  المؤلف: {work.author}
-                </p>
-                <p className={styles["workSummaryMeta"]}>
-                  عدد الفصول الحالي: {String(work.chapterCount)}
-                </p>
-              </div>
-            </div>
-            <Link
-              href={`/admin/works/${work.id}/chapters` as Route}
-              className={styles["btnSecondary"]}
-              style={{ fontSize: "0.8125rem", justifyContent: "center" }}
-            >
-              عرض كل فصول العمل
-              <ArrowRight style={{ width: "0.875rem", height: "0.875rem" }} />
-            </Link>
+            <h2 className={styles["cardTitle"]}>{work.data.title}</h2>
+            <p className={styles["subtitle"]}>
+              الحالة: {detail.data?.publicationStatus ?? "draft"}
+            </p>
+            <p className={styles["subtitle"]}>
+              {illustrated
+                ? `الصفحات المحفوظة: ${String(savedPages.length)}`
+                : `المقاطع المحفوظة: ${String(savedTextBlocks.length)}`}
+            </p>
           </div>
-
-          {/* Status & Publication Card */}
-          <div className={styles["card"]}>
-            <div className={styles["cardHeader"]}>
-              <h3
-                className={styles["cardTitle"]}
-                style={{ fontSize: "0.9375rem" }}
-              >
-                حالة الفصل
-              </h3>
-            </div>
-
-            <div className={styles["field"]}>
-              <label htmlFor="chapter-status" className={styles["label"]}>
-                حالة النشر
-              </label>
-              <select
-                id="chapter-status"
-                className={styles["select"]}
-                value={status}
-                onChange={(e) => {
-                  setStatus(e.target.value as AdminPublishStatus);
-                }}
-              >
-                <option value="draft">مسودة (غير ظاهر للقراء)</option>
-                <option value="published">منشور (متاح للقراءة)</option>
-                <option value="archived">مؤرشف (محفوظ في الأرشيف)</option>
-              </select>
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "0.5rem",
-                fontSize: "0.75rem",
-                color: "rgba(255,255,255,0.5)",
-                background: "rgba(255,255,255,0.02)",
-                padding: "0.75rem",
-                borderRadius: "0.5rem",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span>تاريخ الإنشاء:</span>
-                <span style={{ color: "#fff" }}>
-                  {isEdit ? existingChapter.publishedAt : "اليوم"}
-                </span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span>عدد المشاهدات:</span>
-                <span style={{ color: "#fff" }}>
-                  {isEdit ? String(existingChapter.views) : "0"}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Guidelines / Tips Card */}
-          <div className={styles["card"]}>
-            <div className={styles["cardHeader"]}>
-              <h3
-                className={styles["cardTitle"]}
-                style={{ fontSize: "0.9375rem" }}
-              >
-                <Info className={styles["cardIcon"]} />
-                إرشادات المحتوى
-              </h3>
-            </div>
-            <div className={styles["sidebarList"]}>
-              <div className={styles["sidebarListItem"]}>
-                <span className={styles["sidebarListDot"]}>•</span>
-                <span>
-                  تأكد من تسلسل ترقيم الصفحات بحيث تعكس اتجاه القراءة المعتمد
-                  (من اليمين لليسار أو العكس).
-                </span>
-              </div>
-              <div className={styles["sidebarListItem"]}>
-                <span className={styles["sidebarListDot"]}>•</span>
-                <span>
-                  في الفصول النصية، احرص على استخدام عناوين فرعية (عنوان 2
-                  وعنوان 3) لتقسيم المشاهد الطويلة.
-                </span>
-              </div>
-              <div className={styles["sidebarListItem"]}>
-                <span className={styles["sidebarListDot"]}>•</span>
-                <span>
-                  يمكنك حفظ الفصل كمسودة لتجربة التنسيق في المعاينة قبل إطلاقه
-                  رسمياً للقراء.
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
+        </aside>
       </div>
-
-      {/* Preview Modal */}
+      {serverRevisionChanged || message ? (
+        <p role="status" aria-live="polite">
+          {serverRevisionChanged
+            ? "تغيّرت النسخة المحفوظة على الخادم. بقيت تعديلاتك؛ حمّل النسخة للمقارنة قبل الحفظ."
+            : message}
+        </p>
+      ) : null}
+      {requiresComparison && chapterId !== undefined ? (
+        <button
+          type="button"
+          className={cn(styles["btn"], styles["btnSecondary"])}
+          onClick={() => {
+            void reconcileSavedChapter();
+          }}
+        >
+          تحميل النسخة المحفوظة للمقارنة
+        </button>
+      ) : null}
       <ChapterPreviewModal
-        isOpen={isPreviewOpen}
+        isOpen={previewOpen}
         onClose={() => {
-          setIsPreviewOpen(false);
+          setPreviewOpen(false);
         }}
-        workTitle={work.title}
         chapterNumber={number}
         chapterTitle={title}
-        contentType={contentType}
         pages={pages}
-        textContent={textContent}
+        savedNumber={savedNumber}
+        savedTitle={savedTitle}
+        savedPages={savedPages}
+        textBlocks={textBlocks}
+        savedTextBlocks={savedTextBlocks}
+        contentType={illustrated ? "illustrated" : "text"}
+        hasSavedChapter={chapterId !== undefined}
       />
-    </div>
+      <AdminConfirmDialog
+        isOpen={publicationTarget !== null}
+        busy={publication.isPending}
+        title="تأكيد تغيير حالة الفصل"
+        description={
+          publicationTarget === "published"
+            ? "هل تريد نشر النسخة المحفوظة من الفصل؟"
+            : publicationTarget === "archived"
+              ? "هل تريد أرشفة الفصل؟"
+              : chapterState === "published"
+                ? "هل أنت متأكد من إلغاء نشر الفصل؟ سيتحول إلى مسودة ولن يتمكن القراء من قراءته."
+                : "هل تريد استعادة الفصل من الأرشيف؟"
+        }
+        confirmLabel="تأكيد"
+        onConfirm={() => {
+          void confirmPublication();
+        }}
+        onCancel={() => {
+          setPublicationTarget(null);
+        }}
+      />
+    </main>
   );
 }

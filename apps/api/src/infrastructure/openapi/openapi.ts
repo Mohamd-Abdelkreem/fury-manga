@@ -9,6 +9,8 @@ import {
   adminCategorySchema,
   adminChapterDataSchema,
   adminChapterListDataSchema,
+  adminChapterListQuerySchema,
+  adminChapterSummarySchema,
   adminChapterSchema,
   adminWorkDataSchema,
   adminWorkListDataSchema,
@@ -282,6 +284,7 @@ export const buildOpenApiDocument = () =>
         AdminWorkData: adminWorkDataSchema,
         AdminWorkListData: adminWorkListDataSchema,
         AdminChapter: adminChapterSchema,
+        AdminChapterSummary: adminChapterSummarySchema,
         PublicationTransition: publicationTransitionSchema,
       },
     },
@@ -481,7 +484,7 @@ export const buildOpenApiDocument = () =>
         get: {
           summary: "List published Chapters for a published Work",
           description:
-            "Chapter bodies and illustrated page metadata are excluded.",
+            "Only ready published Chapters under an eligible published Work appear. An unavailable saved image hides its Chapter until repair. Chapter bodies and illustrated page metadata are excluded; public metadata includes the title.",
           requestParams: {
             path: workSlugParamsSchema,
             query: paginationQuerySchema,
@@ -500,7 +503,7 @@ export const buildOpenApiDocument = () =>
         get: {
           summary: "Read one published Chapter",
           description:
-            "Both the parent Work and Chapter must be published; no body or page metadata is returned.",
+            "The parent Work and Chapter must be eligible and published; unavailable page images hide the Chapter. Public metadata includes the title but excludes body and page metadata.",
           requestParams: { path: publicChapterParamsSchema },
           responses: {
             "200": successResponse(
@@ -673,10 +676,12 @@ export const buildOpenApiDocument = () =>
       "/content/admin/works/{workId}/chapters": {
         get: {
           summary: "List Chapters for content management",
+          description:
+            "Returns bounded Work-scoped summaries without text bodies or page associations. Search, state filter, sort, rows and total use one filtered snapshot.",
           security: adminReadSecurity,
           requestParams: {
             path: workIdParamsSchema,
-            query: paginationQuerySchema,
+            query: adminChapterListQuerySchema,
           },
           responses: {
             "200": successResponse(
@@ -690,7 +695,7 @@ export const buildOpenApiDocument = () =>
         post: {
           summary: "Create a Chapter",
           description:
-            "Content type is derived from the immutable parent Work type.",
+            "Content type is derived from the immutable parent Work type. Illustrated pages are a complete ordered asset-ID set. Text content is a strict version-1 document or null for an incomplete private draft.",
           security: adminWriteSecurity,
           requestParams: { path: workIdParamsSchema },
           requestBody: jsonBody(createChapterBodySchema),
@@ -722,7 +727,7 @@ export const buildOpenApiDocument = () =>
         patch: {
           summary: "Update Chapter content or numbering",
           description:
-            "Uses expectedVersion and atomically replaces any submitted non-empty illustrated page sequence.",
+            "Uses expectedVersion. Omitted type-specific content stays unchanged. An empty illustrated page set or null text content clears a private draft; a published Chapter must remain ready.",
           security: adminWriteSecurity,
           requestParams: { path: workChapterParamsSchema },
           requestBody: jsonBody(updateChapterBodySchema),
@@ -733,6 +738,7 @@ export const buildOpenApiDocument = () =>
               "CONTENT_CONFLICT",
               "CONTENT_TYPE_CONFLICT",
               "CONTENT_STALE_WRITE",
+              "CONTENT_NOT_READY",
             ]),
             ...adminContentErrors,
           },
@@ -766,7 +772,7 @@ export const buildOpenApiDocument = () =>
         put: {
           summary: "Set a Chapter publication state",
           description:
-            "Illustrated Chapters require at least one committed page before publishing; same-state retries are idempotent.",
+            "Publishing requires a valid title and number, a complete structured text document or consecutively ordered available Chapter pages. Same-state retries preserve the publication event identity.",
           security: adminWriteSecurity,
           requestParams: { path: workChapterParamsSchema },
           requestBody: jsonBody(publicationCommandBodySchema),
@@ -779,6 +785,7 @@ export const buildOpenApiDocument = () =>
             "409": contentConflict([
               "CONTENT_TRANSITION_CONFLICT",
               "CONTENT_STALE_WRITE",
+              "CONTENT_NOT_READY",
             ]),
             ...adminContentErrors,
           },
@@ -877,7 +884,9 @@ export const buildOpenApiDocument = () =>
           },
         },
         post: {
-          summary: "Bind an available private asset to a P01 target",
+          summary: "Bind an available private asset to a Work target",
+          description:
+            "Chapter-page writes use the parent Chapter save route; a generic chapter_page bind returns MEDIA_TARGET_CONFLICT after administrator authorization.",
           security: [{ BearerAuth: [], CsrfHeader: [] }],
           requestBody: jsonBody(mediaReferenceCreateSchema),
           responses: {
@@ -904,7 +913,10 @@ export const buildOpenApiDocument = () =>
           },
         },
         put: {
-          summary: "Replace an active media reference using compare-and-set",
+          summary:
+            "Replace an active Work media reference using compare-and-set",
+          description:
+            "Active or retired Chapter-page reference IDs return MEDIA_TARGET_CONFLICT to an authorized administrator.",
           security: [{ BearerAuth: [], CsrfHeader: [] }],
           requestParams: { path: mediaReferenceParamsSchema },
           requestBody: jsonBody(mediaReferenceReplaceSchema),
@@ -917,7 +929,10 @@ export const buildOpenApiDocument = () =>
           },
         },
         delete: {
-          summary: "Retire an active media reference using compare-and-set",
+          summary:
+            "Retire an active Work media reference using compare-and-set",
+          description:
+            "Active or retired Chapter-page reference IDs return MEDIA_TARGET_CONFLICT to an authorized administrator.",
           security: [{ BearerAuth: [], CsrfHeader: [] }],
           requestParams: { path: mediaReferenceParamsSchema },
           requestBody: jsonBody(mediaReferenceRetireSchema),

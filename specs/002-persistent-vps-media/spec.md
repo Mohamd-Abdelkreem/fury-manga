@@ -4,7 +4,7 @@
 
 **Created**: 2026-09-23
 
-**Status**: Draft
+**Status**: Requirements accepted after owner-confirmed human review on 2026-09-27; P02 phase-exit evidence and representative-artwork decision remain separate.
 
 **Input**: Roadmap phase P02 — Persistent VPS Media Platform
 

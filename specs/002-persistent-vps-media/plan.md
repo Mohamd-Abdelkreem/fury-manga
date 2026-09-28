@@ -34,7 +34,7 @@ Build a private, validated six-class media pipeline on the existing Express/Post
 
 ## Constitution Check
 
-Each gate was assessed before Phase 0 and again after the Phase 1 artifacts. `PASS` means the plan contains a concrete, testable design, not that implementation has already passed. P00/P01 formal acceptance, P02 reviewer disposition, and live VPS checks remain prerequisites to their respective gates.
+Each gate was assessed before Phase 0 and again after the Phase 1 artifacts. `PASS` means the plan contains a concrete, testable design, not that implementation has already passed. The owner accepted P02's written-requirements review on 2026-09-27; P00/P01 formal acceptance and live VPS checks remain prerequisites to their respective gates.
 
 | Ratified gate                | Pre-design | Post-design | Pass/fail evidence in this plan                                                                                                                                                          |
 | ---------------------------- | ---------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -47,13 +47,13 @@ Each gate was assessed before Phase 0 and again after the Phase 1 artifacts. `PA
 | 7. Evidence                  | PASS       | PASS        | FR/SC matrix below requires contract, PostgreSQL, real HTTP, hook/component, browser, restart/release and restore evidence.                                                              |
 | 8. Change safety             | PASS       | PASS        | Initial status, exact only-planning edits, no external/irreversible action, doc changes, P02 stop and final report are recorded below.                                                   |
 
-**Gate result:** No unjustified constitutional violation remains in this design. Implementation cannot begin until P00/P01 formal exit gates are confirmed and the P02 Draft spec and reviewer-owned readiness checklist receive an accepted disposition. Current P01 execution notes explicitly state that its earlier override was not gate acceptance. Production claims require deployment evidence. Conditional credential URL, external provider, notification, moderation, and device rules are N/A because P02 exposes none of those capabilities.
+**Gate result:** No unjustified constitutional violation remains in this design. The owner accepted P02 written requirements and its reviewer-owned checklist on 2026-09-27. P00/P01 formal exit gates and P02 phase-exit evidence remain separate; the earlier execution override did not accept them. Production claims require deployment evidence. Conditional credential URL, external provider, notification, moderation, and device rules are N/A because P02 exposes none of those capabilities.
 
 ## Project Structure and Exact Touchpoints
 
 ### Phase artifacts
 
-`specs/002-persistent-vps-media/` contains the clarified Draft `spec.md`, this `plan.md`, `research.md`, `data-model.md`, `contracts/media-http.md`, `quickstart.md`, `tasks.md`, and both checklists. The reviewer-owned checklist remains unchecked until human disposition.
+`specs/002-persistent-vps-media/` contains the owner-accepted written `spec.md`, this `plan.md`, `research.md`, `data-model.md`, `contracts/media-http.md`, `quickstart.md`, `tasks.md`, and both checklists. The owner accepted the reviewer-owned checklist on 2026-09-27; technical phase-exit evidence is separate.
 
 ### Reuse/change during implementation
 

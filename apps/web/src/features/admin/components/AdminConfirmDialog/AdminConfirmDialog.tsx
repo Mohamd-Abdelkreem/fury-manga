@@ -8,6 +8,7 @@ interface AdminConfirmDialogProps {
   description: string;
   confirmLabel?: string;
   cancelLabel?: string;
+  busy?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -18,6 +19,7 @@ export function AdminConfirmDialog({
   description,
   confirmLabel = "تأكيد",
   cancelLabel = "إلغاء",
+  busy = false,
   onConfirm,
   onCancel,
 }: AdminConfirmDialogProps) {
@@ -37,13 +39,21 @@ export function AdminConfirmDialog({
     };
   }, [isOpen]);
 
+  useEffect(() => {
+    if (isOpen && busy) dialogRef.current?.focus();
+  }, [isOpen, busy]);
+
   const onDialogKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === "Escape") {
       event.preventDefault();
-      onCancel();
+      if (!busy) onCancel();
       return;
     }
     if (event.key !== "Tab") return;
+    if (busy) {
+      event.preventDefault();
+      return;
+    }
 
     const buttons = dialogRef.current?.querySelectorAll<HTMLButtonElement>(
       "button:not([disabled])",
@@ -67,7 +77,7 @@ export function AdminConfirmDialog({
     <div
       className={styles["backdrop"]}
       onClick={(e) => {
-        if (e.target === e.currentTarget) {
+        if (!busy && e.target === e.currentTarget) {
           onCancel();
         }
       }}
@@ -96,10 +106,13 @@ export function AdminConfirmDialog({
           </div>
         </div>
 
+        {busy ? <p role="status">جارٍ تأكيد الطلب…</p> : null}
+
         <div className={styles["footer"]}>
           <button
             type="button"
             onClick={onCancel}
+            disabled={busy}
             className={styles["cancelBtn"]}
           >
             {cancelLabel}
@@ -108,6 +121,7 @@ export function AdminConfirmDialog({
             ref={confirmBtnRef}
             type="button"
             onClick={onConfirm}
+            disabled={busy}
             className={styles["confirmBtn"]}
           >
             {confirmLabel}

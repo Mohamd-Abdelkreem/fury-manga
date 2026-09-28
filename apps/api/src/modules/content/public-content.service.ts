@@ -1,5 +1,5 @@
 import type { PublicChapter, PublicWork } from "@fury/contracts";
-import { PublicationStatus, Prisma, type DatabaseClient } from "@fury/database";
+import { Prisma, type DatabaseClient } from "@fury/database";
 
 import { NotFoundException } from "../../core/errors/not-found.error.js";
 import {
@@ -11,6 +11,7 @@ import {
   findPublicChapter,
   findPublicWork,
   PUBLIC_READY_WORK_WHERE,
+  countPublicChapters,
   listPublicChapters,
   listPublicWorks,
 } from "./content.queries.js";
@@ -48,19 +49,16 @@ export class PublicContentService {
     workSlug: string,
     pagination: PaginationQuery,
   ): Promise<ContentList<PublicChapter>> {
-    const work = await findPublicWork(this.database, workSlug);
-    if (work === null) throw new NotFoundException();
     const [records, total] = await this.database.$transaction(
-      async (transaction) =>
-        Promise.all([
+      async (transaction) => {
+        const work = await findPublicWork(transaction, workSlug);
+        if (work === null) throw new NotFoundException();
+        return Promise.all([
           listPublicChapters(transaction, work.id, pagination),
-          transaction.chapter.count({
-            where: {
-              workId: work.id,
-              publicationStatus: PublicationStatus.PUBLISHED,
-            },
-          }),
-        ]),
+          countPublicChapters(transaction, work.id),
+        ]);
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
     );
     const chapterList = {
       items: records.map(mapPublicChapter),
@@ -73,12 +71,13 @@ export class PublicContentService {
     workSlug: string,
     chapterNumber: number,
   ): Promise<PublicChapter> {
-    const work = await findPublicWork(this.database, workSlug);
-    if (work === null) throw new NotFoundException();
-    const chapter = await findPublicChapter(
-      this.database,
-      work.id,
-      chapterNumber,
+    const chapter = await this.database.$transaction(
+      async (transaction) => {
+        const work = await findPublicWork(transaction, workSlug);
+        if (work === null) throw new NotFoundException();
+        return findPublicChapter(transaction, work.id, chapterNumber);
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
     );
     if (chapter === null) throw new NotFoundException();
     const publicChapter = mapPublicChapter(chapter);

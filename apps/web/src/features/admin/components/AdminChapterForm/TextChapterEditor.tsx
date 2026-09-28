@@ -1,313 +1,361 @@
 "use client";
 
-import React, { useRef, useState } from "react";
-import {
-  Bold,
-  Eye,
-  FileText,
-  Heading2,
-  Heading3,
-  Italic,
-  List,
-  Quote,
-} from "lucide-react";
+import type { EditableTextBlock } from "../../model/admin-chapter-text";
 import { cn } from "@/lib/utils";
 import styles from "./AdminChapterForm.module.css";
 
-interface TextChapterEditorProps {
-  content: string;
-  onChange: (content: string) => void;
-}
+type TextInline = Extract<
+  EditableTextBlock,
+  { type: "paragraph" }
+>["content"][number];
 
 export function TextChapterEditor({
-  content,
+  blocks,
   onChange,
-}: TextChapterEditorProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [activeTab, setActiveTab] = useState<"edit" | "preview">("edit");
-
-  const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
-  const charCount = content.length;
-  const readTimeMin = Math.max(1, Math.ceil(wordCount / 200));
-
-  const insertMarkup = (before: string, after: string = "") => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const previousContent = textarea.value;
-    const selectedText = previousContent.substring(start, end);
-    const replacement = `${before}${selectedText || "نص"}${after}`;
-
-    const newContent =
-      previousContent.substring(0, start) +
-      replacement +
-      previousContent.substring(end);
-
-    onChange(newContent);
-
-    setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(
-        start + before.length,
-        start + replacement.length - after.length,
-      );
-    }, 0);
+}: Readonly<{
+  blocks: readonly EditableTextBlock[];
+  onChange: (blocks: EditableTextBlock[]) => void;
+}>) {
+  const replaceBlock = (index: number, block: EditableTextBlock) => {
+    onChange(
+      blocks.map((current, position) => (position === index ? block : current)),
+    );
+  };
+  const moveBlock = (index: number, direction: -1 | 1) => {
+    const destination = index + direction;
+    if (destination < 0 || destination >= blocks.length) return;
+    const next = [...blocks];
+    const source = next[index];
+    const target = next[destination];
+    if (source === undefined || target === undefined) return;
+    next[index] = target;
+    next[destination] = source;
+    onChange(next);
+  };
+  const removeBlock = (index: number) => {
+    onChange(blocks.filter((_, position) => position !== index));
+  };
+  const replaceInline = (
+    block: Extract<EditableTextBlock, { type: "paragraph" }>,
+    blockIndex: number,
+    inlineIndex: number,
+    inline: TextInline,
+  ) => {
+    replaceBlock(blockIndex, {
+      ...block,
+      content: block.content.map((current, position) =>
+        position === inlineIndex ? inline : current,
+      ),
+    });
   };
 
   return (
-    <div className={styles["card"]}>
+    <section className={styles["card"]} aria-label="محرر النص المنظم">
       <div className={styles["cardHeader"]}>
-        <div className={styles["pagesCounter"]}>
-          <FileText className={styles["cardIcon"]} />
-          <span>محتوى الفصل النصي</span>
-        </div>
-        <div
-          className={styles["tabsRow"]}
-          style={{ borderBottom: "none", paddingBottom: 0 }}
+        <h2 className={styles["cardTitle"]}>محتوى الفصل النصي</h2>
+        <span className={styles["subtitle"]}>{blocks.length} / 500 مقطع</span>
+      </div>
+      <p className={styles["subtitle"]}>
+        أضف المقاطع بالترتيب المطلوب. يمكن حفظ مسودة فارغة، وتتحقق الخدمة من
+        النص والروابط عند الحفظ.
+      </p>
+      <div
+        className={styles["actionsArea"]}
+        role="group"
+        aria-label="إضافة مقطع"
+      >
+        <button
+          type="button"
+          className={cn(styles["btn"], styles["btnSecondary"])}
+          disabled={blocks.length >= 500}
+          onClick={() => {
+            onChange([
+              ...blocks,
+              { type: "paragraph", content: [{ text: "" }] },
+            ]);
+          }}
         >
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab("edit");
-            }}
-            className={cn(
-              styles["tabBtn"],
-              activeTab === "edit" && styles["tabBtnActive"],
-            )}
-          >
-            المحرر
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab("preview");
-            }}
-            className={cn(
-              styles["tabBtn"],
-              activeTab === "preview" && styles["tabBtnActive"],
-            )}
-          >
-            <Eye
-              style={{
-                width: "0.875rem",
-                height: "0.875rem",
-                display: "inline-block",
-                verticalAlign: "middle",
-                marginLeft: "0.25rem",
-              }}
-            />
-            المعاينة الحية
-          </button>
-        </div>
+          فقرة
+        </button>
+        <button
+          type="button"
+          className={cn(styles["btn"], styles["btnSecondary"])}
+          disabled={blocks.length >= 500}
+          onClick={() => {
+            onChange([...blocks, { type: "heading", level: 2, text: "" }]);
+          }}
+        >
+          عنوان H2
+        </button>
+        <button
+          type="button"
+          className={cn(styles["btn"], styles["btnSecondary"])}
+          disabled={blocks.length >= 500}
+          onClick={() => {
+            onChange([...blocks, { type: "heading", level: 3, text: "" }]);
+          }}
+        >
+          عنوان H3
+        </button>
+        <button
+          type="button"
+          className={cn(styles["btn"], styles["btnSecondary"])}
+          disabled={blocks.length >= 500}
+          onClick={() => {
+            onChange([
+              ...blocks,
+              { type: "list", ordered: false, items: [""] },
+            ]);
+          }}
+        >
+          قائمة نقطية
+        </button>
+        <button
+          type="button"
+          className={cn(styles["btn"], styles["btnSecondary"])}
+          disabled={blocks.length >= 500}
+          onClick={() => {
+            onChange([...blocks, { type: "list", ordered: true, items: [""] }]);
+          }}
+        >
+          قائمة مرقمة
+        </button>
       </div>
-
-      {activeTab === "edit" ? (
-        <>
-          <div className={styles["textToolbar"]}>
-            <button
-              type="button"
-              onClick={() => {
-                insertMarkup("## ", "\n");
-              }}
-              className={styles["toolbarBtn"]}
-              title="عنوان 2"
-            >
-              <Heading2 style={{ width: "1rem", height: "1rem" }} />
-              عنوان 2
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                insertMarkup("### ", "\n");
-              }}
-              className={styles["toolbarBtn"]}
-              title="عنوان 3"
-            >
-              <Heading3 style={{ width: "1rem", height: "1rem" }} />
-              عنوان 3
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                insertMarkup("**", "**");
-              }}
-              className={styles["toolbarBtn"]}
-              title="عريض"
-            >
-              <Bold style={{ width: "1rem", height: "1rem" }} />
-              عريض
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                insertMarkup("*", "*");
-              }}
-              className={styles["toolbarBtn"]}
-              title="مائل"
-            >
-              <Italic style={{ width: "1rem", height: "1rem" }} />
-              مائل
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                insertMarkup("- ", "\n");
-              }}
-              className={styles["toolbarBtn"]}
-              title="قائمة نقطية"
-            >
-              <List style={{ width: "1rem", height: "1rem" }} />
-              قائمة
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                insertMarkup("> ", "\n");
-              }}
-              className={styles["toolbarBtn"]}
-              title="اقتباس"
-            >
-              <Quote style={{ width: "1rem", height: "1rem" }} />
-              اقتباس
-            </button>
-          </div>
-
-          <div className={styles["field"]}>
-            <textarea
-              ref={textareaRef}
-              className={styles["textarea"]}
-              style={{
-                minHeight: "350px",
-                lineHeight: "1.8",
-                fontSize: "0.9375rem",
-                fontFamily: "inherit",
-              }}
-              value={content}
-              onChange={(e) => {
-                onChange(e.target.value);
-              }}
-              placeholder="اكتب أو الصق نص الفصل هنا... يمكنك استخدام أزرار التنسيق أعلاه لإضافة عناوين وفقرات واقتباسات."
-              aria-label="نص الفصل"
-            />
-          </div>
-        </>
-      ) : (
-        <div className={styles["textPreviewArea"]}>
-          {content.trim() ? (
-            <div>
-              {content.split("\n\n").map((block, i) => {
-                const trimmed = block.trim();
-                if (trimmed.startsWith("### ")) {
-                  return (
-                    <h3
-                      key={String(i)}
-                      style={{
-                        fontSize: "1.125rem",
-                        fontWeight: 700,
-                        color: "var(--primary)",
-                        margin: "1rem 0 0.5rem",
-                      }}
-                    >
-                      {trimmed.replace(/^###\s+/, "")}
-                    </h3>
-                  );
-                }
-                if (trimmed.startsWith("## ")) {
-                  return (
-                    <h2
-                      key={String(i)}
-                      style={{
-                        fontSize: "1.35rem",
-                        fontWeight: 800,
-                        color: "#ffffff",
-                        margin: "1.25rem 0 0.5rem",
-                        borderBottom: "1px solid rgba(255,255,255,0.08)",
-                        paddingBottom: "0.25rem",
-                      }}
-                    >
-                      {trimmed.replace(/^##\s+/, "")}
-                    </h2>
-                  );
-                }
-                if (trimmed.startsWith("> ")) {
-                  return (
-                    <blockquote
-                      key={String(i)}
-                      style={{
-                        borderRight: "4px solid var(--primary)",
-                        background: "rgba(255, 71, 71, 0.05)",
-                        padding: "0.75rem 1rem",
-                        margin: "1rem 0",
-                        borderRadius: "0.25rem",
-                        color: "rgba(255, 255, 255, 0.9)",
-                        fontStyle: "italic",
-                      }}
-                    >
-                      {trimmed.replace(/^>\s+/, "")}
-                    </blockquote>
-                  );
-                }
-                if (trimmed.startsWith("- ")) {
-                  const items = trimmed
-                    .split("\n")
-                    .filter((l) => l.startsWith("- "));
-                  return (
-                    <ul
-                      key={String(i)}
-                      style={{ paddingRight: "1.5rem", margin: "0.75rem 0" }}
-                    >
-                      {items.map((item, itemIdx) => (
-                        <li
-                          key={String(itemIdx)}
-                          style={{ marginBottom: "0.25rem" }}
-                        >
-                          {item.replace(/^- /, "")}
-                        </li>
-                      ))}
-                    </ul>
-                  );
-                }
-                return (
-                  <p
-                    key={String(i)}
-                    style={{
-                      marginBottom: "1rem",
-                      lineHeight: "1.9",
-                      fontSize: "0.9375rem",
-                      color: "rgba(255, 255, 255, 0.85)",
-                    }}
-                  >
-                    {trimmed}
-                  </p>
-                );
-              })}
+      {blocks.length === 0 ? (
+        <p className={styles["emptyStateText"]}>لا يوجد نص في هذه المسودة.</p>
+      ) : null}
+      <ol className={styles["textBlockList"]} aria-label="مقاطع الفصل">
+        {blocks.map((block, blockIndex) => (
+          <li className={styles["textBlockItem"]} key={blockIndex}>
+            <div className={styles["actionsArea"]}>
+              <strong>المقطع {blockIndex + 1}</strong>
+              <button
+                type="button"
+                className={styles["pageBtn"]}
+                aria-label={`تحريك المقطع ${String(blockIndex + 1)} للأعلى`}
+                disabled={blockIndex === 0}
+                onClick={() => {
+                  moveBlock(blockIndex, -1);
+                }}
+              >
+                ↑
+              </button>
+              <button
+                type="button"
+                className={styles["pageBtn"]}
+                aria-label={`تحريك المقطع ${String(blockIndex + 1)} للأسفل`}
+                disabled={blockIndex === blocks.length - 1}
+                onClick={() => {
+                  moveBlock(blockIndex, 1);
+                }}
+              >
+                ↓
+              </button>
+              <button
+                type="button"
+                className={styles["deletePageBtn"]}
+                aria-label={`حذف المقطع ${String(blockIndex + 1)}`}
+                onClick={() => {
+                  removeBlock(blockIndex);
+                }}
+              >
+                ×
+              </button>
             </div>
-          ) : (
-            <p
-              style={{
-                color: "rgba(255,255,255,0.4)",
-                textAlign: "center",
-                padding: "2rem",
-              }}
-            >
-              لا يوجد نص لمعاينته بعد. قم بكتابة نص في تبويب المحرر.
-            </p>
-          )}
-        </div>
-      )}
-
-      <div className={styles["textStatsRow"]}>
-        <span>إحصائيات النص:</span>
-        <div style={{ display: "flex", gap: "1rem" }}>
-          <span>{String(wordCount)} كلمة</span>
-          <span>•</span>
-          <span>{String(charCount)} حرف</span>
-          <span>•</span>
-          <span>وقت القراءة التقديري: {String(readTimeMin)} دقيقة</span>
-        </div>
-      </div>
-    </div>
+            {block.type === "heading" ? (
+              <div className={styles["field"]}>
+                <label
+                  className={styles["label"]}
+                  htmlFor={`text-heading-${String(blockIndex)}`}
+                >
+                  عنوان {block.level === 2 ? "H2" : "H3"}
+                </label>
+                <input
+                  id={`text-heading-${String(blockIndex)}`}
+                  className={styles["input"]}
+                  value={block.text}
+                  maxLength={4000}
+                  onChange={(event) => {
+                    replaceBlock(blockIndex, {
+                      ...block,
+                      text: event.target.value,
+                    });
+                  }}
+                />
+              </div>
+            ) : null}
+            {block.type === "paragraph" ? (
+              <div className={styles["textBlockList"]}>
+                {block.content.map((inline, inlineIndex) => (
+                  <div className={styles["textInlineRow"]} key={inlineIndex}>
+                    <div className={styles["field"]}>
+                      <label
+                        className={styles["label"]}
+                        htmlFor={`text-inline-${String(blockIndex)}-${String(inlineIndex)}`}
+                      >
+                        نص الفقرة {blockIndex + 1}، جزء {inlineIndex + 1}
+                      </label>
+                      <textarea
+                        id={`text-inline-${String(blockIndex)}-${String(inlineIndex)}`}
+                        className={styles["textarea"]}
+                        value={inline.text}
+                        maxLength={4000}
+                        onChange={(event) => {
+                          replaceInline(block, blockIndex, inlineIndex, {
+                            ...inline,
+                            text: event.target.value,
+                          });
+                        }}
+                      />
+                    </div>
+                    <label className={styles["label"]}>
+                      <input
+                        type="checkbox"
+                        checked={inline.bold ?? false}
+                        onChange={(event) => {
+                          replaceInline(block, blockIndex, inlineIndex, {
+                            ...inline,
+                            bold: event.target.checked,
+                          });
+                        }}
+                      />{" "}
+                      عريض
+                    </label>
+                    <label className={styles["label"]}>
+                      <input
+                        type="checkbox"
+                        checked={inline.italic ?? false}
+                        onChange={(event) => {
+                          replaceInline(block, blockIndex, inlineIndex, {
+                            ...inline,
+                            italic: event.target.checked,
+                          });
+                        }}
+                      />{" "}
+                      مائل
+                    </label>
+                    <div className={styles["field"]}>
+                      <label
+                        className={styles["label"]}
+                        htmlFor={`text-link-${String(blockIndex)}-${String(inlineIndex)}`}
+                      >
+                        رابط داخلي اختياري
+                      </label>
+                      <input
+                        id={`text-link-${String(blockIndex)}-${String(inlineIndex)}`}
+                        className={styles["input"]}
+                        value={inline.href ?? ""}
+                        placeholder="/stories/example"
+                        onChange={(event) => {
+                          const { href: _previous, ...withoutLink } = inline;
+                          replaceInline(
+                            block,
+                            blockIndex,
+                            inlineIndex,
+                            event.target.value === ""
+                              ? withoutLink
+                              : { ...withoutLink, href: event.target.value },
+                          );
+                        }}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      className={styles["deletePageBtn"]}
+                      aria-label={`حذف جزء ${String(inlineIndex + 1)} من الفقرة ${String(blockIndex + 1)}`}
+                      disabled={block.content.length === 1}
+                      onClick={() => {
+                        replaceBlock(blockIndex, {
+                          ...block,
+                          content: block.content.filter(
+                            (_, position) => position !== inlineIndex,
+                          ),
+                        });
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  className={cn(styles["btn"], styles["btnSecondary"])}
+                  disabled={block.content.length >= 200}
+                  onClick={() => {
+                    replaceBlock(blockIndex, {
+                      ...block,
+                      content: [...block.content, { text: "" }],
+                    });
+                  }}
+                >
+                  إضافة جزء نصي
+                </button>
+              </div>
+            ) : null}
+            {block.type === "list" ? (
+              <div className={styles["textBlockList"]}>
+                {block.items.map((item, itemIndex) => (
+                  <div className={styles["textInlineRow"]} key={itemIndex}>
+                    <div className={styles["field"]}>
+                      <label
+                        className={styles["label"]}
+                        htmlFor={`text-item-${String(blockIndex)}-${String(itemIndex)}`}
+                      >
+                        عنصر {itemIndex + 1} في القائمة {blockIndex + 1}
+                      </label>
+                      <input
+                        id={`text-item-${String(blockIndex)}-${String(itemIndex)}`}
+                        className={styles["input"]}
+                        value={item}
+                        maxLength={4000}
+                        onChange={(event) => {
+                          replaceBlock(blockIndex, {
+                            ...block,
+                            items: block.items.map((current, position) =>
+                              position === itemIndex
+                                ? event.target.value
+                                : current,
+                            ),
+                          });
+                        }}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      className={styles["deletePageBtn"]}
+                      aria-label={`حذف عنصر ${String(itemIndex + 1)} من القائمة ${String(blockIndex + 1)}`}
+                      disabled={block.items.length === 1}
+                      onClick={() => {
+                        replaceBlock(blockIndex, {
+                          ...block,
+                          items: block.items.filter(
+                            (_, position) => position !== itemIndex,
+                          ),
+                        });
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  className={cn(styles["btn"], styles["btnSecondary"])}
+                  disabled={block.items.length >= 200}
+                  onClick={() => {
+                    replaceBlock(blockIndex, {
+                      ...block,
+                      items: [...block.items, ""],
+                    });
+                  }}
+                >
+                  إضافة عنصر
+                </button>
+              </div>
+            ) : null}
+          </li>
+        ))}
+      </ol>
+    </section>
   );
 }

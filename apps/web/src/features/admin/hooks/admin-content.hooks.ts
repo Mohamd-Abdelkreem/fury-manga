@@ -80,10 +80,13 @@ const subscribeToDenial = (
   };
 };
 
-const isActorDenied = (queryClient: QueryClient, actorId: string): boolean =>
-  getDenialState(queryClient, actorId)?.denied ?? false;
+export const isActorDenied = (
+  queryClient: QueryClient,
+  actorId: string,
+): boolean => getDenialState(queryClient, actorId)?.denied ?? false;
 
-const denialError = () => new SafeAdminContentError("ACCESS_FENCED", 0, "");
+export const denialError = () =>
+  new SafeAdminContentError("ACCESS_FENCED", 0, "");
 
 const isWorkWriteBlocked = (
   queryClient: QueryClient,
@@ -160,7 +163,10 @@ const recoverActor = (
   notifyDenialListeners(state);
 };
 
-const useActorDenial = (queryClient: QueryClient, actorId: string | null) =>
+export const useActorDenial = (
+  queryClient: QueryClient,
+  actorId: string | null,
+) =>
   useSyncExternalStore(
     (listener) =>
       actorId === null
@@ -170,7 +176,7 @@ const useActorDenial = (queryClient: QueryClient, actorId: string | null) =>
     () => false,
   );
 
-const runActorRequest = async <T>(
+export const runActorRequest = async <T>(
   queryClient: QueryClient,
   actorId: string,
   request: () => Promise<T>,
@@ -208,7 +214,7 @@ const runActorRequest = async <T>(
   }
 };
 
-const runRecoveryRead = async <T>(
+export const runRecoveryRead = async <T>(
   queryClient: QueryClient,
   actorId: string,
   request: () => Promise<T>,
@@ -235,7 +241,7 @@ const runRecoveryRead = async <T>(
   }
 };
 
-const useAdminActor = () => {
+export const useAdminActor = () => {
   const session = useSession();
   const user = session.data?.user;
   const actorId =

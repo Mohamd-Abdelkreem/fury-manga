@@ -2,8 +2,10 @@
 
 A Next.js 16, Express 5, PostgreSQL, and Prisma 7 foundation with a complete
 email/password account lifecycle, P01 content records, private P02 media, and
-P03 saved category and work administration. Chapter editing and unrelated admin
-screens remain local presentations.
+P03 saved category and work administration, and the P04 admin Chapter authoring
+checkpoint. Unrelated admin screens remain local presentations. P04's synthetic
+staged migration and title-bearing public contract are implemented; real-data
+upgrade and release review remain open.
 
 ## What is included
 
@@ -20,6 +22,7 @@ screens remain local presentations.
 - durable content records with ADMIN management and credential-free published metadata
 - private persistent image assets, actor-scoped upload attempts, narrow P01 media references, and operator reconciliation
 - saved admin categories and illustrated/text works with P03 editorial media references and publication readiness
+- saved admin illustrated/text Chapters, Work-scoped management, private preview, and Chapter publication controls
 - unit tests and disposable PostgreSQL Testcontainers integration tests
 
 ## Local setup
@@ -56,7 +59,8 @@ Create a private writable media directory outside this checkout and set its
 absolute path as `MEDIA_STORAGE_ROOT` in `.env`. The API fails startup rather
 than falling back to a release or public directory.
 
-Start the database, deploy the migration, and run both applications:
+For a fresh empty local database, start PostgreSQL, deploy migrations, and run
+both applications:
 
 ```bash
 docker compose up -d postgres
@@ -64,6 +68,10 @@ pnpm db:generate
 pnpm db:migrate:deploy
 pnpm dev
 ```
+
+Do not run the combined migration directory against an unremediated populated
+P01–P03 database. Follow the staged [P04 Chapter upgrade](./docs/operations/p04-chapter-upgrade.md)
+and its operator-reviewed title/media inventory first.
 
 If port `5432` is already owned by a local PostgreSQL installation, choose a
 free `POSTGRES_PORT` in `.env` and use the same port in `DATABASE_URL` before
@@ -142,13 +150,16 @@ logged.
 P01 persists Categories, Works, Work–Category associations, Chapters, ordered
 illustrated page metadata, and immutable publication events. P03 adds category
 enablement and global order, work editorial fields and tags, featured preference,
-and private cover/background references through P02. Chapter authoring, reader
-output, public image delivery, and personalization remain outside this workflow.
+and private cover/background references through P02. P04 adds saved admin Chapter
+authoring and Chapter-page media association. Reader output, public image
+delivery, and personalization remain outside this workflow.
 
 The API exposes four credential-free metadata reads beneath
 `/api/v1/content/works`. Public Work and Chapter visibility requires the Work
-and Chapter to be published, and public Chapter responses exclude structured
-text and page metadata. Missing, draft, and archived direct reads use the same
+and Chapter to be published. Public Chapter responses include title and exclude
+structured text and page metadata. A populated deployment requires the staged
+legacy title/media gate in the P04 upgrade procedure.
+Missing, draft, and archived direct reads use the same
 safe `404 NOT_FOUND` result.
 
 Admin content operations provide bounded list/create/read/update behavior,
@@ -166,10 +177,13 @@ atomic. The work list searches, filters, sorts, and paginates saved records;
 the dashboard omits fixture work totals and activity. The P03 browser acceptance
 journey remains a separate check in the feature quickstart.
 
-Text Chapters store a strict version-1 JSON document containing only H2/H3
+The three Arabic RTL admin Chapter routes now use saved API data. Illustrated
+Chapters save a complete ordered page set with private P02 assets, retained
+reference history, and version checks. Text Chapters store a strict version-1 JSON document containing only H2/H3
 headings, paragraphs with bounded inline emphasis/internal links, and ordered
 or unordered lists. Illustrated Chapters store ordered positive page positions
-only; chapter editor and public discovery/text-story screens remain fixture-backed.
+only. Chapter editor/preview and Work-scoped list use persisted Chapters; public
+discovery/text-story screens and the fixture reader remain separate.
 
 ## Private media platform
 
@@ -196,7 +210,9 @@ bytes unavailable, and accepts restored bytes only when the stored length and
 SHA-256 match. Follow [the media backup and restore runbook](./docs/operations/media-backup-restore.md)
 for coordinated database and filesystem recovery.
 
-P02 assets can now be bound to saved P03 Works. Chapter forms remain fixtures;
+P02 assets can now be bound to saved P03 Works and, through Chapter save only,
+to P04 illustrated pages. Generic media-reference writes to `chapter_page`
+targets return `MEDIA_TARGET_CONFLICT` for an authorized ADMIN;
 avatar profile binding, reader/public images, category media, personalization,
 gifts/grants, and automatic garbage collection remain outside P03.
 
@@ -248,7 +264,9 @@ additive `20260922010000_content_domain_foundation` migration, the
 `20260923000000_remove_obsolete_phone` cleanup, the forward-only
 `20260923010000_persistent_vps_media` migration, and four P03
 migrations: editorial foundation, published readiness, Work Category limit,
-and enabled Category assignment. The initial migration enforces:
+and enabled Category assignment. The P04 expand migration
+`20260926030000_p04_chapter_expand` adds Chapter title and retained-page storage;
+its final populated enforcement migration is pending. The initial migration enforces:
 
 - `ck_users_email_normalized`
 - `ck_users_status_timestamps_consistent`

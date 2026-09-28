@@ -1,10 +1,5 @@
 import type { PublicationTransition } from "@fury/contracts";
-import {
-  ChapterContentType,
-  Prisma,
-  PublicationStatus,
-  type DatabaseClient,
-} from "@fury/database";
+import { Prisma, PublicationStatus, type DatabaseClient } from "@fury/database";
 
 import { NotFoundException } from "../../core/errors/not-found.error.js";
 import {
@@ -19,6 +14,7 @@ import {
 import { mapPublicationStatus } from "./content.mapper.js";
 import {
   findAdminWork,
+  findAdminChapter,
   findPublishedFeaturedWork,
   lockCategoryEligibilityState,
   readWorkReadiness,
@@ -27,6 +23,7 @@ import {
   assertPublicationTransition,
   assertFeaturedPositionAvailable,
   assertWorkReady,
+  assertChapterReady,
   toDatabasePublicationStatus,
 } from "./content.rules.js";
 import type {
@@ -184,21 +181,17 @@ export class PublicationManagementService {
             return unchangedTransition;
           }
           assertPublicationTransition(current.publicationStatus, target);
-          if (
-            target === PublicationStatus.PUBLISHED &&
-            current.contentType === ChapterContentType.ILLUSTRATED
-          ) {
-            const pageCount = await transaction.chapterPage.count({
-              where: { chapterId },
-            });
-            if (pageCount === 0) {
-              throw new ContentTransitionConflictException(
-                "An illustrated Chapter requires a page before publication.",
-              );
-            }
-          }
           if (current.version !== command.expectedVersion) {
             throw new ContentStaleWriteException();
+          }
+          if (target === PublicationStatus.PUBLISHED) {
+            const chapter = await findAdminChapter(
+              transaction,
+              workId,
+              chapterId,
+            );
+            if (chapter === null) throw new NotFoundException();
+            assertChapterReady(chapter);
           }
           const publication = await this.buildPublicationWrite(
             transaction,

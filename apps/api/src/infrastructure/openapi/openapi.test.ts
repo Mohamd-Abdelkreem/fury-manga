@@ -104,7 +104,12 @@ const conflictCodesByOperation = [
   [
     "/content/admin/works/{workId}/chapters/{chapterId}",
     "patch",
-    ["CONTENT_CONFLICT", "CONTENT_TYPE_CONFLICT", "CONTENT_STALE_WRITE"],
+    [
+      "CONTENT_CONFLICT",
+      "CONTENT_TYPE_CONFLICT",
+      "CONTENT_STALE_WRITE",
+      "CONTENT_NOT_READY",
+    ],
   ],
   [
     "/content/admin/works/{workId}/publication",
@@ -119,7 +124,7 @@ const conflictCodesByOperation = [
   [
     "/content/admin/works/{workId}/chapters/{chapterId}/publication",
     "put",
-    ["CONTENT_TRANSITION_CONFLICT", "CONTENT_STALE_WRITE"],
+    ["CONTENT_TRANSITION_CONFLICT", "CONTENT_STALE_WRITE", "CONTENT_NOT_READY"],
   ],
 ] as const;
 
@@ -175,6 +180,28 @@ const responseCodeEnum = (
 };
 
 describe("OpenAPI document", () => {
+  it("documents bounded Chapter list filters and summary-only output", () => {
+    const document = buildOpenApiDocument();
+    const operation =
+      document.paths?.["/content/admin/works/{workId}/chapters"]?.get;
+    expect(operation?.security).toEqual([{ BearerAuth: [] }]);
+    const parameters = JSON.stringify(operation?.parameters);
+    for (const name of [
+      "page",
+      "limit",
+      "search",
+      "publicationStatus",
+      "sort",
+    ]) {
+      expect(parameters).toContain(name);
+    }
+    const summary = JSON.stringify(
+      document.components?.schemas?.["AdminChapterSummary"],
+    );
+    expect(summary).toContain("readyForPublication");
+    expect(summary).not.toContain("textContent");
+    expect(summary).not.toContain("pages");
+  });
   it("documents the bounded administrative Work list query and summary", () => {
     const operation =
       buildOpenApiDocument().paths?.["/content/admin/works"]?.get;
@@ -427,6 +454,25 @@ describe("OpenAPI document", () => {
     expect(update?.security).toEqual([{ BearerAuth: [], CsrfHeader: [] }]);
     expect(update?.description).toContain("nullable fields clear explicitly");
     expect(update?.responses).toHaveProperty("404");
+  });
+
+  it("documents the title-bearing public Chapter allowlist", () => {
+    const document = buildOpenApiDocument();
+    const chapter = document.components?.schemas?.["PublicChapter"];
+    expect(chapter).toMatchObject({
+      type: "object",
+      additionalProperties: false,
+    });
+    expect(chapter).toHaveProperty("properties.title");
+    expect(chapter).not.toHaveProperty("properties.textContent");
+    expect(chapter).not.toHaveProperty("properties.pages");
+    expect(
+      document.paths?.["/content/works/{workSlug}/chapters"]?.get?.security,
+    ).toBeUndefined();
+    expect(
+      document.paths?.["/content/works/{workSlug}/chapters/{chapterNumber}"]
+        ?.get?.security,
+    ).toBeUndefined();
   });
 
   it("documents exact shared codes for every common P01 failure", () => {

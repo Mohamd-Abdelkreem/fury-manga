@@ -175,3 +175,71 @@ export const workFieldErrors = (error: unknown): WorkFieldErrors => {
       : {}),
   };
 };
+
+export type ChapterFieldErrors = Readonly<{
+  number?: string;
+  title?: string;
+  textContent?: string;
+  pages?: string;
+}>;
+
+export const adminChapterErrorMessage = (error: unknown): string => {
+  if (!(error instanceof SafeAdminContentError))
+    return "تعذر تأكيد نتيجة الفصل. احتفظ بتعديلاتك وأعد تحميل النسخة المحفوظة.";
+  switch (error.code) {
+    case "CONTENT_STALE_WRITE":
+      return "تغيّر الفصل في مكان آخر. احتفظ بتعديلاتك وقارنها بالنسخة المحفوظة.";
+    case "CONTENT_CONFLICT":
+      return "رقم الفصل مستخدم في هذا العمل. اختر رقمًا آخر.";
+    case "CONTENT_TYPE_CONFLICT":
+      return "نوع المحتوى لا يطابق نوع العمل.";
+    case "CONTENT_NOT_READY":
+      return "الفصل غير جاهز للنشر. راجع الحقول المحددة والمحتوى المحفوظ.";
+    case "CONTENT_TRANSITION_CONFLICT":
+      return "لا يمكن تنفيذ انتقال النشر من الحالة الحالية. أعد تحميل الفصل.";
+    case "VALIDATION_ERROR":
+    case "BAD_REQUEST":
+      return "راجع حقول الفصل المحددة ثم حاول مجددًا.";
+    case "UNAUTHORIZED":
+      return "انتهت صلاحية الجلسة. سجّل الدخول مجددًا.";
+    case "FORBIDDEN":
+    case "ACCESS_FENCED":
+      return "لا تتوفر صلاحية إدارة هذا الفصل. احتفظ بتعديلاتك.";
+    case "NOT_FOUND":
+      return "لم يعد الفصل متاحًا ضمن هذا العمل. احتفظ بتعديلاتك.";
+    case "NETWORK_ERROR":
+    case "SERVICE_UNAVAILABLE":
+    case "INTERNAL_SERVER_ERROR":
+    case "HTTP_ERROR":
+      return "نتيجة الطلب غير مؤكدة. احتفظ بتعديلاتك وأعد تحميل النسخة المحفوظة.";
+    case "CANCELLED":
+      return "أُلغي الطلب. احتفظ بتعديلاتك قبل المحاولة مجددًا.";
+    case "RATE_LIMIT_EXCEEDED":
+      return "طلبات كثيرة خلال وقت قصير. احتفظ بتعديلاتك وحاول لاحقًا.";
+    default:
+      return "تعذر تأكيد نتيجة الفصل. احتفظ بتعديلاتك وأعد تحميل النسخة المحفوظة.";
+  }
+};
+
+export const chapterFieldErrors = (error: unknown): ChapterFieldErrors => {
+  if (
+    !(error instanceof SafeAdminContentError) ||
+    (error.code !== "VALIDATION_ERROR" && error.code !== "CONTENT_NOT_READY")
+  )
+    return {};
+  const paths = error.fieldPaths;
+  return {
+    ...(paths.includes("body.number")
+      ? { number: "أدخل رقم فصل صحيحًا." }
+      : {}),
+    ...(paths.includes("body.title")
+      ? { title: "أدخل عنوان فصل صالحًا." }
+      : {}),
+    ...(paths.some((path) => path.startsWith("body.textContent"))
+      ? { textContent: "راجع المقاطع النصية والروابط." }
+      : {}),
+    ...(paths.some((path) => path.startsWith("body.pages"))
+      ? { pages: "راجع ترتيب الصفحات والوسائط المتاحة." }
+      : {}),
+  };
+};

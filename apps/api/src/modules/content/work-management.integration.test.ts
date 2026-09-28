@@ -145,6 +145,7 @@ describe("complete Work draft management with PostgreSQL", () => {
       data: {
         workId: second.id,
         number: 1,
+        title: "Fixture Chapter",
         contentType: ChapterContentType.ILLUSTRATED,
       },
     });

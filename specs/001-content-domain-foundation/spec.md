@@ -4,7 +4,7 @@
 
 **Created**: 2026-09-22
 
-**Status**: Draft
+**Status**: Requirements accepted after owner-confirmed human review on 2026-09-27; P00/P01 phase-exit evidence remains separate.
 
 **Input**: Roadmap phase P01 — Content Domain and Contract Foundation
 
@@ -207,7 +207,7 @@ Product consumers can rely on one bounded content vocabulary and one description
 
 ## Assumptions
 
-- P00 is a hard prerequisite. Drafting this specification does not claim P00 is accepted, and P01 implementation readiness remains blocked until its fresh evidence passes.
+- P00 is a hard prerequisite. Acceptance of this specification's written requirements does not claim P00's phase exit has passed; P01 phase readiness remains evidence-gated.
 - The canonical work vocabulary follows the approved admin-facing terms already closest to the roadmap: `comics` and `text-story` supersede `comic` and `short-story` in contract-bound values and test builders only; rendered fixture-backed presentation remains unchanged in P01.
 - Restore is deliberately safe: archived works and chapters return to draft rather than automatically regaining public visibility.
 - Page-position gaps are allowed because P01 requires unique positive ordering, not contiguous renumbering. Media binding is deferred to its owning phases.

@@ -133,6 +133,61 @@ describe("administrator media query identity", () => {
     expect(result.current.state.phase).toBe("accepted");
   });
 
+  it.each([
+    "work_cover",
+    "work_background",
+    "avatar_frame",
+    "comment_decoration",
+  ] as const)(
+    "preserves %s candidate selection and progress for existing parent editors",
+    async (mediaClass) => {
+      let reportProgress: ((percent: number) => void) | undefined;
+      let finish: ((asset: { id: string }) => void) | undefined;
+      mediaApiMock.upload.mockImplementation(
+        (
+          requestedClass: string,
+          _file: unknown,
+          _attemptId: unknown,
+          options: { onProgress: (percent: number) => void },
+        ) => {
+          expect(requestedClass).toBe(mediaClass);
+          reportProgress = options.onProgress;
+          return new Promise((resolve) => {
+            finish = resolve;
+          });
+        },
+      );
+      mediaApiMock.readContent.mockResolvedValue(new Blob(["private"]));
+      const { result } = renderHook(() => useAdminMediaCandidate(mediaClass), {
+        wrapper,
+      });
+      let selection: Promise<void> | undefined;
+      act(() => {
+        selection = result.current.select(
+          new File(["image"], "candidate.png", { type: "image/png" }),
+        );
+      });
+      await waitFor(() => {
+        expect(reportProgress).toBeTypeOf("function");
+      });
+      act(() => {
+        reportProgress?.(60);
+      });
+      expect(result.current.state).toMatchObject({
+        phase: "uploading",
+        progress: 60,
+      });
+      await act(async () => {
+        finish?.({ id: `asset-${mediaClass}` });
+        await selection;
+      });
+      expect(result.current.state).toMatchObject({
+        phase: "accepted",
+        assetId: `asset-${mediaClass}`,
+      });
+    },
+  );
+
   it("keeps private upload payloads outside React Query mutation variables", async () => {
     let finish: ((asset: { id: string }) => void) | undefined;
     mediaApiMock.upload.mockImplementation(

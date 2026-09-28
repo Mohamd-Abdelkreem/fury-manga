@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import { adminCategorySchema, adminWorkSchema } from "@fury/contracts";
 import {
   ChapterContentType,
+  MediaAssetStatus,
+  MediaReferenceSlot,
   PublicationStatus,
   StoryStatus,
   WorkType,
@@ -64,6 +66,7 @@ const chapter: ChapterRecord = {
   id: "33333333-3333-4333-8333-333333333333",
   workId: work.id,
   number: 1,
+  title: "Chapter",
   contentType: ChapterContentType.ILLUSTRATED,
   publicationStatus: PublicationStatus.PUBLISHED,
   publishedAt: now,
@@ -72,7 +75,25 @@ const chapter: ChapterRecord = {
   createdAt: now,
   updatedAt: now,
   textContent: null,
-  pages: [{ id: "55555555-5555-4555-8555-555555555555", position: 1 }],
+  pages: [
+    {
+      id: "55555555-5555-4555-8555-555555555555",
+      position: 1,
+      mediaReferences: [
+        {
+          id: "66666666-6666-4666-8666-666666666666",
+          version: 0,
+          slot: MediaReferenceSlot.CHAPTER_PAGE,
+          assetId: "77777777-7777-4777-8777-777777777777",
+          asset: {
+            status: MediaAssetStatus.AVAILABLE,
+            mediaClass: "CHAPTER_PAGE",
+            scope: "ADMIN",
+          },
+        },
+      ],
+    },
+  ],
 };
 
 describe("content allowlist mappers", () => {
@@ -100,7 +121,7 @@ describe("content allowlist mappers", () => {
       ].sort(),
     );
     expect(Object.keys(mapPublicChapter(chapter)).sort()).toEqual(
-      ["contentType", "id", "number", "publishedAt", "workId"].sort(),
+      ["contentType", "id", "number", "publishedAt", "title", "workId"].sort(),
     );
   });
 

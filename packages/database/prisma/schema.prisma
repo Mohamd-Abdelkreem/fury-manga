@@ -225,6 +225,7 @@ model Chapter {
   id                        String             @id @default(uuid()) @db.Uuid
   workId                    String             @map("work_id") @db.Uuid
   number                    Int
+  title                     String             @db.VarChar(200)
   contentType               ChapterContentType @map("content_type")
   textContent               Json?              @map("text_content") @db.JsonB
   publicationStatus         PublicationStatus  @default(DRAFT) @map("publication_status")
@@ -244,16 +245,17 @@ model Chapter {
 }
 
 model ChapterPage {
-  id        String   @id @default(uuid()) @db.Uuid
-  chapterId String   @map("chapter_id") @db.Uuid
+  id        String    @id @default(uuid()) @db.Uuid
+  chapterId String    @map("chapter_id") @db.Uuid
   position  Int
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  retiredAt DateTime? @map("retired_at") @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
 
   chapter         Chapter          @relation(fields: [chapterId], references: [id], onDelete: Restrict)
   mediaReferences MediaReference[]
 
-  @@unique([chapterId, position])
   @@index([chapterId, position, id], map: "chapter_pages_order_idx")
+  @@index([chapterId, retiredAt, position, id], map: "chapter_pages_active_order_idx")
   @@map("chapter_pages")
 }
 

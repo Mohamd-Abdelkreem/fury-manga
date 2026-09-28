@@ -5,7 +5,7 @@ P02 media recovery treats PostgreSQL records and the private media directory as 
 ## Before backup
 
 1. Confirm the API readiness endpoint reports healthy database and media storage state.
-2. Quiesce media writes for the backup window. Stop uploads, reference mutations, removals, and reconciliation while the snapshots are taken.
+2. Quiesce media writes for the backup window. Stop uploads, reference mutations, Chapter page-set saves, removals, and reconciliation while the snapshots are taken.
 3. Record the application release identifier, database migration state, backup timestamp, and the configured media root mount identity. Do not record credentials or the absolute media path in shared logs.
 
 ## Coordinated backup
@@ -21,7 +21,7 @@ P02 media recovery treats PostgreSQL records and the private media directory as 
 2. Restore the database first, then restore the media directory with private file and directory permissions.
 3. Configure the isolated API with the restored database and media root. Run database migrations normally; never edit an applied migration.
 4. Run `pnpm --filter @fury/api media:reconcile --limit=100` manually. Repeat bounded runs only after reviewing each report.
-5. Compare the restored manifest with `media_assets` identities, byte lengths, and hashes. Verify active `media_references`, their parent Work or ChapterPage targets, and `media_reference_events` history.
+5. Compare the restored manifest with `media_assets` identities, byte lengths, and hashes. Verify active `media_references`, their parent Work or ChapterPage targets, and `media_reference_events` history. For P04 illustrated Chapters, compare every active ordered page, its one active available `chapter_page` reference, retired pages, and current publication-event identity with the restored database.
 6. Authenticate as the owning user or an administrator as appropriate. Verify metadata and binary reads. Verify an unauthenticated visitor and an unrelated user receive the documented denial without learning whether a private object exists.
 7. Restart the isolated API and replace the application release while retaining the mounted media directory. Repeat identity, hash, reference, and authorization checks.
 
@@ -31,6 +31,7 @@ P02 media recovery treats PostgreSQL records and the private media directory as 
 - An asset left in `REMOVING` is completed by the operator command and retains its database tombstone and reference history.
 - A missing or hash-mismatched available object becomes `UNAVAILABLE` only during reconciliation. Normal GET requests report `MEDIA_UNAVAILABLE` without changing database state.
 - Restored bytes return an unavailable asset to `AVAILABLE` only when byte length and SHA-256 match the existing record. Never substitute different content under an existing asset UUID.
+- An unavailable saved Chapter page hides that illustrated Chapter from public list, count, and detail while its admin publication state and event history remain. Verified byte repair restores metadata eligibility without a new publication event. Recheck these projections after reconciliation on the isolated restore.
 - Accepted unbound assets are retained. Reconciliation does not garbage collect them.
 
 ## Rollback and retry

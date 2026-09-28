@@ -291,6 +291,29 @@ export const adminWorkListQuerySchema = z
   })
   .strict();
 
+export const adminChapterListQuerySchema = z
+  .object({
+    ...paginationQuerySchema.shape,
+    page: paginationQuerySchema.shape.page.pipe(
+      z.number().int().min(1).max(100_000),
+    ),
+    search: z
+      .string()
+      .transform(normalizeText)
+      .pipe(
+        z
+          .string()
+          .max(200)
+          .refine((value) => !hasUnsupportedTextControl(value)),
+      )
+      .optional(),
+    publicationStatus: publicationStatusSchema.optional(),
+    sort: z
+      .enum(["number_asc", "number_desc", "published_desc", "updated_desc"])
+      .default("number_asc"),
+  })
+  .strict();
+
 export const createCategoryBodySchema = z
   .object({
     id: contentIdSchema.optional(),
@@ -409,32 +432,39 @@ export const replaceWorkCategoriesBodySchema = z
   });
 
 export const chapterPageInputSchema = z
-  .object({ position: positiveIntegerSchema })
+  .object({
+    id: canonicalContentIdSchema.optional(),
+    assetId: canonicalContentIdSchema,
+  })
   .strict();
+
+const chapterCreatePagesSchema = z
+  .array(chapterPageInputSchema.omit({ id: true }))
+  .max(500);
 
 const chapterPagesSchema = z
   .array(chapterPageInputSchema)
-  .min(1)
   .max(500)
   .superRefine((pages, context) => {
-    const seen = new Set<number>();
-    pages.forEach(({ position }, index) => {
-      if (seen.has(position)) {
+    const seen = new Set<string>();
+    pages.forEach(({ id }, index) => {
+      if (id !== undefined && seen.has(id)) {
         context.addIssue({
           code: "custom",
-          message: "page positions must be unique",
-          path: [index, "position"],
+          message: "page IDs must be unique",
+          path: [index, "id"],
         });
       }
-      seen.add(position);
+      if (id !== undefined) seen.add(id);
     });
   });
 
 export const createChapterBodySchema = z
   .object({
     number: positiveIntegerSchema,
-    textContent: structuredTextDocumentSchema.optional(),
-    pages: chapterPagesSchema.optional(),
+    title: editorialText(1, 200),
+    textContent: structuredTextDocumentSchema.nullable().optional(),
+    pages: chapterCreatePagesSchema.optional(),
   })
   .strict()
   .refine(
@@ -446,13 +476,15 @@ export const updateChapterBodySchema = z
   .object({
     expectedVersion: expectedVersionSchema,
     number: positiveIntegerSchema.optional(),
-    textContent: structuredTextDocumentSchema.optional(),
+    title: editorialText(1, 200).optional(),
+    textContent: structuredTextDocumentSchema.nullable().optional(),
     pages: chapterPagesSchema.optional(),
   })
   .strict()
   .refine(
     (value) =>
       value.number !== undefined ||
+      value.title !== undefined ||
       value.textContent !== undefined ||
       value.pages !== undefined,
     { message: "at least one mutable field is required" },
@@ -519,6 +551,7 @@ export const publicChapterSchema = z
     id: contentIdSchema,
     workId: contentIdSchema,
     number: positiveIntegerSchema,
+    title: z.string().min(1).max(200),
     contentType: chapterContentTypeSchema,
     publishedAt: contentTimestampSchema,
   })
@@ -588,6 +621,8 @@ export const adminChapterPageSchema = z
   .object({
     id: contentIdSchema,
     position: positiveIntegerSchema,
+    assetId: contentIdSchema,
+    assetStatus: z.enum(["available", "unavailable"]),
   })
   .strict();
 
@@ -596,6 +631,7 @@ export const adminChapterSchema = z
     id: contentIdSchema,
     workId: contentIdSchema,
     number: positiveIntegerSchema,
+    title: z.string().min(1).max(200),
     contentType: chapterContentTypeSchema,
     publicationStatus: publicationStatusSchema,
     publishedAt: contentTimestampSchema.nullable(),
@@ -604,8 +640,14 @@ export const adminChapterSchema = z
     updatedAt: contentTimestampSchema,
     textContent: structuredTextDocumentSchema.nullable(),
     pages: z.array(adminChapterPageSchema),
+    readyForPublication: z.boolean(),
   })
   .strict();
+
+export const adminChapterSummarySchema = adminChapterSchema.omit({
+  textContent: true,
+  pages: true,
+});
 
 export const publicWorkDataSchema = z
   .object({ work: publicWorkSchema })
@@ -655,7 +697,9 @@ export const publicWorkListDataSchema = listDataSchema(publicWorkSchema);
 export const publicChapterListDataSchema = listDataSchema(publicChapterSchema);
 export const adminCategoryListDataSchema = listDataSchema(adminCategorySchema);
 export const adminWorkListDataSchema = listDataSchema(adminWorkListItemSchema);
-export const adminChapterListDataSchema = listDataSchema(adminChapterSchema);
+export const adminChapterListDataSchema = listDataSchema(
+  adminChapterSummarySchema,
+);
 
 export type WorkType = z.infer<typeof workTypeSchema>;
 export type StoryStatus = z.infer<typeof storyStatusSchema>;
@@ -670,6 +714,7 @@ export type StructuredTextDocument = z.infer<
 >;
 export type CategoryListQuery = z.infer<typeof categoryListQuerySchema>;
 export type AdminWorkListQuery = z.infer<typeof adminWorkListQuerySchema>;
+export type AdminChapterListQuery = z.infer<typeof adminChapterListQuerySchema>;
 export type CreateCategoryBody = z.infer<typeof createCategoryBodySchema>;
 export type UpdateCategoryBody = z.infer<typeof updateCategoryBodySchema>;
 export type CategoryPositionBody = z.infer<typeof categoryPositionBodySchema>;
@@ -692,4 +737,5 @@ export type AdminCategoryMove = z.infer<typeof adminCategoryMoveDataSchema>;
 export type AdminWork = z.infer<typeof adminWorkSchema>;
 export type AdminWorkListItem = z.infer<typeof adminWorkListItemSchema>;
 export type AdminChapter = z.infer<typeof adminChapterSchema>;
+export type AdminChapterSummary = z.infer<typeof adminChapterSummarySchema>;
 export type PublicationTransition = z.infer<typeof publicationTransitionSchema>;

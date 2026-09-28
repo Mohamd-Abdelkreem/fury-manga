@@ -610,6 +610,13 @@ export class MediaService {
     command: MediaReferenceCreate,
   ): Promise<{ reference: MediaReferenceDto; created: boolean }> {
     await this.assertAdmin(actorUserId);
+    if (command.targetKind === "chapter_page") {
+      throw new AppError(
+        "Edit the parent Chapter to change its pages.",
+        409,
+        "MEDIA_TARGET_CONFLICT",
+      );
+    }
     const rule = mediaReferenceRule(command.targetKind);
     if (
       !(await mediaReferenceTargetExists(
@@ -623,12 +630,7 @@ export class MediaService {
     try {
       return await this.database.$transaction(
         async (transaction) => {
-          const parentWorkId =
-            rule.slot === MediaReferenceSlot.CHAPTER_PAGE
-              ? null
-              : command.targetId;
-          if (parentWorkId !== null)
-            await this.lockWorkForMediaChange(transaction, parentWorkId);
+          await this.lockWorkForMediaChange(transaction, command.targetId);
           await transaction.$queryRaw`SELECT id FROM media_assets WHERE id = ${command.assetId}::uuid FOR UPDATE`;
           const asset = await transaction.mediaAsset.findUnique({
             where: { id: command.assetId },
@@ -674,8 +676,7 @@ export class MediaService {
               resultVersion: 0,
             },
           });
-          if (parentWorkId !== null)
-            await this.advanceWorkVersion(transaction, parentWorkId);
+          await this.advanceWorkVersion(transaction, command.targetId);
           return { reference: mapMediaReference(reference), created: true };
         },
         { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
@@ -720,6 +721,7 @@ export class MediaService {
     command: MediaReferenceReplace,
   ): Promise<MediaReferenceDto> {
     await this.assertAdmin(actorUserId);
+    await this.assertWorkReferenceWriteTarget(referenceId);
     try {
       return await this.database.$transaction(
         async (transaction) => {
@@ -842,6 +844,7 @@ export class MediaService {
     command: MediaReferenceRetire,
   ): Promise<{ id: string; status: "retired"; version: number }> {
     await this.assertAdmin(actorUserId);
+    await this.assertWorkReferenceWriteTarget(referenceId);
     try {
       return await this.database.$transaction(
         async (transaction) => {
@@ -1017,6 +1020,25 @@ export class MediaService {
   }
 
   // Helper methods
+  private async assertWorkReferenceWriteTarget(
+    referenceId: string,
+  ): Promise<void> {
+    const reference = await this.database.mediaReference.findUnique({
+      where: { id: referenceId },
+      select: { slot: true },
+    });
+    if (reference === null) {
+      throw new AppError("Media reference not found.", 404, "NOT_FOUND");
+    }
+    if (reference.slot === MediaReferenceSlot.CHAPTER_PAGE) {
+      throw new AppError(
+        "Edit the parent Chapter to change its pages.",
+        409,
+        "MEDIA_TARGET_CONFLICT",
+      );
+    }
+  }
+
   private async lockWorkForMediaChange(
     transaction: Prisma.TransactionClient,
     workId: string,
