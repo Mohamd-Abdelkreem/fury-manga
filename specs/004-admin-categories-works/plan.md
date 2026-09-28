@@ -4,7 +4,7 @@
 
 **PLAN.md Phase**: P03 — Persistent Admin Categories and Works | **Dependencies Accepted**: P01 and P02 implemented in this checkout; formal exit gates remain to be confirmed before P03 acceptance.
 
-**Input**: P03 specification pending reviewer acceptance; its 2026-09-25 all-or-nothing save-and-publish clarification is recorded. Do not treat the draft label or unchecked reviewer checklist as an accepted implementation gate.
+**Input**: Owner-accepted P03 written requirements and reviewer checklist as of 2026-09-27; its 2026-09-25 all-or-nothing save-and-publish clarification is recorded. Inherited and P03 phase-exit evidence remain separate.
 
 ## Summary
 
@@ -131,7 +131,7 @@ dependency direction, clear names, coherent functions, justified abstractions,
 duplicated knowledge, dead code, preserved behavior, validation and error paths.
 Use applicable installed guard skills and record concrete file/rule findings and
 fixes, or a clean pass, alongside fresh package type/lint/format results. This
-review covers the accepted P03 scope and does not claim prior reviewer acceptance.
+review covers the accepted P03 scope; the owner recorded written-requirements reviewer acceptance on 2026-09-27 without accepting inherited technical phase exits.
 
 ## Project Structure
 

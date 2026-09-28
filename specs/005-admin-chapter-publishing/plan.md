@@ -2,14 +2,14 @@
 
 **Checkout branch**: `004-admin-categories-works` (the Spec Kit pointer is `005-admin-chapter-publishing`; no branch was created) | **Date**: 2026-09-26 | **Spec**: [spec.md](spec.md)
 
-**PLAN.md phase**: P04 — Persistent Chapter Authoring and Publishing | **Dependency state**: P01 content, P02 private media, P03 Work administration, and existing authentication have executable code. The owner accepted isolated synthetic-data implementation on 2026-09-27; P00–P03 reviewer exits and real deployment acceptance remain open. Browser/device/deployment/backup/rollback evidence is not inferred from code completion.
+**PLAN.md phase**: P04 — Persistent Chapter Authoring and Publishing | **Dependency state**: P01 content, P02 private media, P03 Work administration, and existing authentication have executable code. The owner accepted written requirements reviews and isolated synthetic-data implementation on 2026-09-27; P00–P03 formal phase exits and real deployment acceptance remain open. Browser/device/deployment/backup/rollback evidence is not inferred from code completion.
 
 **Implementation checkpoint (2026-09-27)**: The plan's baseline and gate table
 remain design-time records. Local admin Chapter authoring, management,
 publication, and title-bearing public availability filtering are implemented.
 Phase 8 exercised an earlier isolated browser journey; a synthetic restored
 database/media rehearsal now covers the staged migration. Real-data remediation,
-reviewer acceptance, and deployment recovery evidence remain open in
+formal phase-exit and deployment recovery evidence remain open in
 [evidence.md](evidence.md).
 
 ## Summary
@@ -48,7 +48,7 @@ Connect the three approved Arabic RTL admin Chapter routes to durable Chapter an
 | Evidence                      | **PASS** — current contract/unit/integration/component test owners inspected; historical green results are not used as P04 evidence.                                                                                                                                                                                                                                  | **PASS for plan** — FR/SC-to-test matrix and [quickstart](quickstart.md) specify real DB/HTTP/browser/final-state checks. No P04 application test, browser/device, migration, deployment or backup result is claimed.                                                                                  |
 | Change safety                 | **PASS** — active feature pointer verified; preexisting `.specify/feature.json` modification and untracked feature directory preserved. No plan hooks exist.                                                                                                                                                                                                          | **PASS for artifact revision** — this feature's spec, plan, research, data model, contract, quickstart, and tasks were reconciled after read-only analysis. No app code, PLAN.md, applied migration, or reviewer checklist was edited. Formal dependency and release gates remain open.                |
 
-No constitutional rule is waived by the design. The P04 spec remains Draft and its reviewer-owned readiness checklist remains open; P02/P03 exit-gate acceptance is also unrecorded. The design checks above are conditional, not permission to start implementation or a release claim. T001 must record those dispositions before Phase 2 begins.
+No constitutional rule is waived by the design. The owner accepted P04's written requirements and reviewer-owned readiness checklist on 2026-09-27; P02/P03 formal exit-gate acceptance remains unrecorded. The design checks above were conditional and are not a release claim. Historical T001 records the original pre-implementation disposition; the isolated synthetic implementation proceeded under the separately recorded owner override.
 
 ## Project Structure and touchpoints
 
@@ -119,7 +119,7 @@ Current P01/P02/P03 tests establish their narrower foundations only. P04 needs f
 
 Use the actual root/package scripts: `pnpm --filter @fury/contracts test`, `pnpm --filter @fury/database db:validate`, `pnpm --filter @fury/api test`, `pnpm --filter @fury/api test:integration`, `pnpm --filter @fury/web test`, `pnpm --filter @fury/api check-types`, `pnpm --filter @fury/web check-types`, and `pnpm format:check`. Focus individual Vitest files through the existing package scripts during development. After integrated implementation and needed local services: `pnpm verify` (which includes database format/validate/generate, format/lint/types/unit/integration/build/output and `git diff --check`). Do not weaken checks or report historical green results. No app test is required for this docs-only planning turn; formatting/reference and docs-guard checks are required now.
 
-The 2026-09-27 owner clarification permits a development-only P04 implementation and task exit using a generated, populated P01–P03 database and matching synthetic private media, restored together and staged through expand, documented synthetic editorial remediation, zero-violation inventory, and separate enforcement. This is an execution override for the unaccepted P00–P03 reviewer exits, not a reviewer disposition or permission to migrate an existing deployment. Fresh PostgreSQL, HTTP, browser and full-repository checks remain required. Record real deployment, backup/media restore, rollback, physical-device and reviewer boundaries as unverified; do not claim production readiness. No external message, commit, push or deployment is implied.
+The 2026-09-27 owner clarification permits a development-only P04 implementation and task exit using a generated, populated P01–P03 database and matching synthetic private media, restored together and staged through expand, documented synthetic editorial remediation, zero-violation inventory, and separate enforcement. This was an execution override for the then-unaccepted P00–P03 reviews and remains separate from the formal phase exits; the owner subsequently accepted written-requirements reviews on 2026-09-27. It is not permission to migrate an existing deployment. Fresh PostgreSQL, HTTP, browser and full-repository checks remain required. Record real deployment, backup/media restore, rollback and physical-device boundaries as unverified; do not claim production readiness. No external message, commit, push or deployment is implied.
 
 ## Complexity Tracking
 

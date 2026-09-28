@@ -742,6 +742,22 @@ acceptance sequence; it does not mark P00–P03 reviewer exits complete or satis
 §11 for a real deployment. Repeat data-specific inventory, editorial decisions,
 backup/media restore, rollback and rollout checks when a deployment dataset exists.
 
+**P05 isolated implementation decision (2026-09-27):** The owner accepted the
+written P05 requirements after human review and authorized P05 application-code
+tasks against an isolated fresh or P04-remediated PostgreSQL database populated
+with generated representative categories, illustrated and text works, chapters,
+and matching synthetic private media. This explicitly overrides §10's
+dependency-exit sequence for local P05 development only; it does not mark
+P00–P04 formal exits complete or satisfy §11 for a real deployment. Before code
+tasks, record the active feature and checkout, run the focused baseline checks,
+and confirm the isolated database/media prerequisites. P05 task completion
+requires real PostgreSQL, Express, contract, web, browser, accessibility, privacy,
+SEO, and final repository verification evidence specified in its accepted plan;
+fixtures or mocked success cannot replace those checks. No production migration,
+deployment, real editorial-data decision, or release approval follows from this
+exception. Reassess the dependency exits, actual deployment data and media,
+backup/restore, proxy/cache, and rollout evidence before P05 release acceptance.
+
 ## 12. Owner-provided launch inputs
 
 These are not reasons to keep production placeholders. They must exist before P14 approval:

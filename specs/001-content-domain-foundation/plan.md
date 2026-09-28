@@ -16,12 +16,11 @@ PostgreSQL model for works, categories, assignments, chapters, ordered page meta
 and immutable publication events. Conditional versioned writes and transactions make
 publication, relationship replacement, and chapter-content replacement race-safe.
 
-Implementation MUST NOT begin until P00 has passed its exit gate and this clarified P01
-specification has been formally accepted through its reviewer-owned readiness gate. In
-particular, the current checkout still contains the `User.phone` baseline, the spec
-status is Draft, and the tree does not itself prove P00's reader, fixture-inventory, or
-governance acceptance. Before implementation, the P01 task owner must re-inspect the
-post-P00 tree and adjust overlapping auth/schema test files without undoing P00.
+The owner accepted the written P01 requirements and reviewer-owned readiness checklist
+on 2026-09-27. The original design-time `User.phone` baseline no longer describes
+the current checkout. P00's formal phase exit and P01's final evidence gate remain
+separate; later implementation against this plan was performed under recorded
+execution overrides and must not be treated as proof that those gates passed.
 
 ## Technical Context
 
@@ -626,10 +625,11 @@ is preserved.
 
 ### Remaining risks and implementation prerequisites
 
-1. **Blocking**: P00 acceptance is not present in this checkout, the P01 spec remains
-   Draft, and the reviewer-owned readiness checklist has not been accepted. P00's
-   migration and contract/auth changes must be reconciled and P01 must pass its review
-   gate before any P01 code or migration is created.
+1. **Blocking at original planning; current disposition**: P00 acceptance was not
+   present when this plan was drafted. The owner accepted P01 written requirements on
+   2026-09-27, but the formal P00 phase exit and P01 final evidence gate remain open.
+   Historical implementation proceeded under recorded overrides, not because these
+   gates were silently satisfied.
 2. **Migration name**: the timestamped `content_domain_foundation` directory is assigned
    only after the accepted P00 migration order is known; hard-coding it now could sort
    before a prerequisite migration.

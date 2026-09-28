@@ -4,7 +4,7 @@
 
 **Created**: 2026-09-25
 
-**Status**: Draft
+**Status**: Requirements accepted after owner-confirmed human review on 2026-09-27; inherited and P03 phase-exit evidence remains separate.
 
 **Input**: Roadmap phase P03 — Persistent Admin Categories and Works, with the user’s specification constraints
 
