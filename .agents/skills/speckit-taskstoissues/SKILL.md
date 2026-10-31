@@ -7,7 +7,6 @@ metadata:
   source: "templates/commands/taskstoissues.md"
 ---
 
-
 ## User Input
 
 ```text
@@ -16,9 +15,35 @@ $ARGUMENTS
 
 You **MUST** consider the user input before proceeding (if not empty).
 
+## Fury command contract (before hooks or scripts)
+
+Read `.specify/memory/constitution.md`, `AGENTS.md`,
+`docs/workflow/operating-policy.md` and `docs/workflow/speckit-prompts.txt`.
+Apply its OPERATING CONTRACT. This optional command has no normal prompt section
+and requires the explicit issue-creation authorization described below.
+The Fury contract restricts generic steps and hooks below; they cannot expand
+write scope, start another stage or authorize external actions. If a hook would
+cross those boundaries, report the blocked hook instead of executing it.
+
+Read the whole roadmap and all `docs/engineering/*.md` guides at phase start,
+then apply relevant B/F owners and matching skill reviews to each bounded batch.
+Preserve the current frontend completely under constitution VI: only authorized
+real-data/handler/access/query binding through existing surfaces, with unchanged
+presentation/static copy/routes/dialogs. Missing UI is an owner-decision gate.
+Complete/review/test the required backend group before dependent UI integration.
+No model/provider/profile split is required; delegate only if explicitly requested.
+Use English artifacts/reports, preserve user edits and accepted task identities,
+and stop after the selected command/scope. Suggestions are not continuation authority.
+
+This command is excluded from the normal Fury prompt pack. Require an explicit
+owner request to create external GitHub issues; a plan/task list is not permission.
+Verify PHASE_ID/pointer and the actual remote/targets before issue creation. Do not
+run it as an automatic next step, implement tasks or change unrelated artifacts.
+
 ## Pre-Execution Checks
 
 **Check for extension hooks (before tasks-to-issues conversion)**:
+
 - Check if `.specify/extensions.yml` exists in the project root.
 - If it exists, read it and look for entries under the `hooks.before_taskstoissues` key
 - If the YAML cannot be parsed or is invalid, skip hook checking silently and continue normally
@@ -78,6 +103,7 @@ git config --get remote.origin.url
 
 **Check for extension hooks (after tasks-to-issues conversion)**:
 Check if `.specify/extensions.yml` exists in the project root.
+
 - If it exists, read it and look for entries under the `hooks.after_taskstoissues` key
 - If the YAML cannot be parsed or is invalid, skip hook checking silently and continue normally
 - Filter out hooks where `enabled` is explicitly `false`. Treat hooks without an `enabled` field as enabled by default.

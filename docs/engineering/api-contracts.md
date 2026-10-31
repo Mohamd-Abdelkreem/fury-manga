@@ -4,6 +4,20 @@ Own the wire shape once in the shared browser-safe contracts package. Schema-der
 types serve API and web; API DTO modules alias/export them instead of maintaining
 another copy. Database records and server framework types never become browser DTOs.
 
+## Fury contract owners and integration
+
+Use `@fury/contracts`, including the existing
+`packages/contracts/src/content/content.schema.ts`; content DTO aliases live in
+`apps/api/src/modules/content/dto/content.dto.ts`. Inspect current schemas/exports
+for actual field names and behavior. Work, Chapter, Category, publication and media
+operations must not acquire a competing browser schema or persistence-shaped output.
+
+Complete the required backend contract/producer/authority/integration evidence before
+connecting its frozen frontend. Shape accepted responses for existing controls
+through feature adapters/model transforms; do not redesign presentation to fit an
+invented API. Preserve private/public projection and current reader/media authority.
+If correct behavior needs missing UI or changed copy, record the owner-decision gate.
+
 ## Field decisions
 
 For every body/query/params/output field define type, required/optional presence,

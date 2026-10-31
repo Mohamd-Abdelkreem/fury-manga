@@ -7,6 +7,20 @@ checkpoint. Unrelated admin screens remain local presentations. P04's synthetic
 staged migration and title-bearing public contract are implemented; real-data
 upgrade and release review remain open.
 
+## Engineering and phase workflow
+
+The [constitution](.specify/memory/constitution.md) freezes the current frontend:
+backend integration uses existing screens, controls and feedback without redesign,
+route/layout changes or static-copy edits. Complete and test each required backend
+group before connecting its frontend. Missing UI remains an explicit owner decision.
+
+Read [AGENTS.md](AGENTS.md), the [engineering owner map](docs/engineering/README.md)
+and [operating policy](docs/workflow/operating-policy.md). Use the
+[English phase launchers](docs/workflow/prompts.md) and their
+[selected-command contract](docs/workflow/speckit-prompts.txt) for one phase/command
+at a time. No mandatory model/provider/profile or delegated role split is required.
+These rules do not certify implementation, phase exits or release readiness.
+
 ## What is included
 
 - React 19 and Next.js App Router

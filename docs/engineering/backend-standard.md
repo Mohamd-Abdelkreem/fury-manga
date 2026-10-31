@@ -3,6 +3,24 @@
 Use [the ownership map](README.md), [style](code-style.md), and the linked technical
 guides. A known old pattern is not an exception to an explicit standard.
 
+## Fury delivery boundary
+
+Use the [actual Fury reference owners](README.md#fury-reference-owners), including
+the content management/public-content and media modules. Extend existing composition,
+auth/CSRF, shared `@fury/contracts`, database and error/envelope seams; do not build
+a second backend stack. The following B identifiers retain their Fury meanings.
+
+Before dependent frontend integration, complete/review/test the whole required
+backend group: applicable schema/forward migration/constraints, contracts, authority,
+rules, queries/mappers, services/endpoints, media/providers and failure paths.
+Record real acceptance evidence. A partial endpoint, mock success or fixture-backed
+view is not this gate. A selected phase may own both ordered groups in one feature.
+
+Inspect existing frontend controls to understand accepted intent and contract needs;
+keep its presentation frozen. A missing surface or static-copy conflict is an owner
+decision, not permission to add UI or drop the requirement. Backend-only work need
+not wait for an unrelated presentation decision. Preserve existing accepted artifacts.
+
 ## Responsibilities and invariants
 
 **B01 — Thin controllers.** HTTP only: read validated params/query/body and

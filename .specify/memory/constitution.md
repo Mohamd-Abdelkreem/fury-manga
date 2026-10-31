@@ -1,5 +1,33 @@
 <!--
-Sync Impact Report (2026-09-26)
+Sync Impact Report (2026-10-30)
+- Version change: 1.3.0 -> 2.0.0 (owner-approved incompatible frontend freeze and delivery rules).
+- Owner decision: preserve the current Fury frontend without presentation changes;
+  integrate the backend into existing surfaces using Oscar-style bounded commands.
+- Modified principles: I (scope/authority); VI (absolute presentation freeze);
+  VIII (feature binding, task scope and command boundaries).
+- Added principle: IX. Complete Backend Before Existing-Frontend Integration.
+- Preserved: shared contracts, B/F ownership rules, B33 class boundaries, real
+  PostgreSQL evidence, Arabic/RTL, access/cache/draft rules and skill review gates.
+- Compatibility: historical specs and roadmap UI suggestions do not waive the
+  new freeze; affected work remains an explicit owner-decision gate. Existing
+  isolated-development exceptions retain only their recorded scope.
+- Synchronized: AGENTS.md; README.md; docs/engineering/README.md, code-style.md,
+  backend-standard.md, frontend-standard.md, api-contracts.md, data-patterns.md,
+  security.md, testing.md; docs/design/design-system.md;
+  docs/workflow/operating-policy.md, speckit-prompts.txt, prompts.md and
+  application-audit-prompt.md; .specify/templates/plan-template.md,
+  spec-template.md, tasks-template.md and checklist-template.md;
+  .agents/skills/speckit-*/SKILL.md local command adapters.
+- Reviewed unchanged: constitution-template.md (generic amendment scaffold);
+  bundled workflow (generic runner, not the adopted command sequence).
+- No application code, PLAN.md, accepted feature artifacts, feature pointer,
+  package configuration or Oscar files are changed by this governance amendment.
+- Follow-up TODOs: no new documentation dependencies. Historical implementation
+  follow-ups are not certified resolved; future presentation conflicts remain gates.
+-->
+
+<!--
+Sync Impact Report (2026-09-26, historical)
 - Version change: 1.2.0 -> 1.3.0 (mandatory code-quality review at Spec Kit gates)
 - Modified principles: IV. Clean Architecture and Maintainable Code;
   VII. Evidence-Driven Testing and Completion
@@ -85,6 +113,12 @@ Sync Impact Report (2026-09-22, historical)
 - Accepted behavior and user-owned changes MUST be preserved. Work MUST NOT include
   unrelated refactors, speculative subsystems, premature abstractions, or invented
   requirements.
+- Each roadmap-phase command MUST bind one authorized `PHASE_ID` to the selected feature's
+  specification and `.specify/feature.json`. Roadmap phase IDs, feature-directory
+  numbers, branches and internal task-group numbers MUST NOT be equated.
+- The whole roadmap MUST be read for dependencies and conflicts, while writes remain
+  limited to the selected command and phase. Existing accepted artifacts and task
+  identities MUST NOT be regenerated or overwritten without explicit authorization.
 
 This ordering keeps plans honest without confusing roadmap intent, current behavior,
 and demonstration-only UI.
@@ -185,9 +219,24 @@ ORM declarations.
 
 ### VI. Truthful Arabic-First Frontend
 
-- Accepted Arabic-first RTL behavior, the current route and feature structure, and the
-  visual language in root `DESIGN-SYSTEM.md` MUST be preserved unless the accepted
-  feature explicitly changes them.
+- The current public, reader, account, workspace and admin frontend is frozen.
+  Agents MUST NOT add, delete, move, rename, rebuild or redesign pages, routes,
+  layouts, navigation, dialogs, popups, controls or approved static copy. Typography,
+  Arabic/RTL, colors, spacing, breakpoints, sizes, icons, imagery treatment, motion
+  and interaction presentation MUST remain unchanged. Root `DESIGN-SYSTEM.md`
+  records Fury's visual reference; historical inconsistencies are not permission
+  to normalize or redesign the current UI.
+- Authorized integration MAY replace fixture/local data with validated runtime
+  values and wire real handlers, validation, current authorization, query/mutation
+  state and existing feedback surfaces. It MUST preserve the current presentation
+  and navigation patterns. Invisible logic extraction MUST preserve rendered output
+  and interaction presentation and remain inside the selected task scope.
+- A new specification, roadmap item, old design recommendation, accessibility
+  finding, generic code example or design skill MUST NOT authorize a presentation
+  change. A genuinely missing required surface or conflicting static copy MUST be
+  reported as an owner-decision gate. Agents MUST NOT invent UI, hide failure or
+  success, or drop the underlying requirement to bypass it. A separate explicit
+  owner decision and constitutional amendment are required to change this freeze.
 - Every affected asynchronous view or mutation MUST define truthful loading, empty,
   filtered-empty, error, retry, pending, success, conflict, denied, and stale states
   where applicable.
@@ -195,7 +244,8 @@ ORM declarations.
   MUST NOT be presented as confirmed server truth.
 - Accessibility MUST be part of completion: semantic HTML, keyboard operation, focus
   behavior, labels, descriptions, errors, live regions, contrast, responsive behavior,
-  and reduced-motion handling MUST be verified where applicable.
+  and reduced-motion handling MUST be verified where applicable. A required correction
+  that changes frozen presentation MUST remain a visible gate pending the owner decision.
 - Work that touches Next.js behavior MUST first read the relevant installed guidance in
   `apps/web/node_modules/next/dist/docs`, as required by `apps/web/AGENTS.md`.
 
@@ -245,9 +295,41 @@ Evidence must match the layer and strength of the claim being accepted.
   with external systems MUST NOT occur without explicit authorization.
 - Assumptions, unresolved decisions, missing evidence, warnings, and unverified
   production or device checks MUST be reported honestly.
+- `IMPLEMENT` MUST receive `TASK_SCOPE`: exact task IDs, an explicitly selected
+  dependency-safe batch, `NEXT_DEPENDENCY_SAFE_BATCH`, or `ALL_ACTIVE_PHASE_TASKS`.
+  The next-batch value MUST resolve and report exact IDs before editing; the all-tasks
+  value covers only the selected feature. Missing/ambiguous scope MUST NOT default
+  to all tasks. Out-of-scope tasks and accepted progress MUST remain unchanged.
+- Requirements-quality checklist review MUST precede implementation and be based on
+  actual specification/design evidence. Approval of requirements MUST NOT be reported
+  as implemented behavior or a test pass. Approval markers MUST remain read-only
+  during implementation; only verified in-scope task completion may be marked.
+- `ANALYZE` MUST remain read-only. `CONVERGE` MUST only append traceable remediation
+  tasks to the selected tasks.md; it MUST NOT fix code, rewrite existing tasks,
+  change the feature pointer or run tests/builds that can write artifacts. Missing
+  execution evidence MUST remain an explicit gap. A clean convergence MUST leave
+  tasks.md byte-for-byte unchanged. No command authorizes its suggested next command.
 
 Independent acceptance limits blast radius and keeps user authority visible throughout
 the roadmap.
+
+### IX. Complete Backend Before Existing-Frontend Integration
+
+- Before connecting a domain's frontend, its entire required backend delivery group
+  MUST be implemented, reviewed and tested: applicable shared contracts, forward
+  migrations and constraints, authorization, rules, queries/mappers, services,
+  endpoints, media/provider boundaries, failure handling and real integration evidence.
+  A partial service, fixture response or mocked success MUST NOT satisfy this gate.
+- One selected phase MAY include ordered backend and frontend groups in the same
+  feature. Required backend acceptance MUST precede dependent frontend work even
+  when `ALL_ACTIVE_PHASE_TASKS` is selected. Internal groups MUST NOT create duplicate
+  features or restart completed foundations. Unrelated backend work need not wait
+  for a separate UI decision.
+- Existing owner-recorded isolated-development exceptions MUST retain their exact
+  scope and evidence limits. They MUST NOT certify predecessor exits, permit release,
+  waive this frontend freeze or silently authorize incomplete backend integration.
+
+Backend acceptance establishes the authoritative behavior consumed by the frozen UI.
 
 ## Applicability and Project Baseline
 
@@ -281,6 +363,12 @@ Existing deviations are not precedents. When touched, they MUST be corrected wit
 the accepted scope or recorded as explicit unresolved work with impact and ownership.
 Ratification does not certify that every pre-existing line already complies.
 
+The engineering reference map owns code placement. The operating policy owns phase
+and review procedure; `docs/workflow/speckit-prompts.txt` owns the selected-command
+contract and `docs/workflow/prompts.md` provides copyable launchers. These documents
+MUST remain consistent. No model, provider, profile or delegation split is required;
+use the current session settings and delegate only when explicitly requested.
+
 ## Delivery Workflow and Constitution Check
 
 Before research and again after design, every feature plan MUST record `PASS`, `N/A`
@@ -310,6 +398,8 @@ with a capability reason, or a blocking violation for each check below:
 6. **Frontend truth and access**: identify Arabic/RTL preservation, all applicable async
    states, draft/cache/access behavior, accessibility, responsive and reduced-motion
    checks, and installed Next.js documentation consulted when framework behavior changes.
+   Identify the existing frozen surfaces and any missing-surface/static-copy conflicts;
+   no ordinary feature acceptance may approve presentation changes.
 7. **Evidence**: map every material requirement and risk to the correct automated,
    PostgreSQL, HTTP-stack, component/hook, browser, deployment, or documentation check;
    record matching skill guard passes and actual type/lint/format outcomes.
@@ -318,6 +408,10 @@ with a capability reason, or a blocking violation for each check below:
 9. **Engineering and skill intake**: confirm every `docs/engineering/*.md` file was read,
    list applicable B/F rule IDs, identify matching installed skills and when their
    guard passes run, and record any unavailable skill without claiming it was applied.
+10. **Backend and command gates**: record the matching feature pointer, exact permitted
+    command/task scope, predecessor evidence and backend acceptance before dependent
+    frontend integration. Distinguish batch, internal group, whole-phase and release
+    completion; preserve checklist approval boundaries and historical task identities.
 
 A blocking violation MUST be resolved in the plan or the feature MUST return for an
 accepted specification or constitutional amendment. Complexity Tracking MUST explain
@@ -330,6 +424,15 @@ not invent product behavior: accepted specifications own intent, `PLAN.md` owns 
 scope, and current code plus fresh evidence own implementation reality. More specific
 guidance MAY add constraints but MUST NOT weaken these principles.
 
+Authority order is: explicit current owner decisions; this constitution; approved
+phase requirements in `PLAN.md` and the accepted feature spec; engineering guides
+for implementation/review; source/configuration as evidence of current state;
+generated artifacts; older documents and fixtures. A project-wide policy change
+MUST be recorded as an explicit amendment, not inferred from a routine phase request.
+Historical roadmap, design-audit or feature instructions requiring presentation
+changes MUST remain owner-decision gates under the current freeze. Preserve their
+business requirements and accepted evidence without silently rewriting history.
+
 An amendment requires explicit acceptance, a documented rationale and migration impact,
 an updated Sync Impact Report, and synchronization of affected Spec Kit templates and
 runtime guidance. Versions follow semantic versioning: MAJOR for incompatible governance
@@ -341,4 +444,4 @@ perform the Constitution Check. Unresolved non-compliance MUST block acceptance 
 the constitution itself is amended. Reviews MUST use the current worktree and fresh
 checks rather than inherited claims.
 
-**Version**: 1.3.0 | **Ratified**: 2026-09-22 | **Last Amended**: 2026-09-26
+**Version**: 2.0.0 | **Ratified**: 2026-09-22 | **Last Amended**: 2026-10-30

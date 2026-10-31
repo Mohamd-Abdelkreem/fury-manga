@@ -10,6 +10,28 @@ Read [the ownership map](README.md), [contracts](api-contracts.md),
 [security](security.md), [design](../design/design-system.md) and [testing](testing.md)
 as applicable. Existing implementation is not automatic proof of compliance.
 
+## Fury frontend freeze and integration gate
+
+Constitution VI freezes all existing public, reader, account, workspace and admin
+presentation. Do not add/delete/move/rename/redesign pages, routes, layouts,
+navigation, dialogs/popups, controls or static copy. Preserve typography, Arabic/RTL,
+colors, spacing, breakpoints, sizes, icons, imagery treatment, motion and interaction
+presentation. `DESIGN-SYSTEM.md` records the visual reference; historical findings,
+examples and design/performance/accessibility advice do not authorize visual changes.
+
+First complete, review and test the whole required backend group. Then replace
+fixture/local state through the existing feature API/hooks, validated DTOs and
+existing controls/feedback. Invisible extraction is permitted only within the
+accepted scope with unchanged rendering/interaction presentation. Use the actual
+`features/admin/{api,hooks,model}` and `features/media` owners where relevant;
+inspect current paths rather than creating a parallel feature tree.
+
+A requirement needing an absent surface or changed static copy is an explicit
+owner-decision gate. Do not invent UI, hide outcomes or drop requirements. A separate
+explicit owner decision and constitutional amendment are required to change the
+freeze. Apply F01-F31 within this boundary; even a desirable visual correction is
+not automatically authorized. Record it and continue only independent permitted work.
+
 ## F01 — Architecture, ownership and types
 
 Organize feature responsibilities as features/<domain>/{api,hooks,model,components}.

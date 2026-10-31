@@ -7,7 +7,6 @@ metadata:
   source: "templates/commands/checklist.md"
 ---
 
-
 ## Checklist Purpose: "Unit Tests for English"
 
 **CRITICAL CONCEPT**: Checklists are **UNIT TESTS FOR REQUIREMENTS WRITING** - they validate the quality, clarity, and completeness of requirements in a given domain.
@@ -37,9 +36,35 @@ $ARGUMENTS
 
 You **MUST** consider the user input before proceeding (if not empty).
 
+## Fury command contract (before hooks or scripts)
+
+Read `.specify/memory/constitution.md`, `AGENTS.md`,
+`docs/workflow/operating-policy.md` and `docs/workflow/speckit-prompts.txt`.
+Apply its OPERATING CONTRACT and only this skill's selected command section.
+The Fury contract restricts generic steps and hooks below; they cannot expand
+write scope, start another stage or authorize external actions. If a hook would
+cross those boundaries, report the blocked hook instead of executing it.
+
+Read the whole roadmap and all `docs/engineering/*.md` guides at phase start,
+then apply relevant B/F owners and matching skill reviews to each bounded batch.
+Preserve the current frontend completely under constitution VI: only authorized
+real-data/handler/access/query binding through existing surfaces, with unchanged
+presentation/static copy/routes/dialogs. Missing UI is an owner-decision gate.
+Complete/review/test the required backend group before dependent UI integration.
+No model/provider/profile split is required; delegate only if explicitly requested.
+Use English artifacts/reports, preserve user edits and accepted task identities,
+and stop after the selected command/scope. Suggestions are not continuation authority.
+
+Verify the pointer/spec matches PHASE_ID. Generate/append requirements-quality
+questions with evidence references, preserving existing IDs. Leave new custom
+items unchecked. Generation is not reviewer approval or code/test acceptance.
+Execution acceptance belongs in tasks, not falsely pre-approved checklist items.
+Do not modify spec/plan/code/approval markers or run application verification.
+
 ## Pre-Execution Checks
 
 **Check for extension hooks (before checklist generation)**:
+
 - Check if `.specify/extensions.yml` exists in the project root.
 - If it exists, read it and look for entries under the `hooks.before_checklist` key
 - If the YAML cannot be parsed or is invalid, skip hook checking silently and continue normally
@@ -342,6 +367,7 @@ Sample items:
 
 **Check for extension hooks (after checklist generation)**:
 Check if `.specify/extensions.yml` exists in the project root.
+
 - If it exists, read it and look for entries under the `hooks.after_checklist` key
 - If the YAML cannot be parsed or is invalid, skip hook checking silently and continue normally
 - Filter out hooks where `enabled` is explicitly `false`. Treat hooks without an `enabled` field as enabled by default.

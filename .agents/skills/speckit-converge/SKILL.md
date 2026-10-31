@@ -7,7 +7,6 @@ metadata:
   source: "templates/commands/converge.md"
 ---
 
-
 ## User Input
 
 ```text
@@ -15,6 +14,33 @@ $ARGUMENTS
 ```
 
 You **MUST** consider the user input before proceeding (if not empty).
+
+## Fury command contract (before hooks or scripts)
+
+Read `.specify/memory/constitution.md`, `AGENTS.md`,
+`docs/workflow/operating-policy.md` and `docs/workflow/speckit-prompts.txt`.
+Apply its OPERATING CONTRACT and only this skill's selected command section.
+The Fury contract restricts generic steps and hooks below; they cannot expand
+write scope, start another stage or authorize external actions. If a hook would
+cross those boundaries, report the blocked hook instead of executing it.
+
+Read the whole roadmap and all `docs/engineering/*.md` guides at phase start,
+then apply relevant B/F owners and matching skill reviews to each bounded batch.
+Preserve the current frontend completely under constitution VI: only authorized
+real-data/handler/access/query binding through existing surfaces, with unchanged
+presentation/static copy/routes/dialogs. Missing UI is an owner-decision gate.
+Complete/review/test the required backend group before dependent UI integration.
+No model/provider/profile split is required; delegate only if explicitly requested.
+Use English artifacts/reports, preserve user edits and accepted task identities,
+and stop after the selected command/scope. Suggestions are not continuation authority.
+
+Verify the already selected pointer/spec/PHASE_ID without changing it or using a
+differing persisting override. The ONLY write is appending necessary traceable
+remediation tasks to the selected tasks.md; no old task/marker/spec/plan/code edits.
+Do not execute tests/builds/formatters/generation; inspect recorded evidence and
+make missing execution a gap. Apply review skills read-only and include actual
+B33/file-owner/code-quality, backend acceptance and frozen-UI findings. Missing or
+placeholder constitution blocks the audit. A clean result changes no bytes.
 
 ## Pre-Execution Checks
 
@@ -53,6 +79,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 
     Wait for the result of the hook command before proceeding to the Goal.
     ```
+
     After emitting the block above you MUST actually invoke the hook and wait for it to finish before continuing. Run it the same way you would run the command yourself in this agent/session (the invocation may differ from the literal `{command}` id shown above, e.g. a skills-mode agent runs it as `/skill:speckit-...` or `$speckit-...`). Emitting the block alone does not run the hook.
 
 - If no hooks are registered or `.specify/extensions.yml` does not exist, skip silently
@@ -69,7 +96,7 @@ of remaining work as a new, traceable task** at the bottom of `tasks.md` so that
 `/speckit-implement` has run on the current `tasks.md`, and after `/speckit-tasks` has produced a complete `tasks.md`.
 
 This is **not** a diff tool and does **not** track changes. It assesses the present state
-of the code relative to the feature's artifacts — no git, no branch comparison, no history.
+of the code relative to the feature's artifacts — do not infer intent from Git diffs, branch comparisons or history.
 
 ## Operating Constraints
 
@@ -87,23 +114,23 @@ When the codebase already satisfies everything, the command MUST leave `tasks.md
 
 **Constitution Authority**: The project constitution (`.specify/memory/constitution.md`) is
 **non-negotiable**. Code that violates a MUST principle is the highest-severity finding and
-produces a corresponding remediation task. If the constitution is an unfilled template,
-skip constitution checks gracefully rather than failing.
+produces a corresponding remediation task. If the constitution is absent or an unfilled template, stop with a blocking
+prerequisite finding; do not skip constitutional validation.
 
 ## Execution Steps
 
 ### 1. Initialize Convergence Context
 
-Run `.specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks` once from repo root and parse JSON for FEATURE_DIR and AVAILABLE_DOCS. Derive absolute paths:
+Run `.specify/scripts/bash/check-prerequisites.sh --json --paths-only` once from repo root for non-persisting resolution and parse FEATURE_DIR and the returned artifact paths. This mode does not validate files; read/check the required files directly and inventory available design documents without writing. Reject any resolved path that differs from the already verified pointer/spec/PHASE_ID. Derive absolute paths:
 
 - SPEC = FEATURE_DIR/spec.md
 - PLAN = FEATURE_DIR/plan.md
 - TASKS = FEATURE_DIR/tasks.md
-- CONSTITUTION = `.specify/memory/constitution.md` (if present)
-If `spec.md`, `plan.md`, or `tasks.md` is missing, STOP with a clear, actionable message naming the
-prerequisite command to run (`/speckit-specify` for a missing spec, `/speckit-plan` for a missing plan,
-`/speckit-tasks` for missing tasks). Do not produce partial output.
-For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
+- CONSTITUTION = `.specify/memory/constitution.md` (required and populated)
+
+If `spec.md`, `plan.md`, or `tasks.md` is missing, STOP with a clear message naming
+the missing prerequisite command. Do not produce partial output. The required
+constitution must not be skipped.
 
 ### 2. Load Artifacts (Progressive Disclosure)
 
@@ -196,9 +223,9 @@ Before appending anything, output a compact, severity-graded summary (no file wr
 
 ## Convergence Findings
 
-| ID | Gap Type | Severity | Source | Evidence | Remaining Work |
-|----|----------|----------|--------|----------|----------------|
-| F1 | missing  | HIGH     | FR-008 | Example: no append-only guard detected in path/to/module.py when writing tasks.md | Add append-only enforcement |
+| ID  | Gap Type | Severity | Source | Evidence                                                                          | Remaining Work              |
+| --- | -------- | -------- | ------ | --------------------------------------------------------------------------------- | --------------------------- |
+| F1  | missing  | HIGH     | FR-008 | Example: no append-only guard detected in path/to/module.py when writing tasks.md | Add append-only enforcement |
 
 **Summary metrics:**
 
@@ -231,6 +258,7 @@ Append to the **end** of `tasks.md`, per the append contract:
 
    Constitution-violation tasks MUST be emitted first and described as
    `CRITICAL`.
+
 4. Never reuse or renumber existing IDs. If a prior Convergence phase exists, add a new,
    separately-numbered one below it — do not touch the old one.
 
@@ -284,6 +312,7 @@ After producing the result, check if `.specify/extensions.yml` exists in the pro
     Executing: `/{command}`
     EXECUTE_COMMAND: {command}
     ```
+
     After emitting the block above you MUST actually invoke the hook and wait for it to finish before continuing. Run it the same way you would run the command yourself in this agent/session (the invocation may differ from the literal `{command}` id shown above, e.g. a skills-mode agent runs it as `/skill:speckit-...` or `$speckit-...`). Emitting the block alone does not run the hook.
 
 - If no hooks are registered or `.specify/extensions.yml` does not exist, skip silently

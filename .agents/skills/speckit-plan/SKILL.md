@@ -7,7 +7,6 @@ metadata:
   source: "templates/commands/plan.md"
 ---
 
-
 ## User Input
 
 ```text
@@ -16,9 +15,36 @@ $ARGUMENTS
 
 You **MUST** consider the user input before proceeding (if not empty).
 
+## Fury command contract (before hooks or scripts)
+
+Read `.specify/memory/constitution.md`, `AGENTS.md`,
+`docs/workflow/operating-policy.md` and `docs/workflow/speckit-prompts.txt`.
+Apply its OPERATING CONTRACT and only this skill's selected command section.
+The Fury contract restricts generic steps and hooks below; they cannot expand
+write scope, start another stage or authorize external actions. If a hook would
+cross those boundaries, report the blocked hook instead of executing it.
+
+Read the whole roadmap and all `docs/engineering/*.md` guides at phase start,
+then apply relevant B/F owners and matching skill reviews to each bounded batch.
+Preserve the current frontend completely under constitution VI: only authorized
+real-data/handler/access/query binding through existing surfaces, with unchanged
+presentation/static copy/routes/dialogs. Missing UI is an owner-decision gate.
+Complete/review/test the required backend group before dependent UI integration.
+No model/provider/profile split is required; delegate only if explicitly requested.
+Use English artifacts/reports, preserve user edits and accepted task identities,
+and stop after the selected command/scope. Suggestions are not continuation authority.
+
+Verify the existing pointer/spec/PHASE_ID before setup. Reuse existing accepted
+plan artifacts: do not run a script that overwrites them unless regeneration is
+explicitly authorized. Patch only requested owning sections on amendment runs.
+Record actual code owners/B33/B/F rules, review skills, complete backend acceptance,
+frozen surfaces and concrete real-test paths/services/commands. Only plan-owned
+artifacts may change; no tasks/code or policy waiver through complexity justification.
+
 ## Pre-Execution Checks
 
 **Check for extension hooks (before planning)**:
+
 - Check if `.specify/extensions.yml` exists in the project root.
 - If it exists, read it and look for entries under the `hooks.before_plan` key
 - If the YAML cannot be parsed or is invalid, skip hook checking silently and continue normally
@@ -54,14 +80,14 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 ## Outline
 
-1. **Setup**: Run `.specify/scripts/bash/setup-plan.sh --json` from repo root and parse JSON for FEATURE_SPEC, IMPL_PLAN, SPECS_DIR, BRANCH. For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
+1. **Setup**: First inspect existing plan artifacts. For an explicitly authorized new plan or regeneration only, run `.specify/scripts/bash/setup-plan.sh --json` from repo root and parse JSON for FEATURE_SPEC, IMPL_PLAN, SPECS_DIR, BRANCH. Otherwise read the selected plan/template and patch only requested owning sections without invoking an overwriting setup script. For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 
 2. **Load context**: Read FEATURE_SPEC and `.specify/memory/constitution.md`. Load IMPL_PLAN template (already copied).
 
 3. **Execute plan workflow**: Follow the structure in IMPL_PLAN template to:
    - Fill Technical Context (mark unknowns as "NEEDS CLARIFICATION")
    - Fill Constitution Check section from constitution
-   - Evaluate gates (ERROR if violations unjustified)
+   - Evaluate gates (BLOCKED for unresolved constitutional violations; justification does not waive a rule)
    - Phase 0: Generate research.md (resolve all NEEDS CLARIFICATION)
    - Phase 1: Generate data-model.md, contracts/, quickstart.md
    - Re-evaluate Constitution Check post-design
@@ -71,6 +97,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 **You MUST complete this section before reporting completion to the user.**
 
 Check if `.specify/extensions.yml` exists in the project root.
+
 - If it does not exist, or no hooks are registered under `hooks.after_plan`, skip to the Completion Report.
 - If it exists, read it and look for entries under the `hooks.after_plan` key.
 - If the YAML cannot be parsed or is invalid, skip hook checking silently and continue to the Completion Report.

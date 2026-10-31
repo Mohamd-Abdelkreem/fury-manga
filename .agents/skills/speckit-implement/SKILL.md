@@ -1,12 +1,11 @@
 ---
 name: "speckit-implement"
-description: "Execute the implementation plan by processing and executing all tasks defined in tasks.md"
+description: "Execute only the explicitly selected Fury phase and task scope after requirements and dependency gates pass."
 compatibility: "Requires spec-kit project structure with .specify/ directory"
 metadata:
   author: "github-spec-kit"
   source: "templates/commands/implement.md"
 ---
-
 
 ## User Input
 
@@ -16,9 +15,53 @@ $ARGUMENTS
 
 You **MUST** consider the user input before proceeding (if not empty).
 
+## Fury command contract (before hooks or scripts)
+
+Read `.specify/memory/constitution.md`, `AGENTS.md`,
+`docs/workflow/operating-policy.md` and `docs/workflow/speckit-prompts.txt`.
+Apply its OPERATING CONTRACT and only this skill's selected command section.
+The Fury contract restricts generic steps and hooks below; they cannot expand
+write scope, start another stage or authorize external actions. If a hook would
+cross those boundaries, report the blocked hook instead of executing it.
+
+Read the whole roadmap and all `docs/engineering/*.md` guides at phase start,
+then apply relevant B/F owners and matching skill reviews to each bounded batch.
+Preserve the current frontend completely under constitution VI: only authorized
+real-data/handler/access/query binding through existing surfaces, with unchanged
+presentation/static copy/routes/dialogs. Missing UI is an owner-decision gate.
+Complete/review/test the required backend group before dependent UI integration.
+No model/provider/profile split is required; delegate only if explicitly requested.
+Use English artifacts/reports, preserve user edits and accepted task identities,
+and stop after the selected command/scope. Suggestions are not continuation authority.
+
+Before loading/executing the generic implementation flow, bind the owner's PHASE_ID
+and TASK_SCOPE and verify the unchanged pointer/spec/plan/tasks match. TASK_SCOPE
+must be exact IDs, an explicitly selected dependency-safe batch,
+NEXT_DEPENDENCY_SAFE_BATCH or ALL_ACTIVE_PHASE_TASKS. Resolve/report next-batch IDs;
+all-active covers only this feature's remaining approved tasks, not the roadmap.
+Missing/ambiguous scope never defaults to all tasks. Reuse supplied session values.
+
+Perform the prompt pack's evidence-based checklist review preflight first. Review
+all scanned items, mark only supported written-quality items with evidence, and
+preserve other checklist kinds' actual criteria. This does not prove implementation.
+If any checklist or analysis/predecessor/backend/UI gate required before the selected
+IDs remains unmet, STOP. Building the authorized backend group is permitted before
+its own final acceptance; that acceptance blocks dependent UI, not its backend tasks.
+Do not offer the generic proceed-anyway bypass. During implementation all approval
+markers and out-of-scope task lines remain read-only. Update permitted task completion
+only after actual implementation/review/checks. Narrow every generic all-tasks,
+phase progression and completion statement below to the selected TASK_SCOPE.
+
+Verify existing foundations instead of reinitializing the project. Generic ignore/
+config examples authorize only changes necessary for actual selected artifacts;
+do not add unrelated boilerplate or alter UI. Complete backend acceptance before
+its dependent frontend, including during ALL_ACTIVE_PHASE_TASKS. Report batch and
+whole-phase status separately and stop without CONVERGE or another batch/phase.
+
 ## Pre-Execution Checks
 
 **Check for extension hooks (before implementation)**:
+
 - Check if `.specify/extensions.yml` exists in the project root.
 - If it exists, read it and look for entries under the `hooks.before_implement` key
 - If the YAML cannot be parsed or is invalid, skip hook checking silently and continue normally
@@ -46,7 +89,7 @@ You **MUST** consider the user input before proceeding (if not empty).
     **Automatic Pre-Hook**: {extension}
     Executing: `/{command}`
     EXECUTE_COMMAND: {command}
-    
+
     Wait for the result of the hook command before proceeding to the Outline.
     ```
     After emitting the block above you MUST actually invoke the hook and wait for it to finish before continuing. Run it the same way you would run the command yourself in this agent/session (the invocation may differ from the literal `{command}` id shown above, e.g. a skills-mode agent runs it as `/skill:speckit-...` or `$speckit-...`). Emitting the block alone does not run the hook.
@@ -77,11 +120,9 @@ You **MUST** consider the user input before proceeding (if not empty).
      - **FAIL**: One or more checklists have incomplete items
 
    - **If any checklist is incomplete**:
-     - Display the table with incomplete item counts
-     - **STOP** and ask: "Some checklists are incomplete. Do you want to proceed with implementation anyway? (yes/no)"
-     - Wait for user response before continuing
-     - If user says "no" or "wait" or "stop", halt execution
-     - If user says "yes" or "proceed" or "continue", proceed to step 3
+     - STOP before implementation and report exact unsupported items and their
+       owning evidence/decision. Do not weaken requirements or use a proceed-anyway
+       bypass. Complete only the authorized preflight documentation review; no code.
 
    - **If all checklists are complete**:
      - Display the table showing all checklists passed
@@ -147,14 +188,14 @@ You **MUST** consider the user input before proceeding (if not empty).
    - **Execution flow**: Order and dependency requirements
 
 6. Execute implementation following the task plan:
-   - **Phase-by-phase execution**: Complete each phase before moving to the next
-   - **Respect dependencies**: Run sequential tasks in order, parallel tasks [P] can run together  
+   - **Selected-scope execution**: Complete only the bound task IDs in dependency order; internal groups never authorize another scope or roadmap phase
+   - **Respect dependencies**: Run sequential tasks in order, parallel tasks [P] can run together
    - **Follow TDD approach**: Execute test tasks before their corresponding implementation tasks
    - **File-based coordination**: Tasks affecting the same files must run sequentially
    - **Validation checkpoints**: Verify each phase completion before proceeding
 
 7. Implementation execution rules:
-   - **Setup first**: Initialize project structure, dependencies, configuration
+   - **Prerequisites first**: Verify and reuse existing structure/dependencies/configuration; do not reinitialize accepted foundations
    - **Tests before code**: If you need to write tests for contracts, entities, and integration scenarios
    - **Core development**: Implement models, services, CLI commands, endpoints
    - **Integration work**: Database connections, middleware, logging, external services
@@ -169,7 +210,7 @@ You **MUST** consider the user input before proceeding (if not empty).
    - **IMPORTANT** For completed tasks, make sure to mark the task off as [X] in the tasks file.
 
 9. Completion validation:
-   - Verify all required tasks are completed
+   - Verify all required tasks in the selected TASK_SCOPE are completed; report whole-phase status separately
    - Check that implemented features match the original specification
    - Validate that tests pass and coverage meets requirements
    - Confirm the implementation follows the technical plan
@@ -185,6 +226,7 @@ Note: This command assumes a complete task breakdown exists in tasks.md. If task
 **You MUST complete this section before reporting completion to the user.**
 
 Check if `.specify/extensions.yml` exists in the project root.
+
 - If it does not exist, or no hooks are registered under `hooks.after_implement`, skip to the Completion Report.
 - If it exists, read it and look for entries under the `hooks.after_implement` key.
 - If the YAML cannot be parsed or is invalid, skip hook checking silently and continue to the Completion Report.
@@ -221,7 +263,7 @@ Report final status with summary of completed work.
 
 ## Done When
 
-- [ ] All tasks in tasks.md completed and marked `[X]`
+- [ ] All permitted tasks in the selected TASK_SCOPE completed and marked `[X]` after actual verification; whole-phase status reported separately
 - [ ] Implementation validated against specification, plan, and test coverage
 - [ ] Extension hooks dispatched or skipped according to the rules in Mandatory Post-Execution Hooks above
 - [ ] Completion reported to user with summary of completed work

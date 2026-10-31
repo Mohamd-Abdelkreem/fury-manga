@@ -1,9 +1,37 @@
 # Testing and verification
 
-Tests prove agreed behavior at the claimed boundary. They do not merely reproduce
-the implementation. The selected workflow assigns application test authoring to
-Codex Medium and independent acceptance review to Codex High. Kimi may run/read
-tests and report suspected defects, but must not weaken them to pass.
+Tests prove agreed behavior at the claimed boundary. Codex may author and review
+tests directly using current session settings; no model/provider/profile or separate
+test owner is required. Delegate only when explicitly requested. Apply `test-guard`
+to changed test code and the relevant production/docs skills to their own artifacts.
+Never weaken valid assertions to pass.
+
+## Fury execution and acceptance
+
+Use actual manifest scripts in the `@fury` workspace. Root `pnpm test` and
+`pnpm test:integration` delegate through Turbo. Focused package/file runs establish
+fresh scoped evidence; cached Turbo output must be identified as cached.
+`pnpm test:web-routes` is a route smoke script, not proof of a browser journey.
+
+The root `pnpm verify` gate includes Prisma formatting/validation/generation,
+format/lint/types, unit/integration tests, build, build-output verification and
+`git diff --check`. It writes schema/generated/build artifacts; it is not read-only.
+Do not run it for documentation-only work or during ANALYZE/CONVERGE. Discover the
+actual current scripts and inspect their effects before execution.
+
+Every implementation phase creates/extends meaningful automated files for its
+changed behavior. Complete and verify the required backend group before dependent
+frontend integration. Record contracts, authority, data/failure/rollback evidence
+and applicable actual storage boundaries; partial services or mocked success do
+not pass. Run focused/affected shared checks per batch and required full current
+checks at phase exit/before release. Missing services leave the relevant gate open.
+
+Verify that authorized integration preserves the current frontend, using relevant
+existing views, representative runtime data, keyboard/focus and responsive browser
+checks. Preserve static copy/layout/styles/navigation/interaction presentation.
+A required new surface or visual correction remains an owner-decision gate; tests
+or snapshots cannot approve it. Requirement-quality checklist approval, task
+completion, backend acceptance, phase acceptance and release are different claims.
 
 ## Choose evidence by behavior
 

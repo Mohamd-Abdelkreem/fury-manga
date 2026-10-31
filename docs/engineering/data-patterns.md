@@ -4,6 +4,21 @@ The database package owns schema, migrations, generated client and persistence
 types. Services receive a client from composition; controllers and browser modules
 do not construct or use it. Generated code is not manually edited.
 
+## Fury persistence ownership
+
+Inspect the actual `packages/database/prisma/schema.prisma`, authored migration SQL
+and owning content/media services before changing Category/Work/Chapter/publication
+or media data. `@fury/database` remains server-only. Existing publication, immutable
+identity, ordering, media-reference and retention rules come from their accepted
+specifications and database constraints, not a generic example or an old fixture.
+Future reader/community/gift/support records require their owning phase authority.
+
+A schema change belongs to the backend delivery group and needs safe existing-data,
+forward-migration, real PostgreSQL and applicable media/recovery evidence before
+dependent frontend integration. Do not modify historical migrations, rewrite accepted
+task evidence or treat synthetic-data verification as real-data release acceptance.
+Refer to existing operation guides under `docs/operations/` when that boundary applies.
+
 ## Schema example and its constraints
 
 This is a fictional fragment supporting the worked update, not a command to add

@@ -1,0 +1,368 @@
+FURY SPEC KIT PROMPT PACK
+Adopted: 2026-10-30 | Constitution: 2.0.0
+
+PURPOSE AND USE
+
+This file contains reusable prompts, not permission to execute the entire workflow.
+Use docs/workflow/prompts.md to copy one launcher. Replace its placeholders with
+the owner's selected phase/task scope, or reuse values already supplied in this
+session. Do not ask for the same values again. All artifacts and reports are English;
+product UI retains its existing copy and Arabic/RTL presentation. Chat may follow
+the owner's language.
+
+CONSTITUTION is a project-wide amendment command, not a roadmap phase. Do not run
+it per phase. For a selected phase the normal owner-invoked sequence is SPECIFY,
+CLARIFY, PLAN, CHECKLIST, TASKS, ANALYZE, IMPLEMENT, CONVERGE. Reuse completed valid
+artifacts; the sequence does not require regenerating accepted work. Each request
+executes ONLY its selected command. If convergence finds gaps, request IMPLEMENT
+for the appended IDs, then CONVERGE again. Never advance automatically.
+
+The installed project skills are .agents/skills/speckit-*/SKILL.md. In this Codex
+integration their invocation form is $speckit-<command>. These names are agent
+skills, not shell commands. PHASE_ID and TASK_SCOPE are natural-language bindings,
+not invented CLI flags. Other clients must verify their actual integration.
+The bundled .specify/workflows/speckit/workflow.yml is a generic four-step runner;
+it does not implement this full command sequence, scope contract or all review gates.
+Do not use it to bypass this pack. Do not install/upgrade tools or integrations as
+an incidental phase task. GitHub taskstoissues is excluded unless separately asked.
+
+OPERATING CONTRACT - APPLIES TO EVERY PROMPT
+
+A. Authority, current state and one selected phase
+
+- Read AGENTS.md, applicable nested instructions, the selected installed skill,
+  .specify/memory/constitution.md, PLAN.md and docs/workflow/operating-policy.md.
+- Read the whole roadmap for dependencies/conflicts. At phase start read all eight
+  Markdown guides directly under docs/engineering/: README.md, code-style.md,
+  backend-standard.md, frontend-standard.md, api-contracts.md, data-patterns.md,
+  security.md and testing.md. Revisit relevant rules/source/callers for each batch.
+- Authority: explicit current owner decisions; constitution; approved selected-phase
+  PLAN.md and feature requirements; engineering guides for HOW; actual source and
+  configuration for current facts; generated artifacts; old documents and fixtures.
+  Routine phase requests cannot silently amend the constitution or approve UI changes.
+- Inspect git status before edits. Preserve unrelated edits, untracked files,
+  accepted decisions, completed tasks and historical evidence. Never reset the tree.
+- Verify actual manifests, exports, paths, dependency versions, APIs, scripts and
+  installed tools. Separate implemented behavior, proposed work and executed checks.
+  Existing deviations do not override an adopted standard.
+- Use current session settings. Codex may plan, implement, write tests and review.
+  No model/provider/profile/orchestrator split is required. Delegate only at the
+  owner's explicit request. Missing tools/quota save truthful status and stop the
+  affected work; they do not justify invented results or silent ownership changes.
+- Produce only the selected phase/command artifacts. A necessary shared correction
+  must be bounded and justified. Do not recreate accepted foundations, rewrite the
+  roadmap, or import Oscar financial, custody, OTP or calendar policies into Fury.
+
+B. Bind the correct feature and exact implementation scope
+
+- PHASE_ID identifies the roadmap phase and title, not a feature number, branch,
+  or internal "Phase N" heading in tasks.md. Discover the existing feature by
+  reading its spec, not by assuming matching numeric prefixes.
+- Before SPECIFY, find accepted artifacts for this phase. Reuse them; do not create
+  a duplicate or overwrite them without explicit regeneration authority. For a new
+  phase let the installed skill assign its actual feature directory.
+- Before downstream commands inspect .specify/feature.json and the selected spec.
+  If they do not match PHASE_ID, stop and request correct existing-feature selection.
+  Do not change the pointer during ANALYZE, CONVERGE or IMPLEMENT. Do not use a
+  differing override that persists it as a side effect.
+- A populated, ratified constitution and required prerequisite evidence are mandatory.
+  Missing evidence stays an unmet gate. Preserve recorded isolated-development
+  exceptions with their exact scope; they do not accept predecessor exits, backend
+  completion, real-data release or changes to frozen presentation.
+- IMPLEMENT requires TASK_SCOPE: exact task IDs; an explicitly selected dependency-
+  safe batch; NEXT_DEPENDENCY_SAFE_BATCH; or ALL_ACTIVE_PHASE_TASKS. Resolve/report
+  exact next-batch IDs before editing. All-active covers remaining approved tasks
+  in this feature only, using small internal batches. Missing/ambiguous scope never
+  defaults to all tasks. Out-of-scope task lines and completed work are read-only.
+- Internal groups belong to one feature. A batch/backend group is not a roadmap
+  phase exit. Stop at the selected command and scope; do not run the next command.
+
+C. Absolute current-frontend preservation
+
+- The current public, reader, account, workspace and admin frontend is frozen.
+  Do not add, delete, move, rename, rebuild or redesign pages, routes, layouts,
+  navigation, dialogs/popups or controls. Do not change static copy, typography,
+  Arabic/RTL, colors, spacing, breakpoints, sizes, icons, imagery treatment, motion
+  or interaction presentation. Preserve established Next.js navigation patterns.
+- Root DESIGN-SYSTEM.md is the visual reference. Historical design inconsistencies,
+  old roadmap/spec UI instructions, examples and design skills do not authorize
+  normalization, localization edits or a redesign. Inspect current source and the
+  accepted UI rather than assuming a historical missing surface is still missing.
+- Authorized integration may replace fixture/local data with validated server DTOs
+  through existing API/hooks and wire existing controls, validation, current access
+  and query/mutation/feedback states. Runtime content can change; presentation stays.
+  Invisible logic extraction must preserve rendered output/interaction presentation.
+- Reuse existing loading, empty, error, retry, confirmation and success surfaces.
+  A required absent surface or incompatible static copy is an OWNER DECISION REQUIRED
+  gate. Report exact paths/requirement/impact. Do not invent UI, conceal outcomes,
+  claim success or remove the underlying business/security requirement.
+- Only a separate explicit owner decision and constitutional amendment can change
+  the freeze. A normal spec/plan/task request is not such a decision. Unrelated
+  backend work may continue while a separate presentation decision remains open.
+
+D. Complete backend before dependent frontend integration
+
+- First complete/review/test the entire required backend group: shared contracts,
+  migrations/constraints, current authority, rules, queries/mappers, services,
+  endpoints, applicable media/provider boundaries and realistic failure handling.
+  Record actual required evidence before any dependent UI integration starts.
+- A phase owning both uses one feature with ordered backend and frontend groups.
+  ALL_ACTIVE_PHASE_TASKS does not bypass the backend gate. Do not create a second
+  feature merely for an internal group or restart already accepted setup.
+- A partial endpoint, fixture response, browser-local store or mocked success cannot
+  establish persistent behavior. Integrate the frozen UI with the admitted backend
+  through its real shared contracts; remove replaced production fixture paths only
+  within scope. Do not create a parallel auth/client/Query stack.
+
+E. Fury code structure and integrity
+
+- Follow docs/engineering/README.md's actual owner map and existing @fury packages.
+  Preserve the apps/packages monorepo, pnpm/Turborepo and installed compatible stack.
+  Justify new dependencies and lockfile changes; do not upgrade for a sample.
+- API composition constructs dependencies; routes/middleware own HTTP wiring and
+  validation; controllers remain thin; services own rules/transactions; query,
+  mapper, errors and type files own their respective responsibilities. B33 permits
+  only imports and the exported class at top level in service/controller files.
+  Class-only private helpers follow public methods under // Helper methods.
+- Browser-safe runtime wire schemas live in @fury/contracts; DTOs reuse them.
+  Prisma/schema/migrations stay in @fury/database. Browser code never imports
+  persistence types, provider credentials or server configuration.
+- Web flow: page/layout -> existing feature component -> hook -> feature API ->
+  central transport -> Express. Feature model owns schemas/rules/transforms/error
+  classification; hooks own server lifecycle/cache; components own presentation
+  and transient interaction. Models do not import components; components do not
+  call Axios directly. React Query owns server state, not a second context database.
+- Preserve source-specific publication, current account/ADMIN/ownership, protected
+  reader/media and session/CSRF boundaries. Validate bounded untrusted input and
+  allowlist output. Do not expose drafts, private chapter files, storage paths,
+  tokens, hashes or secrets through public APIs, caches, logs or assets.
+- Protect real data invariants at the database write: constraints, conditional
+  transitions, appropriate isolation and explicit duplicate/stale/retry/rollback
+  semantics. Use forward migrations and safe populated-data/recovery planning.
+  Do not rewrite history or fabricate public/persistent/provider completion.
+- Apply Clean Code, SOLID, DRY, KISS and YAGNI proportionately. Split by real
+  responsibility/test/reuse, not arbitrary file sizes. Avoid giant universal
+  components, empty layers, generic repositories/DI containers/event buses and
+  speculative infrastructure. No unsafe casts, broad any, disabled checks,
+  swallowed failures or false-success fallbacks.
+
+F. Verification, skills and truthful completion
+
+- Read/apply matching installed skills: clean-code-guard after nontrivial production,
+  test-guard after test edits, docs-guard for technical docs and
+  vercel-react-best-practices for React/Next. Use other skills only by their stated
+  scope; security-best-practices applies when required by a security-review request.
+  Use playwright for applicable browser verification. Read apps/web/AGENTS.md and
+  relevant installed Next.js guidance before framework-dependent code changes.
+- Every implementation phase creates/extends meaningful automated test files for
+  changed behavior. Map requirements to positive, negative, boundary, authorization,
+  privacy, stale/concurrent, rollback and failure cases where relevant. Documentation-
+  only changes need formatting/reference/example checks, not application tests.
+- Use real migrated PostgreSQL for persistence/concurrency/rollback, actual Express
+  middleware for HTTP authority, actual isolated storage for file-access claims,
+  real component/hooks/QueryClient for UI lifecycle, and browsers for browser claims.
+  Mock only the intended external boundary; fixture screenshots are not acceptance.
+- Discover commands from manifests. Run focused and affected shared checks per batch,
+  then full required current verification at phase exit/before release. Root pnpm
+  verify includes schema formatting/generation and builds; it is not read-only and
+  must not run during ANALYZE/CONVERGE or this documentation-only workflow.
+- Review actual changed files and immediate callers against the owning guides and
+  skills. Record concrete file/rule findings and fixes or a clean pass. Missing
+  infrastructure or required unperformed checks leaves the relevant gate incomplete.
+  Do not weaken tests, suppress warnings, add retries to hide failure or invent passes.
+- Reports name PHASE_ID, feature path, exact task scope, changed files, actual tests,
+  commands/results, skills applied, UI-preservation evidence and remaining gates.
+  Separate fresh, reused/cached and unperformed evidence, and batch/backend/phase/
+  release completion. Save resumable status on interruption/quota exhaustion.
+- No commit/push, issue creation, deployment, destructive DB action or external
+  message is authorized by these prompts. Follow separately explicit owner authority.
+  Extension hooks cannot enlarge the command/scope or override these boundaries.
+
+PROMPT: CONSTITUTION
+
+$speckit-constitution
+
+Amend the existing Fury constitution only for the owner's explicitly approved
+project-wide decision. Apply this operating contract except the phase/task bindings
+that do not apply to governance work. Read current instructions, engineering guides,
+roadmap and dependent templates/skills. Preserve useful Fury rules, current frontend
+freeze and actual ownership; do not import Oscar business policies.
+
+Document rationale, compatibility/history impact and affected rules. Keep original
+ratification date, update semantic version/amendment date/Sync Impact Report, and
+synchronize only affected guidance/templates/adapters. MAJOR covers incompatible
+policy redefinitions; MINOR adds obligations; PATCH clarifies without policy change.
+Do not rewrite product scope, accepted feature artifacts or application code.
+Report checks and unresolved conflicts, then stop. Do not start SPECIFY.
+
+PROMPT: SPECIFY
+
+$speckit-specify
+PHASE_ID = <owner-selected Fury roadmap phase>
+
+Specify only PHASE_ID. Apply the operating contract. First locate/reuse any accepted
+spec for this phase; do not overwrite it or create a duplicate. For a new feature
+use the installed skill and report the generated path/pointer and roadmap title.
+Describe WHAT/WHY: actors, verified baseline, deliverables, exclusions, prerequisites,
+existing frozen surfaces, backend-before-frontend gates, testable behavior, failures
+and measurable acceptance. Do not invent architecture, capacity targets or UI.
+Keep missing-surface/policy decisions explicit without dropping requirements.
+Create/update only spec-owned artifacts and its built-in requirements-quality
+checklist. Review documentation accuracy, report readiness/questions, then stop.
+
+PROMPT: CLARIFY
+
+$speckit-clarify
+PHASE_ID = <owner-selected Fury roadmap phase>
+
+Clarify the matching existing spec only. Apply the operating contract. Inspect
+source for repository facts; do not ask the owner to repeat known information or
+reopen settled product/design decisions. Ask only genuine material questions about
+scope, authority, publication/access, persistence, state/failure behavior, acceptance
+or frozen-UI conflicts. Follow the skill's limit of five sequential questions.
+Record accepted answers in the active spec immediately and only its permitted
+built-in requirements checklist markers. Do not approve custom checklists, rewrite
+the roadmap/constitution or change code. If no questions remain say so. Stop.
+
+PROMPT: PLAN
+
+$speckit-plan
+PHASE_ID = <owner-selected Fury roadmap phase>
+
+Plan only the clarified matching feature. Apply the operating contract and check
+prerequisite evidence. Inspect actual source/callers/manifests, shared contracts and
+relevant installed framework docs before selecting architecture. Distinguish existing
+owners from proposed work. Preserve accepted artifacts; patch identified sections
+on amendment runs instead of regenerating the suite wholesale.
+Name exact API/service/query/mapper/error/type/contract/database and feature API/
+hook/model/component owners, applicable B/F rules and matching skill review gates.
+Plan contracts/migrations/authority/races/media/failure/recovery only where required.
+State explicit backend acceptance before dependent frozen-UI integration, existing
+surfaces and unresolved owner decisions. Run Constitution Check before research and
+again after design; justification tables cannot waive it. Define real future test
+paths, commands/services, affected regressions and phase exit evidence.
+Produce only plan-owned plan/research/data-model/contracts/quickstart artifacts as
+applicable. Do not create empty paperwork or tasks/code. Review accuracy, then stop.
+
+PROMPT: CHECKLIST
+
+$speckit-checklist
+PHASE_ID = <owner-selected Fury roadmap phase>
+
+Generate a requirements-quality checklist for this matching spec/plan. Apply the
+operating contract. Assess completeness, clarity, consistency, measurable acceptance,
+scope/dependencies, backend gate, frontend freeze, authority/privacy/publication,
+contracts/data/media/failure/recovery and verification where applicable. These are
+tests of written requirements, not claims that code works. Execution acceptance
+belongs in tasks. Reuse/append to the suitable existing checklist preserving IDs.
+Leave new custom items unchecked. Do not mark approval, modify spec/plan/code,
+run application checks or claim implementation readiness. Report the path and stop.
+
+PROMPT: TASKS
+
+$speckit-tasks
+PHASE_ID = <owner-selected Fury roadmap phase>
+
+Generate tasks only for the matching approved spec/plan. Apply the operating contract.
+Preserve existing IDs, completed progress and accepted unrelated content; do not
+overwrite a progressed tasks.md. Use unique IDs, exact paths, story traceability and
+real dependencies. Include actual meaningful automated test-file work, required
+services and manifest-backed commands. Use small reviewable batches; parallel markers
+require independent files and satisfied dependencies and do not authorize agents.
+Order required backend behavior/tests/review/gate before dependent existing-UI wiring.
+Include B33/file-owner/code-quality/skill and preserved-UI review with concrete evidence.
+Do not add redesign, toolkit setup, repeated foundations, arbitrary optimization or
+future phases. Internal groups are not roadmap phases. Report a safe first batch
+and required gates; do not execute any task. Stop.
+
+PROMPT: ANALYZE
+
+$speckit-analyze
+PHASE_ID = <owner-selected Fury roadmap phase>
+
+Apply the operating contract and analyze the matching spec/plan/tasks strictly
+read-only. Inspect the already selected pointer; do not change it or pass a differing
+persisting override. Do not run tests/builds/generation or edit files/checkboxes.
+Check requirement coverage, ambiguity, contradictions, scope, actual proposed APIs,
+backend ordering, frozen surfaces, contracts, B/F ownership, skill/code review and
+real test evidence planned. Constitutional violations are critical. Separate current
+phase gaps from unrequested future work; report concrete artifact/line findings,
+smallest owning correction and remaining readiness gates. Do not fix or implement.
+
+PROMPT: IMPLEMENT
+
+PHASE_ID = <owner-selected Fury roadmap phase>
+TASK_SCOPE = <exact IDs, approved batch, NEXT_DEPENDENCY_SAFE_BATCH or ALL_ACTIVE_PHASE_TASKS>
+
+Apply the operating contract. This request first authorizes evidence-based review of
+existing requirements checklists, then the installed implementation skill only if
+all gates pass. Read the matching spec/plan/tasks/contracts/checklists, constitution,
+roadmap, engineering guides and available analysis. Preserve the current feature pointer.
+
+Preflight, before loading $speckit-implement or making implementation edits:
+1. Resolve/report exact permitted IDs, dependencies and file owners. Inspect every
+   checklist file/item scanned by the skill; do not generate another checklist.
+2. Review unchecked items against actual written requirements/design evidence.
+   Requirements approval is not code/test acceptance. Other checklist kinds keep
+   their own criteria. Preserve item text/IDs and record concise evidence.
+3. Mark only supported items and reuse still-valid prior review. Do not weaken
+   requirements or change spec/plan/constitution/code to manufacture approval.
+4. If any scanned checklist is incomplete, or an analysis/predecessor/backend/UI gate
+   required before the selected IDs remains unmet, report the gap/owner and stop.
+   An unfinished backend group blocks its dependent UI, not the authorized tasks
+   that build that group; a separate UI decision does not block independent backend
+   work. Do not use proceed-anyway
+   to bypass it. Missing future execution evidence cannot be pre-approved.
+
+Only after preflight passes invoke $speckit-implement with the bound PHASE_ID and
+TASK_SCOPE. Its generic all-tasks/completion instructions are restricted to those
+IDs. Checklists are now read-only; only verified permitted task completion may change.
+Complete backend groups/tests before dependent integration. Reuse actual Fury owners,
+contracts, current auth/CSRF, storage and test infrastructure. Replace production
+fixtures through real adapters/hooks in the existing UI without presentation changes.
+Do not create a missing screen/dialog or change copy to finish an integration task.
+
+Write meaningful behavior/regression tests, run focused/shared checks and required
+full phase-exit checks. Apply review skills/guides after edits, fix required in-scope
+findings and record fresh type/lint/format and behavior evidence. Ignore generic
+toolkit/setup/ignore suggestions that would create unrelated configuration churn;
+only add an ignore/config change if necessary for the actual authorized artifacts.
+No unasked commit/push, deployment, destructive DB action or external message.
+Report exact completed/remaining IDs and distinguish batch/backend/phase status.
+Stop without automatically running CONVERGE or another phase.
+
+PROMPT: CONVERGE
+
+$speckit-converge
+PHASE_ID = <owner-selected Fury roadmap phase>
+
+After implementation has run, audit the matching feature against spec/plan/tasks,
+constitution, engineering guides, actual in-scope source/callers and available
+execution evidence. Apply the operating contract and relevant skills in review-only
+mode. Check behavior, ownership/B33, maintainability, contracts, authority, data/media,
+test realism, backend acceptance and unchanged frontend presentation.
+
+Do not modify code/spec/plan/old task content/markers or the feature pointer. Do not
+run tests, builds, formatters or generation: they can write artifacts. Missing required
+fresh evidence is a gap, not an invented pass. The ONLY permitted write is the
+installed skill's appended convergence section at the end of active tasks.md using
+new unique IDs. Each task needs source evidence, requirement/rule traceability,
+exact target paths, dependencies and verification. Do not append optional speculative
+work or duplicates of already resolved findings. If no gaps remain leave tasks.md
+byte-for-byte unchanged. Report findings, appended IDs and remaining phase gates.
+Recommend the next scoped command only; do not execute repairs or advance phases.
+
+PROMPT PACK REVIEW CASES - NOT EXECUTION AUTHORIZATION
+
+- The selected roadmap phase is not the numeric feature directory: inspect spec/pointer.
+- Repeating SPECIFY for accepted work reuses its path instead of overwriting it.
+- A frontend task cannot start while its required backend acceptance remains open.
+- A missing dialog/static-copy conflict reports OWNER DECISION REQUIRED; no new UI.
+- NEXT_DEPENDENCY_SAFE_BATCH reports exact IDs and stops after them, not all tasks.
+- ALL_ACTIVE_PHASE_TASKS never means the full roadmap or a waiver of backend gates.
+- Requirements checklist approval cannot be reported as a successful application test.
+- Missing Docker/PostgreSQL/browser evidence leaves the relevant gate incomplete.
+- ANALYZE changes nothing; CONVERGE only appends tasks and never runs application checks.
+- A docs-only amendment verifies links/format/references without running pnpm verify.
+- No prompt copies Oscar's financial rules, requires model-role orchestration, or
+  authorizes another command, commit/push, deployment or external message.

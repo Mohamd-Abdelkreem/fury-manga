@@ -12,6 +12,25 @@ baseline is two spaces, double quotes, semicolons and LF. A project config is th
 executable owner; avoid a second competing config. Match each package's actual
 runtime/bundler import-extension convention.
 
+## Fury conventions and reference owners
+
+Preserve the existing Node/pnpm/Turborepo workspace and `@fury` package names.
+Match each actual package's module/runtime convention; inspect adjacent code and
+configuration rather than guessing extensions or changing versions. Start from
+[the inspected Fury owner map](README.md#fury-reference-owners).
+
+Use semantic names such as work management, chapter publication, content access
+and media storage for the responsibility actually owned. Phase/task IDs belong
+in traceability documents, not new implementation/helper filenames. Legitimate
+migration/protocol/framework names are not automatic rename work. Do not mass-rename
+existing files or impose arbitrary line limits.
+
+Services/controllers obey B33's imports-plus-exported-class boundary. Keep class-only
+helpers private after public methods under `// Helper methods`; independently owned
+errors/types/rules/queries/mappers remain in their feature owners. On web, preserve
+existing component paths and presentation while moving only authorized invisible
+logic into its api/hooks/model owner. A refactor never authorizes a frontend redesign.
+
 ## Names and responsibility
 
 - Names describe domain and operation; avoid handleData/processEverything/utils

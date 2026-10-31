@@ -1,27 +1,34 @@
-# Portable engineering baseline
+# Fury engineering standards
 
-These 11 files define a reusable coding and review baseline. They intentionally
-contain no client roadmap, brand palette, machine path, production record, source
-audit report or project-specific business model. The current project's accepted
-requirements remain separate and determine what gets built.
+These guides define how to write and review Fury code. Accepted product requirements
+in `PLAN.md` and the selected feature define what is built; the
+[constitution](../../.specify/memory/constitution.md) defines mandatory scope,
+frontend preservation and delivery gates. The current frontend is frozen. This
+baseline does not authorize redesign or new product scope.
+
+Read the [operating policy](../workflow/operating-policy.md),
+[command contract](../workflow/speckit-prompts.txt) and
+[English launchers](../workflow/prompts.md) for one selected phase/command. At phase
+start read all eight Markdown files directly in this engineering directory, then
+apply the relevant B/F rules and skill gates to each bounded batch and its review.
 
 ## One owner per topic
 
-| File                                                   | Owns                                                                    |
-| ------------------------------------------------------ | ----------------------------------------------------------------------- |
-| [AGENTS.md](../../AGENTS.md)                           | Entry and relevant-reference routing                                    |
-| README.md                                              | This ownership/read/adoption map                                        |
-| [code-style.md](code-style.md)                         | Naming, imports, types, functions/classes and shared-code criteria      |
-| [backend-standard.md](backend-standard.md)             | Backend rule IDs and complete layer-by-layer module example             |
-| [frontend-standard.md](frontend-standard.md)           | Frontend rule IDs, feature/form/cache/async examples                    |
-| [api-contracts.md](api-contracts.md)                   | Shared request/output schemas, DTOs and HTTP boundaries                 |
-| [data-patterns.md](data-patterns.md)                   | Schema/constraints/query/transaction/migration details                  |
-| [testing.md](testing.md)                               | Evidence requirements, test examples, suite selection and cleanup       |
-| [security.md](security.md)                             | Authority, credential/error/log/cache/media boundaries                  |
-| [design-system.md](../design/design-system.md)         | Establishing/reusing a project's approved visual and interaction system |
-| [operating-policy.md](../workflow/operating-policy.md) | Task brief, delegation/review, decisions, phase stops and resume        |
+| File                                                   | Owns                                                               |
+| ------------------------------------------------------ | ------------------------------------------------------------------ |
+| [AGENTS.md](../../AGENTS.md)                           | Entry and relevant-reference routing                               |
+| README.md                                              | This ownership/read/adoption map                                   |
+| [code-style.md](code-style.md)                         | Naming, imports, types, functions/classes and shared-code criteria |
+| [backend-standard.md](backend-standard.md)             | Backend rule IDs and complete layer-by-layer module example        |
+| [frontend-standard.md](frontend-standard.md)           | Frontend rule IDs, feature/form/cache/async examples               |
+| [api-contracts.md](api-contracts.md)                   | Shared request/output schemas, DTOs and HTTP boundaries            |
+| [data-patterns.md](data-patterns.md)                   | Schema/constraints/query/transaction/migration details             |
+| [testing.md](testing.md)                               | Evidence requirements, test examples, suite selection and cleanup  |
+| [security.md](security.md)                             | Authority, credential/error/log/cache/media boundaries             |
+| [design-system.md](../design/design-system.md)         | Preserving Fury's frozen visual and interaction system             |
+| [operating-policy.md](../workflow/operating-policy.md) | Task brief, delegation/review, decisions, phase stops and resume   |
 
-Eleven is the current responsibility split, not a target to preserve at all costs.
+The table is a responsibility split, not a target number of files.
 Keep each rule's full explanation in its owner. The backend/frontend ID lists may
 point to a cross-cutting guide; examples and review questions implement those rules
 rather than create competing versions. Add a file only for a new independent
@@ -89,22 +96,67 @@ stable IDs for coverage/review. Domain-only source requirements were removed;
 only their general engineering lessons remain when applicable. Neither the old
 source project's successes nor its remaining blockers are inherited.
 
-## Adopting in an existing or new project
+## Fury reference owners
 
-1. Merge AGENTS.md safely; copy the docs tree while preserving existing guidance.
-2. Read actual code/configuration and record the project facts in its existing
-   plan/reference: stack versions, commands, package names, auth, design and scope.
-3. Use the user's supplied requirement/roadmap. If none exists, clarify the feature
-   and produce only the planning needed; a full-project roadmap is not mandatory.
-4. Reconcile explicit project constraints with the general standards and record
-   concrete exceptions in the active task/plan, not another global rule document.
-5. Link relevant skills/constitution to these owners; do not duplicate their contents.
-6. Verify actual workflow/implementer availability before requesting delegated execution.
+The following paths were inspected for the 2026-10-30 governance adoption. They are
+existing reference owners, not proof that every implementation complies or every
+roadmap feature is complete. Inspect current source/callers before each phase.
 
-A new empty UI requires an approved design direction; partial UI supplies candidate
-patterns to extract and review; a backend-only change needs no unrelated page design.
-Preserve already-approved work in each case.
+| Responsibility               | Existing Fury reference                                                                                                                                    |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Composition                  | `apps/api/src/router.ts` constructs/mounts services, controllers and routes                                                                                |
+| Management HTTP              | `apps/api/src/modules/content/content-management.controller.ts` and `content.routes.ts`                                                                    |
+| Use cases                    | `category-management.service.ts`, `work-management.service.ts`, `chapter-management.service.ts`, `publication-management.service.ts` in the content module |
+| Pure rules/types/errors      | `content.rules.ts`, `content.types.ts`, `content.errors.ts` in the content module                                                                          |
+| Queries/projection           | `content.queries.ts` and `content.mapper.ts` in the content module                                                                                         |
+| Wire contracts/DTO aliases   | `packages/contracts/src/content/content.schema.ts` and `apps/api/src/modules/content/dto/content.dto.ts`                                                   |
+| Admin network/lifecycle      | `apps/web/src/features/admin/api/` and `apps/web/src/features/admin/hooks/`                                                                                |
+| Admin pure form/editor rules | `apps/web/src/features/admin/model/`                                                                                                                       |
+| Media                        | `apps/api/src/modules/media/`, `apps/api/src/infrastructure/media/` and `apps/web/src/features/media/`                                                     |
+| Persistence                  | `packages/database/prisma/`, `packages/database/src/` and `packages/database/tests/`                                                                       |
+| Shared HTTP/session          | `apps/web/src/services/api/` and `apps/web/src/features/auth/`                                                                                             |
 
-These are reusable rules, not a global machine installation. Skill instructions
-describe procedures; these references define engineering requirements. Prompt
-instructions require actual review, tests and runtime controls to be enforced.
+Reference flow: existing admin component -> its hook -> admin API -> central
+transport -> content route/controller -> owning service -> rules/queries/mapper ->
+shared DTO. The composition root supplies dependencies. Read the real operation's
+contract and authority before changing it; do not copy all responsibilities into
+one file or add empty layers to match the diagram.
+
+The work belongs to its domain: Category, Work, Chapter, publication and media
+operations use their existing owners. Later reader/community/gift/support/ad work
+is introduced only by its accepted phase. Do not import another project's financial
+or OTP policies. Package names are `@fury/web`, `@fury/api`, `@fury/contracts` and
+`@fury/database`; verify versions and scripts from their manifests.
+
+## Backend gate and frozen-UI integration
+
+Complete and test the whole required backend group before its dependent frontend:
+contracts, safe migration/constraints, authority, services/rules, query/mapping,
+endpoints, applicable media/provider boundaries, failure handling and acceptance.
+Use one feature with ordered internal groups when the phase owns both. Phase IDs,
+feature numbers and internal groups are different; completed foundations stay complete.
+
+Frontend work replaces fixtures/local mutations through the existing API/hooks and
+controls. Preserve current presentation and static copy under constitution VI.
+A missing surface or a presentation-changing fix is an owner-decision gate, not
+permission to redesign. Report the requirement and exact conflicting surface;
+do not conceal failure or remove the underlying requirement.
+
+## Review and adoption limits
+
+Use the same owner/rule map during planning, implementation, post-edit review,
+analysis and convergence. Preserve the existing B/F identifiers; another project's
+similarly numbered rule may mean something different. No required model/provider,
+profile or role split exists. Delegation needs explicit owner authorization.
+
+The fictional Item/Account snippets remain labelled teaching fragments; they do
+not exist as Fury features, and are not drop-in executable application code. Use
+real Fury owners/contracts for implementation and do not install example packages.
+Do not relocate working code solely to mirror a diagram or adopt an older source
+pattern against an explicit standard. Existing deficiencies are scoped findings,
+not authority to weaken the rule or expand a phase.
+
+These documents guide behavior; their presence is not automatic enforcement, an
+executed test, UI approval or production readiness. Report concrete findings,
+real verification and unmet gates. For docs-only changes use formatting/link/
+reference/example checks rather than unrelated application suites.

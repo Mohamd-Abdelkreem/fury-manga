@@ -1,16 +1,19 @@
 ---
-description: "Task list template for feature implementation"
+description: "Dependency-ordered tasks for one selected Fury phase"
 ---
 
 # Tasks: [FEATURE NAME]
 
-**Input**: Design documents from `/specs/[###-feature-name]/`
+**Roadmap Phase**: [exact PHASE_ID and title from PLAN.md]
+**Feature Directory**: [exact selected path; verify pointer/spec match]
+**Input**: [accepted matching spec.md/plan.md and applicable design artifacts]
+**Prerequisites**: [populated constitution, reviewed requirements, predecessor evidence]
+**Implementation Scope**: [owner binds exact IDs/batch at IMPLEMENT time; generation does not authorize execution]
 
-**Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/
-
-**Tests**: Meaningful automated tests are REQUIRED for every changed behavior. Select
-the evidence boundary required by the specification and constitution; capability-specific
-tests MUST NOT create new product scope.
+**Tests**: Every implementation phase creates/extends actual meaningful automated
+files for changed behavior. State concrete paths, observable outcomes, services and
+manifest-backed commands. No arbitrary coverage or one-test-per-method quotas.
+Documentation-only work requires documentation checks, not application test changes.
 
 **Engineering and skill gate**: Before generating tasks, read every
 `docs/engineering/*.md` file and identify the applicable rule IDs. Tasks that change
@@ -29,248 +32,118 @@ code, `test-guard` for test code, `docs-guard` for technical docs, and
 `vercel-react-best-practices` for React/Next.js code). Apply other matching skills by
 their stated scope; do not add irrelevant skill tasks.
 
-**Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
-
-## Format: `[ID] [P?] [Story] Description`
-
-- **[P]**: Can run in parallel (different files, no dependencies)
-- **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3)
-- Include exact file paths in descriptions
-
-## Path Conventions
-
-- **API**: `apps/api/src/` with integration setup under `apps/api/tests/`
-- **Web**: `apps/web/src/app/`, `apps/web/src/features/`, and established shared components
-- **Contracts**: `packages/contracts/src/`
-- **Database**: `packages/database/prisma/`, `packages/database/src/`, and
-  `packages/database/tests/`
-- Use only exact paths selected by plan.md; do not create folders to mirror examples.
-
-<!--
-  ============================================================================
-  IMPORTANT: The tasks below are SAMPLE TASKS for illustration purposes only.
-
-  The /speckit-tasks command MUST replace these with actual tasks based on:
-  - User stories from spec.md (with their priorities P1, P2, P3...)
-  - Feature requirements from plan.md
-  - Entities from data-model.md
-  - Endpoints from contracts/
-
-  Tasks MUST be organized by user story so each story can be:
-  - Implemented independently
-  - Tested independently
-  - Delivered as an MVP increment
-
-  DO NOT keep these sample tasks in the generated tasks.md file.
-  ============================================================================
--->
-
-## Phase 1: Scope and Baseline
-
-**Purpose**: Reconcile the accepted feature with the current checkout
-
-- [ ] T001 Record git status, preserved user changes, and the accepted PLAN.md phase
-- [ ] T002 Confirm exact existing owners, fixture/local sources, and exclusions
-- [ ] T003 [P] Confirm applicable repository checks and current configuration
-
----
-
-## Phase 2: Foundational (Blocking Prerequisites)
-
-**Purpose**: Core infrastructure that MUST be complete before ANY user story can be implemented
-
-**⚠️ CRITICAL**: No user story work can begin until this phase is complete
-
-Examples of foundational tasks (include only when required by accepted scope):
-
-- [ ] T004 Add or update shared Zod contracts in packages/contracts/src/[feature]/
-- [ ] T005 Add a new forward migration in packages/database/prisma/migrations/
-- [ ] T006 Extend existing API composition/middleware without creating a parallel stack
-- [ ] T007 Add feature-local service/query/mapper owners in apps/api/src/modules/[feature]/
-- [ ] T008 Add only required example configuration; never add secrets
-- [ ] T009 Define migration, rollback/recovery, authority, and concurrency decisions
-
-**Checkpoint**: Foundation ready - user story implementation can now begin in parallel
-
----
-
-## Phase 3: User Story 1 - [Title] (Priority: P1) 🎯 MVP
-
-**Goal**: [Brief description of what this story delivers]
-
-**Independent Test**: [How to verify this story works on its own]
-
-### Tests for User Story 1 (REQUIRED) ⚠️
-
-> **NOTE: Design these from accepted behavior, not implementation details. For a bug,
-> first reproduce it with a meaningful failing regression.**
-
-- [ ] T010 [P] [US1] Contract test in packages/contracts/src/[feature]/[name].test.ts
-- [ ] T011 [P] [US1] HTTP integration test in apps/api/src/[name].integration.test.ts
-
-### Implementation for User Story 1
-
-- [ ] T012 [P] [US1] Add accepted persistence/schema change in packages/database/
-- [ ] T013 [P] [US1] Add shared request/output contracts in packages/contracts/src/
-- [ ] T014 [US1] Implement service/query/mapper behavior in apps/api/src/modules/[feature]/
-- [ ] T015 [US1] Wire the endpoint and/or web feature through existing boundaries
-- [ ] T016 [US1] Add validation and error handling
-- [ ] T017 [US1] Add logging for user story 1 operations
-
-**Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
-
----
-
-## Phase 4: User Story 2 - [Title] (Priority: P2)
-
-**Goal**: [Brief description of what this story delivers]
-
-**Independent Test**: [How to verify this story works on its own]
-
-### Tests for User Story 2 (REQUIRED) ⚠️
-
-- [ ] T018 [P] [US2] Contract/component test in the affected package
-- [ ] T019 [P] [US2] Integration or browser test at the required evidence boundary
-
-### Implementation for User Story 2
-
-- [ ] T020 [P] [US2] Add the accepted model/contract change in its existing package
-- [ ] T021 [US2] Implement use-case invariants in the feature service
-- [ ] T022 [US2] Integrate through the existing API and/or web feature boundary
-- [ ] T023 [US2] Integrate with User Story 1 components (if needed)
-
-**Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
-
----
-
-## Phase 5: User Story 3 - [Title] (Priority: P3)
-
-**Goal**: [Brief description of what this story delivers]
-
-**Independent Test**: [How to verify this story works on its own]
-
-### Tests for User Story 3 (REQUIRED) ⚠️
-
-- [ ] T024 [P] [US3] Contract/component test in the affected package
-- [ ] T025 [P] [US3] Integration or browser test at the required evidence boundary
-
-### Implementation for User Story 3
-
-- [ ] T026 [P] [US3] Add the accepted model/contract change in its existing package
-- [ ] T027 [US3] Implement use-case invariants in the feature service
-- [ ] T028 [US3] Integrate through the existing API and/or web feature boundary
-
-**Checkpoint**: All user stories should now be independently functional
-
----
-
-[Add more user story phases as needed, following the same pattern]
-
----
-
-## Phase N: Polish & Cross-Cutting Concerns
-
-**Purpose**: Improvements that affect multiple user stories
-
-- [ ] TXXX [P] Documentation updates in docs/
-- [ ] TXXX Code cleanup and refactoring
-- [ ] TXXX Performance optimization across all stories
-- [ ] TXXX [P] Additional risk-based tests in the affected package
-- [ ] TXXX Security hardening
-- [ ] TXXX Run quickstart.md validation
-- [ ] TXXX Re-run the Constitution Check against the actual diff and fresh evidence
-- [ ] TXXX Record warnings, missing browser/device/production evidence, and phase exit status
-
----
-
-## Dependencies & Execution Order
-
-### Phase Dependencies
-
-- **Setup (Phase 1)**: No dependencies - can start immediately
-- **Foundational (Phase 2)**: Depends on Setup completion - BLOCKS all user stories
-- **User Stories (Phase 3+)**: All depend on Foundational phase completion
-  - User stories can then proceed in parallel (if staffed)
-  - Or sequentially in priority order (P1 → P2 → P3)
-- **Polish (Final Phase)**: Depends on all desired user stories being complete
-
-### User Story Dependencies
-
-- **User Story 1 (P1)**: Can start after Foundational (Phase 2) - No dependencies on other stories
-- **User Story 2 (P2)**: Can start after Foundational (Phase 2) - May integrate with US1 but should be independently testable
-- **User Story 3 (P3)**: Can start after Foundational (Phase 2) - May integrate with US1/US2 but should be independently testable
-
-### Within Each User Story
-
-- Contract and evidence tasks before or alongside their producer/consumer changes
-- New forward migration and real PostgreSQL evidence before accepting schema behavior
-- Services/invariants before thin controller/route adaptation
-- Core implementation before integration
-- Story complete before moving to next priority
-
-### Parallel Opportunities
-
-- All Setup tasks marked [P] can run in parallel
-- All Foundational tasks marked [P] can run in parallel (within Phase 2)
-- Once Foundational phase completes, all user stories can start in parallel (if team capacity allows)
-- All tests for a user story marked [P] can run in parallel
-- Models within a story marked [P] can run in parallel
-- Different user stories can be worked on in parallel by different team members
-
----
-
-## Parallel Example: User Story 1
-
-```bash
-# Launch independent tests for User Story 1 together:
-Task: "Contract test in packages/contracts/src/[feature]/[name].test.ts"
-Task: "HTTP integration test in apps/api/src/[name].integration.test.ts"
-
-# Launch independent producer/consumer work only when files and prerequisites permit:
-Task: "Add shared schemas in packages/contracts/src/[feature]/"
-Task: "Add focused frontend state tests in apps/web/src/features/[feature]/"
-```
-
----
-
-## Implementation Strategy
-
-### MVP First (User Story 1 Only)
-
-1. Complete Phase 1: Setup
-2. Complete Phase 2: Foundational (CRITICAL - blocks all stories)
-3. Complete Phase 3: User Story 1
-4. **STOP and VALIDATE**: Test User Story 1 independently
-5. Stop for the required review gate; deployment requires separate explicit authorization
-
-### Incremental Delivery
-
-1. Complete Scope/Baseline + Foundational → Foundation ready
-2. Add User Story 1 → Test independently → Review/accept
-3. Add User Story 2 → Test independently → Review/accept
-4. Add User Story 3 → Test independently → Review/accept
-5. Each story adds value without breaking previous stories
-
-### Parallel Team Strategy
-
-With multiple developers:
-
-1. Team completes Setup + Foundational together
-2. Once Foundational is done:
-   - Developer A: User Story 1
-   - Developer B: User Story 2
-   - Developer C: User Story 3
-3. Stories complete and integrate independently
-
----
-
-## Notes
-
-- [P] tasks = different files, no dependencies
-- [Story] label maps task to specific user story for traceability
-- Each user story should be independently completable and testable
-- For bug fixes, verify the meaningful regression fails before implementing
-- Do not commit, push, create issues, deploy, run destructive database operations, or
-  contact external systems without explicit authorization
-- Stop at any checkpoint to validate story independently
-- Avoid: vague tasks, same file conflicts, cross-story dependencies that break independence
+**Frozen frontend**: Preserve existing pages/routes/layouts/navigation/dialogs,
+controls/static copy and all visual/interaction presentation. Only authorized real
+data/handler/access/query/feedback binding through existing surfaces is permitted.
+A missing surface/copy conflict is an owner-decision gate, not a new UI task.
+
+**Backend first**: Complete/review/test the entire required backend group before
+its dependent frontend. Ordered internal groups share this one feature. They are
+not new roadmap phases; a completed group/batch is not the whole phase exit.
+
+Read the constitution, whole roadmap, `docs/workflow/speckit-prompts.txt` and every
+engineering guide before generation. Use actual existing owners and preserve
+completed IDs/progress. Do not repeat setup/foundations or overwrite a progressed
+tasks.md. Replace every sample below with phase-specific tasks and exact paths.
+
+## Format and ownership
+
+- Use `- [ ] T001 [P?] [US?] Description with exact target path`.
+- `[P]` requires different files/owners and satisfied dependencies; it is not agent
+  delegation authorization. Shared schema/service/contract writers are sequential.
+- Story labels trace actual requirements; do not invent independent stories or
+  pretend dependent producer/consumer work can start together.
+- API owners are under `apps/api/src/`; shared schemas under `packages/contracts/src/`;
+  persistence under `packages/database/`; web api/hooks/model/components remain in
+  their actual existing features. Do not create folders merely to mirror an example.
+- Exact accepted task IDs or a resolved dependency-safe/all-active-phase scope are
+  required at implementation. Other task lines and checklist approvals stay read-only.
+
+## Phase 1: Selected-Phase Prerequisites and Baseline
+
+These are internal groups, not Fury roadmap phase IDs. Include only work genuinely
+required by the selected phase.
+
+- [ ] T001 Record matching phase/spec/pointer, git status, preserved edits and accepted predecessor evidence in the selected feature
+- [ ] T002 Identify actual backend owners, existing frozen UI surfaces, exclusions and unresolved owner decisions
+- [ ] T003 Verify actual test/configuration/scripts and applicable B/F rules/skill gates from current source
+
+**Checkpoint**: Required written-quality and predecessor gates are supported by
+actual evidence. Unmet gates remain open; no duplicate setup or accepted-artifact rewrite.
+
+## Phase 2: Required Backend Delivery
+
+Select only applicable backend work. Include actual test-file authoring before or
+alongside the producer change; bug fixes need a meaningful failing regression.
+
+- [ ] T004 [US1] Extend accepted browser-safe schemas/DTO aliases in [exact contract and DTO paths]
+- [ ] T005 [US1] Add safe forward migration/constraints and populated-upgrade evidence in [exact database paths]
+- [ ] T006 [US1] Create/extend contract, authority, failure/race/rollback tests in [actual owning test files]
+- [ ] T007 [US1] Implement bounded rules/query/mapper/error/type changes in [existing domain owners]
+- [ ] T008 [US1] Implement service invariants/transactions and current authority in [existing service path]
+- [ ] T009 [US1] Wire thin controller/routes/middleware/OpenAPI through [actual composition owners]
+- [ ] T010 [US1] Complete applicable media/provider/lifecycle/failure behavior in [actual existing owners]
+- [ ] T011 Review backend code against scoped B rules, B33 and matching skills; fix required in-scope findings and record concrete evidence
+- [ ] T012 Run required real backend/contract/database and affected shared checks using [verified commands/services]; record outcomes in [existing evidence owner]
+
+**Backend acceptance checkpoint**: Entire required group is implemented, reviewed
+and tested, including realistic failures/current authority and actual persistence
+where claimed. Missing infrastructure or execution evidence leaves it incomplete.
+No dependent frontend tasks start before this passes. If no backend change is needed,
+record existing complete backend evidence rather than inventing tasks or a mock gate.
+
+## Phase 3: Bind Existing Frozen Frontend
+
+Include only integration owned by this selected phase after backend acceptance.
+Do not create a screen/control/dialog/static-copy change to complete these tasks.
+
+- [ ] T013 [US1] Extend validated feature API/model adapters in [actual existing paths] against accepted backend responses
+- [ ] T014 [US1] Connect scoped query/mutation/cache/access/draft behavior in [actual existing hooks/model paths]
+- [ ] T015 [US1] Wire existing controls and feedback in [actual existing components] without presentation changes; remove replaced in-scope production fixture paths
+- [ ] T016 [US1] Extend meaningful component/hook/adapter behavior tests in [actual files], including applicable pending/denied/conflict/stale cases
+- [ ] T017 Review F rules, file ownership and matching skills; verify preserved rendering, static copy, navigation and interaction presentation using [relevant browser evidence]
+
+**Checkpoint**: Real accepted behavior uses existing surfaces; unresolved missing UI
+or presentation-changing corrections remain owner-decision gates, not checked tasks.
+
+## Phase 4: Selected-Scope Review and Phase Exit
+
+- [ ] T018 Update only affected technical/operation docs against final source and apply docs-guard
+- [ ] T019 Re-run Constitution Check against actual changed files, file-owner/code-quality review, skill findings and fresh type/lint/format/behavior evidence
+- [ ] T020 Run required affected regressions/full current phase-exit checks from [verified scripts]; record services, outcomes and any unverified boundary
+- [ ] T021 Record exact completed IDs, batch/backend/whole-phase status, frozen-UI evidence, warnings and remaining owner/release gates in [existing feature/evidence owner]
+
+Only use tasks needed by actual scope. No broad refactors, speculative optimization,
+toolkit installation, future-phase requirements or arbitrary file splitting.
+Do not mark required unavailable checks or a partial phase complete.
+
+## Dependencies and Bounded Batches
+
+Replace this sample graph with exact IDs and real ownership/dependencies:
+
+1. Selected-phase prerequisites and written-quality gates precede implementation.
+2. Contracts/schema/rules and realistic backend tests precede backend acceptance.
+3. Each dependent frontend integration waits for its entire required backend group.
+4. Review/verification precede task completion; full phase acceptance also requires
+   all remaining selected-phase deliverables and exit gates.
+5. Independent files/checks may be grouped only after their prerequisites hold.
+   No parallel writers to a shared schema/contract/service/task state.
+
+| Batch                | Exact IDs | Prerequisite evidence | File owners      | Actual verification   |
+| -------------------- | --------- | --------------------- | ---------------- | --------------------- |
+| [next bounded batch] | [IDs]     | [passed gates]        | [existing paths] | [commands/boundaries] |
+
+The owner selects exact IDs, a bounded batch, NEXT_DEPENDENCY_SAFE_BATCH or
+ALL_ACTIVE_PHASE_TASKS at IMPLEMENT time. Resolve/report next-batch IDs before edits.
+All-active covers only remaining approved tasks in this feature, in small batches.
+A list of tasks never authorizes another command or roadmap phase.
+
+## Completion and Convergence
+
+Requirements checklist approvals stay read-only during implementation. Mark permitted
+tasks complete only after their implementation and required checks pass. Preserve
+completed IDs/evidence and record failures, cached versus fresh and unperformed checks.
+Convergence runs only when requested after implementation; it appends traceable new
+remediation IDs without rewriting these tasks or fixing code. Clean convergence
+leaves this file byte-for-byte unchanged. Repairs require separately selected IDs.
+No unasked commit/push/issues/deployment/destructive DB actions or external messages.

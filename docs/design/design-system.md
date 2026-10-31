@@ -1,33 +1,38 @@
-# Project design-system practice
+# Fury frontend preservation and integration
 
-This file defines how to establish and preserve a design system. It deliberately
-does not supply a client's palette, font, logo, dimensions or screen inventory.
-Those values come from the actual project's approved design and code.
+This guide applies the frozen current Fury frontend under
+[constitution VI](../../.specify/memory/constitution.md). Root
+[DESIGN-SYSTEM.md](../../DESIGN-SYSTEM.md) is the visual reference. Preserve the
+actual existing presentation; historical inconsistencies, proposed extensions and
+old roadmap recommendations are not permission to normalize or redesign it.
 
-## Starting from existing pages
+## Preserve the current frontend
 
-Inspect rendered pages as well as source: actual CSS imports/cascade, token values,
-component variants, layout, typography and interactions. A CSS selector does not
-prove a component exists; repeated styling does not automatically mean approved
-design. Extract consistent patterns and surface disagreements before normalizing them.
+Do not add/delete/move/rename/redesign pages, routes, layouts, navigation,
+dialogs/popups, controls or static copy. Preserve typography, Arabic/RTL, colors,
+spacing, breakpoints, sizes, icons, imagery treatment, motion and interaction
+presentation. No new theme, component library or design-system regeneration is
+part of ordinary integration. The freeze covers public, reader, account, workspace
+and admin surfaces.
 
-Reuse existing primitives and sensible feature components. Do not introduce another
-UI framework, packages/ui tree or universal renderer just to match an example.
-Move prototype code into reviewed production structure; production must not depend
-on an external reference/mock project.
+Inspect source and relevant rendered views to identify the actual current baseline;
+a selector alone does not prove a component exists. A historical missing-surface
+claim must be checked against current code. Record actual conflicts rather than
+silently choosing a preferred pattern.
 
-## Starting without pages
+## Connect real behavior to existing surfaces
 
-Derive a page/state inventory from the requested scope. Establish a visual direction
-and representative components, then build navigable mock views with coherent fixture
-data and important states. A complete-site design request needs review of the relevant
-complete site; a small feature needs its affected views; a backend-only task needs
-no unrelated screens.
+Complete and test the required backend group first. Then replace fixture/local
+sources through existing API/hooks and validated DTOs. Wire existing controls,
+validation, current access and query/mutation/feedback states without altering
+presentation. Invisible logic extraction is bounded by the selected task scope.
 
-A browser preview can be the design artifact without a design SaaS tool. Keep it
-reconstructable and separate mock data/authority from production behavior. Rejection
-means revise the reviewed design, not delete unrelated work. Record the accepted
-revision/scope; elapsed time and green tests do not grant visual approval.
+Reuse current primitives and existing feedback/error/loading/confirmation surfaces.
+A required absent surface or incompatible static copy is an owner-decision gate;
+do not invent UI, hide failure/success or drop a requirement. A separate explicit
+owner decision and constitutional amendment are required to change the freeze.
+Accessibility and responsive findings must be reported and verified, but a correction
+that changes frozen presentation cannot be adopted without that decision.
 
 ## What each reusable component defines
 
@@ -42,13 +47,15 @@ revision/scope; elapsed time and green tests do not grant visual approval.
 | Motion          | Purpose, interruption and reduced-motion behavior                    |
 | Data boundary   | Display props and events; no generic component-owned business API    |
 
-Keep business labels/status mapping in the feature. Prefer semantic tokens over
-brand-color names in behavior. Preserve significant language/reading direction;
-Arabic-first RTL is the default unless the client explicitly requires otherwise.
+Keep business labels/status mapping in the feature. Reuse current semantic tokens
+without changing their values or presentation. Preserve the current Arabic-first
+RTL behavior, static copy and approved mixed-direction content.
 
 ## Example: token-driven control
 
-These token names illustrate roles, not a palette to copy. Resolve their values
+This snippet illustrates responsibility, not a control to add or a CSS change to
+apply under the freeze. Resolve any real implementation from the existing owner
+and preserve its values and presentation. Resolve token values
 from the approved project theme. A React component may expose variants matching
 the existing library rather than creating this class again.
 

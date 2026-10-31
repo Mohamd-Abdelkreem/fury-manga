@@ -1,152 +1,161 @@
-# Work planning, delegation and acceptance
+# Fury work planning and acceptance
 
-This portable policy records the user's selected collaboration model. Documentation
-alone does not install tools, enforce permissions or change model effort. Verify
-actual providers, skills and entrypoints before claiming the workflow operates.
+This policy implements the [constitution](../../.specify/memory/constitution.md).
+Use the [prompt pack](speckit-prompts.txt) for the selected Spec Kit command and
+[launchers](prompts.md) for copyable requests. Documentation does not install tools,
+change model settings, enforce permissions or establish a verification result.
 
-## Roles and scope
+## Authority and scope
 
-| Role                 | Owns                                                                                             |
-| -------------------- | ------------------------------------------------------------------------------------------------ |
-| Codex High           | Intake, planning, relevant research, diagnosis, implementation/test review and acceptance        |
-| Codex Medium tester  | Application test files/fixtures and justified test corrections                                   |
-| Selected implementer | Application/prototype implementation and application corrections                                 |
-| User                 | Consequential product/design decisions, phase continuation and separately authorized publication |
+Explicit current owner decisions govern authorized work. The constitution governs
+engineering and delivery; accepted `PLAN.md` and feature requirements govern product
+intent; the [engineering map](../engineering/README.md) governs code placement.
+Source, configuration and fresh checks establish implementation reality. Resolve
+conflicts explicitly rather than copying fixtures or weakening accepted requirements.
 
-Current provider: **Codex trial**. Use `gpt-6-astra` High for the lead, Medium for
-`orchestrator_implementer`, and a separate Medium `orchestrator_tester`. Kimi is a
-future selectable provider, not configured or required for this trial. Start the
-installed global workflow with `codex --profile orchestrator`, then `$orchestrator`.
-Changing a provider later requires explicit selection and a verified adapter.
+Use the current session's model/settings. Codex may plan, implement, write tests and
+review directly. No provider, effort level, profile, orchestrator installation or
+separate implementer/tester is mandatory. Delegate only when the owner explicitly
+requests it; provide any authorized worker the actual scoped instructions and owners.
+Quota exhaustion preserves resumable evidence and stops; it does not authorize a
+silent provider change or a claim that unfinished work passed.
 
-Codex may maintain documentation/configuration. The implementer may read/run tests
-but must not weaken them. A configured test role must actually use the selected effort; text
-claiming it is not proof. Missing/quota-limited implementers save/stop rather than
-silently switching ownership.
+Execute one selected roadmap phase and one selected command at a time. Stop after
+the requested command/task scope and after each phase unless the owner explicitly
+authorizes continuation. A roadmap list, generated next-step suggestion, internal
+task-group number or copied prompt pack is not continuation authorization.
 
-Use the current plan's actual phase IDs and dependencies. A single feature can have
-a scoped plan without a master roadmap. Stop after every phase unless the user
-explicitly changes continuation policy. A list of phases does not silently override
-the stop preference. Resolve important ambiguity but make routine technical choices
-within scope autonomously.
+## Frozen frontend and backend gate
 
-## Intake for any project state
+The current Fury frontend is frozen under constitution VI. Preserve public, reader,
+account, workspace and admin pages, URLs, layouts, navigation, dialogs/popups, static
+copy, typography, Arabic/RTL, styles, spacing, breakpoints, controls, imagery
+treatment, motion and interaction presentation. Root `DESIGN-SYSTEM.md` is a visual
+reference; historical audit recommendations do not authorize changing the current UI.
 
-Inspect actual code/configuration and the supplied requirements. Identify working,
-mock, missing and conflicting behavior. New projects establish necessary design/
-architecture; partial projects preserve completed work and fill scoped gaps;
-complete projects add only the requested feature and its dependencies.
+Authorized integration replaces fixture/local sources through validated API adapters
+and hooks and connects existing controls/feedback to real behavior. Invisible
+extraction is allowed only within the requested scope and with unchanged presentation.
+Do not create missing surfaces, conceal an outcome, or drop a security/product
+requirement. Record the exact conflict and the owner decision needed; a separate
+explicit decision and constitutional amendment are necessary to change the freeze.
 
-Design approval covers the relevant scope before adopting new visuals into live
-behavior. Do not invent global phase ranges or demand a full-site redesign for
-an unrelated backend feature. The project's accepted plan owns sequencing.
+Before dependent frontend integration, complete and test the required backend group:
+contracts, migrations/constraints, current authority, rules, queries/mappers,
+services/endpoints, applicable media/provider work and failure handling. Record actual
+acceptance evidence. Keep backend and frontend groups in one feature when the selected
+phase owns both. Do not repeat completed setup or treat a partial group as a phase exit.
+Recorded isolated-development exceptions retain only their original scope; they do
+not waive the freeze, backend acceptance or real-data release gates.
 
-## Task handoff contract
+## Intake and feature selection
 
-Use the active feature's existing plan/task artifact; no extra file per field is
-required. A bounded handoff contains all of the following:
+1. Read applicable agent instructions, the constitution, the whole roadmap and the
+   selected feature. At a phase start read every Markdown file directly under
+   `docs/engineering/`; revisit relevant rules/source for each bounded batch.
+2. Inspect git status and preserve existing edits/untracked work. Establish what is
+   persistent, fixture-backed, missing, conflicting and actually verified.
+3. Bind the owner's `PHASE_ID` to its exact title and feature spec. Check
+   `.specify/feature.json` directly. Phase IDs, directory numbers and branch names
+   are independent. Do not guess the phase from a numeric prefix.
+4. Reuse accepted artifacts and completed task IDs. A mismatched pointer requires
+   selection of the intended existing feature before downstream commands. Analysis
+   and convergence never change it. Do not regenerate artifacts to obtain a clean gate.
+5. Record deliverables, exclusions, predecessor/backend gates, existing frozen
+   surfaces, applicable B/F rules, review skills and actual verification commands.
 
-1. **Identity/scope:** phase/task, precise outcome, prerequisite status, exclusions.
-2. **Inputs:** existing paths, current edits to preserve, contracts and approved design.
-3. **Ownership:** expected changed files and the responsibility of each.
-4. **Rules:** relevant B/F IDs, linked technical detail and exact code example sections.
-5. **Behavior:** authority, happy path, errors, bounds, duplicate/stale/concurrent outcomes.
-6. **Verification:** requirements-based tests, real checks and applicable browser gates.
-7. **Constraints:** dependencies, package names, runtime versions and allowed operations.
-8. **Return:** changed paths, actual check results, open issues and next action.
+## Task brief and implementation scope
 
-Do not send only "follow clean code" or load every installed skill/reference.
-Skills provide relevant methods; these files own engineering requirements. Avoid
-copying entire skills into standards or full manuals into every task.
+Use the active feature's plan/tasks rather than creating a document for every field.
+A useful bounded brief states:
 
-Every worker handoff must include accessible relevant instructions/references; Codex's
-loaded skills and private conversation do not automatically transfer. The final
-adapter must prove what context and permissions the implementer actually receives.
+| Field         | Required content                                                         |
+| ------------- | ------------------------------------------------------------------------ |
+| Identity      | Phase, feature path, exact task IDs and observable outcome               |
+| Prerequisites | Predecessor/backend evidence and remaining gates                         |
+| Inputs        | Actual source/callers, contracts, frozen surfaces, edits to preserve     |
+| Ownership     | Expected files and responsibility of each; relevant B/F IDs              |
+| Behavior      | Actors, success/failure, bounds, duplicates, stale/concurrent outcomes   |
+| Verification  | Actual test-file work, scripts, services, review and browser evidence    |
+| Limits        | Exclusions, allowed operations and consequential decisions               |
+| Return        | Changed paths, actual checks, findings, incomplete gates and next action |
 
-## Example bounded handoff
+`IMPLEMENT` requires `TASK_SCOPE`: exact IDs, an explicitly selected dependency-safe
+batch, `NEXT_DEPENDENCY_SAFE_BATCH`, or `ALL_ACTIVE_PHASE_TASKS`. Resolve/report the
+exact next-batch IDs before editing. All-active means remaining approved tasks in
+this feature only, executed in small batches. Missing or ambiguous scope never means
+all tasks. Preserve completed work; out-of-scope task lines remain read-only.
 
-```text
-Task: Add the accepted title-edit operation for the selected resource.
+Parallel task markers describe dependency/file independence, not authorization to
+spawn agents. Shared schema, contract, service and task-list writers need sequential
+ownership. One completed batch or backend group does not establish the whole phase.
 
-Read: actual resource/auth/transport owners and the accepted request/output contract.
-Apply: B01, B03-B08, B12-B16, B22, B31, B41, B45-B49;
-        F01, F02, F06-F08, F24-F28 where the UI is affected.
-Reference: backend layer example, shared contract, editor/conflict and access examples.
-Adapt fictional names to the actual project. Do not introduce an example table blindly.
+## Requirements review before implementation
 
-Implement: validated HTTP boundary, owned version-conditional write, safe mapping,
-           and scoped UI integration required by the accepted task.
-Preserve: existing auth/client/query/form owners and unrelated edits.
-Tests: Codex Medium owns test changes. Run the agreed checks and report failures.
-Return: diff summary, actual commands/results and unresolved decisions.
-Stop: complete this bounded task; phase continuation follows the phase policy.
-```
+The IMPLEMENT launcher authorizes evidence-based review of existing checklists first.
+Review every file/item scanned by the installed skill. Mark only supported items;
+preserve questions, IDs, accepted decisions and concise evidence references.
 
-The real brief supplies precise paths and acceptance values. This template is not
-authorization to invent the feature, schema or test expectations.
+Requirements-quality approval means complete, consistent, clear and testable written
+requirements. It does not mean code exists or tests passed. Other checklist kinds
+keep their own criteria; do not reinterpret future execution checks as requirements
+approval. New custom requirement-quality checklists stay unchecked until reviewed.
+Put implementation acceptance work in tasks instead of a checklist that must falsely
+pass before implementation can begin.
 
-## Execution and correction loop
+Unresolved checklist items, analysis blockers, predecessor/backend gates or UI
+decisions stop dependent implementation. Do not bypass them through the generic
+skill's proceed-anyway option. During implementation checklist approval markers are
+read-only. Task checkboxes change only after actual in-scope work and required checks.
 
-1. Read applicable instructions and actual state; establish scoped acceptance.
-2. Run the installed Spec Kit or selected planning process using its verified
-   entrypoints. Do not invent command names or pretend an integration is installed.
-3. Arrange independent test work when interfaces/behavior are defined.
-4. Delegate one bounded implementation task with the context above.
-5. Review the actual diff, not only the implementer's report. Trace applicable
-   layer/contract/data/security/UI behavior and run meaningful checks.
-6. Diagnose each failure: implementation, test, environment or missing decision.
-   Send code corrections to the selected implementer; justified test corrections to the test owner.
-7. Recheck changed behavior and affected integration; record completed evidence.
-8. At phase completion, report and pause under the user's continuation policy.
+## Review and correction
 
-After three unsuccessful correction rounds, the lead diagnoses the root cause and
-sends a materially improved brief to the same implementer. If the next attempt still
-makes no measurable progress, save the blocker and ask for the needed intervention.
-Do not loop indefinitely, reset a database or weaken requirements to claim success.
+For every bounded implementation batch:
 
-## Acceptance checklist in the phase report
+1. Implement only the accepted behavior through its existing owners.
+2. Review the actual diff and immediate callers using the same engineering rules.
+   Check B33, error/type/query/mapper owners, dependency direction, meaningful reuse,
+   names, failure paths, authority, contracts, data and preserved presentation.
+3. Apply installed matching skills: `clean-code-guard` for nontrivial production,
+   `test-guard` for changed tests, `docs-guard` for technical docs and
+   `vercel-react-best-practices` for React/Next. Other skills apply by their scope.
+   Review-only command boundaries override any generic fixing instruction.
+4. Run focused behavior checks and affected shared regressions. Use real migrated
+   PostgreSQL for persistence/concurrency/rollback claims and actual browser evidence
+   for browser-only claims. Missing infrastructure leaves the relevant gate open.
+5. Fix required in-scope findings; diagnose whether a failure belongs to code, tests,
+   environment or an owner decision. Never weaken valid tests or change policy to pass.
+6. Record actual results, warnings, unavailable checks and batch/phase status.
 
-- Requested behavior and applicable boundaries are implemented.
-- Relevant B/F rules hold, with specific explained exceptions.
-- Actual file responsibilities and architecture remain coherent.
-- Public contract, authority, data constraints and error semantics agree.
-- Applicable concurrency/rollback and private-data absence are demonstrated.
-- UI states/drafts/cache/access and approved appearance meet the requested scope.
-- Actual applicable checks passed; warnings and unverified browser/device gates
-  are explicit. No historical/cached output represented as fresh.
-- No unrelated change, hidden fallback or invented provider result.
-- Reviewed source revision/worktree state and next action are recorded.
+For documentation-only work, check formatting, links, commands, references and
+examples. Do not run unrelated application suites or an aggregate that formats the
+schema/generates artifacts. For implementation, use the checks required by the
+accepted plan and run full current verification at phase exit/before release.
 
-Tests/lint cannot guarantee flawless output. Independent review plus real verification
-is required; a Markdown rule alone cannot guarantee that an implementer follows it.
+## Analysis and convergence boundaries
 
-## Resume and authorization
+`ANALYZE` reads artifacts and reports traceable findings; it edits no files or markers.
+`CONVERGE` inspects current in-scope implementation and recorded evidence. Its only
+write is a new convergence section at the end of the selected tasks.md, using new
+unique IDs. It never fixes code, changes old tasks/spec/plan, changes the pointer, or
+runs artifact-writing tests/builds. Missing required evidence becomes a gap/task.
+If no gaps remain, leave tasks.md byte-for-byte unchanged. Repairs require a separately
+authorized IMPLEMENT request for the appended IDs, followed by requested convergence.
 
-Persist phase/task status, exact reviewed work, check outcomes, unresolved decisions
-and next action in the runtime's established checkpoint owner. On resume reconcile
-the tree and unfinished external operations before retrying. Prevent overlapping
-runs from mutating the same task state. Quota exhaustion saves and stops.
+## Completion, resume and external authority
 
-Questions, specs, task briefs and reports are English. Product UI follows the client's
-approved language/direction. Chat language follows the user's preference.
+Reports identify phase/feature/task scope, changed paths, real test work, commands and
+outcomes, applicable review findings/fixes, frozen-UI evidence, warnings and remaining
+gates. Distinguish fresh execution, reused/cached evidence and unperformed checks;
+distinguish batch, backend group, whole phase and release acceptance.
 
-Design approval identifies scope/revision. Do not infer commit/push/deployment or
-external-message authorization from a plan entry. Follow actual user authorization
-without adding unnecessary per-task confirmations.
+Preserve resumable status in the existing feature/evidence owner: reviewed revision,
+completed IDs, pending work, results, decisions and next action. On resume reconcile
+actual files and any unfinished external operation before retrying. No mandatory
+machine-local orchestrator/checkpoint directory is introduced by this policy.
 
-## Setup boundary
-
-The global `orchestrator` skill and profile configure the Codex trial. Project
-Spec Kit skills and `.specify/memory/constitution.md` provide the planning integration;
-the local `speckit-implement` adapter preserves separate implementation/test ownership.
-Use the High-led skill route, not the stock `specify workflow run speckit` runner.
-
-Local `.orchestrator/` checkpoints and the cooperative owner lock are maintained by
-the skill's state helper. The lead checkpoints before delegation and after review,
-then releases ownership only after workers stop. An abrupt interruption preserves
-the last checkpoint; resumption reconciles actual files and worker activity. A stale
-lock is never silently stolen. This does not stop unrelated tools from editing files.
-
-Runtime installation and evidence are machine-specific. Copying this rule pack alone
-does not install global skills/profiles, configure Kimi or prove model access. Verify
-the integration in each environment before claiming the full cycle is operational.
+Specifications, plans, prompts, task briefs and reports are English. Product UI
+retains its current copy/language under the freeze; chat follows the owner's language.
+Commit/push, issue creation, deployment, destructive database operations and external
+messages require their actual explicit authorization. A passing local suite is not
+release approval. No command starts another phase or command automatically.

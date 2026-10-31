@@ -5,6 +5,20 @@ misleading display/actions but do not grant permission. Keep authority, access
 policy and public projection explicit per endpoint. Apply additional controls
 when the feature needs them, not by inventing unrelated security subsystems.
 
+## Fury scope and current-UI boundary
+
+Apply the actual phase's public metadata, current account/ADMIN, publication,
+protected-reader and direct-media rules. Inspect current content/media/auth owners;
+a well-formed identifier, visible control, published parent or browser route guard
+is not a blanket permission. Do not copy Oscar financial, signing, OTP or calendar
+requirements into Fury.
+
+Required backend authorization, safe contracts, private/public storage and failure
+checks must pass before dependent existing-UI integration. Preserve frontend
+presentation under constitution VI. If secure behavior needs an absent confirmation,
+authority/error surface or changed static copy, report the precise decision gate;
+do not invent UI, silently omit security or hide an outcome to finish the phase.
+
 ## Authority table
 
 | Kind                   | Contract                                                                            |

@@ -8,7 +8,12 @@
 
 **Input**: User description: "$ARGUMENTS"
 
-**PLAN.md Phase**: [P00-P14 and title]
+**PLAN.md Phase**: [exact selected phase ID and title]
+**Feature Directory**: [exact generated/selected path; verify the existing pointer]
+
+Apply the constitution and selected SPECIFY section of
+`docs/workflow/speckit-prompts.txt`. Reuse accepted phase artifacts; generation is
+not permission to execute tasks, change presentation or amend project policy.
 
 ## Scope and Current Reality _(mandatory)_
 
@@ -18,20 +23,24 @@
 - **Fixture, local-only, or placeholder sources affected**: [paths and truthful status]
 - **Explicit exclusions**: [requirements and later phases not included]
 - **Phase exit gate**: [the applicable PLAN.md acceptance boundary]
+- **Frozen frontend surfaces**: [existing routes/components/controls/feedback, or N/A]
+- **Missing-surface/static-copy conflicts**: [required owner decision, or none]
+- **Backend acceptance before UI integration**: [complete required group and observable gate]
+- **Owner-recorded development exceptions**: [exact limits; not release/visual approval, or none]
+
+The current frontend presentation is frozen, including pages/routes/layouts,
+navigation/dialogs, controls/static copy and visual/interaction presentation.
+Do not invent UI or drop a requirement to bypass a conflict. Future presentation
+changes need a separate explicit owner decision and constitutional amendment.
 
 ## User Scenarios & Testing _(mandatory)_
 
 <!--
   IMPORTANT: User stories should be PRIORITIZED as user journeys ordered by importance.
-  Each user story/journey must be INDEPENDENTLY TESTABLE - meaning if you implement just ONE of them,
-  you should still have a viable MVP (Minimum Viable Product) that delivers value.
-
-  Assign priorities (P1, P2, P3, etc.) to each story, where P1 is the most critical.
-  Think of each story as a standalone slice of functionality that can be:
-  - Developed independently
-  - Tested independently
-  - Deployed independently
-  - Demonstrated to users independently
+  Each journey must be testable within its declared prerequisites. Assign P1/P2/P3
+  priorities by observable value, but do not claim all stories can deploy or execute
+  independently. Preserve backend acceptance and phase gates. Deployment requires
+  separate authorization. Replace sample stories with this phase's actual behavior.
 -->
 
 ### User Story 1 - [Brief Title] (Priority: P1)
@@ -145,10 +154,13 @@ real-browser evidence. Mark genuinely inapplicable evidence with a reason.
 
 ### Measurable Outcomes
 
-- **SC-001**: [Measurable metric, e.g., "Users can complete account creation in under 2 minutes"]
-- **SC-002**: [Measurable metric, e.g., "System handles 1000 concurrent users without degradation"]
-- **SC-003**: [User satisfaction metric, e.g., "90% of users successfully complete primary task on first attempt"]
-- **SC-004**: [Business metric, e.g., "Reduce support tickets related to [X] by 50%"]
+- **SC-001**: [observable accepted user outcome]
+- **SC-002**: [observable denied/failure/boundary outcome where applicable]
+- **SC-003**: [unchanged frontend presentation with real authoritative behavior]
+- **SC-004**: [phase exit outcome and required evidence]
+
+Do not invent workload/capacity promises, arbitrary coverage percentages or perfect
+security guarantees. Use approved measurable constraints only.
 
 ## Assumptions
 
@@ -156,6 +168,8 @@ real-browser evidence. Mark genuinely inapplicable evidence with a reason.
   ACTION REQUIRED: The content in this section represents placeholders.
   Fill them out with the right assumptions based on reasonable defaults
   chosen when the feature description did not specify certain details.
+  Do not assume presentation approval, change settled product policy or bypass
+  required backend/predecessor evidence. Material conflicts stay explicit gates.
 -->
 
 - [Assumption about target users, e.g., "Users have stable internet connectivity"]
