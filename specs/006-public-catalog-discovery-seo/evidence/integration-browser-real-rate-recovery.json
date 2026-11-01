@@ -1,0 +1,10 @@
+{
+  "kind": "actual real429 unavailable state recovered after existing rate window",
+  "state": "filtered-empty",
+  "focus": {
+    "tag": "P",
+    "text": "0 نتيجة"
+  },
+  "query": "?category=unknown-category",
+  "limitWasNotChanged": true
+}

@@ -4,6 +4,7 @@ import type { AdminWork } from "@fury/contracts";
 
 import {
   adoptServerWork,
+  displayedWorkPublicationStatus,
   continueDraftAgainstServer,
   createWorkEditorState,
   createWorkCommand,
@@ -237,5 +238,76 @@ describe("admin Work editor refresh and draft state", () => {
       expectedVersion: work.version,
       targetState: "published",
     });
+  });
+});
+
+describe("publication confirmation authority", () => {
+  it("keeps a newer own confirmation only until matching authoritative server state catches up", () => {
+    const confirmation = {
+      id: work.id,
+      version: 3,
+      publicationStatus: "published" as const,
+    };
+    expect(displayedWorkPublicationStatus(work, confirmation)).toBe(
+      "published",
+    );
+    expect(
+      displayedWorkPublicationStatus({ ...work, version: 3 }, confirmation),
+    ).toBe("draft");
+    expect(
+      displayedWorkPublicationStatus({ ...work, version: 4 }, confirmation),
+    ).toBe("draft");
+    expect(
+      displayedWorkPublicationStatus(
+        { ...work, version: 4, publicationStatus: "archived" },
+        confirmation,
+      ),
+    ).toBe("archived");
+    expect(
+      displayedWorkPublicationStatus(
+        { ...work, version: 4, publicationStatus: "published" },
+        { ...confirmation, publicationStatus: "draft" },
+      ),
+    ).toBe("published");
+  });
+
+  it("does not carry another Work's acknowledgement into a route or create form", () => {
+    const confirmation = {
+      id: "55555555-5555-4555-8555-555555555555",
+      version: 100,
+      publicationStatus: "published" as const,
+    };
+    expect(displayedWorkPublicationStatus(work, confirmation)).toBe("draft");
+    expect(displayedWorkPublicationStatus(undefined, confirmation)).toBeNull();
+    expect(displayedWorkPublicationStatus(work, null)).toBe("draft");
+  });
+
+  it("keeps publication authority independent of adopting server state or continuing dirty editorial input", () => {
+    const confirmation = {
+      id: work.id,
+      version: 2,
+      publicationStatus: "published" as const,
+    };
+    const local = {
+      ...createWorkEditorState(work),
+      dirty: true,
+      values: {
+        ...workFormValuesFromServer(work),
+        title: "Unsaved editorial title",
+      },
+    };
+    const refreshed = receiveWorkRefresh(local, work.id, newerWork);
+    const continued = continueDraftAgainstServer(refreshed);
+    expect(continued.baseVersion).toBe(3);
+    expect(continued.values.title).toBe("Unsaved editorial title");
+    expect(displayedWorkPublicationStatus(newerWork, confirmation)).toBe(
+      "draft",
+    );
+    const adopted = adoptServerWork(refreshed);
+    expect(adopted.baseVersion).toBe(3);
+    expect(adopted.values.title).toBe("Server title");
+    expect(displayedWorkPublicationStatus(newerWork, confirmation)).toBe(
+      "draft",
+    );
   });
 });

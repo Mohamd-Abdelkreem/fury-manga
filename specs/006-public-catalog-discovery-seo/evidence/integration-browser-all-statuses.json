@@ -1,0 +1,38 @@
+{
+  "passed": true,
+  "statuses": [
+    {
+      "status": "ongoing",
+      "items": [
+        "Browser illustrated عمل",
+        "عمل Mixed 36 manga",
+        "عمل Mixed 30 manga",
+        "عمل Mixed 24 manga",
+        "عمل Mixed 18 manga",
+        "عمل Mixed 12 manga",
+        "عمل Mixed 06 manga",
+        "عمل Mixed 00 manga"
+      ]
+    },
+    {
+      "status": "completed",
+      "items": [
+        "عمل Mixed 39 comics",
+        "عمل Mixed 33 comics",
+        "عمل Mixed 27 comics",
+        "عمل Mixed 21 comics",
+        "عمل Mixed 15 comics",
+        "عمل Mixed 09 comics",
+        "عمل Mixed 03 comics"
+      ]
+    },
+    {
+      "status": "hiatus",
+      "items": []
+    },
+    {
+      "status": "cancelled",
+      "items": []
+    }
+  ]
+}

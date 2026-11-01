@@ -1,4 +1,8 @@
 import type {
+  CatalogWorkDetail,
+  CatalogChapter,
+  CatalogCategory,
+  CatalogWork,
   AdminCategory,
   AdminChapter,
   AdminChapterSummary,
@@ -15,6 +19,10 @@ import type {
 import { structuredTextDocumentSchema } from "@fury/contracts";
 import {
   ChapterContentType,
+  MediaAssetStatus,
+  MediaClass,
+  MediaReferenceSlot,
+  MediaScope,
   PublicationStatus,
   StoryStatus,
   WorkType,
@@ -83,7 +91,7 @@ export const WORK_LIST_SELECT = {
   updatedAt: true,
   _count: { select: { chapters: true } },
   mediaReferences: {
-    where: { retiredAt: null, slot: "WORK_COVER" },
+    where: { retiredAt: null, slot: MediaReferenceSlot.WORK_COVER },
     select: { assetId: true },
     take: 1,
   },
@@ -107,6 +115,112 @@ export const PUBLIC_WORK_SELECT = {
     select: { category: { select: PUBLIC_CATEGORY_SELECT } },
   },
 } as const satisfies Prisma.WorkSelect;
+
+export const CATALOG_CATEGORY_SELECT = {
+  slug: true,
+  displayName: true,
+} as const satisfies Prisma.CategorySelect;
+
+export const CATALOG_WORK_SELECT = {
+  slug: true,
+  title: true,
+  alternativeTitle: true,
+  type: true,
+  storyStatus: true,
+  publishedAt: true,
+  categories: {
+    where: { category: { enabled: true } },
+    select: { category: { select: CATALOG_CATEGORY_SELECT } },
+    orderBy: [{ category: { displayPosition: "asc" } }, { categoryId: "asc" }],
+  },
+} as const satisfies Prisma.WorkSelect;
+
+export const CATALOG_WORK_DETAIL_SELECT = {
+  id: true,
+  ...CATALOG_WORK_SELECT,
+  synopsis: true,
+  author: true,
+  artist: true,
+  tags: {
+    select: { normalizedTag: true },
+    orderBy: [{ position: "asc" }, { normalizedTag: "asc" }],
+  },
+  mediaReferences: {
+    where: {
+      retiredAt: null,
+      slot: MediaReferenceSlot.WORK_BACKGROUND,
+      asset: {
+        mediaClass: MediaClass.WORK_BACKGROUND,
+        scope: MediaScope.ADMIN,
+        status: MediaAssetStatus.AVAILABLE,
+      },
+    },
+    select: { slot: true },
+    take: 1,
+  },
+} as const satisfies Prisma.WorkSelect;
+export type CatalogWorkDetailRecord = Prisma.WorkGetPayload<{
+  select: typeof CATALOG_WORK_DETAIL_SELECT;
+}>;
+
+export const mapCatalogWorkDetail = (
+  work: CatalogWorkDetailRecord,
+): CatalogWorkDetail => {
+  if (work.synopsis === null || work.author === null)
+    throw new Error("Public detail requires saved synopsis and author.");
+  return {
+    ...mapCatalogWork(work),
+    synopsis: work.synopsis,
+    author: work.author,
+    artist: work.artist,
+    tags: work.tags.map((tag) => tag.normalizedTag),
+    backgroundPath:
+      work.mediaReferences.length === 0
+        ? null
+        : `/api/v1/content/works/${work.slug}/background`,
+  };
+};
+
+export type CatalogCategoryRecord = Prisma.CategoryGetPayload<{
+  select: typeof CATALOG_CATEGORY_SELECT;
+}>;
+export type CatalogWorkRecord = Prisma.WorkGetPayload<{
+  select: typeof CATALOG_WORK_SELECT;
+}>;
+
+export const mapCatalogCategory = (
+  record: CatalogCategoryRecord,
+): CatalogCategory => ({ slug: record.slug, displayName: record.displayName });
+
+export const mapCatalogChapter = (
+  chapter: PublicChapterRecord,
+): CatalogChapter => {
+  if (chapter.publishedAt === null)
+    throw new Error("Public Chapter requires saved title and publishedAt.");
+  return {
+    number: chapter.number,
+    title: chapter.title,
+    contentType: chapterContentTypeMap[chapter.contentType],
+    publishedAt: chapter.publishedAt.toISOString(),
+  };
+};
+
+export const mapCatalogWork = (record: CatalogWorkRecord): CatalogWork => {
+  if (record.publishedAt === null)
+    throw new Error("Public catalog Work requires publishedAt.");
+  return {
+    slug: record.slug,
+    title: record.title,
+    alternativeTitle: record.alternativeTitle,
+    type: workTypeMap[record.type],
+    storyStatus: storyStatusMap[record.storyStatus],
+    publishedAt: record.publishedAt.toISOString(),
+    categories: record.categories.map(({ category }) =>
+      mapCatalogCategory(category),
+    ),
+    coverPath: `/api/v1/content/works/${record.slug}/cover`,
+  };
+};
 
 export const CHAPTER_SELECT = {
   id: true,
@@ -133,7 +247,16 @@ export const CHAPTER_SELECT = {
           assetId: true,
           version: true,
           slot: true,
-          asset: { select: { status: true, mediaClass: true, scope: true } },
+          asset: {
+            select: {
+              status: true,
+              mediaClass: true,
+              scope: true,
+              width: true,
+              height: true,
+              byteLength: true,
+            },
+          },
         },
       },
     },
@@ -271,11 +394,13 @@ export const mapAdminWork = (record: WorkRecord): AdminWork => ({
   featuredHome: record.featuredHome,
   featuredOrder: record.featuredOrder,
   coverAssetId:
-    record.mediaReferences.find(({ slot }) => slot === "WORK_COVER")?.assetId ??
-    null,
+    record.mediaReferences.find(
+      ({ slot }) => slot === MediaReferenceSlot.WORK_COVER,
+    )?.assetId ?? null,
   backgroundAssetId:
-    record.mediaReferences.find(({ slot }) => slot === "WORK_BACKGROUND")
-      ?.assetId ?? null,
+    record.mediaReferences.find(
+      ({ slot }) => slot === MediaReferenceSlot.WORK_BACKGROUND,
+    )?.assetId ?? null,
   tags: record.tags.map(({ normalizedTag }) => normalizedTag),
   version: record.version,
   createdAt: record.createdAt.toISOString(),
@@ -329,8 +454,17 @@ export const mapAdminChapter = (record: ChapterRecord): AdminChapter => {
         id,
         position,
         assetId: reference.assetId,
+        ...(reference.asset.width === null
+          ? {}
+          : { width: reference.asset.width }),
+        ...(reference.asset.height === null
+          ? {}
+          : { height: reference.asset.height }),
+        ...(reference.asset.byteLength === null
+          ? {}
+          : { byteLength: reference.asset.byteLength }),
         assetStatus:
-          reference.asset.status === "AVAILABLE"
+          reference.asset.status === MediaAssetStatus.AVAILABLE
             ? ("available" as const)
             : ("unavailable" as const),
       };

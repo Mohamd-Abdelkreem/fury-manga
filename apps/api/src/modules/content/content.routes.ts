@@ -9,6 +9,9 @@ import {
 } from "../../middlewares/index.js";
 import type { ContentManagementController } from "./content-management.controller.js";
 import {
+  catalogWorkListQuerySchema,
+  catalogCategoryListQuerySchema,
+  publicContentNoQuerySchema,
   categoryIdParamsSchema,
   categoryListQuerySchema,
   categoryPositionBodySchema,
@@ -40,26 +43,91 @@ export const contentRoutes = (
   const authorizeAdmin = authorizeRoles(UserRole.ADMIN);
 
   router.get(
+    "/catalog/sitemap-works",
+    validationMiddleware(
+      { query: publicContentNoQuerySchema },
+      { strictQueryEncoding: true },
+    ),
+    publicController.getCatalogSitemap,
+  );
+  router.get(
+    "/catalog/works/:workSlug",
+    validationMiddleware(
+      { params: workSlugParamsSchema, query: publicContentNoQuerySchema },
+      { strictQueryEncoding: true },
+    ),
+    publicController.getCatalogDetail,
+  );
+  router.get(
+    "/works/:workSlug/background",
+    validationMiddleware(
+      { params: workSlugParamsSchema, query: publicContentNoQuerySchema },
+      { strictQueryEncoding: true },
+    ),
+    publicController.getBackground,
+  );
+  router.get(
+    "/catalog/home",
+    validationMiddleware(
+      { query: publicContentNoQuerySchema },
+      { strictQueryEncoding: true },
+    ),
+    publicController.getCatalogHome,
+  );
+  router.get(
+    "/catalog/works",
+    validationMiddleware(
+      { query: catalogWorkListQuerySchema },
+      { strictQueryEncoding: true },
+    ),
+    publicController.listCatalogWorks,
+  );
+  router.get(
+    "/catalog/categories",
+    validationMiddleware(
+      { query: catalogCategoryListQuerySchema },
+      { strictQueryEncoding: true },
+    ),
+    publicController.listCatalogCategories,
+  );
+  router.get(
+    "/works/:workSlug/cover",
+    validationMiddleware(
+      { params: workSlugParamsSchema, query: publicContentNoQuerySchema },
+      { strictQueryEncoding: true },
+    ),
+    publicController.getCover,
+  );
+  router.get(
     "/works",
-    validationMiddleware({ query: paginationQuerySchema }),
+    validationMiddleware(
+      { query: paginationQuerySchema },
+      { strictQueryEncoding: true },
+    ),
     publicController.listWorks,
   );
   router.get(
     "/works/:workSlug",
-    validationMiddleware({ params: workSlugParamsSchema }),
+    validationMiddleware(
+      { params: workSlugParamsSchema, query: publicContentNoQuerySchema },
+      { strictQueryEncoding: true },
+    ),
     publicController.getWork,
   );
   router.get(
     "/works/:workSlug/chapters",
-    validationMiddleware({
-      params: workSlugParamsSchema,
-      query: paginationQuerySchema,
-    }),
+    validationMiddleware(
+      { params: workSlugParamsSchema, query: paginationQuerySchema },
+      { strictQueryEncoding: true },
+    ),
     publicController.listChapters,
   );
   router.get(
     "/works/:workSlug/chapters/:chapterNumber",
-    validationMiddleware({ params: publicChapterParamsSchema }),
+    validationMiddleware(
+      { params: publicChapterParamsSchema, query: publicContentNoQuerySchema },
+      { strictQueryEncoding: true },
+    ),
     publicController.getChapter,
   );
 

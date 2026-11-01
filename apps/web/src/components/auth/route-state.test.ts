@@ -79,6 +79,20 @@ describe("pure route states", () => {
     ).toBe("authorized");
   });
 
+  it.each([
+    ["/settings?section=security", "/settings?section=security"],
+    ["https://outside.example.test", "/dashboard"],
+    ["/settings?token=private", "/dashboard"],
+  ])(
+    "preserves the authenticated return destination policy for %s",
+    (returnTo, target) => {
+      expect(resolveGuestOnlyRouteState(settled, user(), returnTo)).toEqual({
+        kind: "redirecting",
+        target,
+      });
+    },
+  );
+
   it("allows guests and redirects a valid authenticated account", () => {
     expect(resolveGuestOnlyRouteState(settled, null).kind).toBe("authorized");
     expect(resolveGuestOnlyRouteState(settled, user())).toEqual({

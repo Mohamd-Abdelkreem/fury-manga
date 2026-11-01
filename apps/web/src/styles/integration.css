@@ -16,6 +16,8 @@
   --mono: "Poppins", monospace;
 }
 
+[data-public-catalog-focus]:focus-visible,
+[data-media-page-focus]:focus-visible,
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,

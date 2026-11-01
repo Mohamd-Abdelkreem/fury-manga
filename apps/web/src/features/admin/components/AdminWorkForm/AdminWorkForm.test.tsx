@@ -393,7 +393,8 @@ describe("publication controls", () => {
       publicationStatus: "draft",
       publishedAt: null,
       publicationEventId: null,
-      version: work.version,
+      // Another editor already restored the archived revision before this command.
+      version: work.version + 1,
       transitioned: false,
     });
     renderForm("edit", { ...work, publicationStatus: "archived" });

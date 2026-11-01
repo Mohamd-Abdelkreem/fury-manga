@@ -1,0 +1,83 @@
+{
+  "kind": "actual production Next/Express/owned PostgreSQL design comparison",
+  "results": [
+    {
+      "name": "home",
+      "path": "/",
+      "width": 1280,
+      "title": "Fury — اكتشف الأعمال المنشورة",
+      "geometry": {
+        "viewport": 1280,
+        "scroll": 1280,
+        "dir": "rtl"
+      },
+      "loadedImages": 24,
+      "headings": ["عمل Mixed 00 mangaعنوان بديل محفوظ"]
+    },
+    {
+      "name": "discover",
+      "path": "/discover",
+      "width": 1280,
+      "title": "اكتشف الأعمال | Fury",
+      "geometry": {
+        "viewport": 1280,
+        "scroll": 1280,
+        "dir": "rtl"
+      },
+      "loadedImages": 12,
+      "headings": ["قائمة المانجا"]
+    },
+    {
+      "name": "stories",
+      "path": "/stories",
+      "width": 1280,
+      "title": "الروايات والقصص النصية | Fury",
+      "geometry": {
+        "viewport": 1280,
+        "scroll": 1280,
+        "dir": "rtl"
+      },
+      "loadedImages": 12,
+      "headings": ["الروايات والقصص النصية"]
+    },
+    {
+      "name": "categories",
+      "path": "/categories",
+      "width": 1280,
+      "title": "التصنيفات | Fury",
+      "geometry": {
+        "viewport": 1280,
+        "scroll": 1280,
+        "dir": "rtl"
+      },
+      "loadedImages": 0,
+      "headings": ["التصنيفات"]
+    },
+    {
+      "name": "illustrated",
+      "path": "/story/saved-manga-0",
+      "width": 1280,
+      "title": "عمل Mixed 00 manga | Fury",
+      "geometry": {
+        "viewport": 1280,
+        "scroll": 1280,
+        "dir": "rtl"
+      },
+      "loadedImages": 6,
+      "headings": ["عمل Mixed 00 manga"]
+    },
+    {
+      "name": "text",
+      "path": "/story/saved-novel-4",
+      "width": 1280,
+      "title": "عمل Mixed 04 novel | Fury",
+      "geometry": {
+        "viewport": 1280,
+        "scroll": 1280,
+        "dir": "rtl"
+      },
+      "loadedImages": 5,
+      "headings": ["عمل Mixed 04 novel"]
+    }
+  ]
+}

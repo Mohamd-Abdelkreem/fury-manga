@@ -1,0 +1,33 @@
+{
+  "path": "/discover?type=manga&sort=title-desc",
+  "headings": [
+    "قائمة المانجا",
+    "تعذّر تحميل المحتوى",
+    "روابط سريعة",
+    "الدعم",
+    "المجتمع"
+  ],
+  "paragraphs": ["المحتوى غير متاح مؤقتًا. يمكنك إعادة المحاولة."],
+  "selects": [
+    {
+      "id": "discover-category",
+      "name": "category",
+      "value": ""
+    },
+    {
+      "id": "discover-status",
+      "name": "status",
+      "value": ""
+    },
+    {
+      "id": "discover-type",
+      "name": "type",
+      "value": "manga"
+    },
+    {
+      "id": "discover-sort",
+      "name": "sort",
+      "value": "title-desc"
+    }
+  ]
+}

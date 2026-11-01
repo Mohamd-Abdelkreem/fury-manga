@@ -14,7 +14,8 @@
 }
 
 /* Group hover: show arrows on section hover */
-.section:hover .navArrow {
+.section:hover .navArrow,
+.section:focus-within .navArrow {
   opacity: 1;
 }
 

@@ -1,0 +1,36 @@
+{
+  "outcome": "tasks_appended",
+  "task": "T083",
+  "requirements": 33,
+  "successCriteria": 6,
+  "storyScenarios": 24,
+  "evidenceGroups": 6,
+  "constitutionPrinciples": 9,
+  "before": {
+    "treeSha256": "fcbe2ffcd910569177c2b724a99f6de95b82f069e0d258d7b175ae10774adf93",
+    "fileCount": 1213,
+    "focusHashes": {
+      ".specify/feature.json": "c08a2f35e886c973caf9fb7c7e28c3a5c28f8cfbff2b21403331f1c033e7470d",
+      ".specify/memory/constitution.md": "7045832ea5da482a98c496952fc4eedd48a04e97fecb489668d2597d85f77d92",
+      "specs/006-public-catalog-discovery-seo/spec.md": "bea4e3b4c595a9eeb539acf3bf6485636cd019dfdb966f570f98ba435c2dbb0a",
+      "specs/006-public-catalog-discovery-seo/plan.md": "6564925c57a46f29b62f8259635a9a3720e947836f8825e222517166e171a9d3",
+      "specs/006-public-catalog-discovery-seo/tasks.md": "76d63fffbc5a75eebe3b06d8b0541d3379eb3696d4b3746da21ed16462861a1d"
+    }
+  },
+  "after": {
+    "treeSha256": "1c570ef357f37dd33389dc01c274db35fe6d413cda422e099d54e688f716e3e0",
+    "fileCount": 1213,
+    "focusHashes": {
+      ".specify/feature.json": "c08a2f35e886c973caf9fb7c7e28c3a5c28f8cfbff2b21403331f1c033e7470d",
+      ".specify/memory/constitution.md": "7045832ea5da482a98c496952fc4eedd48a04e97fecb489668d2597d85f77d92",
+      "specs/006-public-catalog-discovery-seo/spec.md": "bea4e3b4c595a9eeb539acf3bf6485636cd019dfdb966f570f98ba435c2dbb0a",
+      "specs/006-public-catalog-discovery-seo/plan.md": "6564925c57a46f29b62f8259635a9a3720e947836f8825e222517166e171a9d3",
+      "specs/006-public-catalog-discovery-seo/tasks.md": "56b60476d9694d73b42cf071d2a3d7279d978f4022556087cf89455fee8c7951"
+    }
+  },
+  "onlyTasksChanged": true,
+  "applicationChecksRun": false,
+  "applicationEdits": false,
+  "oldTaskContentOrMarkersEdited": false,
+  "prerequisiteLaunch": "Direct executable bit absent; bash runs the same paths-only script without chmod or mutation."
+}

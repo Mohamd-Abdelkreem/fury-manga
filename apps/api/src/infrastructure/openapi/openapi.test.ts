@@ -18,6 +18,13 @@ const expectedPaths = [
   "/health/live",
   "/health/ready",
   "/openapi.json",
+  "/content/catalog/works/{workSlug}",
+  "/content/works/{workSlug}/background",
+  "/content/catalog/sitemap-works",
+  "/content/catalog/home",
+  "/content/catalog/works",
+  "/content/catalog/categories",
+  "/content/works/{workSlug}/cover",
   "/content/works",
   "/content/works/{workSlug}",
   "/content/works/{workSlug}/chapters",
@@ -180,6 +187,92 @@ const responseCodeEnum = (
 };
 
 describe("OpenAPI document", () => {
+  it("documents a complete anonymous no-query sitemap slug projection", () => {
+    const document = buildOpenApiDocument();
+    const operation = document.paths?.["/content/catalog/sitemap-works"]?.get;
+    expect(operation?.security).toBeUndefined();
+    expect(operation?.parameters ?? []).toEqual([]);
+    for (const status of ["200", "400", "429", "500", "503"])
+      expect(operation?.responses?.[status]).toHaveProperty(
+        "headers.Cache-Control",
+      );
+    const sitemap = JSON.stringify(
+      document.components?.schemas?.["CatalogSitemapData"],
+    );
+    expect(sitemap).toContain("slug");
+    expect(sitemap).not.toContain("workId");
+    expect(sitemap).not.toContain("cursor");
+  });
+  it("documents anonymous detail/background without changing old public Chapter metadata", () => {
+    const document = buildOpenApiDocument();
+    for (const path of [
+      "/content/catalog/works/{workSlug}",
+      "/content/works/{workSlug}/background",
+    ]) {
+      const operation = document.paths?.[path]?.get;
+      expect(operation?.security).toBeUndefined();
+      for (const status of ["200", "400", "404", "429", "500", "503"])
+        expect(operation?.responses?.[status]).toHaveProperty(
+          "headers.Cache-Control",
+        );
+    }
+    expect(document.components?.schemas?.["CatalogWorkDetail"]).toHaveProperty(
+      "properties.synopsis",
+    );
+    expect(
+      document.components?.schemas?.["CatalogWorkDetail"],
+    ).not.toHaveProperty("properties.coverAssetId");
+    expect(document.components?.schemas?.["PublicChapter"]).not.toHaveProperty(
+      "properties.textContent",
+    );
+  });
+  it("documents the anonymous home allowlist and strict no-query boundary", () => {
+    const document = buildOpenApiDocument();
+    const operation = document.paths?.["/content/catalog/home"]?.get;
+    expect(operation?.security).toBeUndefined();
+    expect(operation?.parameters ?? []).toEqual([]);
+    for (const status of ["200", "400", "429", "500", "503"])
+      expect(operation?.responses?.[status]).toHaveProperty(
+        "headers.Cache-Control",
+      );
+    const home = document.components?.schemas?.["CatalogHomeData"];
+    expect(home).toHaveProperty("properties.featured");
+    expect(home).toHaveProperty("properties.suggestions");
+    expect(home).not.toHaveProperty("properties.trending");
+  });
+  it("documents public catalog and cover authority, shapes, failures and binary headers", () => {
+    const document = buildOpenApiDocument();
+    for (const path of [
+      "/content/catalog/works",
+      "/content/catalog/categories",
+      "/content/works/{workSlug}/cover",
+    ]) {
+      const operation = document.paths?.[path]?.get;
+      expect(operation?.security).toBeUndefined();
+      expect(operation?.responses).toHaveProperty("200");
+      for (const status of ["400", "429", "500", "503"])
+        expect(operation?.responses).toHaveProperty(status);
+      expect(operation?.responses?.["200"]).toHaveProperty(
+        "headers.Cache-Control",
+      );
+    }
+    expect(
+      document.paths?.["/content/works/{workSlug}/cover"]?.get?.responses?.[
+        "200"
+      ],
+    ).toHaveProperty("content.image/webp");
+    expect(document.components?.schemas?.["CatalogWork"]).toHaveProperty(
+      "properties.coverPath",
+    );
+    expect(document.components?.schemas?.["CatalogWork"]).not.toHaveProperty(
+      "properties.id",
+    );
+    expect(document.paths?.["/content/catalog/works"]?.get?.parameters).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: "q", in: "query" }),
+      ]),
+    );
+  });
   it("documents bounded Chapter list filters and summary-only output", () => {
     const document = buildOpenApiDocument();
     const operation =
@@ -297,6 +390,34 @@ describe("OpenAPI document", () => {
     });
   });
 
+  it("documents implicit public HEAD authority and failure headers without response bodies", () => {
+    const document = buildOpenApiDocument();
+    const paths = Object.entries(document.paths ?? {}).filter(
+      ([path]) =>
+        path.startsWith("/content/") && !path.startsWith("/content/admin/"),
+    );
+    expect(paths).toHaveLength(11);
+    for (const [, item] of paths) {
+      expect(item.head?.parameters).toEqual(item.get?.parameters);
+      expect(item.head?.security).toEqual(item.get?.security);
+      expect(Object.keys(item.head?.responses ?? {})).toEqual(
+        Object.keys(item.get?.responses ?? {}),
+      );
+      expect(item.head?.responses).toHaveProperty("403");
+      for (const response of Object.values(item.head?.responses ?? {})) {
+        expect(response).not.toHaveProperty("content");
+        expect(response).toHaveProperty(
+          "headers.Cache-Control.schema.const",
+          "no-store",
+        );
+      }
+    }
+    expect(document.paths?.["/content/admin/works"]?.head).toBeUndefined();
+    expect(
+      document.paths?.["/media/assets/{assetId}/content"]?.head,
+    ).toBeUndefined();
+  });
+
   it("does not advertise the retired account phone field", () => {
     expect(JSON.stringify(buildOpenApiDocument())).not.toContain('"phone"');
   });
@@ -316,7 +437,13 @@ describe("OpenAPI document", () => {
   it("documents the exact P01 operation set with its authority and statuses", () => {
     const document = buildOpenApiDocument();
     const actualOperations = Object.entries(document.paths ?? {})
-      .filter(([path]) => path.startsWith("/content"))
+      .filter(
+        ([path]) =>
+          path.startsWith("/content") &&
+          !path.startsWith("/content/catalog/") &&
+          !path.endsWith("/cover") &&
+          !path.endsWith("/background"),
+      )
       .flatMap(([path, item]) =>
         ["get", "post", "patch", "put", "delete"].flatMap((method) =>
           Object.hasOwn(item, method) ? [[path, method]] : [],
@@ -387,6 +514,7 @@ describe("OpenAPI document", () => {
       type: "string",
       enum: [
         "CONTENT_CONFLICT",
+        "CONTENT_SLUG_CONFLICT",
         "CONTENT_IMMUTABLE",
         "CONTENT_TYPE_CONFLICT",
         "CONTENT_TRANSITION_CONFLICT",

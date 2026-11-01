@@ -1,0 +1,40 @@
+{
+  "executionDate": "2026-11-01",
+  "browser": "HeadlessChrome/156.0.0.0 on macOS",
+  "session": "fury-remediation-20261101",
+  "scope": "Existing fixture-backed home presentation; no live catalog or authenticated browser acceptance",
+  "home": [
+    {
+      "url": "/",
+      "lang": "ar",
+      "dir": "rtl",
+      "viewport": 320,
+      "width": 320,
+      "primaryLinks": ["/", "/categories", "/discover", "/stories"]
+    },
+    {
+      "url": "/",
+      "lang": "ar",
+      "dir": "rtl",
+      "viewport": 1280,
+      "width": 1280,
+      "primaryLinks": ["/", "/categories", "/discover", "/stories"]
+    }
+  ],
+  "firstTabFocus": {
+    "focusedTag": "A",
+    "focusedHref": "/",
+    "outlineStyle": "solid"
+  },
+  "reader": {
+    "path": "/story/1/chapter/2",
+    "observedState": "Existing connection-error alert and retry button; API session bootstrap endpoint unavailable",
+    "loginRedirectVerified": false,
+    "readerAuthorizationVerifiedByThisBrowserRun": false
+  },
+  "notices": [
+    "ERR_CONNECTION_REFUSED for isolated API port 4315 (no manual API runtime started)",
+    "Existing unused CSS preload warnings"
+  ],
+  "cleanup": "Named browser closed; owned Next server stopped and port 4316/browser PID verified absent"
+}

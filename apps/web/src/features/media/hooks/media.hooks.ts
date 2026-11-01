@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { MEDIA_SOURCE_BYTE_LIMITS } from "@fury/contracts";
 import type {
   MediaAssetDto,
   MediaClass,
@@ -480,6 +481,15 @@ const useMediaCandidate = (
       return;
     }
     clear();
+    if (file.size > MEDIA_SOURCE_BYTE_LIMITS[mediaClass] || file.size === 0) {
+      setState({
+        ...initialCandidate,
+        phase: "error",
+        errorCode:
+          file.size === 0 ? "MEDIA_INVALID_FILE" : "MEDIA_LIMIT_EXCEEDED",
+      });
+      return;
+    }
     current.current.selectedFile = file;
     current.current.previewUrl = URL.createObjectURL(file);
     await uploadSelectedFile(file);

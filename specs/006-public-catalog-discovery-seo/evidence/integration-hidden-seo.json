@@ -1,0 +1,85 @@
+{
+  "passed": true,
+  "reads": [
+    {
+      "slug": "browser-illustrated",
+      "agent": "Mozilla/5.0",
+      "status": 200,
+      "title": ["العمل غير موجود | Fury"],
+      "robots": ["noindex", "noindex, nofollow"],
+      "savedTitleAndSocialImageAbsent": true
+    },
+    {
+      "slug": "browser-illustrated",
+      "agent": "Twitterbot/1.0",
+      "status": 200,
+      "title": ["العمل غير موجود | Fury"],
+      "robots": ["noindex, nofollow", "noindex"],
+      "savedTitleAndSocialImageAbsent": true
+    },
+    {
+      "slug": "browser-illustrated",
+      "projection": "/content/catalog/works/",
+      "status": 404
+    },
+    {
+      "slug": "browser-illustrated",
+      "projection": "/content/works/",
+      "status": 404
+    },
+    {
+      "slug": "browser-text",
+      "agent": "Mozilla/5.0",
+      "status": 200,
+      "title": ["العمل غير موجود | Fury"],
+      "robots": ["noindex", "noindex, nofollow"],
+      "savedTitleAndSocialImageAbsent": true
+    },
+    {
+      "slug": "browser-text",
+      "agent": "Twitterbot/1.0",
+      "status": 200,
+      "title": ["العمل غير موجود | Fury"],
+      "robots": ["noindex, nofollow", "noindex"],
+      "savedTitleAndSocialImageAbsent": true
+    },
+    {
+      "slug": "browser-text",
+      "projection": "/content/catalog/works/",
+      "status": 404
+    },
+    {
+      "slug": "browser-text",
+      "projection": "/content/works/",
+      "status": 404
+    },
+    {
+      "slug": "unknown-p05-work",
+      "agent": "Mozilla/5.0",
+      "status": 200,
+      "title": ["العمل غير موجود | Fury"],
+      "robots": ["noindex", "noindex, nofollow"],
+      "savedTitleAndSocialImageAbsent": true
+    },
+    {
+      "slug": "unknown-p05-work",
+      "agent": "Twitterbot/1.0",
+      "status": 200,
+      "title": ["العمل غير موجود | Fury"],
+      "robots": ["noindex, nofollow", "noindex"],
+      "savedTitleAndSocialImageAbsent": true
+    },
+    {
+      "slug": "unknown-p05-work",
+      "projection": "/content/catalog/works/",
+      "status": 404
+    },
+    {
+      "slug": "unknown-p05-work",
+      "projection": "/content/works/",
+      "status": 404
+    }
+  ],
+  "sitemapUrls": 46,
+  "hiddenAndUnknownParity": true
+}

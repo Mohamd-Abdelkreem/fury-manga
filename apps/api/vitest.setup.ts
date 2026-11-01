@@ -1,3 +1,8 @@
+import { realpathSync } from "node:fs";
+import { tmpdir } from "node:os";
+
+// Test fixtures need physical paths; production deliberately rejects symlink roots.
+process.env["TMPDIR"] = realpathSync(tmpdir());
 process.env["NODE_ENV"] = "test";
 process.env["DATABASE_URL"] =
   process.env["DATABASE_URL"] ??

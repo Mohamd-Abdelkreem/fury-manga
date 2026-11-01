@@ -1,11 +1,26 @@
 import type { PaginationQuery } from "../../core/pagination/pagination.js";
 import type {
+  CatalogWorkListQuery,
+  CatalogCategoryListQuery,
   AdminChapterListQuery,
   AdminWorkListQuery,
 } from "@fury/contracts";
-import { MediaAssetStatus, Prisma, PublicationStatus } from "@fury/database";
+import {
+  MediaAssetStatus,
+  MediaClass,
+  MediaReferenceSlot,
+  MediaScope,
+  Prisma,
+  PublicationStatus,
+} from "@fury/database";
 
 import {
+  CATALOG_WORK_DETAIL_SELECT,
+  type CatalogWorkDetailRecord,
+  CATALOG_WORK_SELECT,
+  CATALOG_CATEGORY_SELECT,
+  type CatalogWorkRecord,
+  type CatalogCategoryRecord,
   CATEGORY_SELECT,
   CHAPTER_SELECT,
   CHAPTER_SUMMARY_SELECT,
@@ -27,6 +42,8 @@ import {
   toDatabaseWorkType,
   type WorkReadinessInput,
 } from "./content.rules.js";
+
+import type { PublicContentReadClient } from "./content.types.js";
 
 export type ContentReadClient = Pick<
   Prisma.TransactionClient,
@@ -91,7 +108,7 @@ export const readWorkReadiness = async (
   record: WorkRecord,
 ): Promise<WorkReadinessInput> => {
   const coverAssetId = record.mediaReferences.find(
-    ({ slot }) => slot === "WORK_COVER",
+    ({ slot }) => slot === MediaReferenceSlot.WORK_COVER,
   )?.assetId;
   const availableCover =
     coverAssetId === undefined
@@ -100,8 +117,8 @@ export const readWorkReadiness = async (
           where: {
             id: coverAssetId,
             status: MediaAssetStatus.AVAILABLE,
-            mediaClass: "WORK_COVER",
-            scope: "ADMIN",
+            mediaClass: MediaClass.WORK_COVER,
+            scope: MediaScope.ADMIN,
           },
           select: { id: true },
         });
@@ -407,23 +424,15 @@ export const readChapterSummaryReadiness = async (
   return new Map(rows.map(({ id, ready }) => [id, ready]));
 };
 
-export const PUBLIC_READY_WORK_WHERE = {
-  publicationStatus: PublicationStatus.PUBLISHED,
-  synopsis: { not: null },
-  author: { not: null },
-  categories: { some: { category: { enabled: true } } },
-  mediaReferences: {
-    some: {
-      slot: "WORK_COVER",
-      retiredAt: null,
-      asset: {
-        mediaClass: "WORK_COVER",
-        scope: "ADMIN",
-        status: MediaAssetStatus.AVAILABLE,
-      },
-    },
-  },
-} satisfies Prisma.WorkWhereInput;
+const PUBLIC_READY_WORK_SQL = Prisma.sql`
+  w.publication_status = 'published'
+  AND w.synopsis IS NOT NULL AND w.author IS NOT NULL
+  AND EXISTS (SELECT 1 FROM work_categories wc JOIN categories category ON category.id = wc.category_id
+    WHERE wc.work_id = w.id AND category.enabled)
+  AND EXISTS (SELECT 1 FROM media_references reference JOIN media_assets asset ON asset.id = reference.asset_id
+    WHERE reference.work_id = w.id AND reference.slot = 'work_cover' AND reference.retired_at IS NULL
+      AND asset.media_class = 'work_cover' AND asset.scope = 'admin' AND asset.status = 'available')
+`;
 
 const PUBLIC_READY_CHAPTER_SQL = Prisma.sql`
   c.publication_status = 'published'
@@ -432,29 +441,246 @@ const PUBLIC_READY_CHAPTER_SQL = Prisma.sql`
   AND ${CHAPTER_READY_SQL}
 `;
 
-export const listPublicWorks = (
-  database: ContentReadClient,
+export const countPublicWorks = async (
+  transaction: PublicContentReadClient,
+): Promise<number> => {
+  const rows = await transaction.$queryRaw<
+    { total: bigint }[]
+  >`SELECT count(*) AS total FROM works w WHERE ${PUBLIC_READY_WORK_SQL}`;
+  return Number(rows[0]?.total ?? 0n);
+};
+
+export const listPublicWorks = async (
+  transaction: PublicContentReadClient,
   pagination: PaginationQuery,
-): Promise<PublicWorkRecord[]> =>
-  database.work.findMany({
-    where: PUBLIC_READY_WORK_WHERE,
-    orderBy: [{ publishedAt: "desc" }, { id: "asc" }],
+): Promise<PublicWorkRecord[]> => {
+  const ids = await transaction.$queryRaw<{ id: string }[]>`
+    SELECT w.id FROM works w WHERE ${PUBLIC_READY_WORK_SQL}
+    ORDER BY w.published_at DESC, w.id ASC OFFSET ${pagination.skip} LIMIT ${pagination.take}
+  `;
+  const rows = await transaction.work.findMany({
+    where: { id: { in: ids.map(({ id }) => id) } },
+    select: PUBLIC_WORK_SELECT,
+  });
+  return orderSelectedRows(ids, rows);
+};
+
+const findPublicWorkId = async (
+  transaction: PublicContentReadClient,
+  slug: string,
+): Promise<string | undefined> => {
+  const ids = await transaction.$queryRaw<
+    { id: string }[]
+  >`SELECT w.id FROM works w WHERE ${PUBLIC_READY_WORK_SQL} AND w.slug = ${slug} LIMIT 1`;
+  return ids[0]?.id;
+};
+
+export const findPublicWork = async (
+  transaction: PublicContentReadClient,
+  slug: string,
+): Promise<PublicWorkRecord | null> => {
+  const id = await findPublicWorkId(transaction, slug);
+  return id === undefined
+    ? null
+    : transaction.work.findUnique({
+        where: { id },
+        select: PUBLIC_WORK_SELECT,
+      });
+};
+
+export const findCatalogWorkDetail = async (
+  transaction: PublicContentReadClient,
+  slug: string,
+): Promise<CatalogWorkDetailRecord | null> => {
+  const id = await findPublicWorkId(transaction, slug);
+  return id === undefined
+    ? null
+    : transaction.work.findUnique({
+        where: { id },
+        select: CATALOG_WORK_DETAIL_SELECT,
+      });
+};
+
+const orderSelectedRows = <T extends { id: string }>(
+  ids: readonly { id: string }[],
+  rows: T[],
+): T[] => {
+  const byId = new Map(rows.map((row) => [row.id, row]));
+  return ids.map(({ id }) => {
+    const row = byId.get(id);
+    if (row === undefined) throw new Error("Public content snapshot changed.");
+    return row;
+  });
+};
+
+const substringPattern = (search: string): string =>
+  `%${search.replace(/[\\%_]/gu, "\\$&")}%`;
+
+const catalogWorkWhere = (query: CatalogWorkListQuery): Prisma.Sql => {
+  const filters = [PUBLIC_READY_WORK_SQL];
+  if (query.q !== undefined) {
+    const pattern = substringPattern(query.q);
+    filters.push(
+      Prisma.sql`(w.title ILIKE ${pattern} OR w.alternative_title ILIKE ${pattern})`,
+    );
+  }
+  if (query.category !== undefined)
+    filters.push(Prisma.sql`EXISTS (
+    SELECT 1 FROM work_categories wc JOIN categories category ON category.id = wc.category_id
+    WHERE wc.work_id = w.id AND category.enabled AND category.slug = ${query.category})`);
+  if (query.view === "stories")
+    filters.push(Prisma.sql`w.type IN ('novel', 'text-story')`);
+  if (query.type !== undefined)
+    filters.push(Prisma.sql`w.type = ${query.type}::work_type`);
+  if (query.status !== undefined)
+    filters.push(Prisma.sql`w.story_status = ${query.status}::story_status`);
+  return Prisma.join(
+    filters.map((filter) => Prisma.sql`(${filter})`),
+    " AND ",
+  );
+};
+
+const catalogWorkOrder = (sort: CatalogWorkListQuery["sort"]): Prisma.Sql => {
+  switch (sort) {
+    case "newest":
+      return Prisma.sql`w.published_at DESC, w.id ASC`;
+    case "title-asc":
+      return Prisma.sql`w.title COLLATE "C" ASC, w.id ASC`;
+    case "title-desc":
+      return Prisma.sql`w.title COLLATE "C" DESC, w.id ASC`;
+    case "chapter-latest":
+      return Prisma.sql`(SELECT max(c.published_at) FROM chapters c
+      WHERE c.work_id = w.id AND ${PUBLIC_READY_CHAPTER_SQL}) DESC NULLS LAST, w.id ASC`;
+  }
+};
+
+export const listCatalogWorks = async (
+  transaction: PublicContentReadClient,
+  query: CatalogWorkListQuery,
+  pagination: PaginationQuery,
+): Promise<CatalogWorkRecord[]> => {
+  const ids = await transaction.$queryRaw<{ id: string }[]>`
+    SELECT w.id FROM works w WHERE ${catalogWorkWhere(query)}
+    ORDER BY ${catalogWorkOrder(query.sort)} OFFSET ${pagination.skip} LIMIT ${pagination.take}
+  `;
+  const rows = await transaction.work.findMany({
+    where: { id: { in: ids.map(({ id }) => id) } },
+    select: { id: true, ...CATALOG_WORK_SELECT },
+  });
+  return orderSelectedRows(ids, rows);
+};
+
+export const countCatalogWorks = async (
+  transaction: PublicContentReadClient,
+  query: CatalogWorkListQuery,
+): Promise<number> => {
+  const rows = await transaction.$queryRaw<
+    { total: bigint }[]
+  >`SELECT count(*) AS total FROM works w WHERE ${catalogWorkWhere(query)}`;
+  return Number(rows[0]?.total ?? 0n);
+};
+
+export const catalogCategoryWhere = (
+  query: CatalogCategoryListQuery,
+): Prisma.CategoryWhereInput => ({
+  enabled: true,
+  ...(query.q === undefined
+    ? {}
+    : {
+        displayName: {
+          contains: substringPattern(query.q).slice(1, -1),
+          mode: "insensitive",
+        },
+      }),
+});
+
+export const listCatalogCategories = (
+  transaction: PublicContentReadClient,
+  query: CatalogCategoryListQuery,
+  pagination: PaginationQuery,
+): Promise<CatalogCategoryRecord[]> =>
+  transaction.category.findMany({
+    where: catalogCategoryWhere(query),
+    orderBy: [{ displayPosition: "asc" }, { id: "asc" }],
     skip: pagination.skip,
     take: pagination.take,
-    select: PUBLIC_WORK_SELECT,
+    select: CATALOG_CATEGORY_SELECT,
   });
 
-export const findPublicWork = (
-  database: ContentReadClient,
-  slug: string,
-): Promise<PublicWorkRecord | null> =>
-  database.work.findFirst({
-    where: { AND: [PUBLIC_READY_WORK_WHERE, { slug }] },
-    select: PUBLIC_WORK_SELECT,
+export const listFeaturedCatalogWorks = async (
+  transaction: PublicContentReadClient,
+): Promise<CatalogWorkRecord[]> => {
+  const ids = await transaction.$queryRaw<{ id: string }[]>`
+    SELECT w.id FROM works w WHERE ${PUBLIC_READY_WORK_SQL} AND w.featured_home
+    ORDER BY w.featured_order ASC, w.id ASC LIMIT 5
+  `;
+  const rows = await transaction.work.findMany({
+    where: { id: { in: ids.map(({ id }) => id) } },
+    select: { id: true, ...CATALOG_WORK_SELECT },
   });
+  return orderSelectedRows(ids, rows);
+};
+
+export const listPopulatedCatalogCategories = (
+  transaction: PublicContentReadClient,
+): Promise<CatalogCategoryRecord[]> => transaction.$queryRaw`
+  SELECT category.slug, category.display_name AS "displayName" FROM categories category
+  WHERE category.enabled AND EXISTS (SELECT 1 FROM work_categories wc JOIN works w ON w.id = wc.work_id
+    WHERE wc.category_id = category.id AND ${PUBLIC_READY_WORK_SQL})
+  ORDER BY category.display_position ASC, category.id ASC LIMIT 3
+`;
+
+export const listLatestCatalogReleases = async (
+  transaction: PublicContentReadClient,
+): Promise<{ work: CatalogWorkRecord; chapter: PublicChapterRecord }[]> => {
+  const ids = await transaction.$queryRaw<{ id: string; workId: string }[]>`
+    SELECT c.id, c.work_id AS "workId" FROM chapters c JOIN works w ON w.id = c.work_id
+    WHERE ${PUBLIC_READY_WORK_SQL} AND ${PUBLIC_READY_CHAPTER_SQL}
+    ORDER BY c.published_at DESC, c.id ASC LIMIT 12
+  `;
+  const workRecords = await transaction.work.findMany({
+    where: { id: { in: [...new Set(ids.map(({ workId }) => workId))] } },
+    select: { id: true, ...CATALOG_WORK_SELECT },
+  });
+  const chapterRecords = await transaction.chapter.findMany({
+    where: { id: { in: ids.map(({ id }) => id) } },
+    select: PUBLIC_CHAPTER_SELECT,
+  });
+  const worksById = new Map(workRecords.map((work) => [work.id, work]));
+  const chaptersById = new Map(
+    chapterRecords.map((chapter) => [chapter.id, chapter]),
+  );
+  return ids.map(({ id, workId }) => {
+    const work = worksById.get(workId);
+    const chapter = chaptersById.get(id);
+    if (work === undefined || chapter === undefined)
+      throw new Error("Public release snapshot changed.");
+    return { work, chapter };
+  });
+};
+
+export const findPublicWorkImage = async (
+  transaction: PublicContentReadClient,
+  slug: string,
+  slot: "WORK_COVER" | "WORK_BACKGROUND",
+) => {
+  const work = await findPublicWork(transaction, slug);
+  if (work === null) return null;
+  return transaction.mediaAsset.findFirst({
+    where: {
+      mediaClass: slot,
+      scope: MediaScope.ADMIN,
+      status: MediaAssetStatus.AVAILABLE,
+      references: {
+        some: { workId: work.id, slot, retiredAt: null },
+      },
+    },
+    select: { id: true, contentType: true, byteLength: true, sha256: true },
+  });
+};
 
 export const countPublicChapters = async (
-  transaction: Prisma.TransactionClient,
+  transaction: PublicContentReadClient,
   workId: string,
 ): Promise<number> => {
   const rows = await transaction.$queryRaw<{ total: bigint }[]>`
@@ -465,7 +691,7 @@ export const countPublicChapters = async (
 };
 
 export const listPublicChapters = async (
-  transaction: Prisma.TransactionClient,
+  transaction: PublicContentReadClient,
   workId: string,
   pagination: PaginationQuery,
 ): Promise<PublicChapterRecord[]> => {
@@ -490,7 +716,7 @@ export const listPublicChapters = async (
 };
 
 export const findPublicChapter = async (
-  transaction: Prisma.TransactionClient,
+  transaction: PublicContentReadClient,
   workId: string,
   number: number,
 ): Promise<PublicChapterRecord | null> => {
@@ -507,3 +733,46 @@ export const findPublicChapter = async (
     select: PUBLIC_CHAPTER_SELECT,
   });
 };
+
+export const findLatestPublicChapter = async (
+  transaction: PublicContentReadClient,
+  workId: string,
+): Promise<PublicChapterRecord | null> => {
+  const ids = await transaction.$queryRaw<
+    { id: string }[]
+  >`SELECT c.id FROM chapters c WHERE c.work_id = ${workId}::uuid AND ${PUBLIC_READY_CHAPTER_SQL} ORDER BY c.number DESC, c.id ASC LIMIT 1`;
+  const id = ids[0]?.id;
+  return id === undefined
+    ? null
+    : transaction.chapter.findUnique({
+        where: { id },
+        select: PUBLIC_CHAPTER_SELECT,
+      });
+};
+
+export const listSimilarCatalogWorks = async (
+  transaction: PublicContentReadClient,
+  workId: string,
+): Promise<CatalogWorkRecord[]> => {
+  const ids = await transaction.$queryRaw<{ id: string }[]>`
+    SELECT w.id FROM works w WHERE ${PUBLIC_READY_WORK_SQL} AND w.id <> ${workId}::uuid
+      AND EXISTS (SELECT 1 FROM work_categories wc JOIN work_categories current_membership ON current_membership.category_id = wc.category_id
+        JOIN categories category ON category.id = wc.category_id
+        WHERE wc.work_id = w.id AND current_membership.work_id = ${workId}::uuid AND category.enabled)
+    ORDER BY w.published_at DESC, w.id ASC LIMIT 6
+  `;
+  const rows = await transaction.work.findMany({
+    where: { id: { in: ids.map(({ id }) => id) } },
+    select: { id: true, ...CATALOG_WORK_SELECT },
+  });
+  return orderSelectedRows(ids, rows);
+};
+
+export const listCatalogSitemapBatch = (
+  transaction: PublicContentReadClient,
+  afterId: string | undefined,
+): Promise<{ id: string; slug: string }[]> => transaction.$queryRaw`
+  SELECT w.id, w.slug FROM works w WHERE ${PUBLIC_READY_WORK_SQL}
+    ${afterId === undefined ? Prisma.empty : Prisma.sql`AND w.id > ${afterId}::uuid`}
+  ORDER BY w.id ASC LIMIT 100
+`;

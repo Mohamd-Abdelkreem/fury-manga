@@ -1,0 +1,24 @@
+{
+  "kind": "actual installed Turbo dry-run build cache boundary",
+  "runs": [
+    {
+      "publicFixturePort": 4315,
+      "hash": "eac63efd48583d3b",
+      "specifiedBuildEnvironment": {
+        "env": ["NEXT_PUBLIC_API_URL"],
+        "passThroughEnv": null
+      }
+    },
+    {
+      "publicFixturePort": 4317,
+      "hash": "87422ca84e6443f3",
+      "specifiedBuildEnvironment": {
+        "env": ["NEXT_PUBLIC_API_URL"],
+        "passThroughEnv": null
+      }
+    }
+  ],
+  "publicOriginChangesBuildHash": true,
+  "runtimePassThroughKeys": ["SERVER_API_URL", "SITE_ORIGIN", "COMMUNITY_URL"],
+  "privateValuesRetained": false
+}

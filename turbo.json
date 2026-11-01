@@ -2,7 +2,13 @@
   "$schema": "https://turborepo.dev/schema.json",
   "ui": "tui",
   "globalDependencies": [".env", ".env.*", "!.env.example"],
-  "globalPassThroughEnv": ["DATABASE_URL", "NEXT_PUBLIC_API_URL"],
+  "globalPassThroughEnv": [
+    "DATABASE_URL",
+    "NEXT_PUBLIC_API_URL",
+    "SERVER_API_URL",
+    "SITE_ORIGIN",
+    "COMMUNITY_URL"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
@@ -11,7 +17,8 @@
         "!.next/cache/**",
         "dist/**",
         "src/generated/prisma/**"
-      ]
+      ],
+      "env": ["NEXT_PUBLIC_API_URL"]
     },
     "dev": {
       "cache": false,

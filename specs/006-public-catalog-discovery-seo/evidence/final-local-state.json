@@ -1,0 +1,91 @@
+{
+  "date": "2026-10-31",
+  "boundary": "Owned disposable synthetic PostgreSQL/Express fixture only",
+  "category": {
+    "id": "09200a11-9cdc-417f-a4a3-4f2e18225a55",
+    "displayName": "Closeout-browser-category",
+    "slug": "closeout-browser-category",
+    "enabled": true,
+    "displayPosition": 2
+  },
+  "works": [
+    {
+      "slug": "closeout-manga",
+      "type": "MANGA",
+      "publicationStatus": "PUBLISHED",
+      "_count": {
+        "chapters": 1
+      }
+    },
+    {
+      "slug": "closeout-text-story",
+      "type": "TEXT_STORY",
+      "publicationStatus": "PUBLISHED",
+      "_count": {
+        "chapters": 1
+      }
+    }
+  ],
+  "counts": {
+    "publicationEvents": 4,
+    "mediaReferenceEvents": 3,
+    "assets": 2
+  },
+  "getResults": [
+    {
+      "path": "/content/catalog/works",
+      "status": 200,
+      "cacheControl": "no-store",
+      "requestIdPresent": true
+    },
+    {
+      "path": "/content/catalog/home",
+      "status": 200,
+      "cacheControl": "no-store",
+      "requestIdPresent": true
+    },
+    {
+      "path": "/content/catalog/works/closeout-manga",
+      "status": 200,
+      "cacheControl": "no-store",
+      "requestIdPresent": true
+    },
+    {
+      "path": "/content/catalog/works/closeout-text-story",
+      "status": 200,
+      "cacheControl": "no-store",
+      "requestIdPresent": true
+    },
+    {
+      "path": "/content/catalog/sitemap-works",
+      "status": 200,
+      "cacheControl": "no-store",
+      "requestIdPresent": true
+    },
+    {
+      "path": "/content/works/closeout-manga/cover",
+      "status": 200,
+      "cacheControl": "no-store",
+      "requestIdPresent": true
+    },
+    {
+      "path": "/content/works/closeout-manga/background",
+      "status": 404,
+      "cacheControl": "no-store",
+      "requestIdPresent": true
+    },
+    {
+      "path": "/content/catalog/works/absent-closeout",
+      "status": 404,
+      "cacheControl": "no-store",
+      "requestIdPresent": true
+    },
+    {
+      "path": "/content/catalog/works?unknown=1",
+      "status": 400,
+      "cacheControl": "no-store",
+      "requestIdPresent": true
+    }
+  ],
+  "unchangedAfterGets": true
+}

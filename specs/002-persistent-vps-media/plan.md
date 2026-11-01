@@ -131,3 +131,58 @@ Affected controls distinguish first loading, empty and filtered-empty asset list
 Focused implementation commands are `pnpm --filter @fury/contracts test`, `pnpm --filter @fury/database test`, `pnpm --filter @fury/database test:integration`, `pnpm --filter @fury/api test`, `pnpm --filter @fury/api test:integration`, `pnpm --filter @fury/web test`, and package lint/type checks for each touched package. Use `pnpm test:web-routes` for route integrity and `pnpm exec prettier --check` on changed docs. Run root `pnpm verify` once all P02 producer/consumer/migration/UI changes are integrated and Docker/Testcontainers are available, and before phase acceptance; its format, schema, lint, type, unit, integration, build and diff gates must not be weakened. Critical changed async/race frontend suites get five separate shuffled runs with recorded seed per F30. No application suites are claimed as run in this planning step.
 
 **Documentation and review stop:** Update `.env.example` with `MEDIA_STORAGE_ROOT` and bounded config, README local setup/limitations, `PROJECT_REFERENCE.md` current architecture only after behavior exists, OpenAPI, and a scoped backup/restore runbook. Before implementation confirm P00/P01 gates, obtain accepted P02 reviewer disposition, and review representative artwork against proposed limits. At P02 review report actual commands/results, migration/rollback/restart/restore/browser/staging evidence, warnings, unverified production/device boundaries, and changed paths. Stop after this design/remediation scope; code, migrations, deployment, commit, push and external messages require their own later scope/authority.
+
+## Accepted implementation overlay — 2026-11-01
+
+The spec's dated owner overlay governs numerical limits, animation and current
+persisted-preview loading; older unconditional animation/artwork gates are historical.
+Implement existing P02 T081–T085 sequentially; no new feature or schema migration.
+
+Backend T081/T082: retain shared wire output MIME JPEG/PNG/WebP because GIF/animated
+WebP canonicalizes to lossless animated WebP. Audit producer/consumer/OpenAPI type
+allowlists and verify actual bytes, not only MIME. Strict container checks precede
+full animated decode; reject APNG415. Initial safety policy to measure:100 frames,
+24M canvas pixels,32M aggregate decoded pixels,10s animated processing and2 active
+validation jobs per API process. Fail excess capacity safely rather than queue
+unbounded buffers. Static30s/24M behavior remains. No frame metadata column is needed.
+Use existing media storage/service/reference/attempt/reconciler, actual PostgreSQL
+and HTTP plus restart/rollback/replay/visibility tests. Expose existing private asset
+width/height/byteLength in admin Chapter page projections as optional compatibility
+fields, never public Chapter content; current producer populates available metadata.
+
+Frontend T083/T084 only after backend acceptance: source hints are class-specific.
+Existing private candidate and public Work image display must preserve animation
+and respect reduced motion through an ephemeral still display, never stored flattening.
+Keep byte transport in existing feature APIs/central client; pure scheduling in
+content model, network/resource ownership in content/media hooks, markup in the
+existing ChapterContentRenderer. Its real ChapterPreviewModal caller must consume it.
+No public asset URL for Chapter media, persistent protected-byte cache or alternate
+session stack. Chapter/actor/denial scope clears pending/ready resources and object URLs.
+
+Start with10-image initial window, advance10 around index5, maximum20 ahead;
+visible first,2 ordinary transfers (1 on slow/save-data), finite retained encoded
+and decoded-pixel budgets and distant release. Retain visible resources, prioritize
+jumps/reversal and avoid duplicated observer work. Budget bounds may reduce the
+window for large pages. Compare current eager preview with the implementation using
+the same persisted long dataset, actual request timestamps/bytes/concurrency, first
+useful image, boundary stalls, layout shifts and observable URL/resource retention.
+No fastest/device-memory claim; document measurement limits and actual policy tuning.
+
+T085: installed Sharp0.35.4/Next16 documentation plus meaningful unit/contract/real
+Express/PostgreSQL/filesystem/browser tests; five fresh shuffled critical frontend
+processes; affected lint/types/build, final root pnpm verify and separate convergence.
+Apply B05/B12/B20/B28/B33/B40/B45–54 and F01/F02/F04/F08/F24–31; perform
+clean-code-guard, test-guard, docs-guard and vercel-react-best-practices reviews.
+Restore original pointer, preserve pre-existing changes and remove only owned runtime.
+
+Implementation-review clarification (2026-11-01): processing capacity is transient
+503 MEDIA_PROCESSING_BUSY, not a false413 file-size failure. It is an explicitly
+rejected attempt with no retrievable asset; deliberate retry uses a new key.
+The adapter/attempt schema/OpenAPI and current candidate feedback agree. Two
+validation jobs are admitted per composition-owned processor (one API application
+per standard server process); no global multi-instance coordination is claimed.
+Sharp's10s active timeout applies to each metadata/encoding operation, excluding
+libuv queue wait; both native stages are bounded, so this is not a hard10s HTTP
+wall-clock guarantee. Encoded bytes,100 frames/24M canvas/32M aggregate pixels and
+finite admitted jobs bound pending processing. Stored playback duration/looping
+does not make server decoding repeat indefinitely.

@@ -1,0 +1,232 @@
+{
+  "kind": "owned disposable synthetic PostgreSQL and validated synthetic private media",
+  "container": "fury-p05-integration-20261101",
+  "works": [
+    {
+      "slug": "saved-manga-0",
+      "type": "manga",
+      "chapters": 27
+    },
+    {
+      "slug": "saved-manhwa-1",
+      "type": "manhwa",
+      "chapters": 1
+    },
+    {
+      "slug": "saved-manhua-2",
+      "type": "manhua",
+      "chapters": 1
+    },
+    {
+      "slug": "saved-comics-3",
+      "type": "comics",
+      "chapters": 1
+    },
+    {
+      "slug": "saved-novel-4",
+      "type": "novel",
+      "chapters": 27
+    },
+    {
+      "slug": "saved-text-story-5",
+      "type": "text-story",
+      "chapters": 1
+    },
+    {
+      "slug": "saved-manga-6",
+      "type": "manga",
+      "chapters": 0
+    },
+    {
+      "slug": "saved-manhwa-7",
+      "type": "manhwa",
+      "chapters": 0
+    },
+    {
+      "slug": "saved-manhua-8",
+      "type": "manhua",
+      "chapters": 0
+    },
+    {
+      "slug": "saved-comics-9",
+      "type": "comics",
+      "chapters": 0
+    },
+    {
+      "slug": "saved-novel-10",
+      "type": "novel",
+      "chapters": 0
+    },
+    {
+      "slug": "saved-text-story-11",
+      "type": "text-story",
+      "chapters": 0
+    },
+    {
+      "slug": "saved-manga-12",
+      "type": "manga",
+      "chapters": 0
+    },
+    {
+      "slug": "saved-manhwa-13",
+      "type": "manhwa",
+      "chapters": 0
+    },
+    {
+      "slug": "saved-manhua-14",
+      "type": "manhua",
+      "chapters": 0
+    },
+    {
+      "slug": "saved-comics-15",
+      "type": "comics",
+      "chapters": 0
+    },
+    {
+      "slug": "saved-novel-16",
+      "type": "novel",
+      "chapters": 0
+    },
+    {
+      "slug": "saved-text-story-17",
+      "type": "text-story",
+      "chapters": 0
+    },
+    {
+      "slug": "saved-manga-18",
+      "type": "manga",
+      "chapters": 0
+    },
+    {
+      "slug": "saved-manhwa-19",
+      "type": "manhwa",
+      "chapters": 0
+    },
+    {
+      "slug": "saved-manhua-20",
+      "type": "manhua",
+      "chapters": 0
+    },
+    {
+      "slug": "saved-comics-21",
+      "type": "comics",
+      "chapters": 0
+    },
+    {
+      "slug": "saved-novel-22",
+      "type": "novel",
+      "chapters": 0
+    },
+    {
+      "slug": "saved-text-story-23",
+      "type": "text-story",
+      "chapters": 0
+    },
+    {
+      "slug": "saved-manga-24",
+      "type": "manga",
+      "chapters": 0
+    },
+    {
+      "slug": "saved-manhwa-25",
+      "type": "manhwa",
+      "chapters": 0
+    },
+    {
+      "slug": "saved-manhua-26",
+      "type": "manhua",
+      "chapters": 0
+    },
+    {
+      "slug": "saved-comics-27",
+      "type": "comics",
+      "chapters": 0
+    },
+    {
+      "slug": "saved-novel-28",
+      "type": "novel",
+      "chapters": 0
+    },
+    {
+      "slug": "saved-text-story-29",
+      "type": "text-story",
+      "chapters": 0
+    },
+    {
+      "slug": "saved-manga-30",
+      "type": "manga",
+      "chapters": 0
+    },
+    {
+      "slug": "saved-manhwa-31",
+      "type": "manhwa",
+      "chapters": 0
+    },
+    {
+      "slug": "saved-manhua-32",
+      "type": "manhua",
+      "chapters": 0
+    },
+    {
+      "slug": "saved-comics-33",
+      "type": "comics",
+      "chapters": 0
+    },
+    {
+      "slug": "saved-novel-34",
+      "type": "novel",
+      "chapters": 0
+    },
+    {
+      "slug": "saved-text-story-35",
+      "type": "text-story",
+      "chapters": 0
+    },
+    {
+      "slug": "saved-manga-36",
+      "type": "manga",
+      "chapters": 0
+    },
+    {
+      "slug": "saved-manhwa-37",
+      "type": "manhwa",
+      "chapters": 0
+    },
+    {
+      "slug": "saved-manhua-38",
+      "type": "manhua",
+      "chapters": 0
+    },
+    {
+      "slug": "saved-comics-39",
+      "type": "comics",
+      "chapters": 0
+    },
+    {
+      "slug": "saved-novel-40",
+      "type": "novel",
+      "chapters": 0
+    },
+    {
+      "slug": "saved-text-story-41",
+      "type": "text-story",
+      "chapters": 0
+    }
+  ],
+  "categoryCount": 31,
+  "enabledCategories": 30,
+  "ownerArtworkAcceptance": false,
+  "provisioningCorrection": {
+    "initialSeedIntentEnabledCategories": 30,
+    "actualInitialEnabledCategories": 31,
+    "reason": "CategoryManagementService.createCategory always creates enabled; the unsupported seed enabled:false property was not an actual disable. The real administrator UI subsequently disabled the intended empty category.",
+    "observedAfterActualUiAuthoring": {
+      "works": 44,
+      "chapters": 60,
+      "categories": 34,
+      "enabledCategories": 33
+    },
+    "evidence": "integration-browser-category-state-corrected.json"
+  },
+  "enabledCategoriesClaimWasInitialIntent": true
+}

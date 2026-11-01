@@ -1,0 +1,212 @@
+{
+  "passed": true,
+  "uploads": [
+    {
+      "mediaClass": "work_cover",
+      "assetId": "e892b094-466e-4c1e-a806-33b61a33dcf3",
+      "normal": {
+        "alt": "معاينة رفع غلاف جديد",
+        "width": 600,
+        "height": 800,
+        "type": "image/webp",
+        "distinctColors": 3,
+        "samples": [
+          {
+            "ms": 33,
+            "pngFingerprint": "84c1d623"
+          },
+          {
+            "ms": 150,
+            "pngFingerprint": "b09fd76d"
+          },
+          {
+            "ms": 267,
+            "pngFingerprint": "60e1eed"
+          },
+          {
+            "ms": 383,
+            "pngFingerprint": "60e1eed"
+          },
+          {
+            "ms": 501,
+            "pngFingerprint": "b09fd76d"
+          },
+          {
+            "ms": 619,
+            "pngFingerprint": "60e1eed"
+          },
+          {
+            "ms": 734,
+            "pngFingerprint": "60e1eed"
+          },
+          {
+            "ms": 852,
+            "pngFingerprint": "84c1d623"
+          },
+          {
+            "ms": 968,
+            "pngFingerprint": "b09fd76d"
+          },
+          {
+            "ms": 1084,
+            "pngFingerprint": "60e1eed"
+          }
+        ]
+      },
+      "reduced": {
+        "alt": "معاينة رفع غلاف جديد",
+        "width": 600,
+        "height": 800,
+        "type": "image/png",
+        "distinctColors": 1,
+        "samples": [
+          {
+            "ms": 42,
+            "pngFingerprint": "84c1d623"
+          },
+          {
+            "ms": 158,
+            "pngFingerprint": "84c1d623"
+          },
+          {
+            "ms": 277,
+            "pngFingerprint": "84c1d623"
+          },
+          {
+            "ms": 392,
+            "pngFingerprint": "84c1d623"
+          },
+          {
+            "ms": 508,
+            "pngFingerprint": "84c1d623"
+          },
+          {
+            "ms": 625,
+            "pngFingerprint": "84c1d623"
+          },
+          {
+            "ms": 742,
+            "pngFingerprint": "84c1d623"
+          },
+          {
+            "ms": 861,
+            "pngFingerprint": "84c1d623"
+          },
+          {
+            "ms": 977,
+            "pngFingerprint": "84c1d623"
+          },
+          {
+            "ms": 1093,
+            "pngFingerprint": "84c1d623"
+          }
+        ]
+      }
+    },
+    {
+      "mediaClass": "work_background",
+      "assetId": "b0aedd99-d166-40b8-a501-bec44cbe65e4",
+      "normal": {
+        "alt": "معاينة رفع خلفية جديدة",
+        "width": 900,
+        "height": 500,
+        "type": "image/webp",
+        "distinctColors": 3,
+        "samples": [
+          {
+            "ms": 27,
+            "pngFingerprint": "84c1d623"
+          },
+          {
+            "ms": 145,
+            "pngFingerprint": "b09fd76d"
+          },
+          {
+            "ms": 260,
+            "pngFingerprint": "60e1eed"
+          },
+          {
+            "ms": 379,
+            "pngFingerprint": "60e1eed"
+          },
+          {
+            "ms": 494,
+            "pngFingerprint": "b09fd76d"
+          },
+          {
+            "ms": 613,
+            "pngFingerprint": "b09fd76d"
+          },
+          {
+            "ms": 730,
+            "pngFingerprint": "60e1eed"
+          },
+          {
+            "ms": 845,
+            "pngFingerprint": "84c1d623"
+          },
+          {
+            "ms": 963,
+            "pngFingerprint": "b09fd76d"
+          },
+          {
+            "ms": 1079,
+            "pngFingerprint": "60e1eed"
+          }
+        ]
+      },
+      "reduced": {
+        "alt": "معاينة رفع خلفية جديدة",
+        "width": 900,
+        "height": 500,
+        "type": "image/png",
+        "distinctColors": 1,
+        "samples": [
+          {
+            "ms": 36,
+            "pngFingerprint": "84c1d623"
+          },
+          {
+            "ms": 153,
+            "pngFingerprint": "84c1d623"
+          },
+          {
+            "ms": 271,
+            "pngFingerprint": "84c1d623"
+          },
+          {
+            "ms": 387,
+            "pngFingerprint": "84c1d623"
+          },
+          {
+            "ms": 503,
+            "pngFingerprint": "84c1d623"
+          },
+          {
+            "ms": 620,
+            "pngFingerprint": "84c1d623"
+          },
+          {
+            "ms": 735,
+            "pngFingerprint": "84c1d623"
+          },
+          {
+            "ms": 852,
+            "pngFingerprint": "84c1d623"
+          },
+          {
+            "ms": 969,
+            "pngFingerprint": "84c1d623"
+          },
+          {
+            "ms": 1086,
+            "pngFingerprint": "84c1d623"
+          }
+        ]
+      }
+    }
+  ],
+  "parentSaveStatus": 200,
+  "publication": "Actual existing published Work and references saved through the existing UI; no production data",
+  "publicImages": 2
+}

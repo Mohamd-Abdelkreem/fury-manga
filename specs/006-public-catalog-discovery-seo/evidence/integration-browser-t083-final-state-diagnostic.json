@@ -1,0 +1,20 @@
+{
+  "path": "/story/browser-illustrated",
+  "title": "Browser illustrated عمل | Fury",
+  "headings": ["تعذّر تحميل المحتوى", "روابط سريعة", "الدعم", "المجتمع"],
+  "resources": [
+    {
+      "path": "/api/v1/content/works/browser-illustrated/cover",
+      "rsc": false,
+      "duration": 11.5,
+      "responseStatus": 200
+    },
+    {
+      "path": "/api/v1/content/catalog/works/browser-illustrated",
+      "rsc": false,
+      "duration": 114.39999997615814,
+      "responseStatus": 404
+    }
+  ],
+  "errors": [""]
+}

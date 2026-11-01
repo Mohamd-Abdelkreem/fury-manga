@@ -1,0 +1,8 @@
+{
+  "passed": true,
+  "partialDisableCategories": ["browser-category-b"],
+  "refusedStatus": 409,
+  "refusedCode": "CONTENT_CATEGORY_IN_USE",
+  "publicProjectionUnchanged": true,
+  "categoryARestored": true
+}

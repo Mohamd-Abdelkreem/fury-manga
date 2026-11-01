@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { CatalogCategory } from "@fury/contracts";
 import type { Route } from "next";
 
 import styles from "./Footer.module.css";
@@ -29,7 +30,13 @@ const supportLinks = [
 ] as const;
 const communities = ["ديسكورد", "تيك توك", "إنستغرام", "يوتيوب", "تويتر"];
 
-export function Footer() {
+export function Footer({
+  categories,
+}: Readonly<{ categories?: readonly CatalogCategory[] | undefined }> = {}) {
+  const shortcuts =
+    categories === undefined
+      ? categoryLinks.map(([displayName, slug]) => ({ displayName, slug }))
+      : categories.slice(0, 5);
   return (
     <footer className={styles["footer"]}>
       <div className={styles["upper"]}>
@@ -48,11 +55,11 @@ export function Footer() {
               تجربة داكنة ومريحة.
             </p>
             <div className={styles["tags"]} aria-label="تصنيفات سريعة">
-              {categoryLinks.map(([label, slug]) => (
+              {shortcuts.map(({ displayName: label, slug }) => (
                 <Link
                   key={slug}
                   className={styles["tag"]}
-                  href={`/discover?genre=${slug}`}
+                  href={`/discover?category=${slug}`}
                 >
                   #{label}
                 </Link>
@@ -63,15 +70,25 @@ export function Footer() {
           <div className={styles["linkCol"]}>
             <h2 className={styles["linkColHeader"]}>روابط سريعة</h2>
             <div className={styles["linkList"]}>
-              {quickLinks.map(([label, href]) => (
-                <Link
-                  key={href}
-                  href={href as Route}
-                  className={styles["footerLink"]}
-                >
-                  {label}
-                </Link>
-              ))}
+              {quickLinks.map(([label, href]) =>
+                href === "/#trending" && categories !== undefined ? (
+                  <span
+                    key={href}
+                    className={styles["footerLink"]}
+                    aria-disabled="true"
+                  >
+                    {label} لاحقًا
+                  </span>
+                ) : (
+                  <Link
+                    key={href}
+                    href={href as Route}
+                    className={styles["footerLink"]}
+                  >
+                    {label}
+                  </Link>
+                ),
+              )}
             </div>
           </div>
 

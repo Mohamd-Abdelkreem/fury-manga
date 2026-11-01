@@ -1,0 +1,30 @@
+{
+  "kind": "real anonymous Next/Express persisted catalog journey",
+  "results": [
+    {
+      "case": "text-only restriction and real pagination",
+      "works": [
+        "browser-text",
+        "saved-text-story-41",
+        "saved-novel-40",
+        "saved-text-story-35",
+        "saved-novel-34",
+        "saved-text-story-29",
+        "saved-novel-28",
+        "saved-text-story-23",
+        "saved-novel-22",
+        "saved-text-story-17",
+        "saved-novel-16",
+        "saved-text-story-11"
+      ]
+    },
+    {
+      "case": "unknown category retained",
+      "state": "filtered-empty"
+    },
+    {
+      "case": "repeated and invalid query",
+      "normalizedPath": "/discover"
+    }
+  ]
+}

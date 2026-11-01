@@ -81,6 +81,7 @@ let refreshPromise: ValueState<Promise<string>> = { kind: "missing" };
 declare module "axios" {
   interface AxiosRequestConfig {
     _furyRetried?: boolean;
+    furyPublicRead?: boolean;
   }
 }
 
@@ -183,7 +184,45 @@ const isExpectedAnonymousRefreshFailure = (error: unknown): boolean => {
   );
 };
 
+const parsePublicHttpUrl = (url: string, requestBaseUrl: string): URL => {
+  let target: URL;
+  try {
+    target = new URL(url, requestBaseUrl);
+  } catch {
+    throw new Error("Public transport requires a valid HTTP URL.");
+  }
+  if (target.protocol !== "http:" && target.protocol !== "https:") {
+    throw new Error("Public transport requires a valid HTTP URL.");
+  }
+  return target;
+};
+
 apiClient.interceptors.request.use((config) => {
+  if (config.furyPublicRead === true) {
+    if ((config.method ?? "GET").toUpperCase() !== "GET") {
+      throw new Error("Public transport supports GET requests only.");
+    }
+    const target = parsePublicHttpUrl(
+      config.url ?? "",
+      config.baseURL ?? baseURL,
+    );
+    if (target.username !== "" || target.password !== "") {
+      throw new Error("Public transport cannot use URL credentials.");
+    }
+    config.headers.delete([
+      "Authorization",
+      "Cookie",
+      CSRF_HEADER_NAME,
+      "Proxy-Authorization",
+    ]);
+    delete config.auth;
+    // XHR still sends same-origin cookies; Fetch can explicitly omit them.
+    config.adapter = "fetch";
+    config.withCredentials = false;
+    config.withXSRFToken = false;
+    config.fetchOptions = { credentials: "omit", cache: "no-store" };
+    return config;
+  }
   if (accessToken.kind === "value") {
     config.headers.set("Authorization", `Bearer ${accessToken.value}`);
   }
@@ -204,6 +243,7 @@ apiClient.interceptors.response.use(
     const requestUrl = config?.url;
     if (
       config === undefined ||
+      config.furyPublicRead === true ||
       typeof requestUrl !== "string" ||
       error.response?.status !== 401 ||
       isPublicAuthRequest(requestUrl) ||

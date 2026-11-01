@@ -6,9 +6,13 @@ import styles from "./MangaCard.module.css";
 
 interface CardOverlayProps {
   isSmall: boolean;
+  publicCatalog?: boolean;
 }
 
-export function CardOverlay({ isSmall }: CardOverlayProps) {
+export function CardOverlay({
+  isSmall,
+  publicCatalog = false,
+}: CardOverlayProps) {
   return (
     <div className={styles["overlay"]}>
       <div
@@ -21,7 +25,7 @@ export function CardOverlay({ isSmall }: CardOverlayProps) {
         <BookOpen
           style={{ width: isSmall ? 12 : 14, height: isSmall ? 12 : 14 }}
         />
-        <span>اقرأ الآن</span>
+        <span>{publicCatalog ? "تفاصيل العمل" : "اقرأ الآن"}</span>
       </div>
     </div>
   );

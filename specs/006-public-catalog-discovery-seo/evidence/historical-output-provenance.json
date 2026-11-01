@@ -1,0 +1,16 @@
+[
+  {
+    "source": "final-verification.log",
+    "historicalSourceSha256": "52c10d94cac2831f71223ecf1934cd8010de3d79d2cfa3cf7240f3e13414bbd3",
+    "artifact": "final-verification.txt",
+    "artifactSha256": "4d9fe11d2bd8e43ec03cc8bfe99b4aaa4c92c6172111e8c28522cbad41ee2ea7",
+    "kind": "historical output; machine paths sanitized; no new execution"
+  },
+  {
+    "source": "final-routes.log",
+    "historicalSourceSha256": "e10676e7f85d9650b6b5fc48c4b10e63c60ca08aae72970988d111f7e0b3819b",
+    "artifact": "final-routes.txt",
+    "artifactSha256": "e10676e7f85d9650b6b5fc48c4b10e63c60ca08aae72970988d111f7e0b3819b",
+    "kind": "historical output; machine paths sanitized; no new execution"
+  }
+]

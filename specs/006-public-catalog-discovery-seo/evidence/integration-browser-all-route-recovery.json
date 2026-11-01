@@ -1,0 +1,83 @@
+{
+  "kind": "controlled browser network503/held retry with actual backend recovery on all six P05 layouts",
+  "results": [
+    {
+      "path": "/",
+      "failedReadWasNotEmpty": true,
+      "explicitKeyboardRetry": true,
+      "pendingAriaBusy": "true",
+      "recovered": true,
+      "focus": {
+        "tag": "MAIN",
+        "text": "أحدث الإصداراتعرض الكلروايةتفاصيل العملBrowser text عملفصل 1 — Browser chapter ع",
+        "outline": "solid",
+        "outlineWidth": "3px"
+      }
+    },
+    {
+      "path": "/discover",
+      "failedReadWasNotEmpty": true,
+      "explicitKeyboardRetry": true,
+      "pendingAriaBusy": "true",
+      "recovered": true,
+      "focus": {
+        "tag": "P",
+        "text": "44 نتيجة",
+        "outline": "solid",
+        "outlineWidth": "3px"
+      }
+    },
+    {
+      "path": "/stories",
+      "failedReadWasNotEmpty": true,
+      "explicitKeyboardRetry": true,
+      "pendingAriaBusy": "true",
+      "recovered": true,
+      "focus": {
+        "tag": "P",
+        "text": "15 نتيجة",
+        "outline": "solid",
+        "outlineWidth": "3px"
+      }
+    },
+    {
+      "path": "/categories",
+      "failedReadWasNotEmpty": true,
+      "explicitKeyboardRetry": true,
+      "pendingAriaBusy": "true",
+      "recovered": true,
+      "focus": {
+        "tag": "MAIN",
+        "text": "دليل Furyالتصنيفاتابدأ من النوع الذي تحبه، ثم استكشف الأعمال المطابقة له.ابحث في",
+        "outline": "solid",
+        "outlineWidth": "3px"
+      }
+    },
+    {
+      "path": "/story/saved-manga-0",
+      "failedReadWasNotEmpty": true,
+      "explicitKeyboardRetry": true,
+      "pendingAriaBusy": "true",
+      "recovered": true,
+      "focus": {
+        "tag": "DIV",
+        "text": "مانجاالحفظ لاحقًاالحفظ والتقييم والتعليقات غير متاحة بعد.الحالةمستمرةالنوعمانجات",
+        "outline": "solid",
+        "outlineWidth": "3px"
+      }
+    },
+    {
+      "path": "/story/saved-novel-4",
+      "failedReadWasNotEmpty": true,
+      "explicitKeyboardRetry": true,
+      "pendingAriaBusy": "true",
+      "recovered": true,
+      "focus": {
+        "tag": "DIV",
+        "text": "تعذّر تحميل الصورة إعادة تحميل الصورةروايةالحفظ لاحقًاالحفظ والتقييم والتعليقات ",
+        "outline": "solid",
+        "outlineWidth": "3px"
+      }
+    }
+  ]
+}

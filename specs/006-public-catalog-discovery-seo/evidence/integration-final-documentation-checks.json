@@ -1,0 +1,16 @@
+{
+  "kind": "post-convergence documentation and preservation verification",
+  "relativeTargetsChecked": 1325,
+  "missingRelativeTargets": [],
+  "credentialPatternHits": [],
+  "currentHookStressHashesMatchSource": true,
+  "featurePointerExactOriginalBytes": true,
+  "headUnchanged": true,
+  "indexEmpty": true,
+  "diffCheck": "PASS",
+  "legacyTasks": 453,
+  "checked": 450,
+  "unchecked": 3,
+  "applicationSourceChangedAfterFinalAggregate": false,
+  "limitations": "Relative file targets checked; this is not an external URL or screen-reader/device certification"
+}

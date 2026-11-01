@@ -1,0 +1,80 @@
+{
+  "unchanged": true,
+  "before": {
+    "database": "owned disposable media foundation",
+    "rows": {
+      "work": {
+        "count": 1,
+        "sha256": "c5761ad37c02ad172e6941356688fcf3ef981ab9eaf25ed0b356296d1c501779"
+      },
+      "chapter": {
+        "count": 1,
+        "sha256": "69061b639f18ec8f7a00a01e5c2afd4a8e846be0a3bb333205c223e7b90e47fe"
+      },
+      "chapterPage": {
+        "count": 30,
+        "sha256": "2f5305dc158b22b29b997868cd1a173c2e53f1e5e1abccca954f8c1487e68305"
+      },
+      "mediaAsset": {
+        "count": 36,
+        "sha256": "1ab45041bd1beff32a7a3dac4590aa833f4256ad65779b01010031cf51a86cc0"
+      },
+      "uploadAttempt": {
+        "count": 36,
+        "sha256": "896807a63915418749b059633596c1c4ee958d41b8be5f44b2ee30ceab1db835"
+      },
+      "mediaReference": {
+        "count": 32,
+        "sha256": "014cf216ab504f2ba859c59a97d358029090f031bb4434973347ee477290886e"
+      },
+      "mediaReferenceEvent": {
+        "count": 36,
+        "sha256": "18495c8003350ea8e13e7bad30fbe2e273efcf694e129bbdfe60a6b4179b4386"
+      },
+      "publicationEvent": {
+        "count": 2,
+        "sha256": "38d99e60d9b6e0ae476fcbddf45313d925f16893921bf16c72cce5021f6fd125"
+      }
+    },
+    "exclusions": "Authentication/refresh sessions intentionally excluded; comparison isolates prefetched content and publication/reference business state"
+  },
+  "after": {
+    "database": "owned disposable media foundation",
+    "rows": {
+      "work": {
+        "count": 1,
+        "sha256": "c5761ad37c02ad172e6941356688fcf3ef981ab9eaf25ed0b356296d1c501779"
+      },
+      "chapter": {
+        "count": 1,
+        "sha256": "69061b639f18ec8f7a00a01e5c2afd4a8e846be0a3bb333205c223e7b90e47fe"
+      },
+      "chapterPage": {
+        "count": 30,
+        "sha256": "2f5305dc158b22b29b997868cd1a173c2e53f1e5e1abccca954f8c1487e68305"
+      },
+      "mediaAsset": {
+        "count": 36,
+        "sha256": "1ab45041bd1beff32a7a3dac4590aa833f4256ad65779b01010031cf51a86cc0"
+      },
+      "uploadAttempt": {
+        "count": 36,
+        "sha256": "896807a63915418749b059633596c1c4ee958d41b8be5f44b2ee30ceab1db835"
+      },
+      "mediaReference": {
+        "count": 32,
+        "sha256": "014cf216ab504f2ba859c59a97d358029090f031bb4434973347ee477290886e"
+      },
+      "mediaReferenceEvent": {
+        "count": 36,
+        "sha256": "18495c8003350ea8e13e7bad30fbe2e273efcf694e129bbdfe60a6b4179b4386"
+      },
+      "publicationEvent": {
+        "count": 2,
+        "sha256": "38d99e60d9b6e0ae476fcbddf45313d925f16893921bf16c72cce5021f6fd125"
+      }
+    },
+    "exclusions": "Authentication/refresh sessions intentionally excluded; comparison isolates prefetched content and publication/reference business state"
+  },
+  "scope": "Final production wide/slow/recovery/animation reads; authentication sessions excluded; no fixture mutation between snapshots"
+}

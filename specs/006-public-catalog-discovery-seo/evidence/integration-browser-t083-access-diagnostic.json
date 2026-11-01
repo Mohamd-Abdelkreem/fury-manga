@@ -1,0 +1,14 @@
+{
+  "found": true,
+  "denied": true,
+  "browserDenied": true,
+  "revision": 1,
+  "queries": [
+    {
+      "sameClientQuery": true,
+      "errorClassMatches": true,
+      "isNotFound": true,
+      "errorCode": "NOT_FOUND"
+    }
+  ]
+}

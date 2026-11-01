@@ -205,3 +205,18 @@ A visitor understands loading, empty, failure, and retry states in Arabic RTL wi
 - First/latest chapter choices remain visibly informational or deferred until P07 can truthfully deliver the selected content. P05 does not use existing fixture reader pages to simulate that delivery.
 - Missing owner-maintained community URL removes the join action and unsupported counts. Final domain and URL are owner release inputs, not placeholders to publish now.
 - The P05 indexing policy is canonical unfiltered public catalog pages plus eligible work pages; query variants are non-indexed, and protected/private routes are excluded.
+
+## Current governing-policy reconciliation — 2026-11-01
+
+Constitution 2.1.0 VI's P05 functional exception records the owner's explicit
+2026-11-01 authorization. It supersedes only the 2026-10-31 addendum's blanket
+presentation gates for FR-013/FR-014/FR-017/FR-020/FR-030/FR-031 and the existing
+P05 tasks. The accepted requirements and success criteria above remain unchanged.
+Validated persisted data, existing controls, truthful Arabic states, deferred or
+minimally omitted unsupported engagement/reader actions, neutral category icons,
+optional validated community URL, technical SEO/framework boundaries and necessary
+accessibility are permitted within the preserved design. No redesign, new product
+page/destination/dialog, future-phase feature or protected-surface change is allowed.
+Complete and verify the required backend group before dependent integration.
+Formal predecessor, artwork, owner and release acceptance remain separate gates;
+this policy authorization is not evidence that implementation or acceptance passed.

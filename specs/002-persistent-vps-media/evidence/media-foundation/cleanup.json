@@ -1,0 +1,18 @@
+{
+  "ownedContainerRemoved": "fury-media-foundation-20261101",
+  "ownershipLabelVerified": "media-foundation-20261101",
+  "anonymousVolumeRemovalRequested": true,
+  "otherPreexistingContainersPreserved": 29,
+  "otherContainerIdentityDigest": "31ee153cec1e85d69a73670d50c76bb8e0e041646e43087d777d69ac71b4a529",
+  "ownedApiNextAndDatabasePortsClosed": {
+    "4315": true,
+    "4316": true,
+    "32771": true
+  },
+  "namedBrowserClosed": true,
+  "ownedMediaAndUploadRootRemoved": true,
+  "privateCredentialTargetRemoved": true,
+  "preexistingSnapshotsPreserved": true,
+  "originalDirtyWorktreeBaselineRetained": true,
+  "actions": "No commit/push/PR/deploy/production migration or other service mutation"
+}

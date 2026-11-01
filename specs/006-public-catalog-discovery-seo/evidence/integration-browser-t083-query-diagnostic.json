@@ -1,0 +1,17 @@
+{
+  "found": true,
+  "slug": "browser-illustrated",
+  "queries": [
+    {
+      "key": ["public-catalog", "work", "browser-illustrated", "detail"],
+      "status": "error",
+      "fetchStatus": "idle",
+      "error": {
+        "name": "SafePublicCatalogError",
+        "code": "NOT_FOUND",
+        "statusCode": 404,
+        "message": "Public content is unavailable. Try again."
+      }
+    }
+  ]
+}

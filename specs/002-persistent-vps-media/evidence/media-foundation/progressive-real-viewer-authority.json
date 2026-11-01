@@ -1,0 +1,40 @@
+{
+  "passed": true,
+  "reportedConnection": {
+    "saveData": true,
+    "effectiveType": "4g",
+    "source": "Controlled native EventTarget network-preference boundary, not a physical data-saver/device claim"
+  },
+  "initialRequests": [1, 1, 2, 3, 4, 5],
+  "afterJump": [1, 1, 2, 3, 4, 5, 25, 26],
+  "requests": [
+    1, 1, 2, 3, 4, 5, 25, 26, 24, 27, 23, 28, 29, 5, 6, 4, 7, 3, 8, 9, 11, 11,
+    12, 10, 13, 9, 14, 1, 2, 3, 4, 5
+  ],
+  "failed": [
+    {
+      "url": "54cd25f0-d2f1-4ea6-8620-043476e09ace/content",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "url": "00de1e95-18e5-4644-9d60-f989bd6c3dbc/content",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "url": "8d21c8f9-b75f-42a1-a041-3f4c342ae897/content",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    }
+  ],
+  "actualExpressPrivateWrongActor": 404,
+  "actualExpressAdminEndpointDenial": 403,
+  "denialInjection": "Real USER content GET returns non-disclosing 404; real administrator Chapter endpoint returns403, replayed at controlled media transport boundary to verify global denial fencing",
+  "individual503": "Controlled network fault then actual authenticated read retry",
+  "ownedUrlsAfterClose": 0,
+  "scope": "Current draft to saved persisted preview; exact Chapter/account/unmount races also covered at real QueryClient/transport boundary"
+}

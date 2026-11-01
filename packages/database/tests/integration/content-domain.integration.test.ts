@@ -465,14 +465,20 @@ describe("content-domain PostgreSQL invariants", () => {
         "INSERT INTO work_categories (work_id, category_id) VALUES ($1, $2)",
         [concurrentWorkId, categoryIds[99]],
       );
-      const competingInsert = second.query(
-        "INSERT INTO work_categories (work_id, category_id) VALUES ($1, $2)",
-        [concurrentWorkId, categoryIds[100]],
-      );
+      const competingInsert = Promise.allSettled([
+        second.query(
+          "INSERT INTO work_categories (work_id, category_id) VALUES ($1, $2)",
+          [concurrentWorkId, categoryIds[100]],
+        ),
+      ]);
       await first.query("COMMIT");
-      await expect(competingInsert).rejects.toMatchObject({
-        code: "PZ100",
-        constraint: "ck_work_categories_max_100",
+      const [competingResult] = await competingInsert;
+      expect(competingResult).toMatchObject({
+        status: "rejected",
+        reason: {
+          code: "PZ100",
+          constraint: "ck_work_categories_max_100",
+        },
       });
       await second.query("ROLLBACK");
     } finally {

@@ -4,7 +4,7 @@ import { UserStatus, type DatabaseClient } from "@fury/database";
 
 import { UnauthorizedException } from "../core/errors/unauthorized.error.js";
 import { mapSafeUser } from "../modules/users/users.mapper.js";
-import { verifyAccessToken } from "../infrastructure/security/jwt.service.js";
+import { verifyAccessToken } from "../infrastructure/security/jwt-tokens.js";
 
 type UserLookupClient = Pick<DatabaseClient, "user">;
 

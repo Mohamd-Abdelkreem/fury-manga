@@ -614,6 +614,7 @@ export function AdminChapterForm({ workId, chapterId }: AdminChapterFormProps) {
         </button>
       ) : null}
       <ChapterPreviewModal
+        scopeKey={`${workId}:${chapterId ?? "new"}`}
         isOpen={previewOpen}
         onClose={() => {
           setPreviewOpen(false);

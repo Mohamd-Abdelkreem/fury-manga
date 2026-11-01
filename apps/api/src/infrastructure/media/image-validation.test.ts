@@ -87,7 +87,7 @@ describe("media image validation", () => {
     expect(accepted.contentType).toBe("image/png");
   });
 
-  it("rejects a supported animated format before creating an asset", async () => {
+  it("rejects animated avatar media before creating an asset", async () => {
     const firstFrame = await sharp({
       create: { width: 600, height: 800, channels: 3, background: "red" },
     })
@@ -105,8 +105,8 @@ describe("media image validation", () => {
       .toBuffer();
     expect((await sharp(animated).metadata()).pages).toBe(2);
     await expect(
-      validateImage(animated, "work_cover", "image/webp", "cover.webp"),
-    ).rejects.toMatchObject({ code: "MEDIA_INVALID_FILE" });
+      validateImage(animated, "user_avatar", "image/webp", "avatar.webp"),
+    ).rejects.toMatchObject({ code: "MEDIA_UNSUPPORTED_TYPE" });
   });
 
   it("rejects MIME, extension, content, corrupt, executable, and polyglot mismatches", async () => {

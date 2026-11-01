@@ -1,0 +1,78 @@
+{
+  "passed": true,
+  "kind": "final actual production Next/Express design captures",
+  "rows": [
+    {
+      "name": "home",
+      "path": "/",
+      "width": 320,
+      "geometry": {
+        "viewport": 320,
+        "scroll": 320,
+        "dir": "rtl"
+      },
+      "loadedImages": 20,
+      "headings": ["عمل Mixed 00 mangaعنوان بديل محفوظ"]
+    },
+    {
+      "name": "discover",
+      "path": "/discover",
+      "width": 320,
+      "geometry": {
+        "viewport": 320,
+        "scroll": 320,
+        "dir": "rtl"
+      },
+      "loadedImages": 12,
+      "headings": ["قائمة المانجا"]
+    },
+    {
+      "name": "stories",
+      "path": "/stories",
+      "width": 320,
+      "geometry": {
+        "viewport": 320,
+        "scroll": 320,
+        "dir": "rtl"
+      },
+      "loadedImages": 12,
+      "headings": ["الروايات والقصص النصية"]
+    },
+    {
+      "name": "categories",
+      "path": "/categories",
+      "width": 320,
+      "geometry": {
+        "viewport": 320,
+        "scroll": 320,
+        "dir": "rtl"
+      },
+      "loadedImages": 0,
+      "headings": ["التصنيفات"]
+    },
+    {
+      "name": "illustrated",
+      "path": "/story/saved-manga-0",
+      "width": 320,
+      "geometry": {
+        "viewport": 320,
+        "scroll": 320,
+        "dir": "rtl"
+      },
+      "loadedImages": 6,
+      "headings": ["عمل Mixed 00 manga"]
+    },
+    {
+      "name": "text",
+      "path": "/story/saved-novel-4",
+      "width": 320,
+      "geometry": {
+        "viewport": 320,
+        "scroll": 320,
+        "dir": "rtl"
+      },
+      "loadedImages": 6,
+      "headings": ["عمل Mixed 04 novel"]
+    }
+  ]
+}

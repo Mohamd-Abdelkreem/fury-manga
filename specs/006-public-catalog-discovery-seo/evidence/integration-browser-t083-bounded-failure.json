@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "constantServer503": true,
+  "browserSuccesses": 2,
+  "automaticServerRefreshes": 1,
+  "boundedAcrossTemplateRemount": true,
+  "title": "المحتوى غير متاح مؤقتًا | Fury",
+  "robots": ["noindex, nofollow"]
+}

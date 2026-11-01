@@ -1,4 +1,7 @@
+import { ImageProcessor } from "./infrastructure/media/image-processor.js";
 import { randomUUID } from "node:crypto";
+import type { Server } from "node:http";
+import { readFile, writeFile, unlink } from "node:fs/promises";
 import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -6,10 +9,24 @@ import { join } from "node:path";
 import pino from "pino";
 import sharp from "sharp";
 import request, { type Response as SupertestResponse } from "supertest";
-import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import type { z } from "zod";
 
 import {
+  catalogSitemapDataSchema,
+  catalogDetailDataSchema,
+  catalogHomeDataSchema,
+  mediaOperationErrorCodeSchema,
+  catalogWorkListResponseSchema,
+  catalogCategoryListResponseSchema,
   accountResponseSchemas,
   adminCategoryDataSchema as categoryDataSchema,
   adminCategoryListDataSchema,
@@ -29,7 +46,11 @@ import {
 } from "@fury/contracts";
 import { createDatabaseClient, UserRole, UserStatus } from "@fury/database";
 
-import { createApp } from "./app.js";
+import { createApp as createExpressApp } from "./app.js";
+import {
+  listenOnTestLoopback,
+  closeTestServers,
+} from "./test-support/http-server.test-helper.js";
 import { createMediaConfig } from "./core/config/media.config.js";
 import { mapPrismaError } from "./infrastructure/database/prisma-error.mapper.js";
 import { MediaStorage } from "./infrastructure/media/media-storage.js";
@@ -41,7 +62,7 @@ import { rateLimitConfig } from "./core/config/rate-limit.config.js";
 import type { EmailDelivery } from "./infrastructure/email/email-delivery.js";
 import type { EmailSendRequest } from "./infrastructure/email/email-delivery.js";
 import { createLogger } from "./infrastructure/logger/logger.js";
-import { generateTokenPair } from "./infrastructure/security/jwt.service.js";
+import { generateTokenPair } from "./infrastructure/security/jwt-tokens.js";
 
 const databaseUrl = process.env["DATABASE_URL"];
 if (databaseUrl === undefined) {
@@ -53,7 +74,11 @@ const mediaFixtureRoot = mkdtempSync(join(tmpdir(), "fury-content-media-"));
 const mediaRoot = join(mediaFixtureRoot, "persistent");
 mkdirSync(mediaRoot);
 const mediaConfig = createMediaConfig(mediaRoot);
-const media = new MediaService(database, new MediaStorage(mediaConfig));
+const media = new MediaService(
+  database,
+  new MediaStorage(mediaConfig),
+  new ImageProcessor(),
+);
 const delivered: EmailSendRequest[] = [];
 const emailDelivery: EmailDelivery = {
   provider: "console",
@@ -62,12 +87,7 @@ const emailDelivery: EmailDelivery = {
     return Promise.resolve({ providerMessageId: "content-test" });
   },
 };
-let app = createApp({
-  database,
-  logger: pino({ level: "silent" }),
-  emailDelivery,
-  mediaConfig,
-});
+let app: Server;
 
 const csrfToken = "content-integration-csrf";
 
@@ -199,7 +219,9 @@ const createIllustratedAggregate = async (
     request(app).post("/api/v1/content/admin/categories"),
     token,
   ).send({ displayName: "Action", slug: "action" });
-  expect(categoryResponse.status).toBe(201);
+  expect(categoryResponse.status, JSON.stringify(categoryResponse.body)).toBe(
+    201,
+  );
   const categoryId = parseSuccessData(categoryResponse, categoryDataSchema)
     .category.id;
 
@@ -256,13 +278,31 @@ const createIllustratedAggregate = async (
   };
 };
 
+const ownedServers: Server[] = [];
+
+const createApp = async (
+  dependencies: Parameters<typeof createExpressApp>[0],
+): Promise<Server> => {
+  const server = await listenOnTestLoopback(createExpressApp(dependencies));
+  ownedServers.push(server);
+  return server;
+};
+
+const resetContentFixture = async (): Promise<void> => {
+  await database.$executeRawUnsafe(
+    "TRUNCATE media_reference_events, media_references, upload_attempts, media_assets, publication_events, chapter_pages, chapters, work_tags, work_categories, categories, works, refresh_tokens, users",
+  );
+};
+
+afterEach(async () => {
+  await closeTestServers(ownedServers);
+});
+
 describe("real HTTP content boundary", () => {
   beforeEach(async () => {
     delivered.length = 0;
-    await database.$executeRawUnsafe(
-      "TRUNCATE media_reference_events, media_references, upload_attempts, media_assets, publication_events, chapter_pages, chapters, work_tags, work_categories, categories, works, refresh_tokens, users",
-    );
-    app = createApp({
+    await resetContentFixture();
+    app = await createApp({
       database,
       logger: pino({ level: "silent" }),
       emailDelivery,
@@ -271,8 +311,631 @@ describe("real HTTP content boundary", () => {
   });
 
   afterAll(async () => {
+    await resetContentFixture();
     await database.$disconnect();
     rmSync(mediaFixtureRoot, { recursive: true, force: true });
+  });
+
+  it("serves anonymous catalog and work cover reads with public authority, safe failures and no writes", async () => {
+    const admin = await createIdentity(UserRole.ADMIN);
+    const ordinary = await createIdentity(UserRole.USER);
+    const category = await database.category.create({
+      data: { displayName: "Action", slug: "action" },
+    });
+    const coverAssetId = await uploadWorkAsset(admin.user.id, "work_cover");
+    const manager = new WorkManagementService(database, media);
+    const work = await manager.createWork(
+      {
+        title: "Catalog HTTP",
+        slug: "catalog-http",
+        type: "novel",
+        storyStatus: "ongoing",
+        synopsis: "A complete synopsis for catalog HTTP verification.",
+        author: "HTTP Author",
+        categoryIds: [category.id],
+        coverAssetId,
+      },
+      admin.user.id,
+    );
+    const publisher = new PublicationManagementService(database, {
+      currentTime: () => new Date(),
+      createIdentifier: randomUUID,
+    });
+    const published = await publisher.publishWork(work.id, {
+      expectedVersion: work.version,
+      targetState: "published",
+    });
+    const before = {
+      publications: await database.publicationEvent.count(),
+      references: await database.mediaReferenceEvent.count(),
+      work: await database.work.findUniqueOrThrow({ where: { id: work.id } }),
+    };
+    for (const token of [
+      undefined,
+      ordinary.token,
+      admin.token,
+      "invalid-ambient-token",
+    ]) {
+      const get = request(app)
+        .get("/api/v1/content/catalog/works?view=stories")
+        .set("Cookie", "refreshToken=ambient");
+      if (token !== undefined) get.set("Authorization", `Bearer ${token}`);
+      const response = await get;
+      expect(response.status).toBe(200);
+      const parsed = catalogWorkListResponseSchema.parse(response.body);
+      expect(parsed.data.items.map((item) => item.slug)).toEqual([work.slug]);
+      expect(parsed.paginationMeta).toEqual(parsed.data.pagination);
+      expect(response.headers["cache-control"]).toBe("no-store");
+      expect(parsed.requestId).toBe(response.headers["x-request-id"]);
+    }
+    const categories = await request(app).get(
+      "/api/v1/content/catalog/categories",
+    );
+    expect(categories.status).toBe(200);
+    expect(
+      catalogCategoryListResponseSchema.parse(categories.body).data.items,
+    ).toEqual([{ slug: "action", displayName: "Action" }]);
+    for (const categorySlug of ["unknown-category", "disabled"]) {
+      if (categorySlug === "disabled")
+        await database.category.create({
+          data: { displayName: "Disabled", slug: categorySlug, enabled: false },
+        });
+      const response = await request(app).get(
+        `/api/v1/content/catalog/works?category=${categorySlug}`,
+      );
+      expect(response.status).toBe(200);
+      expect(
+        catalogWorkListResponseSchema.parse(response.body).data,
+      ).toMatchObject({ items: [], pagination: { total: 0 } });
+    }
+    const path = `/api/v1/content/works/${work.slug}/cover`;
+    const bytes = await readFile(join(mediaRoot, `${coverAssetId}.bin`));
+    const cover = await request(app)
+      .get(path)
+      .set("Authorization", "Bearer invalid")
+      .set("Cookie", "refreshToken=ambient");
+    expect(cover.status).toBe(200);
+    expect(cover.body).toEqual(bytes);
+    expect(cover.headers).toMatchObject({
+      "content-type": "image/jpeg",
+      "content-length": String(bytes.length),
+      "content-disposition": "inline",
+      "x-content-type-options": "nosniff",
+      "cache-control": "no-store",
+    });
+    const headCover = await request(app)
+      .head(path)
+      .set("Authorization", "Bearer invalid");
+    expect(headCover.status).toBe(200);
+    expect(headCover.headers).toMatchObject({
+      "content-type": "image/jpeg",
+      "content-length": String(bytes.length),
+      "cache-control": "no-store",
+    });
+    expect(headCover.text).toBeUndefined();
+    await writeFile(
+      join(mediaRoot, `${coverAssetId}.bin`),
+      Buffer.alloc(bytes.length, 1),
+    );
+    const corrupt = await request(app).get(path);
+    expect(corrupt.status).toBe(503);
+    expect(
+      mediaOperationErrorCodeSchema.parse(
+        errorEnvelopeSchema.parse(corrupt.body).code,
+      ),
+    ).toBe("MEDIA_UNAVAILABLE");
+    expect(corrupt.headers["cache-control"]).toBe("no-store");
+    const headCorrupt = await request(app).head(path);
+    expect(headCorrupt.status).toBe(503);
+    expect(headCorrupt.headers["cache-control"]).toBe("no-store");
+    expect(headCorrupt.text).toBeUndefined();
+    expect(
+      (await request(app).get("/api/v1/content/catalog/works")).status,
+    ).toBe(200);
+    expect(
+      await database.mediaAsset.findUniqueOrThrow({
+        where: { id: coverAssetId },
+      }),
+    ).toMatchObject({ status: "AVAILABLE" });
+    await writeFile(join(mediaRoot, `${coverAssetId}.bin`), bytes);
+    expect((await request(app).get(path)).status).toBe(200);
+    await unlink(join(mediaRoot, `${coverAssetId}.bin`));
+    const missingBytes = await request(app).get(path);
+    expect(missingBytes.status).toBe(503);
+    expect(errorEnvelopeSchema.parse(missingBytes.body).code).toBe(
+      "MEDIA_UNAVAILABLE",
+    );
+    expect(missingBytes.headers["cache-control"]).toBe("no-store");
+    await writeFile(join(mediaRoot, `${coverAssetId}.bin`), bytes);
+    const after = {
+      publications: await database.publicationEvent.count(),
+      references: await database.mediaReferenceEvent.count(),
+      work: await database.work.findUniqueOrThrow({ where: { id: work.id } }),
+    };
+    expect(after).toEqual(before);
+    await publisher.publishWork(work.id, {
+      expectedVersion: published.version,
+      targetState: "draft",
+    });
+    const hidden = await request(app).get(path);
+    const unknown = await request(app).get(
+      "/api/v1/content/works/unknown-work/cover",
+    );
+    expect(hidden.status).toBe(404);
+    expect(unknown.status).toBe(404);
+    expect(parseErrorBody(hidden)).toMatchObject({
+      code: "NOT_FOUND",
+      message: parseErrorBody(unknown).message,
+      path: parseErrorBody(unknown).path,
+    });
+    expect(hidden.headers["cache-control"]).toBe("no-store");
+    expect(
+      (await request(app).get(`/api/v1/media/assets/${coverAssetId}/content`))
+        .status,
+    ).toBe(401);
+  });
+
+  it("serves the complete anonymous sitemap projection and fails without partial success", async () => {
+    const empty = await request(app).get(
+      "/api/v1/content/catalog/sitemap-works",
+    );
+    expect(empty.status).toBe(200);
+    expect(parseSuccessData(empty, catalogSitemapDataSchema)).toEqual({
+      items: [],
+    });
+    expect(successEnvelopeSchema.parse(empty.body)).not.toHaveProperty(
+      "paginationMeta",
+    );
+    const admin = await createIdentity(UserRole.ADMIN);
+    const aggregate = await createIllustratedAggregate(
+      admin.token,
+      admin.user.id,
+    );
+    const publisher = new PublicationManagementService(database, {
+      currentTime: () => new Date(),
+      createIdentifier: randomUUID,
+    });
+    const published = await publisher.publishWork(aggregate.workId, {
+      expectedVersion: aggregate.workVersion,
+      targetState: "published",
+    });
+    const response = await request(app)
+      .get("/api/v1/content/catalog/sitemap-works")
+      .set("Authorization", "Bearer invalid-ambient");
+    expect(response.status).toBe(200);
+    expect(parseSuccessData(response, catalogSitemapDataSchema)).toEqual({
+      items: [{ slug: "http-work" }],
+    });
+    expect(response.headers["cache-control"]).toBe("no-store");
+    expect(successEnvelopeSchema.parse(response.body).requestId).toBe(
+      response.headers["x-request-id"],
+    );
+    const invalid = await request(app).get(
+      "/api/v1/content/catalog/sitemap-works?page=2",
+    );
+    expect(invalid.status).toBe(400);
+    const failure = vi
+      .spyOn(database, "$transaction")
+      .mockRejectedValueOnce(new Error("private-sitemap-sentinel"));
+    try {
+      const failed = await request(app).get(
+        "/api/v1/content/catalog/sitemap-works",
+      );
+      expect(failed.status).toBe(500);
+      expect(parseErrorBody(failed).code).toBe("INTERNAL_SERVER_ERROR");
+      expect(JSON.stringify(failed.body)).not.toContain(
+        "private-sitemap-sentinel",
+      );
+      expect(failed.headers["cache-control"]).toBe("no-store");
+    } finally {
+      failure.mockRestore();
+    }
+    await publisher.publishWork(aggregate.workId, {
+      expectedVersion: published.version,
+      targetState: "draft",
+    });
+    expect(
+      parseSuccessData(
+        await request(app).get("/api/v1/content/catalog/sitemap-works"),
+        catalogSitemapDataSchema,
+      ),
+    ).toEqual({ items: [] });
+  });
+
+  it("serves strict detail and optional background bytes without private data or stale visibility", async () => {
+    const admin = await createIdentity(UserRole.ADMIN);
+    const aggregate = await createIllustratedAggregate(
+      admin.token,
+      admin.user.id,
+    );
+    const publisher = new PublicationManagementService(database, {
+      currentTime: () => new Date(),
+      createIdentifier: randomUUID,
+    });
+    const published = await publisher.publishWork(aggregate.workId, {
+      expectedVersion: aggregate.workVersion,
+      targetState: "published",
+    });
+    await publisher.publishChapter(aggregate.workId, aggregate.chapterId, {
+      expectedVersion: aggregate.chapterVersion,
+      targetState: "published",
+    });
+    const detailPath = "/api/v1/content/catalog/works/http-work";
+    const backgroundPath = "/api/v1/content/works/http-work/background";
+    const detail = await request(app)
+      .get(detailPath)
+      .set("Authorization", "Bearer invalid-ambient");
+    expect(detail.status).toBe(200);
+    expect(parseSuccessData(detail, catalogDetailDataSchema)).toMatchObject({
+      work: { slug: "http-work", artist: null, backgroundPath: null },
+      firstChapter: { number: 1, contentType: "illustrated" },
+      latestChapter: { number: 1 },
+    });
+    expect(successEnvelopeSchema.parse(detail.body)).not.toHaveProperty(
+      "paginationMeta",
+    );
+    expect((await request(app).get(backgroundPath)).status).toBe(404);
+    const backgroundAssetId = await uploadWorkAsset(
+      admin.user.id,
+      "work_background",
+    );
+    const manager = new WorkManagementService(database, media);
+    await manager.updateWork(
+      aggregate.workId,
+      { expectedVersion: published.version, backgroundAssetId },
+      admin.user.id,
+    );
+    const withBackground = await request(app).get(detailPath);
+    expect(
+      parseSuccessData(withBackground, catalogDetailDataSchema).work
+        .backgroundPath,
+    ).toBe(backgroundPath);
+    const bytes = await readFile(join(mediaRoot, `${backgroundAssetId}.bin`));
+    const image = await request(app).get(backgroundPath);
+    expect(image.status).toBe(200);
+    expect(image.body).toEqual(bytes);
+    expect(image.headers["cache-control"]).toBe("no-store");
+    await unlink(join(mediaRoot, `${backgroundAssetId}.bin`));
+    const missing = await request(app).get(backgroundPath);
+    expect(missing.status).toBe(503);
+    expect(errorEnvelopeSchema.parse(missing.body).code).toBe(
+      "MEDIA_UNAVAILABLE",
+    );
+    expect(missing.headers["cache-control"]).toBe("no-store");
+    expect((await request(app).get(detailPath)).status).toBe(200);
+    await writeFile(join(mediaRoot, `${backgroundAssetId}.bin`), bytes);
+    const stored = await manager.getWork(aggregate.workId);
+    if (stored.coverAssetId === null) throw new Error("Missing fixture cover");
+    await database.mediaAsset.update({
+      where: { id: stored.coverAssetId },
+      data: { status: "UNAVAILABLE" },
+    });
+    const hidden = await request(app).get(detailPath);
+    const unknown = await request(app).get(
+      "/api/v1/content/catalog/works/unknown-work",
+    );
+    expect(hidden.status).toBe(404);
+    expect(unknown.status).toBe(404);
+    expect(parseErrorBody(hidden)).toMatchObject({
+      code: "NOT_FOUND",
+      message: parseErrorBody(unknown).message,
+      path: parseErrorBody(unknown).path,
+    });
+    expect((await request(app).get(backgroundPath)).status).toBe(404);
+    await media.reconcile();
+    expect((await request(app).get(detailPath)).status).toBe(200);
+    expect((await request(app).get(backgroundPath)).status).toBe(200);
+    const invalid = await request(app).get(detailPath + "?page=2");
+    expect(invalid.status).toBe(400);
+    expect(parseErrorBody(invalid).code).toBe("VALIDATION_ERROR");
+    expect(detail.headers["cache-control"]).toBe("no-store");
+    expect(successEnvelopeSchema.parse(detail.body).requestId).toBe(
+      detail.headers["x-request-id"],
+    );
+  });
+
+  it("serves a strict anonymous home aggregate with current saved publication and safe failure", async () => {
+    const empty = await request(app).get("/api/v1/content/catalog/home");
+    expect(empty.status).toBe(200);
+    expect(parseSuccessData(empty, catalogHomeDataSchema)).toEqual({
+      featured: [],
+      categoryShortcuts: [],
+      latestReleases: [],
+      suggestions: [],
+    });
+    expect(successEnvelopeSchema.parse(empty.body)).not.toHaveProperty(
+      "paginationMeta",
+    );
+    const admin = await createIdentity(UserRole.ADMIN);
+    const aggregate = await createIllustratedAggregate(
+      admin.token,
+      admin.user.id,
+    );
+    const publisher = new PublicationManagementService(database, {
+      currentTime: () => new Date(),
+      createIdentifier: randomUUID,
+    });
+    const published = await publisher.publishWork(aggregate.workId, {
+      expectedVersion: aggregate.workVersion,
+      targetState: "published",
+    });
+    await publisher.publishChapter(aggregate.workId, aggregate.chapterId, {
+      expectedVersion: aggregate.chapterVersion,
+      targetState: "published",
+    });
+    const home = await request(app)
+      .get("/api/v1/content/catalog/home")
+      .set("Authorization", "Bearer invalid-ambient");
+    expect(home.status).toBe(200);
+    expect(parseSuccessData(home, catalogHomeDataSchema)).toMatchObject({
+      categoryShortcuts: [{ slug: "action" }],
+      latestReleases: [{ work: { slug: "http-work" }, chapter: { number: 1 } }],
+      suggestions: [
+        { category: { slug: "action" }, works: [{ slug: "http-work" }] },
+      ],
+    });
+    expect(home.headers["cache-control"]).toBe("no-store");
+    expect(successEnvelopeSchema.parse(home.body).requestId).toBe(
+      home.headers["x-request-id"],
+    );
+    const invalid = await request(app).get(
+      "/api/v1/content/catalog/home?page=1",
+    );
+    expect(invalid.status).toBe(400);
+    expect(parseErrorBody(invalid).code).toBe("VALIDATION_ERROR");
+    await publisher.publishWork(aggregate.workId, {
+      expectedVersion: published.version,
+      targetState: "draft",
+    });
+    expect(
+      parseSuccessData(
+        await request(app).get("/api/v1/content/catalog/home"),
+        catalogHomeDataSchema,
+      ),
+    ).toMatchObject({ featured: [], latestReleases: [], suggestions: [] });
+    const fault = vi
+      .spyOn(database, "$transaction")
+      .mockRejectedValueOnce(
+        Object.assign(new Error("home-database-sentinel"), { code: "P1001" }),
+      );
+    try {
+      const failed = await request(app).get("/api/v1/content/catalog/home");
+      expect(failed.status).toBe(503);
+      expect(parseErrorBody(failed).code).toBe("SERVICE_UNAVAILABLE");
+      expect(JSON.stringify(failed.body)).not.toContain(
+        "home-database-sentinel",
+      );
+      expect(failed.headers["cache-control"]).toBe("no-store");
+    } finally {
+      fault.mockRestore();
+    }
+  });
+
+  it("validates public queries, sanitizes final request logs and sets no-store before router failures", async () => {
+    const messages: string[] = [];
+    const observedApp = await createApp({
+      database,
+      emailDelivery,
+      mediaConfig,
+      logger: createLogger({
+        level: "info",
+        pretty: false,
+        destination: {
+          write(message: string) {
+            messages.push(message);
+          },
+        },
+      }),
+    });
+    const sentinel = "P05-SEARCH-SENTINEL";
+    for (const [url, code, field] of [
+      [
+        "/api/v1/content/catalog/works?sort=rating",
+        "VALIDATION_ERROR",
+        "query.sort",
+      ],
+      [
+        "/api/v1/content/catalog/works?page=1&page=2",
+        "VALIDATION_ERROR",
+        "query.page",
+      ],
+      [
+        "/api/v1/content/catalog/works?view=stories&type=manga",
+        "VALIDATION_ERROR",
+        "query.type",
+      ],
+      [
+        `/api/v1/content/catalog/works?q=${sentinel}%ZZ`,
+        "BAD_REQUEST",
+        undefined,
+      ],
+      [`/api/v1/content/works/%ZZ-${sentinel}/cover`, "BAD_REQUEST", undefined],
+    ] as const) {
+      const response = await request(observedApp).get(url);
+      expect(response.status).toBe(400);
+      const parsed = parseErrorBody(response);
+      expect(parsed.code).toBe(code);
+      if (field !== undefined)
+        expect(parsed.errors?.map((error) => error.field)).toContain(field);
+      else expect(parsed.errors).toBeUndefined();
+      expect(JSON.stringify(parsed)).not.toContain(sentinel);
+      expect(response.headers["cache-control"]).toBe("no-store");
+    }
+    const valid = await request(observedApp)
+      .get(`/api/v1/content/catalog/works?q=${sentinel}`)
+      .set("Referer", `http://localhost:3000/discover?q=${sentinel}`)
+      .set("x-original-url", `/discover?q=${sentinel}`);
+    expect(valid.status).toBe(200);
+    const unknown = await request(observedApp).get(
+      `/api/v1/content/catalog/${sentinel}`,
+    );
+    expect(unknown.status).toBe(404);
+    expect(JSON.stringify(unknown.body)).not.toContain(sentinel);
+    const corsRejected = await request(observedApp)
+      .get("/api/v1/content/catalog/works")
+      .set("Origin", "https://disallowed.example.test");
+    expect(corsRejected.status).toBe(403);
+    expect(corsRejected.headers["cache-control"]).toBe("no-store");
+    const unknownQueryKey = await request(observedApp).get(
+      `/api/v1/content/catalog/works?${sentinel}=value`,
+    );
+    expect(unknownQueryKey.status).toBe(400);
+    expect(JSON.stringify(unknownQueryKey.body)).not.toContain(sentinel);
+    expect(messages.join("")).not.toContain(sentinel);
+    expect(messages.join("")).toContain(valid.headers["x-request-id"]);
+    expect(messages.join("")).toContain("/content/catalog/works");
+  });
+
+  it("protects public HEAD and unsupported methods across routing, early failures and final logs", async () => {
+    const messages: string[] = [];
+    const observedApp = await createApp({
+      database,
+      emailDelivery,
+      mediaConfig,
+      logger: createLogger({
+        level: "info",
+        pretty: false,
+        destination: {
+          write(message: string) {
+            messages.push(message);
+          },
+        },
+      }),
+    });
+    const sentinel = "PUBLIC-METHOD-PRIVATE-SENTINEL";
+    const assertHead = (response: SupertestResponse, status: number) => {
+      expect(response.status).toBe(status);
+      expect(response.headers["cache-control"]).toBe("no-store");
+      expect(response.headers["x-request-id"]).toEqual(expect.any(String));
+      expect(response.text).toBeUndefined();
+    };
+    assertHead(
+      await request(observedApp)
+        .head("/api/v1/content/catalog/works")
+        .set("Referer", `http://localhost:3000/discover?q=${sentinel}`)
+        .set("x-original-url", `/discover?q=${sentinel}`),
+      200,
+    );
+    assertHead(await request(observedApp).head("/api/v1/content/works"), 200);
+    assertHead(
+      await request(observedApp).head("/api/v1/content/catalog/works?page=0"),
+      400,
+    );
+    assertHead(
+      await request(observedApp).head(
+        `/api/v1/content/catalog/works?q=${sentinel}%ZZ`,
+      ),
+      400,
+    );
+    assertHead(
+      await request(observedApp).head(
+        `/api/v1/content/works/%ZZ-${sentinel}/cover`,
+      ),
+      400,
+    );
+    assertHead(
+      await request(observedApp).head(`/api/v1/content/catalog/${sentinel}`),
+      404,
+    );
+    assertHead(
+      await request(observedApp).head(
+        `/api/v1/content/works/${sentinel}/cover`,
+      ),
+      404,
+    );
+    assertHead(
+      await request(observedApp)
+        .head("/api/v1/content/catalog/home")
+        .set("Origin", "https://disallowed.example.test"),
+      403,
+    );
+    const fault = vi
+      .spyOn(database, "$transaction")
+      .mockRejectedValueOnce(new Error(sentinel));
+    try {
+      assertHead(
+        await request(observedApp).head("/api/v1/content/catalog/home"),
+        500,
+      );
+    } finally {
+      fault.mockRestore();
+    }
+    for (const method of ["post", "put", "delete"] as const) {
+      const response = await request(observedApp)[method](
+        `/api/v1/content/catalog/${sentinel}`,
+      );
+      expect(response.status).toBe(404);
+      expect(response.headers["cache-control"]).toBe("no-store");
+      expect(parseErrorBody(response).message).toBe("Resource not found.");
+      expect(JSON.stringify(response.body)).not.toContain(sentinel);
+    }
+    const malformedMethod = await request(observedApp).post(
+      `/api/v1/content/%ZZ-${sentinel}`,
+    );
+    expect(malformedMethod.status).toBe(400);
+    expect(JSON.stringify(malformedMethod.body)).not.toContain(sentinel);
+    const preflight = await request(observedApp)
+      .options(`/api/v1/content/catalog/${sentinel}`)
+      .set("Origin", "https://disallowed.example.test");
+    expect(preflight.status).toBe(403);
+    expect(preflight.headers["cache-control"]).toBe("no-store");
+    // Inspect the destination after Pino serializers and message construction, not a logger spy.
+    const emitted = messages.map((message): unknown => JSON.parse(message));
+    expect(emitted.length).toBeGreaterThan(0);
+    expect(messages.join("")).not.toContain(sentinel);
+    expect(messages.join("")).toContain("Resource not found.");
+    expect(messages.join("")).toContain("/api/v1/content/[unknown]");
+  });
+
+  it("keeps legacy Work and Chapter query validation private for GET and HEAD", async () => {
+    const messages: string[] = [];
+    const observedApp = await createApp({
+      database,
+      emailDelivery,
+      mediaConfig,
+      logger: createLogger({
+        level: "info",
+        pretty: false,
+        destination: {
+          write(message: string) {
+            messages.push(message);
+          },
+        },
+      }),
+    });
+    const sentinel = "LEGACY-QUERY-PRIVATE-SENTINEL";
+    const before = await database.publicationEvent.count();
+    for (const path of [
+      "/api/v1/content/works/unknown-work/chapters",
+      "/api/v1/content/works/unknown-work",
+      "/api/v1/content/works/unknown-work/chapters/1",
+    ]) {
+      for (const [query, code] of [
+        [`${sentinel}=value`, "VALIDATION_ERROR"],
+        [`q=${sentinel}%ZZ`, "BAD_REQUEST"],
+      ] as const) {
+        const response = await request(observedApp).get(`${path}?${query}`);
+        expect(response.status).toBe(400);
+        const parsed = parseErrorBody(response);
+        expect(parsed.code).toBe(code);
+        expect(JSON.stringify(parsed)).not.toContain(sentinel);
+        expect(response.headers["cache-control"]).toBe("no-store");
+        if (code === "VALIDATION_ERROR")
+          expect(parsed.errors).toEqual([
+            { field: "query", message: "Unknown field." },
+          ]);
+        else expect(parsed.errors).toBeUndefined();
+        const head = await request(observedApp).head(`${path}?${query}`);
+        expect(head.status).toBe(400);
+        expect(head.headers["cache-control"]).toBe("no-store");
+        expect(head.text).toBeUndefined();
+      }
+    }
+    expect(messages.join("")).not.toContain(sentinel);
+    expect(messages.join("")).toContain(
+      "/api/v1/content/works/:workSlug/chapters",
+    );
+    expect(await database.publicationEvent.count()).toBe(before);
   });
 
   it("lists saved Work summaries with combined filters and safe authority", async () => {
@@ -421,7 +1084,7 @@ describe("real HTTP content boundary", () => {
 
   it("requires matching CSRF before validating category position commands", async () => {
     const identity = await createIdentity(UserRole.ADMIN);
-    const categoryApp = createApp({
+    const categoryApp = await createApp({
       database,
       logger: pino({ level: "silent" }),
       emailDelivery,
@@ -640,7 +1303,7 @@ describe("real HTTP content boundary", () => {
     ] as const;
 
     for (const actor of deniedActors) {
-      const actorApp = createApp({
+      const actorApp = await createApp({
         database,
         logger: pino({ level: "silent" }),
         emailDelivery,
@@ -707,7 +1370,7 @@ describe("real HTTP content boundary", () => {
     await expect(database.chapter.count()).resolves.toBe(1);
     await expect(database.publicationEvent.count()).resolves.toBe(0);
 
-    const adminApp = createApp({
+    const adminApp = await createApp({
       database,
       logger: pino({ level: "silent" }),
       emailDelivery,
@@ -754,7 +1417,7 @@ describe("real HTTP content boundary", () => {
   });
 
   it("returns the central rate-limit envelope with request identity", async () => {
-    const isolatedApp = createApp({
+    const isolatedApp = await createApp({
       database,
       logger: pino({ level: "silent" }),
       emailDelivery,
@@ -765,17 +1428,34 @@ describe("real HTTP content boundary", () => {
       expect(allowed.status).toBe(200);
     }
     const limited = await request(isolatedApp).get("/api/v1/content/works");
+    expect(limited.headers["cache-control"]).toBe("no-store");
     expect(limited.status).toBe(429);
     expect(parseErrorBody(limited)).toMatchObject({
       code: "RATE_LIMIT_EXCEEDED",
       requestId: limited.headers["x-request-id"],
       path: "/api/v1/content/works",
     });
+    const headLimited = await request(isolatedApp).head(
+      "/api/v1/content/catalog/works",
+    );
+    expect(headLimited.status).toBe(429);
+    expect(headLimited.headers["cache-control"]).toBe("no-store");
+    expect(headLimited.headers["x-request-id"]).toEqual(expect.any(String));
+    expect(headLimited.text).toBeUndefined();
+    for (const path of [
+      "/api/v1/content/catalog/works",
+      "/api/v1/content/works/hidden/cover",
+    ]) {
+      const rejected = await request(isolatedApp).get(path);
+      expect(rejected.status).toBe(429);
+      expect(parseErrorBody(rejected).code).toBe("RATE_LIMIT_EXCEEDED");
+      expect(rejected.headers["cache-control"]).toBe("no-store");
+    }
   });
 
   it("redacts credential sentinels from serialized logs and safe errors", async () => {
     const serializedLogs: string[] = [];
-    const observedApp = createApp({
+    const observedApp = await createApp({
       database,
       logger: createLogger({
         level: "info",
@@ -1177,7 +1857,7 @@ describe("real HTTP content boundary", () => {
       storyStatus: "ongoing",
     });
     expect(duplicateWork.status).toBe(409);
-    expect(parseErrorBody(duplicateWork).code).toBe("CONTENT_CONFLICT");
+    expect(parseErrorBody(duplicateWork).code).toBe("CONTENT_SLUG_CONFLICT");
 
     const immutable = await authorize(
       request(app).patch("/api/v1/content/admin/works/" + aggregate.workId),
@@ -1210,7 +1890,7 @@ describe("real HTTP content boundary", () => {
 
   it("manages saved category filters, state, usage, and adjacent order over HTTP", async () => {
     const identity = await createIdentity(UserRole.ADMIN);
-    const categoryApp = createApp({
+    const categoryApp = await createApp({
       database,
       logger: pino({ level: "silent" }),
       emailDelivery,
@@ -1765,6 +2445,67 @@ describe("real HTTP content boundary", () => {
     await expect(
       database.chapter.findUniqueOrThrow({ where: { id: chapter.id } }),
     ).resolves.toMatchObject({ textContent: secondDocument, version: 1 });
+  });
+
+  it("validates the persisted text byte boundary before attempting a Chapter write", async () => {
+    const identity = await createIdentity(UserRole.ADMIN);
+    const workResponse = await authorize(
+      request(app).post("/api/v1/content/admin/works"),
+      identity.token,
+    ).send({
+      title: "Text storage boundary",
+      slug: "text-storage-boundary",
+      type: "text-story",
+      storyStatus: "ongoing",
+    });
+    const workId = parseSuccessData(workResponse, workDataSchema).work.id;
+
+    for (const overflow of [0, 1]) {
+      const document = {
+        version: 1,
+        blocks: Array.from({ length: 132 }, () => ({
+          type: "heading",
+          level: 2,
+          text: "x",
+        })),
+      };
+      // These ASCII-only values make this PostgreSQL JSON rendering unambiguous.
+      const emptySize = Buffer.byteLength(
+        JSON.stringify(document).replaceAll(":", ": ").replaceAll(",", ", "),
+      );
+      let remaining = 512 * 1024 + overflow - emptySize;
+      for (const block of document.blocks) {
+        const added = Math.min(3_999, remaining);
+        block.text += "x".repeat(added);
+        remaining -= added;
+      }
+      expect(remaining).toBe(0);
+      const [stored] = await database.$queryRaw<{ bytes: number }[]>`
+        SELECT octet_length(${JSON.stringify(document)}::jsonb::text) AS bytes
+      `;
+      expect(stored?.bytes).toBe(512 * 1024 + overflow);
+
+      const response = await authorize(
+        request(app).post(`/api/v1/content/admin/works/${workId}/chapters`),
+        identity.token,
+      ).send({
+        number: overflow + 1,
+        title: "Boundary",
+        textContent: document,
+      });
+      expect(response.status).toBe(overflow === 0 ? 201 : 400);
+      if (overflow === 0) {
+        expect(
+          parseSuccessData(response, chapterDataSchema).chapter.textContent,
+        ).toEqual(document);
+      } else {
+        expect(parseErrorBody(response)).toMatchObject({
+          code: "VALIDATION_ERROR",
+          errors: [expect.objectContaining({ field: "body.textContent" })],
+        });
+      }
+    }
+    expect(await database.chapter.count({ where: { workId } })).toBe(1);
   });
 
   it("creates and reloads a complete text document, then clears it to a private draft", async () => {
@@ -2403,7 +3144,7 @@ describe("real HTTP content boundary", () => {
   });
 
   it("returns a safe 503 for a public read when database connectivity fails", async () => {
-    const fault = vi.spyOn(database.work, "findFirst").mockRejectedValueOnce(
+    const fault = vi.spyOn(database, "$transaction").mockRejectedValueOnce(
       Object.assign(new Error("database-offline-sentinel"), {
         code: "P1001",
       }),
@@ -2426,7 +3167,7 @@ describe("real HTTP content boundary", () => {
   });
 
   it("distinguishes CSRF-rejected Work PATCH from revoked reader authority", async () => {
-    const isolatedWorkApp = createApp({
+    const isolatedWorkApp = await createApp({
       database,
       logger: pino({ level: "silent" }),
       emailDelivery,
@@ -2528,8 +3269,42 @@ describe("real HTTP content boundary", () => {
     });
   });
 
+  it("distinguishes an occupied slug from an occupied create identity so a corrected form can retry", async () => {
+    const admin = await createIdentity(UserRole.ADMIN);
+    const originalId = randomUUID();
+    const retryId = randomUUID();
+    const body = {
+      title: "Occupied slug owner",
+      slug: "occupied-slug-owner",
+      type: "manga",
+      storyStatus: "ongoing",
+    };
+    const create = (id: string, slug: string) =>
+      authorize(
+        request(app).post("/api/v1/content/admin/works"),
+        admin.token,
+      ).send({ ...body, id, slug });
+
+    expect((await create(originalId, body.slug)).status).toBe(201);
+    const duplicate = await create(retryId, body.slug);
+    expect(duplicate.status).toBe(409);
+    expect(parseErrorBody(duplicate).code).toBe("CONTENT_SLUG_CONFLICT");
+    await expect(
+      database.work.findUnique({ where: { id: retryId } }),
+    ).resolves.toBeNull();
+
+    const corrected = await create(retryId, "corrected-slug-owner");
+    expect(corrected.status).toBe(201);
+    expect(parseSuccessData(corrected, workDataSchema).work.id).toBe(retryId);
+
+    const occupiedIdentity = await create(originalId, "another-free-slug");
+    expect(occupiedIdentity.status).toBe(409);
+    expect(parseErrorBody(occupiedIdentity).code).toBe("CONTENT_CONFLICT");
+    expect(await database.work.count()).toBe(2);
+  });
+
   it("rejects invalid rich writes and rolls back wrong-class media or stale edits", async () => {
-    const isolatedWorkApp = createApp({
+    const isolatedWorkApp = await createApp({
       database,
       logger: pino({ level: "silent" }),
       emailDelivery,
@@ -2594,7 +3369,7 @@ describe("real HTTP content boundary", () => {
       admin.token,
     ).send({ ...workBody, id: occupiedSlugId, slug: created.slug });
     expect(duplicateSlug.status).toBe(409);
-    expect(parseErrorBody(duplicateSlug).code).toBe("CONTENT_CONFLICT");
+    expect(parseErrorBody(duplicateSlug).code).toBe("CONTENT_SLUG_CONFLICT");
     await expect(
       database.work.findUnique({ where: { id: occupiedSlugId } }),
     ).resolves.toBeNull();

@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "action": "actual administrator unpublish",
+  "result": [
+    {
+      "slug": "browser-illustrated",
+      "status": 200,
+      "savedDraft": true
+    }
+  ]
+}

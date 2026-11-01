@@ -22,6 +22,7 @@ export function ChapterPreviewModal({
   savedTextBlocks,
   contentType,
   hasSavedChapter,
+  scopeKey,
 }: Readonly<{
   isOpen: boolean;
   onClose: () => void;
@@ -35,6 +36,7 @@ export function ChapterPreviewModal({
   savedTextBlocks: readonly EditableTextBlock[];
   contentType: "illustrated" | "text";
   hasSavedChapter: boolean;
+  scopeKey: string;
 }>) {
   const { dialogRef, onDialogKeyDown } = useAdminDialogFocus({
     isOpen,
@@ -132,7 +134,10 @@ export function ChapterPreviewModal({
               }
             />
           ) : (
-            <ChapterContentRenderer pages={showingSaved ? savedPages : pages} />
+            <ChapterContentRenderer
+              scopeKey={`${scopeKey}:${showingSaved ? "saved" : "draft"}`}
+              pages={showingSaved ? savedPages : pages}
+            />
           )}
         </div>
         <div className={styles["modalFooter"]}>

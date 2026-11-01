@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "actualAdministratorRepublication": true,
+  "result": [
+    {
+      "slug": "browser-illustrated",
+      "alreadyPublishedByPriorHarness": false,
+      "publicResult": {
+        "status": 200,
+        "slug": "browser-illustrated",
+        "chapters": 1
+      }
+    }
+  ]
+}

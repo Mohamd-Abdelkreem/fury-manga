@@ -10,6 +10,23 @@ import {
   type FormValues,
 } from "./admin-work-form";
 
+export type WorkPublicationConfirmation = Pick<
+  AdminWork,
+  "id" | "version" | "publicationStatus"
+>;
+
+export const displayedWorkPublicationStatus = (
+  server: WorkPublicationConfirmation | undefined,
+  confirmation: WorkPublicationConfirmation | null,
+): AdminWork["publicationStatus"] | null => {
+  if (server === undefined) return null;
+  return confirmation !== null &&
+    confirmation.id === server.id &&
+    confirmation.version > server.version
+    ? confirmation.publicationStatus
+    : server.publicationStatus;
+};
+
 export type WorkEditorState = Readonly<{
   workId: string | null;
   baseVersion: number | null;

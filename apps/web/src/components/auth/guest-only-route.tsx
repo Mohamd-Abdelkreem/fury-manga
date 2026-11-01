@@ -2,11 +2,12 @@
 
 import type { Route } from "next";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 
 import { useSession } from "@/features/auth/hooks/auth.hooks";
 import { localizeAuthMessage } from "@/features/auth/utils/auth-messages";
+import { resolvePostLoginPath } from "@/features/auth/utils/safe-return-path";
 import { getApiError } from "@/services/api/api-client";
 
 import { SessionLoader } from "./session-loader";
@@ -26,6 +27,7 @@ export type GuestOnlyRouteState =
 export const resolveGuestOnlyRouteState = (
   session: SessionSnapshot,
   account: ReturnType<typeof useSession>["data"] | null,
+  returnTo?: string | null,
 ): GuestOnlyRouteState => {
   if (session.isPending || !session.isFetched) return { kind: "pending" };
   if (session.isError) return { kind: "error" };
@@ -36,15 +38,20 @@ export const resolveGuestOnlyRouteState = (
   ) {
     return { kind: "authorized" };
   }
-  return { kind: "redirecting", target: "/dashboard" };
+  return { kind: "redirecting", target: resolvePostLoginPath(returnTo) };
 };
 
 export function GuestOnlyRoute({
   children,
 }: Readonly<{ children: ReactNode }>) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const session = useSession();
-  const state = resolveGuestOnlyRouteState(session, session.data ?? null);
+  const state = resolveGuestOnlyRouteState(
+    session,
+    session.data ?? null,
+    searchParams.get("returnTo"),
+  );
   const redirectTarget = state.kind === "redirecting" ? state.target : null;
 
   useEffect(() => {

@@ -19,6 +19,7 @@ describe("shared navigation destinations", () => {
     render(<Navbar />);
     const search = screen.getByLabelText("البحث في جميع الأعمال");
     fireEvent.change(search, { target: { value: "Trait Hoarder" } });
+    expect(search).toHaveAttribute("maxlength", "100");
     const form = search.closest("form");
     expect(form).not.toBeNull();
     if (form !== null) fireEvent.submit(form);

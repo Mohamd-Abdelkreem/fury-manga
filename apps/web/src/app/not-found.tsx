@@ -2,10 +2,10 @@ import Link from "next/link";
 
 export default function NotFound() {
   return (
-    <main className="state-page">
-      <p className="eyebrow">404 / Not found</p>
-      <h1>This route does not exist.</h1>
-      <Link href="/">Return to Fury Turbo</Link>
+    <main className="state-page" dir="rtl">
+      <p className="eyebrow">404</p>
+      <h1>الصفحة غير موجودة</h1>
+      <Link href="/">العودة إلى Fury</Link>
     </main>
   );
 }

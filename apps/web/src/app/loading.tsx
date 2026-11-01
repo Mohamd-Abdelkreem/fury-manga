@@ -1,8 +1,9 @@
+import { PublicCatalogState } from "@/features/public-catalog/components/PublicCatalogState";
+
 export default function Loading() {
   return (
-    <main className="state-page" aria-live="polite">
-      <p className="eyebrow">Loading</p>
-      <h1>Preparing the workspace…</h1>
+    <main className="state-page">
+      <PublicCatalogState kind="loading" />
     </main>
   );
 }

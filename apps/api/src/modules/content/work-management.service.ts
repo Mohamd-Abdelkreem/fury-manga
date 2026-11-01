@@ -12,11 +12,13 @@ import type { PaginationQuery } from "../../core/pagination/pagination.js";
 import { buildPaginationMeta } from "../../core/pagination/pagination.js";
 import {
   isTransactionConflict,
+  isWorkSlugConflict,
   rethrowWriteConflict,
 } from "./content-write-conflict.js";
 import {
   ContentConflictException,
   ContentStaleWriteException,
+  ContentWorkSlugConflictException,
 } from "./content.errors.js";
 import { mapAdminWork, mapAdminWorkListItem } from "./content.mapper.js";
 import {
@@ -180,6 +182,18 @@ export class WorkManagementService {
       );
       return mapAdminWork(created);
     } catch (error: unknown) {
+      if (isWorkSlugConflict(error)) {
+        const occupiedIdentity =
+          data.id === undefined
+            ? null
+            : await this.database.work.findUnique({
+                where: { id: data.id },
+                select: { id: true },
+              });
+        if (occupiedIdentity === null) {
+          throw new ContentWorkSlugConflictException();
+        }
+      }
       return rethrowWriteConflict(error);
     }
   }

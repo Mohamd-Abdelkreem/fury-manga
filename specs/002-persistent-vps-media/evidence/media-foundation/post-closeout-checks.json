@@ -1,0 +1,11 @@
+{
+  "documentationFormatting": "pass",
+  "changedFormattedCandidates": 95,
+  "markdownLocalTargets": "pass, zero missing",
+  "gitDiffCheck": "pass",
+  "headUnchanged": true,
+  "indexUnchangedAndUnstaged": true,
+  "originalFeatureBytesRestored": true,
+  "originalChecklistFilesUnchanged": 11,
+  "convergenceStageAlreadyClosed": "No production/test changes after final aggregate; this closing stage changes only evidence/task/documentation and restores original selection."
+}

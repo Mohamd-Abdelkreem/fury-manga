@@ -86,6 +86,9 @@ const chapter: ChapterRecord = {
           slot: MediaReferenceSlot.CHAPTER_PAGE,
           assetId: "77777777-7777-4777-8777-777777777777",
           asset: {
+            width: 600,
+            height: 800,
+            byteLength: 4096,
             status: MediaAssetStatus.AVAILABLE,
             mediaClass: "CHAPTER_PAGE",
             scope: "ADMIN",
@@ -129,7 +132,7 @@ describe("content allowlist mappers", () => {
     expect(mapAdminWork(work)).not.toHaveProperty("currentPublicationEventId");
     expect(mapAdminChapter(chapter)).toMatchObject({
       textContent: null,
-      pages: [{ position: 1 }],
+      pages: [{ position: 1, width: 600, height: 800, byteLength: 4096 }],
     });
     expect(mapAdminChapter(chapter)).not.toHaveProperty(
       "currentPublicationEventId",

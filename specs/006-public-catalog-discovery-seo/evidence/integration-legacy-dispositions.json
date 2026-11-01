@@ -1,0 +1,44 @@
+{
+  "kind": "current literal legacy task and phase dispositions after actual independent review and final verification",
+  "taskCount": 453,
+  "checked": 450,
+  "unchecked": 3,
+  "dispositions": {
+    "VERIFIED COMPLETE": 449,
+    "SUPERSEDED": 2,
+    "OWNER DECISION REQUIRED": 2
+  },
+  "remainingUnchecked": [
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T004",
+      "checked": false
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T002",
+      "checked": false
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T067",
+      "checked": false
+    }
+  ],
+  "phaseAcceptance": {
+    "P00": "PASS independent technical review",
+    "P01": "PASS independent technical review with original written approval",
+    "P02": "BLOCKED: T002/T067 approved representative-artwork/bounds input",
+    "P03": "technical complete; formal inherited P02 gate blocked",
+    "P04": "technical local-synthetic complete; formal inherited gate blocked; release-only obligations separate",
+    "P05": "technical implementation complete; inherited formal legacy gate blocked"
+  },
+  "verdicts": {
+    "P05 IMPLEMENTATION": "COMPLETE",
+    "LEGACY CLOSEOUT": "INCOMPLETE",
+    "NEXT SPEC": "NOT READY"
+  }
+}

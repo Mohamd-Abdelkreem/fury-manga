@@ -1,0 +1,47 @@
+{
+  "measurements": [
+    {
+      "kind": "representative-cover-gif",
+      "format": "gif",
+      "mediaClass": "work_cover",
+      "width": 600,
+      "height": 800,
+      "frames": 3,
+      "sourceBytes": 7965,
+      "storedBytes": 276,
+      "processingMs": 18,
+      "rssBefore": 126091264,
+      "rssAfter": 135053312,
+      "decodedPixels": 1440000
+    },
+    {
+      "kind": "representative-background-webp",
+      "format": "webp",
+      "mediaClass": "work_background",
+      "width": 900,
+      "height": 500,
+      "frames": 3,
+      "sourceBytes": 290,
+      "storedBytes": 290,
+      "processingMs": 16,
+      "rssBefore": 146718720,
+      "rssAfter": 153370624,
+      "decodedPixels": 1350000
+    },
+    {
+      "kind": "aggregate-budget-boundary",
+      "format": "webp",
+      "mediaClass": "chapter_page",
+      "width": 4000,
+      "height": 4000,
+      "frames": 2,
+      "sourceBytes": 906,
+      "storedBytes": 906,
+      "processingMs": 320,
+      "rssBefore": 534806528,
+      "rssAfter": 691306496,
+      "decodedPixels": 32000000
+    }
+  ],
+  "limits": "One local native process. RSS before/after is not peak/native allocator ownership; fixture generation excluded from timings. Native timeout applies per stage, not total HTTP lifetime."
+}

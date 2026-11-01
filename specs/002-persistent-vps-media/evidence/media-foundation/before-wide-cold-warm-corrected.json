@@ -1,0 +1,225 @@
+{
+  "passed": true,
+  "version": "before",
+  "viewport": 1280,
+  "profile": {
+    "slow": false,
+    "latencyMs": 20,
+    "downloadBytesPerSecond": 10485760
+  },
+  "persistedPages": 30,
+  "firstUsefulMs": 387,
+  "encodedDataBytesBeforeUseful": 1864483,
+  "initialRequests": [
+    1, 2, 3, 6, 4, 5, 8, 12, 9, 13, 10, 11, 7, 15, 16, 17, 18, 14, 20, 21, 22,
+    23, 24, 19, 25, 26, 27, 28, 29, 30
+  ],
+  "initialPreparedMs": 1222,
+  "maxApplicationOutstandingContentRequests": 30,
+  "requests": [
+    {
+      "index": 1,
+      "startedMs": 89
+    },
+    {
+      "index": 2,
+      "startedMs": 98
+    },
+    {
+      "index": 3,
+      "startedMs": 100
+    },
+    {
+      "index": 6,
+      "startedMs": 107
+    },
+    {
+      "index": 4,
+      "startedMs": 107
+    },
+    {
+      "index": 5,
+      "startedMs": 118
+    },
+    {
+      "index": 8,
+      "startedMs": 119
+    },
+    {
+      "index": 12,
+      "startedMs": 119
+    },
+    {
+      "index": 9,
+      "startedMs": 119
+    },
+    {
+      "index": 13,
+      "startedMs": 123
+    },
+    {
+      "index": 10,
+      "startedMs": 123
+    },
+    {
+      "index": 11,
+      "startedMs": 139
+    },
+    {
+      "index": 7,
+      "startedMs": 140
+    },
+    {
+      "index": 15,
+      "startedMs": 140
+    },
+    {
+      "index": 16,
+      "startedMs": 140
+    },
+    {
+      "index": 17,
+      "startedMs": 144
+    },
+    {
+      "index": 18,
+      "startedMs": 145
+    },
+    {
+      "index": 14,
+      "startedMs": 161
+    },
+    {
+      "index": 20,
+      "startedMs": 161
+    },
+    {
+      "index": 21,
+      "startedMs": 162
+    },
+    {
+      "index": 22,
+      "startedMs": 162
+    },
+    {
+      "index": 23,
+      "startedMs": 165
+    },
+    {
+      "index": 24,
+      "startedMs": 166
+    },
+    {
+      "index": 19,
+      "startedMs": 183
+    },
+    {
+      "index": 25,
+      "startedMs": 183
+    },
+    {
+      "index": 26,
+      "startedMs": 184
+    },
+    {
+      "index": 27,
+      "startedMs": 184
+    },
+    {
+      "index": 28,
+      "startedMs": 187
+    },
+    {
+      "index": 29,
+      "startedMs": 187
+    },
+    {
+      "index": 30,
+      "startedMs": 204
+    }
+  ],
+  "boundaries": [
+    {
+      "page": 5,
+      "stallMs": 66,
+      "requested": [
+        1, 2, 3, 6, 4, 5, 8, 12, 9, 13, 10, 11, 7, 15, 16, 17, 18, 14, 20, 21,
+        22, 23, 24, 19, 25, 26, 27, 28, 29, 30
+      ]
+    },
+    {
+      "page": 10,
+      "stallMs": 66,
+      "requested": [
+        1, 2, 3, 6, 4, 5, 8, 12, 9, 13, 10, 11, 7, 15, 16, 17, 18, 14, 20, 21,
+        22, 23, 24, 19, 25, 26, 27, 28, 29, 30
+      ]
+    },
+    {
+      "page": 15,
+      "stallMs": 66,
+      "requested": [
+        1, 2, 3, 6, 4, 5, 8, 12, 9, 13, 10, 11, 7, 15, 16, 17, 18, 14, 20, 21,
+        22, 23, 24, 19, 25, 26, 27, 28, 29, 30
+      ]
+    },
+    {
+      "kind": "warm reversal",
+      "page": 13,
+      "stallMs": 37,
+      "newRequests": 0
+    }
+  ],
+  "resources": {
+    "base": {
+      "active": 0,
+      "bytes": 0,
+      "maximum": 0,
+      "maxBytes": 0
+    },
+    "firstReady": {
+      "active": 5,
+      "bytes": 1126035,
+      "maximum": 5,
+      "maxBytes": 1126035
+    },
+    "atEnd": {
+      "active": 30,
+      "bytes": 10505060,
+      "maximum": 30,
+      "maxBytes": 10505060
+    },
+    "afterClose": {
+      "active": 0,
+      "bytes": 0,
+      "maximum": 30,
+      "maxBytes": 10505060
+    }
+  },
+  "layout": {
+    "width": 1280,
+    "scrollWidth": 1280,
+    "initialFirstPageHeight": 30,
+    "readyFirstPageHeight": 1000,
+    "shifts": [
+      {
+        "value": 0.027480468749999997,
+        "hadRecentInput": false
+      },
+      {
+        "value": 0.2897135416666667,
+        "hadRecentInput": true
+      },
+      {
+        "value": 0.23434956868489584,
+        "hadRecentInput": true
+      }
+    ]
+  },
+  "heap": {
+    "usedSize": 23524364,
+    "totalSize": 36159488,
+    "limit": "JavaScript heap only; excludes native decoder/GPU animation memory"
+  },
+  "measurement": "One controlled real-Chromium/Express/PostgreSQL sample; warm means retained ready pages within this open viewer, not cross-session protected persistence"
+}

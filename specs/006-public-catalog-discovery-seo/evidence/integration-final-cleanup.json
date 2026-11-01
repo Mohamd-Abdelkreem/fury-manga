@@ -1,0 +1,19 @@
+{
+  "kind": "verified cleanup of resources owned by this integration only",
+  "browserSessions": {
+    "fury-p05-design": "closed",
+    "fury-p05-admin": "already not open"
+  },
+  "loopbackPortsClosed": {
+    "4315": true,
+    "4316": true,
+    "4317": true
+  },
+  "ownedContainerRemoved": "fury-p05-integration-20261101",
+  "ownedContainerLabelVerified": true,
+  "anonymousContainerVolumesRemoved": true,
+  "ownedMediaRootRemoved": "/private/tmp/fury-p05-integration-20261101/media",
+  "featurePointerRestored": true,
+  "otherServicesOrDatasetsTouched": false,
+  "retainedBoundary": "Reviewable source/evidence and original dirty-worktree backup remain; disposable runtime is not a durable dependency"
+}

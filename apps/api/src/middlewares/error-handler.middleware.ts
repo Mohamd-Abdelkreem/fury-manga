@@ -2,6 +2,8 @@ import type { ErrorRequestHandler } from "express";
 
 import type { ErrorEnvelope } from "@fury/contracts";
 
+import { BadRequestException } from "../core/errors/bad-request.error.js";
+import { publicContentRouteIdentity } from "../infrastructure/logger/request-sanitizer.js";
 import { AppError } from "../core/errors/app.error.js";
 import { mapPrismaError } from "../infrastructure/database/prisma-error.mapper.js";
 
@@ -39,8 +41,22 @@ export const errorHandlerMiddleware: ErrorRequestHandler = (
   _next,
 ) => {
   let appError: AppError;
+  const publicPath = publicContentRouteIdentity(request.originalUrl);
+  let malformedPublicPath = false;
+  if (publicPath !== undefined) {
+    try {
+      decodeURIComponent(request.originalUrl.split("?", 1)[0] ?? "");
+    } catch {
+      malformedPublicPath = true;
+    }
+  }
 
-  if (error instanceof AppError) {
+  if (
+    publicPath !== undefined &&
+    (malformedPublicPath || error instanceof URIError)
+  ) {
+    appError = new BadRequestException("Malformed request URL.");
+  } else if (error instanceof AppError) {
     appError = error;
   } else {
     appError = mapPrismaError(error);
@@ -61,7 +77,13 @@ export const errorHandlerMiddleware: ErrorRequestHandler = (
 
   return response
     .status(appError.statusCode)
-    .json(createErrorResponse(appError, request.path, request.requestId));
+    .json(
+      createErrorResponse(
+        appError,
+        publicPath ?? request.path,
+        request.requestId,
+      ),
+    );
 };
 
 export const errorHandler = errorHandlerMiddleware;

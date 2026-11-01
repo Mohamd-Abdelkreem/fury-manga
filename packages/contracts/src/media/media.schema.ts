@@ -29,6 +29,20 @@ export const MEDIA_SOURCE_BYTE_LIMITS = {
   comment_decoration: 4 * MIB,
 } as const satisfies Record<z.infer<typeof mediaClassSchema>, number>;
 
+const STATIC_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+const WORK_IMAGE_TYPES = [...STATIC_IMAGE_TYPES, "image/gif"] as const;
+export const MEDIA_SOURCE_TYPES = {
+  work_cover: WORK_IMAGE_TYPES,
+  work_background: WORK_IMAGE_TYPES,
+  chapter_page: WORK_IMAGE_TYPES,
+  user_avatar: STATIC_IMAGE_TYPES,
+  avatar_frame: ["image/png", "image/webp"],
+  comment_decoration: ["image/png", "image/webp"],
+} as const satisfies Record<
+  z.infer<typeof mediaClassSchema>,
+  readonly string[]
+>;
+
 export const adminMediaClassSchema = mediaClassSchema.exclude(["user_avatar"]);
 export const mediaUploadFieldSchema = z
   .object({ mediaClass: mediaClassSchema })
@@ -92,6 +106,7 @@ export const mediaAttemptSchema = z
         "MEDIA_INVALID_FILE",
         "MEDIA_UNSUPPORTED_TYPE",
         "MEDIA_LIMIT_EXCEEDED",
+        "MEDIA_PROCESSING_BUSY",
       ])
       .nullable(),
     createdAt: timestamp,
@@ -201,6 +216,7 @@ export const mediaOperationErrorCodeSchema = z.enum([
   "MEDIA_INVALID_FILE",
   "MEDIA_UNSUPPORTED_TYPE",
   "MEDIA_LIMIT_EXCEEDED",
+  "MEDIA_PROCESSING_BUSY",
   "UPLOAD_IN_PROGRESS",
   "UPLOAD_ATTEMPT_CONFLICT",
   "UPLOAD_INCOMPLETE",

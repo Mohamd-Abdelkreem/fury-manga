@@ -124,3 +124,11 @@ The 2026-09-27 owner clarification permits a development-only P04 implementation
 ## Complexity Tracking
 
 No constitutional violation is justified or waived. The retained page marker and aggregate save add necessary complexity because the existing restrictive media history cannot be preserved by delete/recreate; [research.md](research.md) records the rejected simpler alternatives.
+
+## Media-foundation maintenance overlay — 2026-11-01
+
+The separately owner-authorized existing P02 T081–T085 extension covers animated
+Work/Chapter media and bounded existing persisted-preview/public-image consumers
+under constitution2.2.0. Preserve completed phase task IDs and current data/authority,
+publication, design and denial fences. This maintenance does not reopen the completed
+original implementation, create a specification or implement the future P07 reader.

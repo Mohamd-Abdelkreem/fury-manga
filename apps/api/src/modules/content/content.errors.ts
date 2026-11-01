@@ -16,6 +16,13 @@ export class ContentConflictException extends ContentException {
   }
 }
 
+export class ContentWorkSlugConflictException extends ContentException {
+  constructor() {
+    super("CONTENT_SLUG_CONFLICT", "The Work slug is already in use.");
+    this.name = "ContentWorkSlugConflictException";
+  }
+}
+
 export class ContentImmutableException extends ContentException {
   constructor(message = "An immutable content field cannot be changed.") {
     super("CONTENT_IMMUTABLE", message);

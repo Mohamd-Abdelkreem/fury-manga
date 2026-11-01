@@ -14,6 +14,7 @@ import {
 } from "@fury/contracts";
 import {
   MediaAssetStatus,
+  MediaClass,
   MediaReferenceAction,
   MediaReferenceSlot,
   MediaScope,
@@ -28,8 +29,12 @@ import {
 } from "@fury/database";
 
 import { AppError } from "../../core/errors/app.error.js";
+import { ForbiddenException } from "../../core/errors/forbidden.error.js";
+import { UnauthorizedException } from "../../core/errors/unauthorized.error.js";
 import { ContentNotReadyException } from "../content/content.errors.js";
-import { validateImage } from "../../infrastructure/media/image-validation.js";
+import type { ImageProcessor } from "../../infrastructure/media/image-processor.js";
+import type { ValidatedImage } from "../../infrastructure/media/image-validation.js";
+import { readVerifiedMedia } from "../../infrastructure/media/media-read-integrity.js";
 import { mediaSha256 } from "../../infrastructure/media/media-digest.js";
 import {
   MediaReconciler,
@@ -44,6 +49,15 @@ import {
 import {
   MediaUnavailableException,
   MediaVersionConflictException,
+  MediaAssetNotFoundException,
+  MediaTargetNotFoundException,
+  MediaReferenceNotFoundException,
+  UploadAttemptNotFoundException,
+  MediaTargetConflictException,
+  ChapterPageReferenceWriteException,
+  MediaInUseException,
+  UploadAttemptConflictException,
+  UploadInProgressException,
 } from "./media.errors.js";
 import {
   findActorUploadAttempt,
@@ -71,16 +85,20 @@ export class MediaService {
   constructor(
     private readonly database: DatabaseClient,
     private readonly storage: MediaStorage,
+    private readonly imageProcessor: ImageProcessor,
   ) {}
 
-  reconcile(limit?: number): Promise<MediaReconcileReport> {
-    return new MediaReconciler(this.database, this.storage).run(limit);
+  async reconcile(limit?: number): Promise<MediaReconcileReport> {
+    const reconciler = new MediaReconciler(this.database, this.storage);
+    const report = await reconciler.run(limit);
+    return report;
   }
 
   async uploadAdmin(
     command: UploadAdminCommand,
   ): Promise<{ asset: MediaAssetDto; replayed: boolean }> {
-    return this.upload(command);
+    const result = await this.upload(command);
+    return result;
   }
 
   async upload(
@@ -91,7 +109,8 @@ export class MediaService {
       command.attemptId,
       command.mediaClass,
     );
-    return this.completeUpload(command, reservation);
+    const result = await this.completeUpload(command, reservation);
+    return result;
   }
 
   async reserveAdminUpload(
@@ -99,7 +118,12 @@ export class MediaService {
     attemptId: string,
     mediaClass: UploadAdminCommand["mediaClass"],
   ): Promise<MediaUploadReservation> {
-    return this.reserveUpload(actorUserId, attemptId, mediaClass);
+    const reservation = await this.reserveUpload(
+      actorUserId,
+      attemptId,
+      mediaClass,
+    );
+    return reservation;
   }
 
   async reserveUpload(
@@ -109,7 +133,7 @@ export class MediaService {
   ): Promise<MediaUploadReservation> {
     const actor = await this.assertActiveActor(actorUserId);
     if (mediaClass !== "user_avatar" && actor.role !== UserRole.ADMIN) {
-      throw new AppError("Administrator access required.", 403, "FORBIDDEN");
+      throw new ForbiddenException("Administrator access required.");
     }
     const expectedClass = toDatabaseMediaClass(mediaClass);
     const existing = await findActorUploadAttempt(
@@ -119,11 +143,7 @@ export class MediaService {
     );
     if (existing !== null) {
       if (existing.mediaClass !== expectedClass) {
-        throw new AppError(
-          "Upload attempt key conflicts with its prior result.",
-          409,
-          "UPLOAD_ATTEMPT_CONFLICT",
-        );
+        throw new UploadAttemptConflictException();
       }
       return { assetId: existing.assetId, attempt: existing, created: false };
     }
@@ -142,7 +162,7 @@ export class MediaService {
             relativeKey: `${assetId}.bin`,
           },
         });
-        return transaction.uploadAttempt.create({
+        const createdAttempt = await transaction.uploadAttempt.create({
           data: {
             id: attemptId,
             actorUserId,
@@ -150,6 +170,7 @@ export class MediaService {
             assetId,
           },
         });
+        return createdAttempt;
       });
       return { assetId, attempt, created: true };
     } catch (error) {
@@ -164,11 +185,7 @@ export class MediaService {
         );
         if (winner !== null) {
           if (winner.mediaClass !== expectedClass) {
-            throw new AppError(
-              "Upload attempt key conflicts with its prior result.",
-              409,
-              "UPLOAD_ATTEMPT_CONFLICT",
-            );
+            throw new UploadAttemptConflictException();
           }
           return { assetId: winner.assetId, attempt: winner, created: false };
         }
@@ -181,7 +198,8 @@ export class MediaService {
     command: UploadAdminCommand,
     reservation: MediaUploadReservation,
   ): Promise<{ asset: MediaAssetDto; replayed: boolean }> {
-    return this.completeUpload(command, reservation);
+    const result = await this.completeUpload(command, reservation);
+    return result;
   }
 
   async completeUpload(
@@ -190,7 +208,12 @@ export class MediaService {
   ): Promise<{ asset: MediaAssetDto; replayed: boolean }> {
     const sourceSha256 = mediaSha256(command.source);
     if (!reservation.created) {
-      return this.resolveAttempt(reservation.attempt, command, sourceSha256);
+      const result = await this.resolveAttempt(
+        reservation.attempt,
+        command,
+        sourceSha256,
+      );
+      return result;
     }
     const assetId = reservation.assetId;
     if (assetId === null) throw new MediaUnavailableException();
@@ -204,9 +227,9 @@ export class MediaService {
       data: { sourceSha256 },
     });
 
-    let validated: Awaited<ReturnType<typeof validateImage>>;
+    let validated: ValidatedImage;
     try {
-      validated = await validateImage(
+      validated = await this.imageProcessor.process(
         command.source,
         command.mediaClass,
         command.declaredType,
@@ -262,23 +285,27 @@ export class MediaService {
 
   async readAdmin(actorUserId: string, assetId: string): Promise<Buffer> {
     const asset = await this.lookupAdminAsset(actorUserId, assetId);
-    return this.readStoredAsset(asset);
+    const bytes = await this.readStoredAsset(asset);
+    return bytes;
   }
 
   async read(actorUserId: string, assetId: string): Promise<Buffer> {
     const asset = await this.lookupAsset(actorUserId, assetId);
-    return this.readStoredAsset(asset);
+    const bytes = await this.readStoredAsset(asset);
+    return bytes;
   }
 
   async getAdminAsset(
     actorUserId: string,
     assetId: string,
   ): Promise<MediaAssetDto> {
-    return mapMediaAsset(await this.lookupAdminAsset(actorUserId, assetId));
+    const asset = await this.lookupAdminAsset(actorUserId, assetId);
+    return mapMediaAsset(asset);
   }
 
   async getAsset(actorUserId: string, assetId: string): Promise<MediaAssetDto> {
-    return mapMediaAsset(await this.lookupAsset(actorUserId, assetId));
+    const asset = await this.lookupAsset(actorUserId, assetId);
+    return mapMediaAsset(asset);
   }
 
   async getAdminAttempt(
@@ -291,8 +318,7 @@ export class MediaService {
       actorUserId,
       attemptId,
     );
-    if (attempt === null)
-      throw new AppError("Upload attempt not found.", 404, "NOT_FOUND");
+    if (attempt === null) throw new UploadAttemptNotFoundException();
     return mapMediaAttempt(attempt);
   }
 
@@ -322,7 +348,8 @@ export class MediaService {
       ],
       { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
     );
-    return this.toMediaPage(assets, page, limit, total);
+    const mediaPage = this.toMediaPage(assets, page, limit, total);
+    return mediaPage;
   }
 
   async listMine(
@@ -349,7 +376,8 @@ export class MediaService {
       ],
       { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
     );
-    return this.toMediaPage(assets, page, limit, total);
+    const mediaPage = this.toMediaPage(assets, page, limit, total);
+    return mediaPage;
   }
 
   async removeOwnAvatar(
@@ -363,7 +391,7 @@ export class MediaService {
       assetId,
     );
     if (asset === null) {
-      throw new AppError("Media asset not found.", 404, "NOT_FOUND");
+      throw new MediaAssetNotFoundException();
     }
     if (asset.status === MediaAssetStatus.REMOVED) {
       return { id: asset.id, status: "removed" };
@@ -374,7 +402,7 @@ export class MediaService {
       asset.status !== MediaAssetStatus.AVAILABLE &&
       asset.status !== MediaAssetStatus.UNAVAILABLE
     ) {
-      throw new AppError("Media asset not found.", 404, "NOT_FOUND");
+      throw new MediaAssetNotFoundException();
     }
     const claimed = await this.database.mediaAsset.updateMany({
       where: {
@@ -407,11 +435,15 @@ export class MediaService {
       actorUserId,
       assetId,
     );
-    if (ownedAvatar !== null) return this.removeOwnAvatar(actorUserId, assetId);
-    if (actor.role === UserRole.ADMIN) {
-      return this.removeAdminAsset(actorUserId, assetId);
+    if (ownedAvatar !== null) {
+      const removal = await this.removeOwnAvatar(actorUserId, assetId);
+      return removal;
     }
-    throw new AppError("Media asset not found.", 404, "NOT_FOUND");
+    if (actor.role === UserRole.ADMIN) {
+      const removal = await this.removeAdminAsset(actorUserId, assetId);
+      return removal;
+    }
+    throw new MediaAssetNotFoundException();
   }
 
   async getReferenceForTarget(
@@ -424,7 +456,7 @@ export class MediaService {
     if (
       !(await mediaReferenceTargetExists(this.database, rule.slot, targetId))
     ) {
-      throw new AppError("Media target not found.", 404, "NOT_FOUND");
+      throw new MediaTargetNotFoundException();
     }
     const reference = await findActiveMediaReference(
       this.database,
@@ -448,7 +480,7 @@ export class MediaService {
         workId,
       ))
     ) {
-      throw new AppError("Media target not found.", 404, "NOT_FOUND");
+      throw new MediaTargetNotFoundException();
     }
 
     const assetIds = [selection.coverAssetId, selection.backgroundAssetId]
@@ -534,7 +566,7 @@ export class MediaService {
         asset.mediaClass !== rule.mediaClass ||
         asset.status !== MediaAssetStatus.AVAILABLE
       ) {
-        throw new AppError("Media asset not found.", 404, "NOT_FOUND");
+        throw new MediaAssetNotFoundException();
       }
       if (current?.assetId === assetId) continue;
       if (current === undefined) {
@@ -600,8 +632,7 @@ export class MediaService {
     const reference = await this.database.mediaReference.findFirst({
       where: { id: referenceId, retiredAt: null },
     });
-    if (reference === null)
-      throw new AppError("Media reference not found.", 404, "NOT_FOUND");
+    if (reference === null) throw new MediaReferenceNotFoundException();
     return mapMediaReference(reference);
   }
 
@@ -611,11 +642,7 @@ export class MediaService {
   ): Promise<{ reference: MediaReferenceDto; created: boolean }> {
     await this.assertAdmin(actorUserId);
     if (command.targetKind === "chapter_page") {
-      throw new AppError(
-        "Edit the parent Chapter to change its pages.",
-        409,
-        "MEDIA_TARGET_CONFLICT",
-      );
+      throw new ChapterPageReferenceWriteException();
     }
     const rule = mediaReferenceRule(command.targetKind);
     if (
@@ -625,10 +652,10 @@ export class MediaService {
         command.targetId,
       ))
     ) {
-      throw new AppError("Media target not found.", 404, "NOT_FOUND");
+      throw new MediaTargetNotFoundException();
     }
     try {
-      return await this.database.$transaction(
+      const binding = await this.database.$transaction(
         async (transaction) => {
           await this.lockWorkForMediaChange(transaction, command.targetId);
           await transaction.$queryRaw`SELECT id FROM media_assets WHERE id = ${command.assetId}::uuid FOR UPDATE`;
@@ -641,7 +668,7 @@ export class MediaService {
             asset.mediaClass !== rule.mediaClass ||
             asset.status !== MediaAssetStatus.AVAILABLE
           ) {
-            throw new AppError("Media asset not found.", 404, "NOT_FOUND");
+            throw new MediaAssetNotFoundException();
           }
           const existing = await findActiveMediaReference(
             transaction,
@@ -652,17 +679,13 @@ export class MediaService {
             if (existing.assetId === command.assetId) {
               return { reference: mapMediaReference(existing), created: false };
             }
-            throw new AppError(
-              "Media target already has a reference.",
-              409,
-              "MEDIA_TARGET_CONFLICT",
-            );
+            throw new MediaTargetConflictException();
           }
           const reference = await transaction.mediaReference.create({
             data: {
               assetId: command.assetId,
               slot: rule.slot,
-              ...(rule.slot === "CHAPTER_PAGE"
+              ...(rule.slot === MediaReferenceSlot.CHAPTER_PAGE
                 ? { chapterPageId: command.targetId }
                 : { workId: command.targetId }),
             },
@@ -681,6 +704,7 @@ export class MediaService {
         },
         { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
       );
+      return binding;
     } catch (error) {
       const targetRace =
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -702,14 +726,10 @@ export class MediaService {
             asset.scope !== MediaScope.ADMIN ||
             asset.mediaClass !== rule.mediaClass
           ) {
-            throw new AppError("Media asset not found.", 404, "NOT_FOUND");
+            throw new MediaAssetNotFoundException();
           }
         }
-        throw new AppError(
-          "Media target already has a reference.",
-          409,
-          "MEDIA_TARGET_CONFLICT",
-        );
+        throw new MediaTargetConflictException();
       }
       throw error;
     }
@@ -723,7 +743,7 @@ export class MediaService {
     await this.assertAdmin(actorUserId);
     await this.assertWorkReferenceWriteTarget(referenceId);
     try {
-      return await this.database.$transaction(
+      const replacement = await this.database.$transaction(
         async (transaction) => {
           const parent = await this.lockReferenceParent(
             transaction,
@@ -738,7 +758,7 @@ export class MediaService {
             where: { id: referenceId },
           });
           if (reference === null || reference.retiredAt !== null) {
-            throw new AppError("Media reference not found.", 404, "NOT_FOUND");
+            throw new MediaReferenceNotFoundException();
           }
           if (
             reference.assetId === command.assetId &&
@@ -772,18 +792,18 @@ export class MediaService {
             where: { id: command.assetId },
           });
           const expectedClass =
-            reference.slot === "WORK_COVER"
-              ? "WORK_COVER"
-              : reference.slot === "WORK_BACKGROUND"
-                ? "WORK_BACKGROUND"
-                : "CHAPTER_PAGE";
+            reference.slot === MediaReferenceSlot.WORK_COVER
+              ? MediaClass.WORK_COVER
+              : reference.slot === MediaReferenceSlot.WORK_BACKGROUND
+                ? MediaClass.WORK_BACKGROUND
+                : MediaClass.CHAPTER_PAGE;
           if (
             asset === null ||
             asset.scope !== MediaScope.ADMIN ||
             asset.mediaClass !== expectedClass ||
             asset.status !== MediaAssetStatus.AVAILABLE
           ) {
-            throw new AppError("Media asset not found.", 404, "NOT_FOUND");
+            throw new MediaAssetNotFoundException();
           }
           const resultVersion = reference.version + 1;
           const updated = await transaction.mediaReference.update({
@@ -806,6 +826,7 @@ export class MediaService {
         },
         { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
       );
+      return replacement;
     } catch (error) {
       if (!isTransactionWriteConflict(error)) throw error;
       const reference = await this.database.mediaReference.findUnique({
@@ -846,77 +867,80 @@ export class MediaService {
     await this.assertAdmin(actorUserId);
     await this.assertWorkReferenceWriteTarget(referenceId);
     try {
-      return await this.database.$transaction(
-        async (transaction) => {
-          const parent = await this.lockReferenceParent(
-            transaction,
-            referenceId,
-          );
-          await transaction.$queryRaw`SELECT id FROM media_references WHERE id = ${referenceId}::uuid FOR UPDATE`;
-          const reference = await transaction.mediaReference.findUnique({
-            where: { id: referenceId },
-          });
-          if (reference === null)
-            throw new AppError("Media reference not found.", 404, "NOT_FOUND");
-          if (reference.retiredAt !== null) {
-            const repeated = await transaction.mediaReferenceEvent.findUnique({
-              where: {
-                referenceId_resultVersion: {
-                  referenceId,
-                  resultVersion: reference.version,
+      const retirement: { id: string; status: "retired"; version: number } =
+        await this.database.$transaction(
+          async (transaction) => {
+            const parent = await this.lockReferenceParent(
+              transaction,
+              referenceId,
+            );
+            await transaction.$queryRaw`SELECT id FROM media_references WHERE id = ${referenceId}::uuid FOR UPDATE`;
+            const reference = await transaction.mediaReference.findUnique({
+              where: { id: referenceId },
+            });
+            if (reference === null) throw new MediaReferenceNotFoundException();
+            if (reference.retiredAt !== null) {
+              const repeated = await transaction.mediaReferenceEvent.findUnique(
+                {
+                  where: {
+                    referenceId_resultVersion: {
+                      referenceId,
+                      resultVersion: reference.version,
+                    },
+                  },
                 },
+              );
+              if (
+                repeated?.action === MediaReferenceAction.RETIRED &&
+                repeated.actorUserId === actorUserId &&
+                repeated.fromAssetId === command.expectedAssetId &&
+                reference.version === command.expectedVersion + 1
+              ) {
+                return {
+                  id: reference.id,
+                  status: "retired",
+                  version: reference.version,
+                };
+              }
+              throw new MediaReferenceNotFoundException();
+            }
+            if (
+              reference.assetId !== command.expectedAssetId ||
+              reference.version !== command.expectedVersion
+            ) {
+              throw new MediaVersionConflictException();
+            }
+            if (
+              reference.slot === MediaReferenceSlot.WORK_COVER &&
+              parent?.publicationStatus === PublicationStatus.PUBLISHED
+            ) {
+              throw new ContentNotReadyException(["coverAssetId"]);
+            }
+            const resultVersion = reference.version + 1;
+            await transaction.mediaReference.update({
+              where: { id: reference.id },
+              data: { retiredAt: new Date(), version: resultVersion },
+            });
+            await transaction.mediaReferenceEvent.create({
+              data: {
+                referenceId: reference.id,
+                actorUserId,
+                action: MediaReferenceAction.RETIRED,
+                fromAssetId: reference.assetId,
+                resultVersion,
               },
             });
-            if (
-              repeated?.action === MediaReferenceAction.RETIRED &&
-              repeated.actorUserId === actorUserId &&
-              repeated.fromAssetId === command.expectedAssetId &&
-              reference.version === command.expectedVersion + 1
-            ) {
-              return {
-                id: reference.id,
-                status: "retired",
-                version: reference.version,
-              };
-            }
-            throw new AppError("Media reference not found.", 404, "NOT_FOUND");
-          }
-          if (
-            reference.assetId !== command.expectedAssetId ||
-            reference.version !== command.expectedVersion
-          ) {
-            throw new MediaVersionConflictException();
-          }
-          if (
-            reference.slot === MediaReferenceSlot.WORK_COVER &&
-            parent?.publicationStatus === PublicationStatus.PUBLISHED
-          ) {
-            throw new ContentNotReadyException(["coverAssetId"]);
-          }
-          const resultVersion = reference.version + 1;
-          await transaction.mediaReference.update({
-            where: { id: reference.id },
-            data: { retiredAt: new Date(), version: resultVersion },
-          });
-          await transaction.mediaReferenceEvent.create({
-            data: {
-              referenceId: reference.id,
-              actorUserId,
-              action: MediaReferenceAction.RETIRED,
-              fromAssetId: reference.assetId,
-              resultVersion,
-            },
-          });
-          if (parent !== null)
-            await this.advanceWorkVersion(transaction, parent.workId);
-          return {
-            id: reference.id,
-            status: "retired",
-            version: resultVersion,
-          };
-        },
-        { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
-      );
+            if (parent !== null)
+              await this.advanceWorkVersion(transaction, parent.workId);
+            return {
+              id: reference.id,
+              status: "retired",
+              version: resultVersion,
+            };
+          },
+          { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+        );
+      return retirement;
     } catch (error) {
       if (!isTransactionWriteConflict(error)) throw error;
       const reference = await this.database.mediaReference.findUnique({
@@ -966,7 +990,7 @@ export class MediaService {
             where: { id: assetId },
           });
           if (current === null || current.scope !== MediaScope.ADMIN) {
-            throw new AppError("Media asset not found.", 404, "NOT_FOUND");
+            throw new MediaAssetNotFoundException();
           }
           if (current.status === MediaAssetStatus.REMOVED) return current;
           if (current.status === MediaAssetStatus.REMOVING)
@@ -975,18 +999,19 @@ export class MediaService {
             current.status !== MediaAssetStatus.AVAILABLE &&
             current.status !== MediaAssetStatus.UNAVAILABLE
           ) {
-            throw new AppError("Media asset not found.", 404, "NOT_FOUND");
+            throw new MediaAssetNotFoundException();
           }
           const activeUses = await transaction.mediaReference.count({
             where: { assetId, retiredAt: null },
           });
           if (activeUses > 0) {
-            throw new AppError("Media asset is in use.", 409, "MEDIA_IN_USE");
+            throw new MediaInUseException();
           }
-          return transaction.mediaAsset.update({
+          const removingAsset = await transaction.mediaAsset.update({
             where: { id: assetId },
             data: { status: MediaAssetStatus.REMOVING },
           });
+          return removingAsset;
         },
         { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
       );
@@ -996,7 +1021,7 @@ export class MediaService {
         where: { assetId, retiredAt: null },
       });
       if (activeUses > 0) {
-        throw new AppError("Media asset is in use.", 409, "MEDIA_IN_USE");
+        throw new MediaInUseException();
       }
       const current = await findMediaAsset(this.database, assetId);
       if (current?.status === MediaAssetStatus.REMOVED) {
@@ -1028,14 +1053,10 @@ export class MediaService {
       select: { slot: true },
     });
     if (reference === null) {
-      throw new AppError("Media reference not found.", 404, "NOT_FOUND");
+      throw new MediaReferenceNotFoundException();
     }
     if (reference.slot === MediaReferenceSlot.CHAPTER_PAGE) {
-      throw new AppError(
-        "Edit the parent Chapter to change its pages.",
-        409,
-        "MEDIA_TARGET_CONFLICT",
-      );
+      throw new ChapterPageReferenceWriteException();
     }
   }
 
@@ -1048,8 +1069,7 @@ export class MediaService {
       where: { id: workId },
       select: { publicationStatus: true },
     });
-    if (work === null)
-      throw new AppError("Media target not found.", 404, "NOT_FOUND");
+    if (work === null) throw new MediaTargetNotFoundException();
     return work.publicationStatus;
   }
 
@@ -1081,19 +1101,12 @@ export class MediaService {
   }
 
   private async readStoredAsset(asset: MediaAsset): Promise<Buffer> {
-    let bytes: Buffer;
     try {
-      bytes = await this.storage.read(asset.id);
+      const bytes = await readVerifiedMedia(this.storage, asset);
+      return bytes;
     } catch {
       throw new MediaUnavailableException();
     }
-    if (
-      bytes.length !== asset.byteLength ||
-      mediaSha256(bytes) !== asset.sha256
-    ) {
-      throw new MediaUnavailableException();
-    }
-    return bytes;
   }
 
   private toMediaPage(
@@ -1120,10 +1133,10 @@ export class MediaService {
     await this.assertAdmin(actorUserId);
     const asset = await findMediaAsset(this.database, assetId);
     if (asset === null || asset.scope !== MediaScope.ADMIN) {
-      throw new AppError("Media asset not found.", 404, "NOT_FOUND");
+      throw new MediaAssetNotFoundException();
     }
     if (asset.status === MediaAssetStatus.REMOVED) {
-      throw new AppError("Media asset not found.", 404, "NOT_FOUND");
+      throw new MediaAssetNotFoundException();
     }
     if (asset.status !== MediaAssetStatus.AVAILABLE)
       throw new MediaUnavailableException();
@@ -1139,7 +1152,7 @@ export class MediaService {
     );
     if (ownedAvatar !== null) {
       if (ownedAvatar.status === MediaAssetStatus.REMOVED) {
-        throw new AppError("Media asset not found.", 404, "NOT_FOUND");
+        throw new MediaAssetNotFoundException();
       }
       if (ownedAvatar.status !== MediaAssetStatus.AVAILABLE)
         throw new MediaUnavailableException();
@@ -1151,10 +1164,10 @@ export class MediaService {
       asset.scope !== MediaScope.ADMIN ||
       actor.role !== UserRole.ADMIN
     ) {
-      throw new AppError("Media asset not found.", 404, "NOT_FOUND");
+      throw new MediaAssetNotFoundException();
     }
     if (asset.status === MediaAssetStatus.REMOVED) {
-      throw new AppError("Media asset not found.", 404, "NOT_FOUND");
+      throw new MediaAssetNotFoundException();
     }
     if (asset.status !== MediaAssetStatus.AVAILABLE)
       throw new MediaUnavailableException();
@@ -1164,7 +1177,7 @@ export class MediaService {
   private async assertAdmin(actorUserId: string): Promise<void> {
     const actor = await this.assertActiveActor(actorUserId);
     if (actor.role !== UserRole.ADMIN) {
-      throw new AppError("Administrator access required.", 403, "FORBIDDEN");
+      throw new ForbiddenException("Administrator access required.");
     }
   }
 
@@ -1178,7 +1191,7 @@ export class MediaService {
       actor.status !== UserStatus.ACTIVE ||
       actor.emailVerifiedAt === null
     ) {
-      throw new AppError("Authentication required.", 401, "UNAUTHORIZED");
+      throw new UnauthorizedException("Authentication required.");
     }
     return actor;
   }
@@ -1193,25 +1206,13 @@ export class MediaService {
       attempt.state === UploadAttemptState.REJECTED ||
       (attempt.sourceSha256 !== null && attempt.sourceSha256 !== sourceSha256)
     ) {
-      throw new AppError(
-        "Upload attempt key conflicts with its prior result.",
-        409,
-        "UPLOAD_ATTEMPT_CONFLICT",
-      );
+      throw new UploadAttemptConflictException();
     }
     if (attempt.state === UploadAttemptState.PENDING) {
-      throw new AppError(
-        "Upload attempt is still pending.",
-        409,
-        "UPLOAD_IN_PROGRESS",
-      );
+      throw new UploadInProgressException();
     }
     if (attempt.sourceSha256 !== sourceSha256) {
-      throw new AppError(
-        "Upload attempt key conflicts with its prior result.",
-        409,
-        "UPLOAD_ATTEMPT_CONFLICT",
-      );
+      throw new UploadAttemptConflictException();
     }
     if (attempt.assetId === null) throw new MediaUnavailableException();
     const asset = await findMediaAsset(this.database, attempt.assetId);

@@ -433,6 +433,53 @@ P11 may be developed in parallel with P03–P10 after its P01 prerequisites exis
 - Unpublished/archived transitions stop content access without leaking it from cached public responses.
 - Network/bundle verification proves zero advertising/detection behavior on the reader.
 
+### Media-foundation handoff — owner decision 2026-11-01
+
+P02's authorized legacy extension owns animated GIF/WebP ingestion for
+`work_cover`, `work_background` and `chapter_page`, canonical animated WebP
+storage, existing Work consumers and the current persisted administrator Chapter
+preview. It does not implement this P07 reader. The current protected chapter
+route still consumes `MOCK_PAGES`; its client session gate is not API chapter
+content authorization. P06 remains the recorded P07 prerequisite.
+
+P07 must adapt the shared illustrated renderer's pure scheduling/resource policy
+to its own real protected reader authority; the present administrator-only media
+adapter is not a user-reader endpoint. Return stable ordered page/asset identities
+with authorized dimensions and byte lengths. Authenticate every content GET/HEAD,
+recheck active verified account and current publication eligibility, and keep
+private content `no-store`. Never turn chapter pages into public Work-image URLs.
+
+The starting continuous policy is visible-first, initial eligible pages 1–10,
+extension toward 11–20 near page 5, then finite groups; at most two transfers,
+one while the visible page is unready, a two-page rear window and at most twenty
+retained images. Enforce 24 MiB encoded resources and 32 million decoded pixels
+(charging animation frames), in addition to server per-image limits. Reduced
+motion uses temporary still display resources, with a separate 96 MiB ceiling;
+the stored animation remains intact. Slow/2G/3G or save-data uses one transfer,
+initial five and extension near page three. Budgets may reduce eligible lookahead.
+Single-page mode uses the current page, one rear page and up to three ahead
+(one ahead when constrained). Validate these starting values on the real reader;
+do not promise an optimal universal window or native/GPU memory ceiling.
+
+Reuse scoped resource ownership, in-flight deduplication, priority recomputation,
+obsolete-request cancellation, individual retry and stable aspect reservations.
+Changes of chapter, mode, actor or confirmed denial must fence late completions,
+release obsolete object URLs and preserve visible artwork while safe. No protected
+bytes enter persistent browser storage or an indiscriminate shared query cache.
+Already delivered bytes cannot be revoked; subsequent reads and owned resources
+must honor denial. Prefetch must create no progress, completion, open or other
+business event. Explicit reading actions own those future writes.
+
+P07 acceptance requires a long **persisted** chapter through its real protected
+API and production browser build: static and animated pages, cold and retained
+warm navigation, wide/narrow and throttled slow/save-data cases, page-five
+lookahead, bounded measured transfer sequence/bytes, first useful image and
+boundary stalls, jump/reversal/mode changes, retry, logout/account/chapter changes,
+publication withdrawal, stable layout, motion preference changes and exact URL
+cleanup. Capture actual frame changes and still reduced-motion presentation.
+Record browser JS/resource measurements separately from unmeasured native/GPU
+memory; fixture routes and legacy admin preview are not P07 acceptance.
+
 ## P08 — Community and Moderation
 
 **Suggested feature slug:** `community-moderation`

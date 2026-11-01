@@ -4,12 +4,15 @@ import Link from "next/link";
 import React from "react";
 import { Clock, ChevronLeft } from "lucide-react";
 import { MangaCard } from "@/components/ui/MangaCard/MangaCard";
-import { LATEST_DATA } from "@/features/home/data/latestData";
+import type { CatalogHomeData } from "@fury/contracts";
 import styles from "./LatestReleases.module.css";
 
-export function LatestReleases() {
+export function LatestReleases({
+  releases,
+}: Readonly<{ releases: CatalogHomeData["latestReleases"] }>) {
+  if (releases.length === 0) return null;
   return (
-    <div id="latest-releases" dir="rtl">
+    <div dir="rtl">
       {/* Header */}
       <div className={styles["header"]}>
         <div className={styles["headerLeft"]}>
@@ -30,7 +33,7 @@ export function LatestReleases() {
           </h2>
         </div>
         <Link
-          href="/discover"
+          href="/discover?sort=chapter-latest"
           className={styles["viewAll"]}
           onMouseEnter={(e) => {
             (e.currentTarget as HTMLAnchorElement).style.color = "#ffffff";
@@ -47,15 +50,20 @@ export function LatestReleases() {
 
       {/* Grid */}
       <div className={styles["grid"]}>
-        {LATEST_DATA.slice(0, 12).map((manga) => (
-          <MangaCard key={manga.id} {...manga} stretch />
+        {releases.map(({ work, chapter }) => (
+          <MangaCard
+            key={`${work.slug}:${chapter.number}`}
+            work={work}
+            chapterLabel={`فصل ${chapter.number} — ${chapter.title}`}
+            stretch
+          />
         ))}
       </div>
 
       {/* Load more */}
       <div className={styles["loadMoreWrapper"]}>
         <Link
-          href="/discover"
+          href="/discover?sort=chapter-latest"
           className={styles["loadMoreBtn"]}
           style={{
             background: "rgba(255, 255, 255, 0.04)",

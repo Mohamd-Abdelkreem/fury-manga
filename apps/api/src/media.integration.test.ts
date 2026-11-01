@@ -1,4 +1,6 @@
+import type { Server } from "node:http";
 import { randomUUID } from "node:crypto";
+import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -16,10 +18,19 @@ import {
 } from "@fury/contracts";
 import { createDatabaseClient } from "@fury/database";
 
-import { createApp } from "./app.js";
+import { createApp as createExpressApp } from "./app.js";
+import {
+  listenOnTestLoopback,
+  closeTestServers,
+} from "./test-support/http-server.test-helper.js";
 import { createMediaConfig } from "./core/config/media.config.js";
 import { createLogger } from "./infrastructure/logger/logger.js";
-import { generateTokenPair } from "./infrastructure/security/jwt.service.js";
+import { generateTokenPair } from "./infrastructure/security/jwt-tokens.js";
+import {
+  animatedImageFixture,
+  compositedAnimationPixels,
+} from "./test-support/animated-image.test-helper.js";
+import { MediaStorage } from "./infrastructure/media/media-storage.js";
 
 const databaseUrl = process.env["DATABASE_URL"];
 if (databaseUrl === undefined)
@@ -28,7 +39,15 @@ const database = createDatabaseClient(databaseUrl);
 const fixtureRoot = mkdtempSync(join(tmpdir(), "fury-media-http-"));
 const mediaRoot = join(fixtureRoot, "persistent");
 mkdirSync(mediaRoot);
-const app = createApp({
+const ownedServers: Server[] = [];
+const createApp = async (
+  dependencies: Parameters<typeof createExpressApp>[0],
+): Promise<Server> => {
+  const server = await listenOnTestLoopback(createExpressApp(dependencies));
+  ownedServers.push(server);
+  return server;
+};
+const app = await createApp({
   database,
   logger: pino({ level: "silent" }),
   mediaConfig: createMediaConfig(mediaRoot),
@@ -70,6 +89,7 @@ const createSession = async (
 };
 
 afterAll(async () => {
+  await closeTestServers(ownedServers);
   await database.mediaReferenceEvent.deleteMany({
     where: { actorUserId: { in: ownedUsers } },
   });
@@ -201,7 +221,7 @@ describe("private media HTTP boundary", () => {
     expect(delivered.headers["content-type"]).toMatch(/^image\/jpeg/u);
     expect((await request(app).get(parsed.data.contentPath)).status).toBe(401);
 
-    const restartedApp = createApp({
+    const restartedApp = await createApp({
       database,
       logger: pino({ level: "silent" }),
       mediaConfig: createMediaConfig(mediaRoot),
@@ -577,7 +597,7 @@ describe("private media HTTP boundary", () => {
 
   it("omits token, CSRF, file, parser, and storage details from responses and logs", async () => {
     const lines: string[] = [];
-    const loggedApp = createApp({
+    const loggedApp = await createApp({
       database,
       logger: createLogger({
         level: "info",
@@ -692,7 +712,7 @@ describe("private media HTTP boundary", () => {
       .set("x-csrf-token", csrfToken);
     expect(inUse.status).toBe(409);
     expect(inUse.body).toMatchObject({ code: "MEDIA_IN_USE" });
-    const restartedApp = createApp({
+    const restartedApp = await createApp({
       database,
       logger: pino({ level: "silent" }),
       mediaConfig: createMediaConfig(mediaRoot),
@@ -760,5 +780,131 @@ describe("private media HTTP boundary", () => {
           .set("x-csrf-token", csrfToken)
       ).status,
     ).toBe(200);
+  });
+});
+
+// The actual HTTP/file boundary must deliver multiple frames, not merely accept a MIME.
+describe("animated editorial media delivery", () => {
+  it("preserves canonical frames through replay, storage and fresh private HTTP instances", async () => {
+    const uploadServer = await createApp({
+      database,
+      logger: pino({ level: "silent" }),
+      mediaConfig: createMediaConfig(mediaRoot),
+      emailDelivery: {
+        provider: "console",
+        send: () => Promise.resolve({ providerMessageId: "test" }),
+      },
+    });
+    const token = await createSession("ADMIN");
+    const otherToken = await createSession("USER");
+    const storage = new MediaStorage(createMediaConfig(mediaRoot));
+    let restarted: Server | undefined;
+    for (const mediaClass of [
+      "work_cover",
+      "work_background",
+      "chapter_page",
+    ] as const) {
+      for (const format of ["gif", "webp"] as const) {
+        const source = await animatedImageFixture(
+          format,
+          mediaClass === "work_background" ? 900 : 600,
+          mediaClass === "work_background" ? 500 : 800,
+        );
+        const key = randomUUID();
+        const upload = () =>
+          request(uploadServer)
+            .post("/api/v1/media/assets")
+            .set("Authorization", `Bearer ${token}`)
+            .set("Cookie", `csrfToken=${csrfToken}`)
+            .set("x-csrf-token", csrfToken)
+            .set("Idempotency-Key", key)
+            .field("mediaClass", mediaClass)
+            .attach("file", source, {
+              filename: `art.${format}`,
+              contentType: `image/${format}`,
+            });
+        const first = await upload();
+        expect(first.status).toBe(201);
+        const asset = mediaAssetResponseSchema.parse(first.body).data;
+        expect(asset.contentType).toBe("image/webp");
+        const replay = await upload();
+        expect(replay.status).toBe(200);
+        expect(mediaAssetResponseSchema.parse(replay.body).data.id).toBe(
+          asset.id,
+        );
+        restarted ??= await createApp({
+          database,
+          logger: pino({ level: "silent" }),
+          mediaConfig: createMediaConfig(mediaRoot),
+          emailDelivery: {
+            provider: "console",
+            send: () => Promise.resolve({ providerMessageId: "test" }),
+          },
+        });
+        const privateRead = await request(restarted)
+          .get(asset.contentPath)
+          .set("Authorization", `Bearer ${token}`);
+        expect(privateRead.status).toBe(200);
+        expect(privateRead.headers).toMatchObject({
+          "content-type": "image/webp",
+          "cache-control": "private, no-store",
+          "x-content-type-options": "nosniff",
+        });
+        const bytes = await storage.read(asset.id);
+        expect(privateRead.body).toEqual(bytes);
+        expect(
+          (await compositedAnimationPixels(bytes)).equals(
+            await compositedAnimationPixels(source),
+          ),
+        ).toBe(true);
+        const metadata = await sharp(bytes, { animated: true }).metadata();
+        expect(metadata).toMatchObject({
+          pages: 3,
+          pageHeight: asset.height,
+          width: asset.width,
+          loop: 2,
+          delay: [80, 140, 200],
+        });
+        const stored = await database.mediaAsset.findUniqueOrThrow({
+          where: { id: asset.id },
+        });
+        expect(stored).toMatchObject({
+          contentType: "image/webp",
+          sha256: createHash("sha256").update(bytes).digest("hex"),
+          byteLength: bytes.length,
+        });
+        expect(
+          (await request(uploadServer).get(asset.contentPath)).status,
+        ).toBe(401);
+        expect(
+          (
+            await request(uploadServer)
+              .get(asset.contentPath)
+              .set("Authorization", `Bearer ${otherToken}`)
+          ).status,
+        ).toBe(404);
+        const head = await request(uploadServer)
+          .head(asset.contentPath)
+          .set("Authorization", `Bearer ${token}`);
+        expect(head.status).toBe(200);
+        expect(head.headers["content-length"]).toBe(String(bytes.length));
+      }
+    }
+    const source = await animatedImageFixture("gif");
+    const rejected = await request(uploadServer)
+      .post("/api/v1/media/assets")
+      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", `csrfToken=${csrfToken}`)
+      .set("x-csrf-token", csrfToken)
+      .set("Idempotency-Key", randomUUID())
+      .field("mediaClass", "work_cover")
+      .attach("file", source.subarray(0, source.length - 2), {
+        filename: "broken.gif",
+        contentType: "image/gif",
+      });
+    expect(rejected.status).toBe(400);
+    expect(errorEnvelopeSchema.parse(rejected.body).code).toBe(
+      "MEDIA_INVALID_FILE",
+    );
   });
 });

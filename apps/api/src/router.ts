@@ -1,3 +1,4 @@
+import { ImageProcessor } from "./infrastructure/media/image-processor.js";
 import { Router } from "express";
 import { randomUUID } from "node:crypto";
 
@@ -39,7 +40,11 @@ export const createApiRouter = (
 
   const healthService = new HealthService(database, mediaStorage);
   const healthController = new HealthController(healthService);
-  const mediaService = new MediaService(database, mediaStorage);
+  const mediaService = new MediaService(
+    database,
+    mediaStorage,
+    new ImageProcessor(),
+  );
   const mediaController = new MediaController(mediaService);
   const authenticationMiddleware = createAuthenticationMiddleware(database);
   const authController = new AuthController(
@@ -51,7 +56,7 @@ export const createApiRouter = (
     createIdentifier: randomUUID,
   };
   const publicContentController = new PublicContentController(
-    new PublicContentService(database),
+    new PublicContentService(database, mediaStorage),
   );
   const contentManagementController = new ContentManagementController(
     new CategoryManagementService(database),

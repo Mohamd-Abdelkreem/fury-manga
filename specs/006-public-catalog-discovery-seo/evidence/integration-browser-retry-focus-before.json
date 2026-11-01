@@ -1,0 +1,9 @@
+{
+  "kind": "actual keyboard retry focus probe before correction",
+  "controlledFailures": 1,
+  "retryHadFocus": true,
+  "focusAfterSuccess": {
+    "tag": "BODY",
+    "text": "FURYالرئيسيةالتصنيفاتقائمة المانجاالروايات والقصص النصيةالبحث في جميع الأعمالدخولقائمة الم"
+  }
+}

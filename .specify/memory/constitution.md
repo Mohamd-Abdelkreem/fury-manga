@@ -1,5 +1,43 @@
 <!--
-Sync Impact Report (2026-10-30)
+Sync Impact Report (2026-11-01, media-foundation authorization)
+- Version change: 2.1.0 -> 2.2.0 (MINOR: bounded legacy-media obligations/exception).
+- Explicit owner decision: numerical limits approved; animated Work media and
+  progressive current persisted-image previews authorized, with future P07 excluded.
+- Modified principle: VI; added media-foundation subsection. Removed sections: none.
+- Ratification remains 2026-09-22. General design/security/backend/command gates remain.
+- Synchronized: AGENTS.md; README.md; docs/engineering/README.md and frontend-standard.md;
+  docs/design/design-system.md; docs/workflow/operating-policy.md, speckit-prompts.txt,
+  prompts.md and application-audit-prompt.md; four existing Spec Kit templates;
+  ten existing .agents/skills/speckit-*/SKILL.md command adapters.
+- Reviewed unchanged: other engineering guides and generic constitution template.
+- No application code, PLAN.md, accepted feature artifacts or pointer changed here.
+- No governance TODO; implementation/acceptance is separate and not certified here.
+-->
+
+<!--
+Sync Impact Report (2026-11-01)
+- Version change: 2.0.0 -> 2.1.0 (MINOR: scoped P05 functional authorization).
+- Owner decision: the 2026-11-01 P05 completion request explicitly authorizes
+  functional integration and truthful states within the existing design.
+- Modified principle: VI; added its P05 functional-exception subsection.
+- Removed sections: none. General freeze, backend-first, authority, review and
+  evidence gates remain. Ratification date remains 2026-09-22.
+- Synchronized: AGENTS.md; README.md; docs/engineering/README.md and
+  frontend-standard.md; docs/design/design-system.md;
+  docs/workflow/operating-policy.md, speckit-prompts.txt, prompts.md and
+  application-audit-prompt.md; .specify/templates/plan-template.md,
+  spec-template.md, tasks-template.md and checklist-template.md;
+  .agents/skills/speckit-*/SKILL.md command adapters.
+- Reviewed unchanged: other engineering guides and constitution-template.md;
+  their general preservation rules apply subject to this explicit exception.
+- No application code, roadmap, feature pointer, accepted feature artifacts or
+  Oscar files changed in this stage. Feature-policy reconciliation is separate.
+- Follow-up TODOs: none for governance. No implementation, human acceptance,
+  representative-artwork acceptance or release gate is certified by this amendment.
+-->
+
+<!--
+Sync Impact Report (2026-10-30, historical)
 - Version change: 1.3.0 -> 2.0.0 (owner-approved incompatible frontend freeze and delivery rules).
 - Owner decision: preserve the current Fury frontend without presentation changes;
   integrate the backend into existing surfaces using Oscar-style bounded commands.
@@ -219,7 +257,8 @@ ORM declarations.
 
 ### VI. Truthful Arabic-First Frontend
 
-- The current public, reader, account, workspace and admin frontend is frozen.
+- Except for the bounded P05 and media-foundation exceptions below, the current public,
+  reader, account, workspace and admin frontend is frozen.
   Agents MUST NOT add, delete, move, rename, rebuild or redesign pages, routes,
   layouts, navigation, dialogs, popups, controls or approved static copy. Typography,
   Arabic/RTL, colors, spacing, breakpoints, sizes, icons, imagery treatment, motion
@@ -251,6 +290,74 @@ ORM declarations.
 
 The interface must communicate what the system knows, in the approved language and
 interaction model, without manufacturing certainty.
+
+#### P05 functional exception — owner decision of 2026-11-01
+
+This exception applies ONLY to the existing `specs/006-public-catalog-discovery-seo`
+feature, roadmap P05, and its in-scope remediation. It MUST NOT authorize changes
+in another phase or a redesign. The owner explicitly permits:
+
+- Validated persisted data replacing public fixtures; existing search, filters,
+  sorting, pagination, categories and detail controls; immutable Work slug links.
+- Truthful loading, empty, filtered-empty, out-of-range, unavailable, not-found and
+  retry feedback, minimal Arabic functional copy, semantics, keyboard/focus/labels
+  and accessibility corrections using existing components, tokens and conventions.
+- Removing fabricated engagement and local-only success; deferring existing
+  future-phase controls or minimally omitting unsupported actions. P05 MUST NOT
+  implement ratings, bookmarks, comments, followers, progress or community activity.
+- Hiding trending without its authoritative event source; hiding or truthfully
+  presenting empty home sections. Community joins require a configured validated
+  owner-maintained HTTPS `COMMUNITY_URL`; unset means no join/counts and is not a gate.
+- Saved enabled categories in saved order, existing neutral icons and truthful
+  generic action copy instead of invented descriptions/artwork/database fields.
+- Persisted Work fields and eligible Chapter summaries with full-set first/latest;
+  reading actions MUST be informational/deferred until P07 and MUST NOT link a
+  persisted Work to unrelated fixture-reader content.
+- P05 metadata, sitemap, robots and framework loading/error/not-found boundaries;
+  trusted configured origins and image delivery preserving publication visibility.
+
+The visual identity, component families, page composition, typography, colors,
+spacing conventions, dimensions, image treatment, breakpoints and Arabic/RTL MUST
+remain. Existing navigation structure and URL patterns, authentication, account,
+workspace, admin, protected-reader behavior and structural ad locations MUST remain.
+Advertising MUST NOT be activated. No new theme, visual system, product page,
+navigation destination, dialog or unrelated interaction is permitted. Necessary
+removal of unsupported values/actions/empty sections MUST preserve surrounding
+presentation as closely as practical. Before/after browser evidence MUST distinguish
+these functional differences from unintended styling/layout changes.
+
+This is implementation authority, not phase/reviewer/owner/artwork/release acceptance.
+Backend acceptance, task dependencies, scoped commands, real verification and honest
+completion markers remain mandatory. Other presentation conflicts remain owner gates.
+
+#### Media-foundation exception — owner decision of 2026-11-01
+
+The owner separately authorizes a bounded extension of the existing P02 media
+foundation and its current P04 shared illustrated preview/P05 Work-image consumers.
+This MUST NOT authorize the P07 protected-reader feature or a redesign.
+
+- The supplied numerical byte, dimension and ratio limits are approved product
+  decisions. A dated accepted-artifact overlay MUST supersede the former
+  representative-artwork prerequisite without inventing a historical artwork review.
+- Work cover, Work background and illustrated Chapter page media MUST support
+  ordinary animated GIF/WebP with preserved observable animation. Other media
+  classes retain static behavior. Class policy, finite processing budgets,
+  actual decoded output, storage/delivery and consumer agreement MUST be verified.
+- Existing persisted illustrated renderer/viewer consumers MAY gain bounded
+  progressive scheduling, cancellation, retry and resource cleanup, necessary
+  upload-type hints/minimal Arabic functional feedback, and a reduced-motion
+  display policy. Stored animation MUST remain intact. Numerical product bounds,
+  current design/layout/RTL, authorization, publication and immutable identity
+  rules MUST remain. No new page, dialog, destination or unrelated control is allowed.
+- The shared loader MUST have a real current persisted-image caller. P07 obligations
+  MUST be recorded in the existing roadmap/engineering owners; progress, resume,
+  chapter-open analytics and fixture-reader replacement remain future P07 work.
+  Fixture-reader behavior MUST NOT be called protected persisted-content acceptance.
+
+Governance, accepted-artifact reconciliation, implementation and convergence remain
+separate stages. Real backend acceptance MUST precede dependent consumers. Technical
+completion MUST use actual processing, PostgreSQL/HTTP and browser/network evidence;
+this authority supplies no deployment, human artwork-review or future-phase approval.
 
 ### VII. Evidence-Driven Testing and Completion
 
@@ -444,4 +551,4 @@ perform the Constitution Check. Unresolved non-compliance MUST block acceptance 
 the constitution itself is amended. Reviews MUST use the current worktree and fresh
 checks rather than inherited claims.
 
-**Version**: 2.0.0 | **Ratified**: 2026-09-22 | **Last Amended**: 2026-10-30
+**Version**: 2.2.0 | **Ratified**: 2026-09-22 | **Last Amended**: 2026-11-01

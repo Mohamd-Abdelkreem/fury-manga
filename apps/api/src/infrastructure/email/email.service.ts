@@ -69,6 +69,7 @@ export class EmailService {
   private buildPublicUrl(path: string, token: string): string {
     const url = new URL(`${this.publicWebUrl}${path}`);
     url.searchParams.set("token", token);
-    return url.toString();
+    const publicUrl = url.toString();
+    return publicUrl;
   }
 }

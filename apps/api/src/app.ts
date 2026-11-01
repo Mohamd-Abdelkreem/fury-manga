@@ -20,6 +20,7 @@ import {
   EmailService,
   type EmailDelivery,
 } from "./infrastructure/email/index.js";
+import { publicContentRouteIdentity } from "./infrastructure/logger/request-sanitizer.js";
 import { MediaStorage } from "./infrastructure/media/media-storage.js";
 import {
   createApiRateLimitMiddleware,
@@ -70,6 +71,11 @@ export const createApp = ({
 
   // Global middleware
   app.use(requestId);
+  app.use((request, response, next) => {
+    if (publicContentRouteIdentity(request.originalUrl) !== undefined)
+      response.setHeader("Cache-Control", "no-store");
+    next();
+  });
   app.use(createRequestLoggerMiddleware(logger));
   app.use(helmet());
   app.use(cors(corsOptions));

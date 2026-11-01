@@ -1,10 +1,23 @@
+import { animatedImageFixture } from "../../test-support/animated-image.test-helper.js";
+import { ImageProcessor } from "../../infrastructure/media/image-processor.js";
 import { randomUUID } from "node:crypto";
 import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
+import { writeFile } from "node:fs/promises";
+import { PublicContentService } from "../content/public-content.service.js";
+import { PublicationManagementService } from "../content/publication-management.service.js";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import sharp from "sharp";
-import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 import { createDatabaseClient } from "@fury/database";
 
@@ -24,7 +37,7 @@ const fixtureRoot = mkdtempSync(join(tmpdir(), "fury-media-service-"));
 const mediaRoot = join(fixtureRoot, "persistent");
 mkdirSync(mediaRoot);
 const storage = new MediaStorage(createMediaConfig(mediaRoot));
-const service = new MediaService(database, storage);
+const service = new MediaService(database, storage, new ImageProcessor());
 const works = new WorkManagementService(database, service);
 const categories = new CategoryManagementService(database);
 const userIds: string[] = [];
@@ -48,6 +61,13 @@ const createActor = async (
   });
   return id;
 };
+
+beforeEach(async () => {
+  // ADMIN listings span all uploaders, so every scenario needs its own inventory.
+  await database.$executeRawUnsafe(
+    "TRUNCATE media_reference_events, media_references, upload_attempts, media_assets, publication_events, chapter_pages, chapters, work_tags, work_categories, categories, works",
+  );
+});
 
 afterAll(async () => {
   await database.$executeRawUnsafe(
@@ -239,68 +259,83 @@ describe("administrator media service", () => {
     ).resolves.toBeInstanceOf(Buffer);
   });
 
-  it("persists one private asset per actor-scoped attempt and replays exactly", async () => {
-    const firstAdmin = await createActor();
-    const secondAdmin = await createActor();
-    const attemptId = randomUUID();
-    const source = await sharp({
-      create: { width: 600, height: 800, channels: 3, background: "red" },
-    })
-      .jpeg()
-      .toBuffer();
-    const command = {
-      actorUserId: firstAdmin,
-      attemptId,
-      mediaClass: "work_cover" as const,
-      source,
-      declaredType: "image/jpeg",
-      sourceName: "cover.jpg",
-    };
+  it.each([false, true])(
+    "replays private upload exactly (animated=%s)",
+    async (animated) => {
+      const firstAdmin = await createActor();
+      const secondAdmin = await createActor();
+      const attemptId = randomUUID();
+      const source = animated
+        ? await animatedImageFixture("gif")
+        : await sharp({
+            create: { width: 600, height: 800, channels: 3, background: "red" },
+          })
+            .jpeg()
+            .toBuffer();
+      const command = {
+        actorUserId: firstAdmin,
+        attemptId,
+        mediaClass: "work_cover" as const,
+        source,
+        declaredType: animated ? "image/gif" : "image/jpeg",
+        sourceName: animated ? "cover.gif" : "cover.jpg",
+      };
 
-    const created = await service.uploadAdmin(command);
-    expect(created.replayed).toBe(false);
-    expect(created.asset.mediaClass).toBe("work_cover");
-    expect(
-      await database.mediaAsset.count({
-        where: { uploadedByUserId: firstAdmin, status: "AVAILABLE" },
-      }),
-    ).toBe(1);
-    const repeated = await service.uploadAdmin(command);
-    expect(repeated).toMatchObject({
-      replayed: true,
-      asset: { id: created.asset.id },
-    });
-    expect(
-      await database.mediaAsset.count({
-        where: { uploadedByUserId: firstAdmin },
-      }),
-    ).toBe(1);
-    expect(
-      (await service.readAdmin(firstAdmin, created.asset.id)).length,
-    ).toBeGreaterThan(0);
-    expect(await service.getAdminAttempt(firstAdmin, attemptId)).toMatchObject({
-      state: "accepted",
-      assetId: created.asset.id,
-    });
-    expect(
-      await service.listAdmin(firstAdmin, 1, 25, "work_cover"),
-    ).toMatchObject({
-      pagination: { total: 1 },
-      items: [{ id: created.asset.id }],
-    });
+      const created = await service.uploadAdmin(command);
+      expect(created.replayed).toBe(false);
+      expect(created.asset.mediaClass).toBe("work_cover");
+      expect(
+        await database.mediaAsset.count({
+          where: { uploadedByUserId: firstAdmin, status: "AVAILABLE" },
+        }),
+      ).toBe(1);
+      if (animated)
+        expect(
+          (
+            await sharp(await service.readAdmin(firstAdmin, created.asset.id), {
+              animated: true,
+            }).metadata()
+          ).pages,
+        ).toBe(3);
+      const repeated = await service.uploadAdmin(command);
+      expect(repeated).toMatchObject({
+        replayed: true,
+        asset: { id: created.asset.id },
+      });
+      expect(
+        await database.mediaAsset.count({
+          where: { uploadedByUserId: firstAdmin },
+        }),
+      ).toBe(1);
+      expect(
+        (await service.readAdmin(firstAdmin, created.asset.id)).length,
+      ).toBeGreaterThan(0);
+      expect(
+        await service.getAdminAttempt(firstAdmin, attemptId),
+      ).toMatchObject({
+        state: "accepted",
+        assetId: created.asset.id,
+      });
+      expect(
+        await service.listAdmin(firstAdmin, 1, 25, "work_cover"),
+      ).toMatchObject({
+        pagination: { total: 1 },
+        items: [{ id: created.asset.id }],
+      });
 
-    const independent = await service.uploadAdmin({
-      ...command,
-      actorUserId: secondAdmin,
-    });
-    expect(independent.asset.id).not.toBe(created.asset.id);
-    expect(
-      (await service.readAdmin(secondAdmin, created.asset.id)).length,
-    ).toBeGreaterThan(0);
-    expect(
-      await database.uploadAttempt.count({ where: { id: attemptId } }),
-    ).toBe(2);
-  });
+      const independent = await service.uploadAdmin({
+        ...command,
+        actorUserId: secondAdmin,
+      });
+      expect(independent.asset.id).not.toBe(created.asset.id);
+      expect(
+        (await service.readAdmin(secondAdmin, created.asset.id)).length,
+      ).toBeGreaterThan(0);
+      expect(
+        await database.uploadAttempt.count({ where: { id: attemptId } }),
+      ).toBe(2);
+    },
+  );
 
   it("rejects invalid images and user-role uploads without a usable identity", async () => {
     const adminId = await createActor();
@@ -341,6 +376,124 @@ describe("administrator media service", () => {
       }),
     ).toBe(0);
   });
+
+  it.each([false, true])(
+    "keeps public eligibility and byte failures distinct (animated=%s)",
+    async (animated) => {
+      const adminId = await createActor();
+      const userId = await createActor("USER");
+      const source = animated
+        ? await animatedImageFixture("gif")
+        : await sharp({
+            create: { width: 600, height: 800, channels: 3, background: "red" },
+          })
+            .jpeg()
+            .toBuffer();
+      const created = await service.uploadAdmin({
+        actorUserId: adminId,
+        attemptId: randomUUID(),
+        mediaClass: "work_cover",
+        source,
+        declaredType: animated ? "image/gif" : "image/jpeg",
+        sourceName: animated ? "synthetic-cover.gif" : "synthetic-cover.jpg",
+      });
+      const category = await categories.createCategory({
+        displayName: "Available",
+        slug: "available",
+      });
+      const work = await works.createWork(
+        {
+          title: "Integrity work",
+          slug: "integrity-work",
+          type: "novel",
+          storyStatus: "ongoing",
+          synopsis: "A complete synopsis for the integrity fixture.",
+          author: "Fixture Author",
+          categoryIds: [category.id],
+          coverAssetId: created.asset.id,
+        },
+        adminId,
+      );
+      const publisher = new PublicationManagementService(database, {
+        currentTime: () => new Date(),
+        createIdentifier: randomUUID,
+      });
+      await publisher.publishWork(work.id, {
+        expectedVersion: work.version,
+        targetState: "published",
+      });
+      const catalog = new PublicContentService(database, storage);
+      const saved = await service.read(adminId, created.asset.id);
+      expect((await catalog.getCover(work.slug)).bytes).toEqual(saved);
+      expect(
+        (await catalog.getCatalogHome()).suggestions[0]?.works.map(
+          (work) => work.slug,
+        ),
+      ).toEqual([work.slug]);
+      await expect(
+        service.read(userId, created.asset.id),
+      ).rejects.toMatchObject({
+        statusCode: 404,
+      });
+      await expect(catalog.getCover("unknown-work")).rejects.toMatchObject({
+        statusCode: 404,
+      });
+      for (const failure of ["digest", "missing"] as const) {
+        if (failure === "digest")
+          await writeFile(
+            join(mediaRoot, `${created.asset.id}.bin`),
+            Buffer.alloc(saved.length, 1),
+          );
+        else await storage.remove(created.asset.id);
+        await expect(
+          service.read(adminId, created.asset.id),
+        ).rejects.toMatchObject({ statusCode: 503, code: "MEDIA_UNAVAILABLE" });
+        await expect(catalog.getCover(work.slug)).rejects.toMatchObject({
+          statusCode: 503,
+          code: "MEDIA_UNAVAILABLE",
+        });
+        expect(
+          (
+            await database.mediaAsset.findUniqueOrThrow({
+              where: { id: created.asset.id },
+            })
+          ).status,
+        ).toBe("AVAILABLE");
+        await expect(catalog.getWork(work.slug)).resolves.toMatchObject({
+          slug: work.slug,
+        });
+        expect(
+          (await catalog.getCatalogHome()).suggestions[0]?.works.map(
+            (work) => work.slug,
+          ),
+        ).toEqual([work.slug]);
+        await writeFile(join(mediaRoot, `${created.asset.id}.bin`), saved);
+      }
+      await database.mediaAsset.update({
+        where: { id: created.asset.id },
+        data: { status: "UNAVAILABLE" },
+      });
+      await expect(catalog.getWork(work.slug)).rejects.toMatchObject({
+        statusCode: 404,
+      });
+      await expect(catalog.getCover(work.slug)).rejects.toMatchObject({
+        statusCode: 404,
+      });
+      expect((await catalog.getCatalogHome()).suggestions).toEqual([]);
+      await service.reconcile();
+      expect(
+        (
+          await database.mediaAsset.findUniqueOrThrow({
+            where: { id: created.asset.id },
+          })
+        ).status,
+      ).toBe("AVAILABLE");
+      await expect(catalog.getWork(work.slug)).resolves.toMatchObject({
+        slug: work.slug,
+      });
+      expect((await catalog.getCover(work.slug)).bytes).toEqual(saved);
+    },
+  );
 
   it("does not acknowledge an accepted replay after its stored bytes disappear", async () => {
     const adminId = await createActor();
@@ -498,67 +651,82 @@ describe("administrator media service", () => {
     ).toBe(3);
   });
 
-  it("allows one concurrent replacement and reports the stale loser safely", async () => {
-    const adminId = await createActor();
-    const work = await database.work.create({
-      data: {
-        title: "Concurrent reference target",
-        slug: `concurrent-reference-${randomUUID()}`,
-        type: "MANGA",
-        storyStatus: "ONGOING",
-      },
-    });
-    const upload = async (background: string) =>
-      service.uploadAdmin({
-        actorUserId: adminId,
-        attemptId: randomUUID(),
-        mediaClass: "work_cover",
-        source: await sharp({
-          create: { width: 600, height: 800, channels: 3, background },
-        })
-          .jpeg()
-          .toBuffer(),
-        declaredType: "image/jpeg",
-        sourceName: "cover.jpg",
+  it.each([false, true])(
+    "has one concurrent reference winner (animated=%s)",
+    async (animated) => {
+      const adminId = await createActor();
+      const work = await database.work.create({
+        data: {
+          title: "Concurrent reference target",
+          slug: `concurrent-reference-${randomUUID()}`,
+          type: "MANGA",
+          storyStatus: "ONGOING",
+        },
       });
-    const initial = await upload("black");
-    const firstCandidate = await upload("yellow");
-    const secondCandidate = await upload("white");
-    const bound = await service.bindReference(adminId, {
-      targetKind: "work_cover",
-      targetId: work.id,
-      assetId: initial.asset.id,
-    });
+      const upload = async (background: string) =>
+        service.uploadAdmin({
+          actorUserId: adminId,
+          attemptId: randomUUID(),
+          mediaClass: "work_cover",
+          source: animated
+            ? await animatedImageFixture("gif", 600, 800, 3, background.length)
+            : await sharp({
+                create: { width: 600, height: 800, channels: 3, background },
+              })
+                .jpeg()
+                .toBuffer(),
+          declaredType: animated ? "image/gif" : "image/jpeg",
+          sourceName: animated ? "cover.gif" : "cover.jpg",
+        });
+      const initial = await upload("black");
+      const firstCandidate = await upload("yellow");
+      const secondCandidate = await upload("white");
+      const bound = await service.bindReference(adminId, {
+        targetKind: "work_cover",
+        targetId: work.id,
+        assetId: initial.asset.id,
+      });
 
-    const outcomes = await Promise.allSettled([
-      service.replaceReference(adminId, bound.reference.id, {
-        assetId: firstCandidate.asset.id,
-        expectedAssetId: initial.asset.id,
-        expectedVersion: 0,
-      }),
-      service.replaceReference(adminId, bound.reference.id, {
-        assetId: secondCandidate.asset.id,
-        expectedAssetId: initial.asset.id,
-        expectedVersion: 0,
-      }),
-    ]);
-    expect(
-      outcomes.filter((outcome) => outcome.status === "fulfilled"),
-    ).toHaveLength(1);
-    const rejected = outcomes.find((outcome) => outcome.status === "rejected");
-    expect(rejected).toMatchObject({
-      reason: { statusCode: 409, code: "VERSION_CONFLICT" },
-    });
-    const active = await service.getReferenceForTarget(
-      adminId,
-      "work_cover",
-      work.id,
-    );
-    expect(active).toMatchObject({ version: 1 });
-    expect([firstCandidate.asset.id, secondCandidate.asset.id]).toContain(
-      active?.assetId,
-    );
-  });
+      const outcomes = await Promise.allSettled([
+        service.replaceReference(adminId, bound.reference.id, {
+          assetId: firstCandidate.asset.id,
+          expectedAssetId: initial.asset.id,
+          expectedVersion: 0,
+        }),
+        service.replaceReference(adminId, bound.reference.id, {
+          assetId: secondCandidate.asset.id,
+          expectedAssetId: initial.asset.id,
+          expectedVersion: 0,
+        }),
+      ]);
+      expect(
+        outcomes.filter((outcome) => outcome.status === "fulfilled"),
+      ).toHaveLength(1);
+      const rejected = outcomes.find(
+        (outcome) => outcome.status === "rejected",
+      );
+      expect(rejected).toMatchObject({
+        reason: { statusCode: 409, code: "VERSION_CONFLICT" },
+      });
+      const active = await service.getReferenceForTarget(
+        adminId,
+        "work_cover",
+        work.id,
+      );
+      expect(active).toMatchObject({ version: 1 });
+      if (animated && active !== null)
+        expect(
+          (
+            await sharp(await service.readAdmin(adminId, active.assetId), {
+              animated: true,
+            }).metadata()
+          ).pages,
+        ).toBe(3);
+      expect([firstCandidate.asset.id, secondCandidate.asset.id]).toContain(
+        active?.assetId,
+      );
+    },
+  );
 
   it("keeps a concurrent bind and removal in one valid final state", async () => {
     const adminId = await createActor();
@@ -612,126 +780,135 @@ describe("administrator media service", () => {
     }
   });
 
-  it("binds, replaces, and retires Work media in the caller-owned transaction", async () => {
-    const adminId = await createActor();
-    const work = await database.work.create({
-      data: {
-        title: "Media editorial work",
-        slug: `media-editorial-${randomUUID()}`,
-        type: "MANGA",
-        storyStatus: "ONGOING",
-      },
-      select: { id: true },
-    });
-
-    const upload = async (mediaClass: "work_cover" | "work_background") =>
-      service.uploadAdmin({
-        actorUserId: adminId,
-        attemptId: randomUUID(),
-        mediaClass,
-        source: await sharp({
-          create: {
-            width: mediaClass === "work_cover" ? 600 : 1_200,
-            height: mediaClass === "work_cover" ? 800 : 675,
-            channels: 3,
-            background: mediaClass === "work_cover" ? "purple" : "teal",
-          },
-        })
-          .jpeg()
-          .toBuffer(),
-        declaredType: "image/jpeg",
-        sourceName: `${mediaClass}.jpg`,
+  it.each([false, true])(
+    "rolls back parent/reference changes (animated=%s)",
+    async (animated) => {
+      const adminId = await createActor();
+      const work = await database.work.create({
+        data: {
+          title: "Media editorial work",
+          slug: `media-editorial-${randomUUID()}`,
+          type: "MANGA",
+          storyStatus: "ONGOING",
+        },
+        select: { id: true },
       });
-    const initialCover = await upload("work_cover");
-    const replacementCover = await upload("work_cover");
-    const initialBackground = await upload("work_background");
-    const mismatchedClass = await upload("work_background");
 
-    await expect(
-      database.$transaction((transaction) =>
-        service.saveWorkReferences(transaction, adminId, work.id, {
-          coverAssetId: initialCover.asset.id,
-          backgroundAssetId: initialBackground.asset.id,
-        }),
-      ),
-    ).resolves.toEqual({
-      coverAssetId: initialCover.asset.id,
-      backgroundAssetId: initialBackground.asset.id,
-      changed: true,
-    });
-
-    await expect(
-      database.$transaction(async (transaction) => {
-        await service.saveWorkReferences(transaction, adminId, work.id, {
-          coverAssetId: replacementCover.asset.id,
+      const upload = async (mediaClass: "work_cover" | "work_background") =>
+        service.uploadAdmin({
+          actorUserId: adminId,
+          attemptId: randomUUID(),
+          mediaClass,
+          source: animated
+            ? await animatedImageFixture(
+                "gif",
+                mediaClass === "work_cover" ? 600 : 1200,
+                mediaClass === "work_cover" ? 800 : 675,
+              )
+            : await sharp({
+                create: {
+                  width: mediaClass === "work_cover" ? 600 : 1_200,
+                  height: mediaClass === "work_cover" ? 800 : 675,
+                  channels: 3,
+                  background: mediaClass === "work_cover" ? "purple" : "teal",
+                },
+              })
+                .jpeg()
+                .toBuffer(),
+          declaredType: animated ? "image/gif" : "image/jpeg",
+          sourceName: `${mediaClass}.${animated ? "gif" : "jpg"}`,
         });
-        throw new Error("injected parent edit failure");
-      }),
-    ).rejects.toThrow("injected parent edit failure");
-    await expect(
-      database.mediaReference.findFirstOrThrow({
-        where: { workId: work.id, slot: "WORK_COVER", retiredAt: null },
-      }),
-    ).resolves.toMatchObject({ assetId: initialCover.asset.id, version: 0 });
-    await expect(
-      database.mediaReferenceEvent.count({
+      const initialCover = await upload("work_cover");
+      const replacementCover = await upload("work_cover");
+      const initialBackground = await upload("work_background");
+      const mismatchedClass = await upload("work_background");
+
+      await expect(
+        database.$transaction((transaction) =>
+          service.saveWorkReferences(transaction, adminId, work.id, {
+            coverAssetId: initialCover.asset.id,
+            backgroundAssetId: initialBackground.asset.id,
+          }),
+        ),
+      ).resolves.toEqual({
+        coverAssetId: initialCover.asset.id,
+        backgroundAssetId: initialBackground.asset.id,
+        changed: true,
+      });
+
+      await expect(
+        database.$transaction(async (transaction) => {
+          await service.saveWorkReferences(transaction, adminId, work.id, {
+            coverAssetId: replacementCover.asset.id,
+          });
+          throw new Error("injected parent edit failure");
+        }),
+      ).rejects.toThrow("injected parent edit failure");
+      await expect(
+        database.mediaReference.findFirstOrThrow({
+          where: { workId: work.id, slot: "WORK_COVER", retiredAt: null },
+        }),
+      ).resolves.toMatchObject({ assetId: initialCover.asset.id, version: 0 });
+      await expect(
+        database.mediaReferenceEvent.count({
+          where: { reference: { workId: work.id } },
+        }),
+      ).resolves.toBe(2);
+
+      await expect(
+        database.$transaction((transaction) =>
+          service.saveWorkReferences(transaction, adminId, work.id, {
+            coverAssetId: replacementCover.asset.id,
+            backgroundAssetId: null,
+          }),
+        ),
+      ).resolves.toEqual({
+        coverAssetId: replacementCover.asset.id,
+        backgroundAssetId: null,
+        changed: true,
+      });
+
+      await expect(
+        database.$transaction((transaction) =>
+          service.saveWorkReferences(transaction, adminId, work.id, {
+            coverAssetId: mismatchedClass.asset.id,
+          }),
+        ),
+      ).rejects.toMatchObject({ statusCode: 404, code: "NOT_FOUND" });
+
+      const references = await database.mediaReference.findMany({
+        where: { workId: work.id },
+        orderBy: { slot: "asc" },
+      });
+      const coverReference = references.find(
+        ({ slot, assetId, retiredAt }) =>
+          slot === "WORK_COVER" &&
+          assetId === replacementCover.asset.id &&
+          retiredAt === null,
+      );
+      const retiredBackground = references.find(
+        ({ slot, assetId }) =>
+          slot === "WORK_BACKGROUND" && assetId === initialBackground.asset.id,
+      );
+      expect(coverReference).toMatchObject({
+        assetId: replacementCover.asset.id,
+        retiredAt: null,
+        version: 1,
+      });
+      expect(retiredBackground).toMatchObject({
+        assetId: initialBackground.asset.id,
+        version: 1,
+      });
+      expect(retiredBackground?.retiredAt).toBeInstanceOf(Date);
+      const events = await database.mediaReferenceEvent.findMany({
         where: { reference: { workId: work.id } },
-      }),
-    ).resolves.toBe(2);
-
-    await expect(
-      database.$transaction((transaction) =>
-        service.saveWorkReferences(transaction, adminId, work.id, {
-          coverAssetId: replacementCover.asset.id,
-          backgroundAssetId: null,
-        }),
-      ),
-    ).resolves.toEqual({
-      coverAssetId: replacementCover.asset.id,
-      backgroundAssetId: null,
-      changed: true,
-    });
-
-    await expect(
-      database.$transaction((transaction) =>
-        service.saveWorkReferences(transaction, adminId, work.id, {
-          coverAssetId: mismatchedClass.asset.id,
-        }),
-      ),
-    ).rejects.toMatchObject({ statusCode: 404, code: "NOT_FOUND" });
-
-    const references = await database.mediaReference.findMany({
-      where: { workId: work.id },
-      orderBy: { slot: "asc" },
-    });
-    const coverReference = references.find(
-      ({ slot, assetId, retiredAt }) =>
-        slot === "WORK_COVER" &&
-        assetId === replacementCover.asset.id &&
-        retiredAt === null,
-    );
-    const retiredBackground = references.find(
-      ({ slot, assetId }) =>
-        slot === "WORK_BACKGROUND" && assetId === initialBackground.asset.id,
-    );
-    expect(coverReference).toMatchObject({
-      assetId: replacementCover.asset.id,
-      retiredAt: null,
-      version: 1,
-    });
-    expect(retiredBackground).toMatchObject({
-      assetId: initialBackground.asset.id,
-      version: 1,
-    });
-    expect(retiredBackground?.retiredAt).toBeInstanceOf(Date);
-    const events = await database.mediaReferenceEvent.findMany({
-      where: { reference: { workId: work.id } },
-      orderBy: [{ referenceId: "asc" }, { resultVersion: "asc" }],
-    });
-    expect(events.map(({ action }) => action).sort()).toEqual(
-      ["BOUND", "BOUND", "REPLACED", "RETIRED"].sort(),
-    );
-  });
+        orderBy: [{ referenceId: "asc" }, { resultVersion: "asc" }],
+      });
+      expect(events.map(({ action }) => action).sort()).toEqual(
+        ["BOUND", "BOUND", "REPLACED", "RETIRED"].sort(),
+      );
+    },
+  );
 
   it("leaves a failed unlink resumable and completes it during reconciliation", async () => {
     const adminId = await createActor();

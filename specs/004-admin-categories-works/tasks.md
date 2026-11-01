@@ -264,3 +264,60 @@ Implement Setup and Foundation, then stop at T025 (MVP category management), T04
 ## Owner requirements-review disposition — 2026-09-27
 
 The owner confirmed completed human review of the written P03 requirements. All 36 reviewer-owned items in `checklists/review-readiness.md` are accepted. Earlier execution notes remain historical; inherited P00–P02 and P03 phase-exit evidence must be assessed independently before P05 implementation under `PLAN.md` §10.
+
+## Phase 15: Closeout convergence — concurrent rejection ownership
+
+- [x] T104 Attach settlement handling immediately to the losing query in `packages/database/tests/integration/content-domain.integration.test.ts`'s concurrent 100-category scenario. The 2026-10-31 aggregate passed every assertion but exited 1 because the expected `PZ100` rejection became unhandled before the later assertion attached. Preserve real concurrent PostgreSQL transactions, the exactly-100 invariant, error code/constraint checks and final rows; do not suppress warnings, retry queries or weaken expectations. Run the real database suite and final aggregate. Trace: FR-008/FR-016/FR-020, AE-002, Constitution VII, B46/B50/B51.
+
+**T104 execution — 2026-10-31:** PHASE_ID=P03 / TASK_SCOPE=T104. The current requirements-quality acceptance remains read-only; inherited phase exits remain open. The failing aggregate is recorded in the P00 evidence owner. Immediate `Promise.allSettled` ownership prevents the expected losing query rejection from becoming unhandled while the first transaction commits. The assertion still requires rejected status, exact `PZ100` / `ck_work_categories_max_100`, and exactly 100 final relationships on real PostgreSQL. Test-guard review found the same concurrent boundary and invariant, no timeout/retry/skip or warning suppression. The full database integration script passed 5 files / 36 tests (`/tmp/fury-closeout-p03-concurrency-fixed.log`, 31.22 seconds), without the unhandled rejection. Final shared aggregate remains required before ticking T104. No application or presentation code changed in this batch.
+
+## Phase 16: Closeout convergence — native slug validation syntax
+
+- [x] T105 Correct only the slug input's HTML pattern syntax in `apps/web/src/features/admin/components/AdminCategories/AdminCategoryDialog.tsx`: Chromium 156 reports `[A-Za-z0-9-]+` invalid under the browser's Unicode-sets `v` rules, disabling native pattern validation. Escape the literal hyphen while retaining exactly the intended letter/digit/hyphen character set. Keep the same control, static copy, styles, layout, focus, routes and handlers. Verify the emitted browser pattern compiles, intended ASCII slugs match and disallowed punctuation does not; rerun existing Category regressions and the aggregate. Trace: FR-002/FR-016/FR-018, SC-002/SC-007, F05/F30, Constitution VI/VII. This is a syntax repair to the existing validation contract, not a new presentation surface.
+
+## Final local closeout disposition — 2026-10-31
+
+PHASE_ID=P03 / TASK_SCOPE=T104,T105. T104's immediate settlement ownership passed the complete real PostgreSQL suite and three later aggregate integrations, retaining exactly-100/error-constraint assertions without unhandled rejection. T105 changes exactly one existing HTML pattern attribute to escape its literal hyphen under Unicode-sets `v` syntax. Normalizing that one attribute reproduces the original HEAD component byte-for-byte: no control, copy, styling, route, layout, icon or handler changed. Existing Category regressions passed 1 file / 12 tests; `pnpm verify` after that change freshly passed all 474 web tests and its production build. The last enum-reviewed aggregate also exited 0, with the web task unchanged/cached and all real database/HTTP regressions fresh. No new mirror test, retry, skip or suppression was added.
+
+Real HeadlessChrome/156 verified the rebuilt emitted pattern compiles with `v`, accepts `Valid-123` and literal hyphen, rejects `invalid!`, and sets native `patternMismatch:true` on the actual existing input. The dialog focused its first field; Escape restored focus to the create button. The existing list/dialog had document widths equal to viewports at 320 and 1280px. A keyboard Tab/Enter Category create survived full reload; isolated PostgreSQL confirmed `09200a11-9cdc-417f-a4a3-4f2e18225a55`, slug `closeout-browser-category`, enabled true, global position 2. These are disposable synthetic records, not a production action. Clean-code-guard and React/UI guidance review retained existing labels, focus, server validation and transport owners. The initial browser invalid-pattern console error was genuine and repaired; preload notices remain visible.
+
+All 105 task identities and the existing nine Markdown artifacts were reconciled with the focused Category/Work/Chapter/publication services, current contracts, forward migrations, scoped admin API/hooks/editor models and regression tests. Earlier `content-management.controller.ts` references resolve to the later accepted focused controllers; later P04 legitimately removed the Chapter fixtures that P03 originally preserved for that earlier checkpoint. Nothing was rebuilt solely to recreate retired paths. The old 2026-09-26 complete category/both-Work/publication/rollback/accessibility journeys remain explicitly reused historical browser evidence; this closeout does not claim it freshly repeated that whole matrix. Current real PostgreSQL/HTTP tests prove constraints, safe disable/order, complete atomic drafts, publication/event truth, stale/idempotent recovery and authority; current QueryClient/component suites prove actor/identity/draft/uncertain-outcome regressions.
+
+Read-only convergence found no additional unowned technical task; **P03's formal T002 dependency / T084 phase-exit disposition remains owner/reviewer gated despite implementation checkboxes**. The 2026-09-27 written requirements acceptance is already recorded and remains distinct. No human acceptance, physical-device certification or real-data deployment/recovery claim was made.
+
+## Independent legacy acceptance reconciliation — 2026-11-01
+
+The separately authorized independent reviewer `/root/legacy_review` inspected
+literal task/phase criteria, current owners, historical execution records and
+accepted written requirements. The final post-T082 shared verification is linked
+in [P05 evidence](../006-public-catalog-discovery-seo/evidence.md); it is a local
+synthetic check, not production or human artwork approval. No written-review or
+human acceptance marker was changed.
+
+P03 T002's evidence-review/negative-disposition task remains complete:
+its instruction expressly includes blocking acceptance on a missing prerequisite.
+Current management, category invariants, immutable slugs/publication transitions,
+API authority, real media binding and original/current regression/browser evidence
+support technical **PASS** (including T084 review). Formal P03 acceptance remains
+**BLOCKED through P02 T002/T067**, rather than being inferred from the historical
+checkbox. Existing P05 synthetic continuation remains the distinct owner authority.
+
+## Phase 17: Convergence — legacy prerequisite status truth
+
+Review date: 2026-11-01. Selected existing phase P03. An independent read-only review of `AdminWorkForm.tsx` and its refresh/adopt/continue callers confirms a HIGH partial publication-state gap: `confirmedStatus` has no Work/version provenance. A newer server Work advances `baseline.version`, after which equality lets the older confirmation override the current server publication status. The real P05 ADMIN journey recorded a successful unpublish command and public404 while the editor retained published controls. That observation corroborates the defect; the exact callback/refetch timing is not claimed as proved. Existing T088/T090/T099 are complete and do not own this newly established correction. This CONVERGE only appends the task; no application, old task, approval marker, pointer, test/build/formatter/generator or release action occurs inside it.
+
+- [x] T106 [HIGH] Stamp local publication confirmation in `apps/web/src/features/admin/components/AdminWorkForm/AdminWorkForm.tsx` with matching Work identity and confirmed server revision. Put the pure precedence rule in the existing `model/admin-work-editor.ts`: a local confirmation may override only an older matching server Work; equal/newer authoritative server data wins independently of editor baseline/adopt/continue changes. Preserve dirty editorial input, current-actor/canSave/unknown-outcome guards, version/CAS commands and all existing DOM, copy, controls and CSS. Add meaningful identity/revision/status and adopt/continue regressions in the existing model suite, reuse the form/hook regressions, and verify actual publish→unpublish→republish without reloading the administrator editor. Retain the prior actual failure and distinguish the P05 reload workaround from this repair. Dependencies: T088/T090/T099 and unchanged verified P03 backend/media group; this is independent of unresolved P02 artwork judgment and is necessary existing-feature maintenance, not phase admission. Trace: FR-012/FR-016/FR-018/FR-020, AE-004, SC-004; F02/F07/F24; partial.
+
+### T106 actual implementation and verification — 2026-11-01
+
+The version-stamped rule and original actor/save/unknown/CAS guards passed
+independent code/test/legacy review. Fresh model/form/hook73 cases passed after
+correcting the existing impossible same-revision no-op fixture to a real v+1
+intervening restore, retaining its assertions. The actual compiled browser
+journey published, unpublished and republished in the same editor without reload;
+newer saved draft controls and real anonymous denial/recovery were observed.
+[Portable current evidence](../006-public-catalog-discovery-seo/evidence.md) records
+the initial focused fixture failure, one later outer5000ms timeout, unchanged
+full-suite repetition516pass, real PostgreSQL/HTTP158+36 checks and final build.
+No administrator DOM, copy, CSS, actor/CAS or unknown-outcome rule changed. Formal
+P03 phase acceptance still inherits the explicit P02 T002/T067 artwork gate.

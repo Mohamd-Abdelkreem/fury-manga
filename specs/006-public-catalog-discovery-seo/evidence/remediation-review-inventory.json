@@ -1,0 +1,1250 @@
+{
+  "date": "2026-11-01",
+  "branch": "main",
+  "head": "868948bb9f51fe9fdf6f40d18e8d8b7d920a1f9f",
+  "initialChangedPaths": 81,
+  "finalGitChangedPathsIncludingThisInventory": 117,
+  "totalReviewedEntries": 118,
+  "featureSelectionRestoredExactly": true,
+  "presentationOwnersPreservedFromRequestStart": true,
+  "taskDescriptionsAndOutOfScopeMarkersPreserved": true,
+  "taskCounts": {
+    "specs/001-content-domain-foundation": {
+      "total": 72,
+      "checked": 69,
+      "unchecked": ["T003", "T004", "T059"]
+    },
+    "specs/002-persistent-vps-media": {
+      "total": 80,
+      "checked": 75,
+      "unchecked": ["T001", "T002", "T065", "T066", "T067"]
+    },
+    "specs/003-repository-product-alignment": {
+      "total": 18,
+      "checked": 17,
+      "unchecked": ["T012"]
+    },
+    "specs/004-admin-categories-works": {
+      "total": 105,
+      "checked": 105,
+      "unchecked": []
+    },
+    "specs/005-admin-chapter-publishing": {
+      "total": 94,
+      "checked": 94,
+      "unchecked": []
+    },
+    "specs/006-public-catalog-discovery-seo": {
+      "total": 77,
+      "checked": 54,
+      "unchecked": [
+        "T020",
+        "T021",
+        "T022",
+        "T023",
+        "T024",
+        "T025",
+        "T035",
+        "T036",
+        "T037",
+        "T038",
+        "T039",
+        "T048",
+        "T049",
+        "T050",
+        "T055",
+        "T056",
+        "T057",
+        "T059",
+        "T061",
+        "T062",
+        "T063",
+        "T068",
+        "T069"
+      ]
+    }
+  },
+  "inventorySelfHash": "excluded to avoid self-reference",
+  "paths": [
+    {
+      "path": "PROJECT_REFERENCE.md",
+      "category": "technical documentation and acceptance boundaries",
+      "initiallyChanged": true,
+      "initialSha256": "935bc7bb31773b5d5a7714b29adfb21416cae45ad0fcdde3995ebd1e666ef880",
+      "currentSha256": "f835e39c0dce99f7ebc4e1d2bac203d284136cc89aeca516ba5ba6d6b8e04978",
+      "currentFileExists": true,
+      "disposition": "targeted correction or documented owner move",
+      "review": "Compared documented paths, accepted requirements, task identity/approval markers and dated/current claims with source and recorded actual checks; owner gates preserved."
+    },
+    {
+      "path": "README.md",
+      "category": "technical documentation and acceptance boundaries",
+      "initiallyChanged": true,
+      "initialSha256": "04be823518f82dc46a127e5a5cd731be0517c6d8da2e3056aa2387b1e77925cc",
+      "currentSha256": "4b3237dcc2be5496183dc57e9ac2bf9286b7de1b5321d75890d2f54779956f66",
+      "currentFileExists": true,
+      "disposition": "targeted correction or documented owner move",
+      "review": "Compared documented paths, accepted requirements, task identity/approval markers and dated/current claims with source and recorded actual checks; owner gates preserved."
+    },
+    {
+      "path": "apps/api/src/app.integration.test.ts",
+      "category": "test behavior and owned fixture lifecycle",
+      "initiallyChanged": true,
+      "initialSha256": "98561174a4c349729535eb0ba1769a4c14aa27e8926c61f7b58cb1f75d490c48",
+      "currentSha256": "98561174a4c349729535eb0ba1769a4c14aa27e8926c61f7b58cb1f75d490c48",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Owned listener lifecycle reviewed; complete auth HTTP assertions preserved; final two-order/shared regressions."
+    },
+    {
+      "path": "apps/api/src/app.ts",
+      "category": "API authority, mapping, logging and orchestration",
+      "initiallyChanged": true,
+      "initialSha256": "c93e4ac538aa570a26eba9de5b4805ae43b00584b51cbb3927ab0b482dcf3769",
+      "currentSha256": "322e03444e983cf3f5376241ad39806fa021b4415188acf25751c35e3318e4e0",
+      "currentFileExists": true,
+      "disposition": "targeted correction or documented owner move",
+      "review": "Complete changed production functions and immediate callers reviewed under clean-code/security/B/F ownership; actual shared API/PostgreSQL/HTTP checks passed; no presentation or authority weakening."
+    },
+    {
+      "path": "apps/api/src/content.integration.test.ts",
+      "category": "test behavior and owned fixture lifecycle",
+      "initiallyChanged": true,
+      "initialSha256": "ab537f1605f29aff90239684df8e71e33ebebf3a8e28d49f192e03b6c6c08000",
+      "currentSha256": "101ef16896a7acc816f289772433ff2519c71470c274f65a69d3a857b11fa9b4",
+      "currentFileExists": true,
+      "disposition": "targeted correction or documented owner move",
+      "review": "Actual full HTTP/public/ADMIN/auth/media requests, final emitted Pino logs, strict GET/HEAD, byte failure and one shared isolated fixture reset reviewed."
+    },
+    {
+      "path": "apps/api/src/infrastructure/email/email.service.ts",
+      "category": "API authority, mapping, logging and orchestration",
+      "initiallyChanged": true,
+      "initialSha256": "4c151fff591184683600dcb10e38682770c3a9875c72ef37432caad4534bd571",
+      "currentSha256": "4c151fff591184683600dcb10e38682770c3a9875c72ef37432caad4534bd571",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Complete changed production functions and immediate callers reviewed under clean-code/security/B/F ownership; actual shared API/PostgreSQL/HTTP checks passed; no presentation or authority weakening."
+    },
+    {
+      "path": "apps/api/src/infrastructure/logger/request-sanitizer.test.ts",
+      "category": "test behavior and owned fixture lifecycle",
+      "initiallyChanged": true,
+      "initialSha256": "02c05db3c1accb74f75801fa6a4c655aad22b927cfe956ae44c2b088581509f0",
+      "currentSha256": "963a891cd338c6dd6a6653643f48a87faeecd5403c1602daad1bf6031f042882",
+      "currentFileExists": true,
+      "disposition": "targeted correction or documented owner move",
+      "review": "Test diff and corresponding production boundary reviewed with test-guard; meaningful outcomes, privacy/failure assertions, real infrastructure and cleanup preserved; affected shared suites executed."
+    },
+    {
+      "path": "apps/api/src/infrastructure/logger/request-sanitizer.ts",
+      "category": "API authority, mapping, logging and orchestration",
+      "initiallyChanged": true,
+      "initialSha256": "58431fecd3f48dc56a5cc1e69d0019acd6632a7e89d01c3d4621d470533c0c43",
+      "currentSha256": "2e9aa34c815ca12d179fd633d8ceeb72baf922acd581d3538eefde9f02498223",
+      "currentFileExists": true,
+      "disposition": "targeted correction or documented owner move",
+      "review": "Complete changed production functions and immediate callers reviewed under clean-code/security/B/F ownership; actual shared API/PostgreSQL/HTTP checks passed; no presentation or authority weakening."
+    },
+    {
+      "path": "apps/api/src/infrastructure/media/media-read-integrity.test.ts",
+      "category": "test behavior and owned fixture lifecycle",
+      "initiallyChanged": true,
+      "initialSha256": "ece6078d9371c561dc90cc3ac387f8f52b7fbcd0b8a19e1522b479b2d44c7951",
+      "currentSha256": "ece6078d9371c561dc90cc3ac387f8f52b7fbcd0b8a19e1522b479b2d44c7951",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Test diff and corresponding production boundary reviewed with test-guard; meaningful outcomes, privacy/failure assertions, real infrastructure and cleanup preserved; affected shared suites executed."
+    },
+    {
+      "path": "apps/api/src/infrastructure/media/media-read-integrity.ts",
+      "category": "API authority, mapping, logging and orchestration",
+      "initiallyChanged": true,
+      "initialSha256": "62fa46bceac99551d1307184b73dd72325f5bc80b455423fdd17d133ebf72ec7",
+      "currentSha256": "00ba73999dd3f2828469aff84da9b6c21377be8fc09a80b14ee364465dc72c2c",
+      "currentFileExists": true,
+      "disposition": "targeted correction or documented owner move",
+      "review": "Complete changed production functions and immediate callers reviewed under clean-code/security/B/F ownership; actual shared API/PostgreSQL/HTTP checks passed; no presentation or authority weakening."
+    },
+    {
+      "path": "apps/api/src/infrastructure/media/media.errors.ts",
+      "category": "API authority, mapping, logging and orchestration",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "ec3d7f66c76d06b3373a072dc3531c71f403f9505f6260c1001a0f90b9a8046d",
+      "currentFileExists": true,
+      "disposition": "new artifact",
+      "review": "Complete changed production functions and immediate callers reviewed under clean-code/security/B/F ownership; actual shared API/PostgreSQL/HTTP checks passed; no presentation or authority weakening."
+    },
+    {
+      "path": "apps/api/src/infrastructure/openapi/openapi.test.ts",
+      "category": "test behavior and owned fixture lifecycle",
+      "initiallyChanged": true,
+      "initialSha256": "fa4cf683b47038ef6989b6eea886fd278b17a10528a06c064da708347d305e64",
+      "currentSha256": "7ebbeb61d945a5ebd0b04febac21d6cc5a1e4278c72f0e140fa9c63b8156cdf0",
+      "currentFileExists": true,
+      "disposition": "targeted correction or documented owner move",
+      "review": "Test diff and corresponding production boundary reviewed with test-guard; meaningful outcomes, privacy/failure assertions, real infrastructure and cleanup preserved; affected shared suites executed."
+    },
+    {
+      "path": "apps/api/src/infrastructure/openapi/openapi.ts",
+      "category": "API authority, mapping, logging and orchestration",
+      "initiallyChanged": true,
+      "initialSha256": "f2ab27b36124cb071ee7804fd44f05906de2d21b4e8d365ee5c728be0f7dfa85",
+      "currentSha256": "c1916f7e98a881d6ae2a36e40f61b3ac8a643f23b55c46df684afdfd551cb53d",
+      "currentFileExists": true,
+      "disposition": "targeted correction or documented owner move",
+      "review": "Complete changed production functions and immediate callers reviewed under clean-code/security/B/F ownership; actual shared API/PostgreSQL/HTTP checks passed; no presentation or authority weakening."
+    },
+    {
+      "path": "apps/api/src/infrastructure/security/index.ts",
+      "category": "API authority, mapping, logging and orchestration",
+      "initiallyChanged": true,
+      "initialSha256": "b60120af1a0ac2d51e022ec3a90390c9443a8b109ac7edaa964677244f69b39f",
+      "currentSha256": "b60120af1a0ac2d51e022ec3a90390c9443a8b109ac7edaa964677244f69b39f",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Complete changed production functions and immediate callers reviewed under clean-code/security/B/F ownership; actual shared API/PostgreSQL/HTTP checks passed; no presentation or authority weakening."
+    },
+    {
+      "path": "apps/api/src/infrastructure/security/jwt-tokens.test.ts",
+      "category": "test behavior and owned fixture lifecycle",
+      "initiallyChanged": true,
+      "initialSha256": "770a475a8789cf50f999bddab12ed4627bafcc9d2645f1338144693a0f25cecc",
+      "currentSha256": "770a475a8789cf50f999bddab12ed4627bafcc9d2645f1338144693a0f25cecc",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Test diff and corresponding production boundary reviewed with test-guard; meaningful outcomes, privacy/failure assertions, real infrastructure and cleanup preserved; affected shared suites executed."
+    },
+    {
+      "path": "apps/api/src/infrastructure/security/jwt-tokens.ts",
+      "category": "behavior-preserving JWT filename relocation",
+      "initiallyChanged": true,
+      "initialSha256": "4ccf8f3b525e4b14f6f0539d5a33960b7ab58cd16a30a8b3b32f4c9ae229b45a",
+      "currentSha256": "4ccf8f3b525e4b14f6f0539d5a33960b7ab58cd16a30a8b3b32f4c9ae229b45a",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Compared relocation to original HEAD source/test with only its import filename adjusted; auth/middleware callers and fresh shared regressions preserved."
+    },
+    {
+      "path": "apps/api/src/infrastructure/security/jwt.service.test.ts",
+      "category": "test behavior and owned fixture lifecycle",
+      "initiallyChanged": true,
+      "initialSha256": null,
+      "currentSha256": null,
+      "currentFileExists": false,
+      "disposition": "preserved",
+      "review": "Test diff and corresponding production boundary reviewed with test-guard; meaningful outcomes, privacy/failure assertions, real infrastructure and cleanup preserved; affected shared suites executed."
+    },
+    {
+      "path": "apps/api/src/infrastructure/security/jwt.service.ts",
+      "category": "behavior-preserving JWT filename relocation",
+      "initiallyChanged": true,
+      "initialSha256": null,
+      "currentSha256": null,
+      "currentFileExists": false,
+      "disposition": "preserved",
+      "review": "Compared relocation to original HEAD source/test with only its import filename adjusted; auth/middleware callers and fresh shared regressions preserved."
+    },
+    {
+      "path": "apps/api/src/media.integration.test.ts",
+      "category": "test behavior and owned fixture lifecycle",
+      "initiallyChanged": true,
+      "initialSha256": "d09baed262528e0ea3c76c2dd7ea2272b2f45bf46594d3f328b10e1b26052f70",
+      "currentSha256": "d09baed262528e0ea3c76c2dd7ea2272b2f45bf46594d3f328b10e1b26052f70",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Test diff and corresponding production boundary reviewed with test-guard; meaningful outcomes, privacy/failure assertions, real infrastructure and cleanup preserved; affected shared suites executed."
+    },
+    {
+      "path": "apps/api/src/middlewares/auth.middleware.ts",
+      "category": "API authority, mapping, logging and orchestration",
+      "initiallyChanged": true,
+      "initialSha256": "30b8031746568130aba7f4e580d97bc52a43390b2b6425bfa47852edfedb2f6a",
+      "currentSha256": "30b8031746568130aba7f4e580d97bc52a43390b2b6425bfa47852edfedb2f6a",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Complete changed production functions and immediate callers reviewed under clean-code/security/B/F ownership; actual shared API/PostgreSQL/HTTP checks passed; no presentation or authority weakening."
+    },
+    {
+      "path": "apps/api/src/middlewares/error-handler.middleware.test.ts",
+      "category": "test behavior and owned fixture lifecycle",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "67e55fa4105a4f3a0b5f47c7b9736dd68431c47927c258d9bee073b2455c9897",
+      "currentFileExists": true,
+      "disposition": "newly corrected tracked owner",
+      "review": "Test diff and corresponding production boundary reviewed with test-guard; meaningful outcomes, privacy/failure assertions, real infrastructure and cleanup preserved; affected shared suites executed."
+    },
+    {
+      "path": "apps/api/src/middlewares/error-handler.middleware.ts",
+      "category": "API authority, mapping, logging and orchestration",
+      "initiallyChanged": true,
+      "initialSha256": "528f89a7bb77a2fd1f6616287811daabb4a4ac9d96de78fb611a12387066b660",
+      "currentSha256": "78b374490c7e77a51f68396d54bec090209f3cef862e757dc62bd8312d5357bf",
+      "currentFileExists": true,
+      "disposition": "targeted correction or documented owner move",
+      "review": "Complete changed production functions and immediate callers reviewed under clean-code/security/B/F ownership; actual shared API/PostgreSQL/HTTP checks passed; no presentation or authority weakening."
+    },
+    {
+      "path": "apps/api/src/middlewares/not-found.middleware.ts",
+      "category": "API authority, mapping, logging and orchestration",
+      "initiallyChanged": true,
+      "initialSha256": "31ab58e751ed134c50e1aad7cd2484751d0bee7dc9004ab50b5b0af13350251c",
+      "currentSha256": "eb9cca63c8153a53abe8be45366d4d6bbf518d4c0a6b7ba01cfe0ca804cd5cc5",
+      "currentFileExists": true,
+      "disposition": "targeted correction or documented owner move",
+      "review": "Complete changed production functions and immediate callers reviewed under clean-code/security/B/F ownership; actual shared API/PostgreSQL/HTTP checks passed; no presentation or authority weakening."
+    },
+    {
+      "path": "apps/api/src/middlewares/validation.middleware.ts",
+      "category": "API authority, mapping, logging and orchestration",
+      "initiallyChanged": true,
+      "initialSha256": "19885a2ef65ecf610af50d6b89424d10bca459324005a7f61126e059316f72cf",
+      "currentSha256": "19885a2ef65ecf610af50d6b89424d10bca459324005a7f61126e059316f72cf",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Complete changed production functions and immediate callers reviewed under clean-code/security/B/F ownership; actual shared API/PostgreSQL/HTTP checks passed; no presentation or authority weakening."
+    },
+    {
+      "path": "apps/api/src/modules/auth/auth.service.ts",
+      "category": "API authority, mapping, logging and orchestration",
+      "initiallyChanged": true,
+      "initialSha256": "5b94bc4e5e6702cfe1f497eb7c5a5a9eadad0b8c60e227e219dd201960509f40",
+      "currentSha256": "5b94bc4e5e6702cfe1f497eb7c5a5a9eadad0b8c60e227e219dd201960509f40",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Complete changed production functions and immediate callers reviewed under clean-code/security/B/F ownership; actual shared API/PostgreSQL/HTTP checks passed; no presentation or authority weakening."
+    },
+    {
+      "path": "apps/api/src/modules/content/content.mapper.ts",
+      "category": "API authority, mapping, logging and orchestration",
+      "initiallyChanged": true,
+      "initialSha256": "8dd1b483e440929712988b3f50dc7f2c17e3ac75fcbddc6b888f587bae64684c",
+      "currentSha256": "b1fd6e2efddf461e65305849b3deb70ad915a844c8ee1a95de22bca6eb98ed55",
+      "currentFileExists": true,
+      "disposition": "targeted correction or documented owner move",
+      "review": "Complete changed production functions and immediate callers reviewed under clean-code/security/B/F ownership; actual shared API/PostgreSQL/HTTP checks passed; no presentation or authority weakening."
+    },
+    {
+      "path": "apps/api/src/modules/content/content.queries.ts",
+      "category": "API authority, mapping, logging and orchestration",
+      "initiallyChanged": true,
+      "initialSha256": "a9d1d13ad0c98e1b90cb573acc70c7ce9e65bb33b9ffc2e1f40aee0fb418e1a1",
+      "currentSha256": "a9d1d13ad0c98e1b90cb573acc70c7ce9e65bb33b9ffc2e1f40aee0fb418e1a1",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Shared published readiness, parameterized literal substring filters, deterministic SQL ordering/counts/bounds, snapshot/keyset traversal and narrow selections reviewed against real PostgreSQL cases."
+    },
+    {
+      "path": "apps/api/src/modules/content/content.routes.ts",
+      "category": "API authority, mapping, logging and orchestration",
+      "initiallyChanged": true,
+      "initialSha256": "c6fd48f4dcf95f129897dffdf0a5cb2c7fc55836bce6330f4aa3e6bc4267020d",
+      "currentSha256": "892b3ad7f2600de18b58cfedc304bd5fdaa16dc8bb3758c9abed272a19f3d932",
+      "currentFileExists": true,
+      "disposition": "targeted correction or documented owner move",
+      "review": "Complete changed production functions and immediate callers reviewed under clean-code/security/B/F ownership; actual shared API/PostgreSQL/HTTP checks passed; no presentation or authority weakening."
+    },
+    {
+      "path": "apps/api/src/modules/content/content.types.ts",
+      "category": "API authority, mapping, logging and orchestration",
+      "initiallyChanged": true,
+      "initialSha256": "b61f6c28d6af50d9638ffa58c035597789cef7ee6f468c0034a90e92c7c7d1d4",
+      "currentSha256": "b61f6c28d6af50d9638ffa58c035597789cef7ee6f468c0034a90e92c7c7d1d4",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Complete changed production functions and immediate callers reviewed under clean-code/security/B/F ownership; actual shared API/PostgreSQL/HTTP checks passed; no presentation or authority weakening."
+    },
+    {
+      "path": "apps/api/src/modules/content/dto/content.dto.ts",
+      "category": "API authority, mapping, logging and orchestration",
+      "initiallyChanged": true,
+      "initialSha256": "2b81ea7b742e5b5922687728a46753627e05e9433fa2534d72bf3418a7ebcd86",
+      "currentSha256": "2b81ea7b742e5b5922687728a46753627e05e9433fa2534d72bf3418a7ebcd86",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Complete changed production functions and immediate callers reviewed under clean-code/security/B/F ownership; actual shared API/PostgreSQL/HTTP checks passed; no presentation or authority weakening."
+    },
+    {
+      "path": "apps/api/src/modules/content/public-content.controller.ts",
+      "category": "API authority, mapping, logging and orchestration",
+      "initiallyChanged": true,
+      "initialSha256": "a1cfe01dab2e7efd4ecbde979385b124c924b5d1e0e83eaa7697b55de131883b",
+      "currentSha256": "a1cfe01dab2e7efd4ecbde979385b124c924b5d1e0e83eaa7697b55de131883b",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Complete changed production functions and immediate callers reviewed under clean-code/security/B/F ownership; actual shared API/PostgreSQL/HTTP checks passed; no presentation or authority weakening."
+    },
+    {
+      "path": "apps/api/src/modules/content/public-content.integration.test.ts",
+      "category": "test behavior and owned fixture lifecycle",
+      "initiallyChanged": true,
+      "initialSha256": "bf315da3731b04173d41233be4b1009ed969a6707f61892460c82f2010228841",
+      "currentSha256": "bf315da3731b04173d41233be4b1009ed969a6707f61892460c82f2010228841",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Actual PostgreSQL full-set boundaries, all work types, ordering/paging, publication/category/media transitions, coherent concurrent snapshots and complete multi-batch sitemap reviewed."
+    },
+    {
+      "path": "apps/api/src/modules/content/public-content.service.ts",
+      "category": "API authority, mapping, logging and orchestration",
+      "initiallyChanged": true,
+      "initialSha256": "36b58ccaed2cd75fd621b34bffd10f0ef0984c52f38a5b97bf4a9f7350eff15b",
+      "currentSha256": "51900123a23dec4d68e4841968c128fd9bb4a72b6c540dd1615c7ec2ee986b3b",
+      "currentFileExists": true,
+      "disposition": "targeted correction or documented owner move",
+      "review": "Complete read-only transaction/eligibility/home/detail/sitemap/image orchestration and controller callers reviewed; no fixture fallback or event write."
+    },
+    {
+      "path": "apps/api/src/modules/media/media.errors.ts",
+      "category": "API authority, mapping, logging and orchestration",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "b8d1f327c3ce718ad84f21461a71628d881df767801cb3d7c326a83962a723d0",
+      "currentFileExists": true,
+      "disposition": "newly corrected tracked owner",
+      "review": "Complete changed production functions and immediate callers reviewed under clean-code/security/B/F ownership; actual shared API/PostgreSQL/HTTP checks passed; no presentation or authority weakening."
+    },
+    {
+      "path": "apps/api/src/modules/media/media.reconcile.integration.test.ts",
+      "category": "test behavior and owned fixture lifecycle",
+      "initiallyChanged": true,
+      "initialSha256": "e2086d9b88dbeb0bfd5e540ce5658a07400d6d09e9c1d7b71cecfc772c868be2",
+      "currentSha256": "e2086d9b88dbeb0bfd5e540ce5658a07400d6d09e9c1d7b71cecfc772c868be2",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Test diff and corresponding production boundary reviewed with test-guard; meaningful outcomes, privacy/failure assertions, real infrastructure and cleanup preserved; affected shared suites executed."
+    },
+    {
+      "path": "apps/api/src/modules/media/media.service.integration.test.ts",
+      "category": "test behavior and owned fixture lifecycle",
+      "initiallyChanged": true,
+      "initialSha256": "61d224489a3eb54954983e322d3cb956afab2c0ed0d44e6ee0e673530a762d5e",
+      "currentSha256": "61d224489a3eb54954983e322d3cb956afab2c0ed0d44e6ee0e673530a762d5e",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Test diff and corresponding production boundary reviewed with test-guard; meaningful outcomes, privacy/failure assertions, real infrastructure and cleanup preserved; affected shared suites executed."
+    },
+    {
+      "path": "apps/api/src/modules/media/media.service.ts",
+      "category": "API authority, mapping, logging and orchestration",
+      "initiallyChanged": true,
+      "initialSha256": "f5766d09e2420ed6b9871d83e4e2ff28ed6c7b125497a452b24f759577795d36",
+      "currentSha256": "c5716e0019164ac8e3c1feaa5cb92a070ff5c8d15a0a69668980a820aab13036",
+      "currentFileExists": true,
+      "disposition": "targeted correction or documented owner move",
+      "review": "Complete touched use cases and immediate callers reviewed; named transaction/delegation outcomes, canonical enums, B12 error owners and 60-site wire equivalence; unchanged locks/CAS/replay/events/private byte authority."
+    },
+    {
+      "path": "apps/api/src/router.ts",
+      "category": "API authority, mapping, logging and orchestration",
+      "initiallyChanged": true,
+      "initialSha256": "c030a1f64854d519fa457c38ff4acbd1ac4d0aa753ec143b759226ad2b3c5d8b",
+      "currentSha256": "c030a1f64854d519fa457c38ff4acbd1ac4d0aa753ec143b759226ad2b3c5d8b",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Complete changed production functions and immediate callers reviewed under clean-code/security/B/F ownership; actual shared API/PostgreSQL/HTTP checks passed; no presentation or authority weakening."
+    },
+    {
+      "path": "apps/api/src/test-support/http-server.test-helper.ts",
+      "category": "test behavior and owned fixture lifecycle",
+      "initiallyChanged": true,
+      "initialSha256": "62cbe82c748f8b7f6777eb64ab0fd15dab9ec06580327e336d21586d3f87097c",
+      "currentSha256": "62cbe82c748f8b7f6777eb64ab0fd15dab9ec06580327e336d21586d3f87097c",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Test diff and corresponding production boundary reviewed with test-guard; meaningful outcomes, privacy/failure assertions, real infrastructure and cleanup preserved; affected shared suites executed."
+    },
+    {
+      "path": "apps/api/vitest.setup.ts",
+      "category": "test behavior and owned fixture lifecycle",
+      "initiallyChanged": true,
+      "initialSha256": "1d7977346fdc5ef1ee622568385ff6a3be6d2e251cc8389d10eca4e75e65133d",
+      "currentSha256": "1d7977346fdc5ef1ee622568385ff6a3be6d2e251cc8389d10eca4e75e65133d",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Test diff and corresponding production boundary reviewed with test-guard; meaningful outcomes, privacy/failure assertions, real infrastructure and cleanup preserved; affected shared suites executed."
+    },
+    {
+      "path": "apps/web/.env.example",
+      "category": "validated example/server-only configuration",
+      "initiallyChanged": true,
+      "initialSha256": "8077da53a09a7b5b78b333c611b09bcc9a2f59cc14b199b1d770f55ae256a996",
+      "currentSha256": "8077da53a09a7b5b78b333c611b09bcc9a2f59cc14b199b1d770f55ae256a996",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Actual environment key readers, strict safe URL/config validation, client/server isolation and configuration regressions reviewed; no real credentials retained."
+    },
+    {
+      "path": "apps/web/src/config/server-environment.test.ts",
+      "category": "test behavior and owned fixture lifecycle",
+      "initiallyChanged": true,
+      "initialSha256": "7e36987b8771b71d0d2b9d7237c3705bfd3743b73e8232532ec9b11bf9eb477c",
+      "currentSha256": "7e36987b8771b71d0d2b9d7237c3705bfd3743b73e8232532ec9b11bf9eb477c",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Test diff and corresponding production boundary reviewed with test-guard; meaningful outcomes, privacy/failure assertions, real infrastructure and cleanup preserved; affected shared suites executed."
+    },
+    {
+      "path": "apps/web/src/config/server-environment.ts",
+      "category": "validated example/server-only configuration",
+      "initiallyChanged": true,
+      "initialSha256": "ddd02d48fdc412f2785e203403ced534844fc06040361d76eade3a3688ff2f49",
+      "currentSha256": "ddd02d48fdc412f2785e203403ced534844fc06040361d76eade3a3688ff2f49",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Actual environment key readers, strict safe URL/config validation, client/server isolation and configuration regressions reviewed; no real credentials retained."
+    },
+    {
+      "path": "apps/web/src/features/admin/components/AdminCategories/AdminCategoryDialog.tsx",
+      "category": "frozen presentation owner preserved",
+      "initiallyChanged": true,
+      "initialSha256": "3e182e80042ffe8ec1fe10eb203b4d6d3069bed18543abbf68601df8b0cfc750",
+      "currentSha256": "3e182e80042ffe8ec1fe10eb203b4d6d3069bed18543abbf68601df8b0cfc750",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Byte-identical to the beginning-of-request file; existing narrow prior closeout pattern/import extraction preserved, no new presentation change."
+    },
+    {
+      "path": "apps/web/src/features/home/components/Navbar/AccessibleNavbar.tsx",
+      "category": "frozen presentation owner preserved",
+      "initiallyChanged": true,
+      "initialSha256": "9a6719345df518d8774bed03017098a6ca0d78f3445ad51216c8cb9f9d8e153e",
+      "currentSha256": "9a6719345df518d8774bed03017098a6ca0d78f3445ad51216c8cb9f9d8e153e",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Byte-identical to the beginning-of-request file; existing narrow prior closeout pattern/import extraction preserved, no new presentation change."
+    },
+    {
+      "path": "apps/web/src/features/home/data/heroData.ts",
+      "category": "frozen presentation owner preserved",
+      "initiallyChanged": true,
+      "initialSha256": "ee4c1087006f60da52d4d574acca31aa5f8e91872d395a9a1a63765e44bff4ca",
+      "currentSha256": "ee4c1087006f60da52d4d574acca31aa5f8e91872d395a9a1a63765e44bff4ca",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Byte-identical to the beginning-of-request file; existing narrow prior closeout pattern/import extraction preserved, no new presentation change."
+    },
+    {
+      "path": "apps/web/src/features/home/model/navigation.ts",
+      "category": "frozen presentation owner preserved",
+      "initiallyChanged": true,
+      "initialSha256": "d5328f5acdbad0381177a40f40eb5aa17f696948a71041079c0cc071eb6e5430",
+      "currentSha256": "d5328f5acdbad0381177a40f40eb5aa17f696948a71041079c0cc071eb6e5430",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Byte-identical to the beginning-of-request file; existing narrow prior closeout pattern/import extraction preserved, no new presentation change."
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/api/public-catalog.api.test.ts",
+      "category": "test behavior and owned fixture lifecycle",
+      "initiallyChanged": true,
+      "initialSha256": "41d0ebcc5091b3db60697f18dbd6852f8740de45850681bc2ca7e0979f77bb2b",
+      "currentSha256": "41d0ebcc5091b3db60697f18dbd6852f8740de45850681bc2ca7e0979f77bb2b",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Test diff and corresponding production boundary reviewed with test-guard; meaningful outcomes, privacy/failure assertions, real infrastructure and cleanup preserved; affected shared suites executed."
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/api/public-catalog.api.ts",
+      "category": "invisible public consumer ownership and behavior",
+      "initiallyChanged": true,
+      "initialSha256": "c7890d34b07f06d9213d2c8ef1edea3fcfaddcd4785a3e7338c8e9823652e22d",
+      "currentSha256": "a38c51ba4c90080d2bacaf4372e7d4274ccaaf69ab83a2333d2968deac52f9e3",
+      "currentFileExists": true,
+      "disposition": "targeted correction or documented owner move",
+      "review": "Complete pure/API/query lifecycle functions and immediate callers reviewed; shared schema validation, identity correlation, safe failure, cancellation and denial recovery checked against real QueryClient/network-boundary suites."
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/api/public-catalog.server.test.ts",
+      "category": "test behavior and owned fixture lifecycle",
+      "initiallyChanged": true,
+      "initialSha256": "c2aa612ab0405733eb915af76ccc40dffd4800af04b9d922d25bdda42da20478",
+      "currentSha256": "c2aa612ab0405733eb915af76ccc40dffd4800af04b9d922d25bdda42da20478",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Test diff and corresponding production boundary reviewed with test-guard; meaningful outcomes, privacy/failure assertions, real infrastructure and cleanup preserved; affected shared suites executed."
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/api/public-catalog.server.ts",
+      "category": "invisible public consumer ownership and behavior",
+      "initiallyChanged": true,
+      "initialSha256": "283f7701d775749140fbb91a3a808d8431ec619bcd638c7d752f9391f1816174",
+      "currentSha256": "eae2093d3c185a198622849595a817147918a2ae0e8e5ceb32f97f66052097db",
+      "currentFileExists": true,
+      "disposition": "targeted correction or documented owner move",
+      "review": "Complete pure/API/query lifecycle functions and immediate callers reviewed; shared schema validation, identity correlation, safe failure, cancellation and denial recovery checked against real QueryClient/network-boundary suites."
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/api/public-catalog.test-helper.ts",
+      "category": "invisible public consumer ownership and behavior",
+      "initiallyChanged": true,
+      "initialSha256": "86591cec2cb0351d2d5344e23d11cac0ba6dd7c6d45e2af96b0302306fb83ab3",
+      "currentSha256": "86591cec2cb0351d2d5344e23d11cac0ba6dd7c6d45e2af96b0302306fb83ab3",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Complete pure/API/query lifecycle functions and immediate callers reviewed; shared schema validation, identity correlation, safe failure, cancellation and denial recovery checked against real QueryClient/network-boundary suites."
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/api/public-catalog.transport.ts",
+      "category": "invisible public consumer ownership and behavior",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "49a85d4117b2e5a97f88a5d03734e2f8a9331ee86d468010b4e676b953b1198c",
+      "currentFileExists": true,
+      "disposition": "new artifact",
+      "review": "Raw Axios/Blob/HTTP error translation moved from model; safe allowlisted errors before caches; no second transport/session stack."
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/hooks/public-catalog.access.ts",
+      "category": "invisible public consumer ownership and behavior",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "be3880bef2bf483aa4e8fc5c94a8bd1499bb416d6b856d728b322c461d633117",
+      "currentFileExists": true,
+      "disposition": "new artifact",
+      "review": "Byte-identical lifecycle owner move except model imports; per-QueryClient control metadata, cache barriers and asynchronous recovery reviewed with real clients in five shuffled processes."
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/hooks/public-catalog.hooks.test.tsx",
+      "category": "test behavior and owned fixture lifecycle",
+      "initiallyChanged": true,
+      "initialSha256": "8307f3c05e7de1cb0b390f626f5798e52592b1c0e592e6aa34994f39f1a736ec",
+      "currentSha256": "4077a6076c06661e8b01ae6be7e72e4d5855ec9ddeff5a27dd8d26e158fb178c",
+      "currentFileExists": true,
+      "disposition": "targeted correction or documented owner move",
+      "review": "Test diff and corresponding production boundary reviewed with test-guard; meaningful outcomes, privacy/failure assertions, real infrastructure and cleanup preserved; affected shared suites executed."
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/hooks/public-catalog.hooks.ts",
+      "category": "invisible public consumer ownership and behavior",
+      "initiallyChanged": true,
+      "initialSha256": "f8cda85e8c0215cd756aabad7ded8fc91215d3a3daf5f505fea68d6a582a4c2a",
+      "currentSha256": "d348a12630a91e19a23b393cf66d52cd7c36c11d7cf1dd815b67eb05877d1316",
+      "currentFileExists": true,
+      "disposition": "targeted correction or documented owner move",
+      "review": "Complete pure/API/query lifecycle functions and immediate callers reviewed; shared schema validation, identity correlation, safe failure, cancellation and denial recovery checked against real QueryClient/network-boundary suites."
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/hooks/public-catalog.keys.ts",
+      "category": "invisible public consumer ownership and behavior",
+      "initiallyChanged": true,
+      "initialSha256": "0de8ea6db3c5c31edefde15dadde58549956441a8734df10618bc7fe8d6f9a60",
+      "currentSha256": "0de8ea6db3c5c31edefde15dadde58549956441a8734df10618bc7fe8d6f9a60",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Complete pure/API/query lifecycle functions and immediate callers reviewed; shared schema validation, identity correlation, safe failure, cancellation and denial recovery checked against real QueryClient/network-boundary suites."
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/model/catalog-query.test.ts",
+      "category": "test behavior and owned fixture lifecycle",
+      "initiallyChanged": true,
+      "initialSha256": "69016e3016d9ef0684e721e202e341519ce2fd200f937042fdb08a3ed34b9f76",
+      "currentSha256": "69016e3016d9ef0684e721e202e341519ce2fd200f937042fdb08a3ed34b9f76",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Test diff and corresponding production boundary reviewed with test-guard; meaningful outcomes, privacy/failure assertions, real infrastructure and cleanup preserved; affected shared suites executed."
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/model/catalog-query.ts",
+      "category": "invisible public consumer ownership and behavior",
+      "initiallyChanged": true,
+      "initialSha256": "284045332c2473096d34dbe1e64e52c6cde8976f84ab212e129f1e2d1d41f083",
+      "currentSha256": "284045332c2473096d34dbe1e64e52c6cde8976f84ab212e129f1e2d1d41f083",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Complete pure/API/query lifecycle functions and immediate callers reviewed; shared schema validation, identity correlation, safe failure, cancellation and denial recovery checked against real QueryClient/network-boundary suites."
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/model/public-catalog.errors.ts",
+      "category": "invisible public consumer ownership and behavior",
+      "initiallyChanged": true,
+      "initialSha256": "a6b03787343c4619ea7614349c667885b95f996924d205f92af1111a8aac5d1b",
+      "currentSha256": "b6d9282a5339a38a6f59361df0914231032932808b9499a1af9510bcb14df915",
+      "currentFileExists": true,
+      "disposition": "targeted correction or documented owner move",
+      "review": "Complete pure/API/query lifecycle functions and immediate callers reviewed; shared schema validation, identity correlation, safe failure, cancellation and denial recovery checked against real QueryClient/network-boundary suites."
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/model/public-catalog.responses.ts",
+      "category": "invisible public consumer ownership and behavior",
+      "initiallyChanged": true,
+      "initialSha256": "e7ee0af1385a2dd20ae295be754bd4ede16e0122b787241a77efae08041ca757",
+      "currentSha256": "e7ee0af1385a2dd20ae295be754bd4ede16e0122b787241a77efae08041ca757",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Complete pure/API/query lifecycle functions and immediate callers reviewed; shared schema validation, identity correlation, safe failure, cancellation and denial recovery checked against real QueryClient/network-boundary suites."
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/model/public-catalog.states.ts",
+      "category": "invisible public consumer ownership and behavior",
+      "initiallyChanged": true,
+      "initialSha256": "01a5c7a12849bea28c8d6e5360847e0acc61414bfb18af07c6ec186010aa8cd3",
+      "currentSha256": null,
+      "currentFileExists": false,
+      "disposition": "targeted correction or documented owner move",
+      "review": "Old untracked model owner intentionally removed; complete implementation retained byte-identically in hooks/public-catalog.access.ts except two imports."
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/model/public-catalog.types.ts",
+      "category": "invisible public consumer ownership and behavior",
+      "initiallyChanged": true,
+      "initialSha256": "693888cf4631b15ead41a179fe9b01fec32a341b3b0af325dffa8cde3e4e09b3",
+      "currentSha256": "693888cf4631b15ead41a179fe9b01fec32a341b3b0af325dffa8cde3e4e09b3",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Complete pure/API/query lifecycle functions and immediate callers reviewed; shared schema validation, identity correlation, safe failure, cancellation and denial recovery checked against real QueryClient/network-boundary suites."
+    },
+    {
+      "path": "apps/web/src/services/api/api-client.test.ts",
+      "category": "test behavior and owned fixture lifecycle",
+      "initiallyChanged": true,
+      "initialSha256": "b9aac93df6aa103ace171b52fd2c71a212b0a9585f45143400e5ba472268cb93",
+      "currentSha256": "b9aac93df6aa103ace171b52fd2c71a212b0a9585f45143400e5ba472268cb93",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Test diff and corresponding production boundary reviewed with test-guard; meaningful outcomes, privacy/failure assertions, real infrastructure and cleanup preserved; affected shared suites executed."
+    },
+    {
+      "path": "apps/web/src/services/api/api-client.ts",
+      "category": "API authority, mapping, logging and orchestration",
+      "initiallyChanged": true,
+      "initialSha256": "20684e25eafc7c6247df0fdec2a2cd5c3f58fbf99c5915685892dd585138ff63",
+      "currentSha256": "20684e25eafc7c6247df0fdec2a2cd5c3f58fbf99c5915685892dd585138ff63",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Public final Fetch adapter strips ambient authority/basic credentials, omits cookies and no-store; session refresh path remains separate; callers and actual adapter regressions reviewed."
+    },
+    {
+      "path": "docs/product/implementation-status.md",
+      "category": "technical documentation and acceptance boundaries",
+      "initiallyChanged": true,
+      "initialSha256": "2d9c5daf54e875f303d5a4e8e774a88f094b0c528ea5f05916a2dfcfce3e73c3",
+      "currentSha256": "2d9c5daf54e875f303d5a4e8e774a88f094b0c528ea5f05916a2dfcfce3e73c3",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Compared documented paths, accepted requirements, task identity/approval markers and dated/current claims with source and recorded actual checks; owner gates preserved."
+    },
+    {
+      "path": "docs/product/legacy-closeout.md",
+      "category": "technical documentation and acceptance boundaries",
+      "initiallyChanged": true,
+      "initialSha256": "1d17f1f76981b255bcbd41a1f07891af71bb51b8299090bccf5c1745358d21c3",
+      "currentSha256": "e00a6eb73442b3adbb584a0e37951e5a264d958d043924c899a92f4b219cf709",
+      "currentFileExists": true,
+      "disposition": "targeted correction or documented owner move",
+      "review": "Compared documented paths, accepted requirements, task identity/approval markers and dated/current claims with source and recorded actual checks; owner gates preserved."
+    },
+    {
+      "path": "packages/contracts/src/content/content.schema.test.ts",
+      "category": "test behavior and owned fixture lifecycle",
+      "initiallyChanged": true,
+      "initialSha256": "a44a65117e77ba18a5d0e15e92e326a5af9a821883ae672c0541f2e63791035c",
+      "currentSha256": "a44a65117e77ba18a5d0e15e92e326a5af9a821883ae672c0541f2e63791035c",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Test diff and corresponding production boundary reviewed with test-guard; meaningful outcomes, privacy/failure assertions, real infrastructure and cleanup preserved; affected shared suites executed."
+    },
+    {
+      "path": "packages/contracts/src/content/content.schema.ts",
+      "category": "shared browser-safe contract and explicit exports",
+      "initiallyChanged": true,
+      "initialSha256": "de930340bbac860baa32bf4aeba4ff654081f12226c72d2b3ec6913b47ce0c39",
+      "currentSha256": "de930340bbac860baa32bf4aeba4ff654081f12226c72d2b3ec6913b47ce0c39",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Strict schema/input/output/projection boundaries and actual producer/consumer callers reviewed; canonical browser-only exports and compatibility preserved; fresh contracts suite passed."
+    },
+    {
+      "path": "packages/contracts/src/index.ts",
+      "category": "shared browser-safe contract and explicit exports",
+      "initiallyChanged": true,
+      "initialSha256": "df9af72e04c7c804ac392845ec5c3d3ab5d78b2165e87102ec9b4e1df95bae39",
+      "currentSha256": "df9af72e04c7c804ac392845ec5c3d3ab5d78b2165e87102ec9b4e1df95bae39",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Strict schema/input/output/projection boundaries and actual producer/consumer callers reviewed; canonical browser-only exports and compatibility preserved; fresh contracts suite passed."
+    },
+    {
+      "path": "packages/database/tests/integration/content-domain.integration.test.ts",
+      "category": "test behavior and owned fixture lifecycle",
+      "initiallyChanged": true,
+      "initialSha256": "51c267d5c72dbee97c5d06c413fa3aa2732c54c880073ae07e528317c472881d",
+      "currentSha256": "51c267d5c72dbee97c5d06c413fa3aa2732c54c880073ae07e528317c472881d",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Concurrent maximum-category loser rejection handled immediately via allSettled; exact PZ100/constraint and final count preserved."
+    },
+    {
+      "path": "packages/database/tests/integration/migration.integration.test.ts",
+      "category": "test behavior and owned fixture lifecycle",
+      "initiallyChanged": true,
+      "initialSha256": "21435ae8a9882c39f7a3a27eb562e382ba9bc96dd7c15b001c2fe99f6ac29ab0",
+      "currentSha256": "21435ae8a9882c39f7a3a27eb562e382ba9bc96dd7c15b001c2fe99f6ac29ab0",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Actual populated upgrade, preserved rows/history, expected rollback, repeated deploy and awaited owned PostgreSQL Client cleanup reviewed; no migration/schema edit."
+    },
+    {
+      "path": "specs/001-content-domain-foundation/tasks.md",
+      "category": "technical documentation and acceptance boundaries",
+      "initiallyChanged": true,
+      "initialSha256": "8e19449a6a5ae0ac855b98bd27f7184bd0534e6921362efb326e90deab036a9a",
+      "currentSha256": "8e19449a6a5ae0ac855b98bd27f7184bd0534e6921362efb326e90deab036a9a",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Compared documented paths, accepted requirements, task identity/approval markers and dated/current claims with source and recorded actual checks; owner gates preserved."
+    },
+    {
+      "path": "specs/002-persistent-vps-media/implementation-evidence.md",
+      "category": "technical documentation and acceptance boundaries",
+      "initiallyChanged": true,
+      "initialSha256": "0f670dd56ae9dfc548f2e500f45f92c6dbd68f15e2480d34659b1cf25be94a1e",
+      "currentSha256": "6d69b22c4d63e26bb4531aea92036c3ff2199ebc7dafbabbde416437434b95db",
+      "currentFileExists": true,
+      "disposition": "targeted correction or documented owner move",
+      "review": "Compared documented paths, accepted requirements, task identity/approval markers and dated/current claims with source and recorded actual checks; owner gates preserved."
+    },
+    {
+      "path": "specs/002-persistent-vps-media/tasks.md",
+      "category": "technical documentation and acceptance boundaries",
+      "initiallyChanged": true,
+      "initialSha256": "7b43b752858cc79b32addc32323f60dc8f484c2ae5d1f30a3a67e628f57ce1aa",
+      "currentSha256": "17fd7e6309abc5c670a552c3cb480c4f5221b3d9866043d2317e823053422eb1",
+      "currentFileExists": true,
+      "disposition": "targeted correction or documented owner move",
+      "review": "Compared documented paths, accepted requirements, task identity/approval markers and dated/current claims with source and recorded actual checks; owner gates preserved."
+    },
+    {
+      "path": "specs/003-repository-product-alignment/implementation-evidence.md",
+      "category": "technical documentation and acceptance boundaries",
+      "initiallyChanged": true,
+      "initialSha256": "e4847bb3d2030c34dd5be724583b33758924a7d84ead7e078bde1a82330befb7",
+      "currentSha256": "e4847bb3d2030c34dd5be724583b33758924a7d84ead7e078bde1a82330befb7",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Compared documented paths, accepted requirements, task identity/approval markers and dated/current claims with source and recorded actual checks; owner gates preserved."
+    },
+    {
+      "path": "specs/003-repository-product-alignment/tasks.md",
+      "category": "technical documentation and acceptance boundaries",
+      "initiallyChanged": true,
+      "initialSha256": "7f889c79109fcd349b34995ba7ae838f951e2012fa3993c47e5a8c27ae736caf",
+      "currentSha256": "7f889c79109fcd349b34995ba7ae838f951e2012fa3993c47e5a8c27ae736caf",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Compared documented paths, accepted requirements, task identity/approval markers and dated/current claims with source and recorded actual checks; owner gates preserved."
+    },
+    {
+      "path": "specs/004-admin-categories-works/tasks.md",
+      "category": "technical documentation and acceptance boundaries",
+      "initiallyChanged": true,
+      "initialSha256": "6455080f2c8292e1c8f7ff090d8dec949f5aad6eed227d8c1574966ddaf99fad",
+      "currentSha256": "6455080f2c8292e1c8f7ff090d8dec949f5aad6eed227d8c1574966ddaf99fad",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Compared documented paths, accepted requirements, task identity/approval markers and dated/current claims with source and recorded actual checks; owner gates preserved."
+    },
+    {
+      "path": "specs/005-admin-chapter-publishing/evidence.md",
+      "category": "technical documentation and acceptance boundaries",
+      "initiallyChanged": true,
+      "initialSha256": "8612fa4437b84021e7b2f537c0ba133c599eb7cd91c81f9eceabb4b7d68389fd",
+      "currentSha256": "8612fa4437b84021e7b2f537c0ba133c599eb7cd91c81f9eceabb4b7d68389fd",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Compared documented paths, accepted requirements, task identity/approval markers and dated/current claims with source and recorded actual checks; owner gates preserved."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/contracts/public-catalog.md",
+      "category": "technical documentation and acceptance boundaries",
+      "initiallyChanged": true,
+      "initialSha256": "b9cdcda59dfd643555547c31d02d9953b54db1e420864926835efb756aaf40f4",
+      "currentSha256": "91f3f15d6c21f42d16dce9fe76f6c0b88b8a6f9f908c30a1b0870bcdca55dbab",
+      "currentFileExists": true,
+      "disposition": "targeted correction or documented owner move",
+      "review": "Compared documented paths, accepted requirements, task identity/approval markers and dated/current claims with source and recorded actual checks; owner gates preserved."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/evidence.md",
+      "category": "technical documentation and acceptance boundaries",
+      "initiallyChanged": true,
+      "initialSha256": "9a00ccde9c5c82a3ce0b70ac3a5f99efa2bb257a5822906bcf4e6d7dd272c12a",
+      "currentSha256": "0a157a4b10b931bdc24405e606d20c60c08a8cfd5924eef7e3eb0f544d8f8ea4",
+      "currentFileExists": true,
+      "disposition": "targeted correction or documented owner move",
+      "review": "Compared documented paths, accepted requirements, task identity/approval markers and dated/current claims with source and recorded actual checks; owner gates preserved."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/evidence/final-local-state.json",
+      "category": "portable execution evidence",
+      "initiallyChanged": true,
+      "initialSha256": "12641b35bd5af0173d1f36864cb9376a068937cbd74d041f76a077de1b3a7afe",
+      "currentSha256": "12641b35bd5af0173d1f36864cb9376a068937cbd74d041f76a077de1b3a7afe",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Sanitized actual synthetic output/provenance inspected; versionable nonignored path; fresh/cached/historical/failure boundaries retained."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/evidence/final-routes.txt",
+      "category": "portable execution evidence",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "e10676e7f85d9650b6b5fc48c4b10e63c60ca08aae72970988d111f7e0b3819b",
+      "currentFileExists": true,
+      "disposition": "new artifact",
+      "review": "Sanitized actual synthetic output/provenance inspected; versionable nonignored path; fresh/cached/historical/failure boundaries retained."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/evidence/final-verification.txt",
+      "category": "portable execution evidence",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "4d9fe11d2bd8e43ec03cc8bfe99b4aaa4c92c6172111e8c28522cbad41ee2ea7",
+      "currentFileExists": true,
+      "disposition": "new artifact",
+      "review": "Sanitized actual synthetic output/provenance inspected; versionable nonignored path; fresh/cached/historical/failure boundaries retained."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/evidence/historical-output-provenance.json",
+      "category": "portable execution evidence",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "6cd1693bb855077e9072cb64d9b037ab14850cb20b76133b67836593b6ac5397",
+      "currentFileExists": true,
+      "disposition": "new artifact",
+      "review": "Sanitized actual synthetic output/provenance inspected; versionable nonignored path; fresh/cached/historical/failure boundaries retained."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/evidence/latest-releases-explain.json",
+      "category": "portable execution evidence",
+      "initiallyChanged": true,
+      "initialSha256": "d5e457142e3eee61371d64ebee338d7da60654676c69099912d11dda89865c6a",
+      "currentSha256": "d5e457142e3eee61371d64ebee338d7da60654676c69099912d11dda89865c6a",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Sanitized actual synthetic output/provenance inspected; versionable nonignored path; fresh/cached/historical/failure boundaries retained."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/evidence/remediation-after-media-verify.txt",
+      "category": "portable execution evidence",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "ff214bbf0f0ddfa43cf9e522358d5e3007c4a1ffbffa60db357d1856b8cb2fe5",
+      "currentFileExists": true,
+      "disposition": "new artifact",
+      "review": "Sanitized actual synthetic output/provenance inspected; versionable nonignored path; fresh/cached/historical/failure boundaries retained."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/evidence/remediation-api-unit-fixture-failure.txt",
+      "category": "portable execution evidence",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "fac070620c4e821981eb4565154fade6381cdfdb2719c257ac37dca3c971763b",
+      "currentFileExists": true,
+      "disposition": "new artifact",
+      "review": "Sanitized actual synthetic output/provenance inspected; versionable nonignored path; fresh/cached/historical/failure boundaries retained."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/evidence/remediation-before-error-ownership-verify.txt",
+      "category": "portable execution evidence",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "9ed8fe1eaebf5aac212acd5c125f53a4ec0019573a4b0d5bab219e525897c383",
+      "currentFileExists": true,
+      "disposition": "new artifact",
+      "review": "Sanitized actual synthetic output/provenance inspected; versionable nonignored path; fresh/cached/historical/failure boundaries retained."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/evidence/remediation-browser.json",
+      "category": "portable execution evidence",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "36b0165255c87d240a98725f175cafce83f3c3dfeb2723f7a96e5acd117e6adc",
+      "currentFileExists": true,
+      "disposition": "new artifact",
+      "review": "Sanitized actual synthetic output/provenance inspected; versionable nonignored path; fresh/cached/historical/failure boundaries retained."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/evidence/remediation-contracts-fresh.txt",
+      "category": "portable execution evidence",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "837d9cfd92e05fd5fa422c606ff413b1efc80662d5d312778b1179bbf673210b",
+      "currentFileExists": true,
+      "disposition": "new artifact",
+      "review": "Sanitized actual synthetic output/provenance inspected; versionable nonignored path; fresh/cached/historical/failure boundaries retained."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/evidence/remediation-database-unit-fresh.txt",
+      "category": "portable execution evidence",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "8cb0316cd13cad02d3eb8237d9543fcc9d3b961516cccaf9c54532cb86d3aff8",
+      "currentFileExists": true,
+      "disposition": "new artifact",
+      "review": "Sanitized actual synthetic output/provenance inspected; versionable nonignored path; fresh/cached/historical/failure boundaries retained."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/evidence/remediation-error-integration.txt",
+      "category": "portable execution evidence",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "bce767baea0b33a9fb268013da4d1e973f231f02b70f4205e4955dfa9d4ddf8c",
+      "currentFileExists": true,
+      "disposition": "new artifact",
+      "review": "Sanitized actual synthetic output/provenance inspected; versionable nonignored path; fresh/cached/historical/failure boundaries retained."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/evidence/remediation-error-types-failure.txt",
+      "category": "portable execution evidence",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "922c3dcba6b191f677211d4825a5a48029ec8f2bfc19adf0bf92b9dc9d3a1656",
+      "currentFileExists": true,
+      "disposition": "new artifact",
+      "review": "Sanitized actual synthetic output/provenance inspected; versionable nonignored path; fresh/cached/historical/failure boundaries retained."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/evidence/remediation-error-units.txt",
+      "category": "portable execution evidence",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "f908b869ded9c6138021f5f43824ce4a842ac17086224baf289cca8cec9fc2a3",
+      "currentFileExists": true,
+      "disposition": "new artifact",
+      "review": "Sanitized actual synthetic output/provenance inspected; versionable nonignored path; fresh/cached/historical/failure boundaries retained."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/evidence/remediation-error-wire-audit.json",
+      "category": "portable execution evidence",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "a1fd16a81b6cea3f57576a386e9390c6dc4cefa78a840fbc14479a4fdfd31d6f",
+      "currentFileExists": true,
+      "disposition": "new artifact",
+      "review": "Sanitized actual synthetic output/provenance inspected; versionable nonignored path; fresh/cached/historical/failure boundaries retained."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/evidence/remediation-final-verify.txt",
+      "category": "portable execution evidence",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "4fa1ec95c4693d92810fef0fe7abc943e827376ebe6d78c5f22167d563d8daa5",
+      "currentFileExists": true,
+      "disposition": "new artifact",
+      "review": "Sanitized actual synthetic output/provenance inspected; versionable nonignored path; fresh/cached/historical/failure boundaries retained."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/evidence/remediation-first-verify.txt",
+      "category": "portable execution evidence",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "34ae35685f2d55c6779509b5bcbdc6984b835e5467075e9c27017ef269c65b30",
+      "currentFileExists": true,
+      "disposition": "new artifact",
+      "review": "Sanitized actual synthetic output/provenance inspected; versionable nonignored path; fresh/cached/historical/failure boundaries retained."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/evidence/remediation-fixture-order-6201.txt",
+      "category": "portable execution evidence",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "685ef38254d37bf1e030e3a5d8f0bfd5f606b9f435ebf4dcd1e0274ac69e443b",
+      "currentFileExists": true,
+      "disposition": "new artifact",
+      "review": "Sanitized actual synthetic output/provenance inspected; versionable nonignored path; fresh/cached/historical/failure boundaries retained."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/evidence/remediation-fixture-order-6202.txt",
+      "category": "portable execution evidence",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "e4e40baed6907ae48d173a8e7dbd7db965140e6305eeba1a3bc59b40c81eb028",
+      "currentFileExists": true,
+      "disposition": "new artifact",
+      "review": "Sanitized actual synthetic output/provenance inspected; versionable nonignored path; fresh/cached/historical/failure boundaries retained."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/evidence/remediation-fixture-order-6204.txt",
+      "category": "portable execution evidence",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "46798f492bcc1ae76cafb4ded16da4f520ea2540dac3557bc81e8ad5c5d94856",
+      "currentFileExists": true,
+      "disposition": "new artifact",
+      "review": "Sanitized actual synthetic output/provenance inspected; versionable nonignored path; fresh/cached/historical/failure boundaries retained."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/evidence/remediation-head-green.txt",
+      "category": "portable execution evidence",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "14b95cba7a08dc216dcf1cf9a2a9df51f3dd248b58f89ff72c4b24998aac19cc",
+      "currentFileExists": true,
+      "disposition": "new artifact",
+      "review": "Sanitized actual synthetic output/provenance inspected; versionable nonignored path; fresh/cached/historical/failure boundaries retained."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/evidence/remediation-head-invocation-failure.txt",
+      "category": "portable execution evidence",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "78e4ae44295a1501dcade38d62f1553601a1b4101d94b8b273b302c7d36f79b5",
+      "currentFileExists": true,
+      "disposition": "new artifact",
+      "review": "Sanitized actual synthetic output/provenance inspected; versionable nonignored path; fresh/cached/historical/failure boundaries retained."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/evidence/remediation-head-red.txt",
+      "category": "portable execution evidence",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "43a0f1e5ee822a40f30cd7f1fd4fa26daaffa3ab0bb6c90769eb240546393f42",
+      "currentFileExists": true,
+      "disposition": "new artifact",
+      "review": "Sanitized actual synthetic output/provenance inspected; versionable nonignored path; fresh/cached/historical/failure boundaries retained."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/evidence/remediation-hook-stress.txt",
+      "category": "portable execution evidence",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "7b086d229fab5ca3ec6a321ae90d7a97d813a747afa9d8a1a9a85c45fe6df392",
+      "currentFileExists": true,
+      "disposition": "new artifact",
+      "review": "Sanitized actual synthetic output/provenance inspected; versionable nonignored path; fresh/cached/historical/failure boundaries retained."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/evidence/remediation-media-green.txt",
+      "category": "portable execution evidence",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "342fd8e975f983eab44eaf52407ab365e3419fda4655b98266adf0f32774fb18",
+      "currentFileExists": true,
+      "disposition": "new artifact",
+      "review": "Sanitized actual synthetic output/provenance inspected; versionable nonignored path; fresh/cached/historical/failure boundaries retained."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/evidence/remediation-media-import-failure.txt",
+      "category": "portable execution evidence",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "4b03e026c235caf6adcbb842af10c7440a3537d31172cc08c84f2a11752dac5f",
+      "currentFileExists": true,
+      "disposition": "new artifact",
+      "review": "Sanitized actual synthetic output/provenance inspected; versionable nonignored path; fresh/cached/historical/failure boundaries retained."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/evidence/remediation-output-provenance.json",
+      "category": "portable execution evidence",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "dbee7f29c2db4e0ac715b4a12c105a8b80ce3639ffd707e0a5f0d6a87ddb7f84",
+      "currentFileExists": true,
+      "disposition": "new artifact",
+      "review": "Sanitized actual synthetic output/provenance inspected; versionable nonignored path; fresh/cached/historical/failure boundaries retained."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/evidence/remediation-review-inventory.json",
+      "category": "portable execution evidence",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": null,
+      "currentFileExists": true,
+      "disposition": "new artifact",
+      "review": "Sanitized actual synthetic output/provenance inspected; versionable nonignored path; fresh/cached/historical/failure boundaries retained."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/evidence/remediation-routes.txt",
+      "category": "portable execution evidence",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "e10676e7f85d9650b6b5fc48c4b10e63c60ca08aae72970988d111f7e0b3819b",
+      "currentFileExists": true,
+      "disposition": "new artifact",
+      "review": "Sanitized actual synthetic output/provenance inspected; versionable nonignored path; fresh/cached/historical/failure boundaries retained."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/evidence/remediation-shared-fixture-failure.txt",
+      "category": "portable execution evidence",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "cfa58b3109d0d09ab8818ce811421a8072022206267895ba2cf03992a13ba1c5",
+      "currentFileExists": true,
+      "disposition": "new artifact",
+      "review": "Sanitized actual synthetic output/provenance inspected; versionable nonignored path; fresh/cached/historical/failure boundaries retained."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/evidence/remediation-t075-green.txt",
+      "category": "portable execution evidence",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "69c6af84bbf9d985661e9b17e4068d12c79db7705e0f6ca2ba479ffa2dcbb98d",
+      "currentFileExists": true,
+      "disposition": "new artifact",
+      "review": "Sanitized actual synthetic output/provenance inspected; versionable nonignored path; fresh/cached/historical/failure boundaries retained."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/evidence/remediation-t075-red.txt",
+      "category": "portable execution evidence",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "8f276c7bd6fa3e77d42f17fb86fc2aff4aa39da1f3b6118c6fee703544f05ad3",
+      "currentFileExists": true,
+      "disposition": "new artifact",
+      "review": "Sanitized actual synthetic output/provenance inspected; versionable nonignored path; fresh/cached/historical/failure boundaries retained."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/evidence/remediation-t076-green.txt",
+      "category": "portable execution evidence",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "31b858da75f73d4c0500e28d78d28873598c0800317d3c03a7301ade0e9005f8",
+      "currentFileExists": true,
+      "disposition": "new artifact",
+      "review": "Sanitized actual synthetic output/provenance inspected; versionable nonignored path; fresh/cached/historical/failure boundaries retained."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/evidence/remediation-t076-red.txt",
+      "category": "portable execution evidence",
+      "initiallyChanged": false,
+      "initialSha256": null,
+      "currentSha256": "0f986d43fe35b7a885e3a6a35402039e385c8459e961344276874cdff9214248",
+      "currentFileExists": true,
+      "disposition": "new artifact",
+      "review": "Sanitized actual synthetic output/provenance inspected; versionable nonignored path; fresh/cached/historical/failure boundaries retained."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/plan.md",
+      "category": "technical documentation and acceptance boundaries",
+      "initiallyChanged": true,
+      "initialSha256": "73c4dd64eab1c377c19982e29d7b29acb3b1152f0a48703464c6b069770f9fc9",
+      "currentSha256": "73c4dd64eab1c377c19982e29d7b29acb3b1152f0a48703464c6b069770f9fc9",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Compared documented paths, accepted requirements, task identity/approval markers and dated/current claims with source and recorded actual checks; owner gates preserved."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/spec.md",
+      "category": "technical documentation and acceptance boundaries",
+      "initiallyChanged": true,
+      "initialSha256": "0525e69ad2e86127583bed77ce83eb9961f658e8facabcb404006a650b038394",
+      "currentSha256": "0525e69ad2e86127583bed77ce83eb9961f658e8facabcb404006a650b038394",
+      "currentFileExists": true,
+      "disposition": "preserved",
+      "review": "Compared documented paths, accepted requirements, task identity/approval markers and dated/current claims with source and recorded actual checks; owner gates preserved."
+    },
+    {
+      "path": "specs/006-public-catalog-discovery-seo/tasks.md",
+      "category": "technical documentation and acceptance boundaries",
+      "initiallyChanged": true,
+      "initialSha256": "ce256755da26600783e0ea02a0c6623f071b6ad19e6170b529ebb62f840c6030",
+      "currentSha256": "25f582636d90326161a1594ad468884767b9de8fd9f0d0e768056a27a61cf96c",
+      "currentFileExists": true,
+      "disposition": "targeted correction or documented owner move",
+      "review": "Compared documented paths, accepted requirements, task identity/approval markers and dated/current claims with source and recorded actual checks; owner gates preserved."
+    }
+  ]
+}

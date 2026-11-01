@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 
 import { useSession } from "@/features/auth/hooks/auth.hooks";
+import { localizeAuthMessage } from "@/features/auth/utils/auth-messages";
 import { sanitizeReturnPath } from "@/features/auth/utils/safe-return-path";
 import { getApiError } from "@/services/api/api-client";
 
@@ -81,7 +82,7 @@ export function ProtectedRoute({
     return (
       <div className="route-state">
         <p className="form-notice form-notice--error" role="alert">
-          {error.message}
+          {localizeAuthMessage(error.message)}
         </p>
         {error.requestId.length === 0 ? null : (
           <small>معرّف الطلب: {error.requestId}</small>

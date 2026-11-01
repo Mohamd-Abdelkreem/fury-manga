@@ -1,0 +1,40 @@
+{
+  "passed": true,
+  "actualCommittedUnavailableCover": true,
+  "enabledCategoriesVisible": true,
+  "geometry": {
+    "viewport": 320,
+    "scroll": 320,
+    "main": {
+      "x": 16,
+      "y": 346,
+      "width": 288,
+      "height": 318,
+      "top": 346,
+      "right": 304,
+      "bottom": 664,
+      "left": 16
+    },
+    "footer": {
+      "x": 0,
+      "y": 728,
+      "width": 320,
+      "height": 1000.375,
+      "top": 728,
+      "right": 320,
+      "bottom": 1728.375,
+      "left": 0
+    },
+    "shortcut": {
+      "x": 179.1875,
+      "y": 64,
+      "width": 140.8125,
+      "height": 52,
+      "top": 64,
+      "right": 320,
+      "bottom": 116,
+      "left": 179.1875
+    },
+    "workLinks": 0
+  }
+}

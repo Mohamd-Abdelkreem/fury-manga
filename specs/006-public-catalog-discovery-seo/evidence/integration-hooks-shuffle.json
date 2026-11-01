@@ -1,0 +1,35 @@
+{
+  "kind": "five separate fresh shuffled Vitest processes on current critical hook code",
+  "runs": [
+    {
+      "seed": 6301,
+      "command": "pnpm --filter @fury/web test src/features/public-catalog/hooks/public-catalog.hooks.test.tsx --sequence.shuffle --sequence.seed 6301",
+      "exitCode": 0,
+      "output": "integration-hooks-shuffle-6301.txt"
+    },
+    {
+      "seed": 6302,
+      "command": "pnpm --filter @fury/web test src/features/public-catalog/hooks/public-catalog.hooks.test.tsx --sequence.shuffle --sequence.seed 6302",
+      "exitCode": 0,
+      "output": "integration-hooks-shuffle-6302.txt"
+    },
+    {
+      "seed": 6303,
+      "command": "pnpm --filter @fury/web test src/features/public-catalog/hooks/public-catalog.hooks.test.tsx --sequence.shuffle --sequence.seed 6303",
+      "exitCode": 0,
+      "output": "integration-hooks-shuffle-6303.txt"
+    },
+    {
+      "seed": 6304,
+      "command": "pnpm --filter @fury/web test src/features/public-catalog/hooks/public-catalog.hooks.test.tsx --sequence.shuffle --sequence.seed 6304",
+      "exitCode": 0,
+      "output": "integration-hooks-shuffle-6304.txt"
+    },
+    {
+      "seed": 6305,
+      "command": "pnpm --filter @fury/web test src/features/public-catalog/hooks/public-catalog.hooks.test.tsx --sequence.shuffle --sequence.seed 6305",
+      "exitCode": 0,
+      "output": "integration-hooks-shuffle-6305.txt"
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access -- Supertest intentionally exposes response.body as any; boundary assertions validate every consumed field. */
+import type { Server } from "node:http";
 import pino from "pino";
 import { mkdirSync, mkdtempSync, renameSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -8,7 +9,11 @@ import { afterAll, beforeEach, describe, expect, it } from "vitest";
 
 import { createDatabaseClient } from "@fury/database";
 
-import { createApp } from "./app.js";
+import { createApp as createExpressApp } from "./app.js";
+import {
+  listenOnTestLoopback,
+  closeTestServers,
+} from "./test-support/http-server.test-helper.js";
 import { createMediaConfig } from "./core/config/media.config.js";
 import type {
   EmailDelivery,
@@ -36,7 +41,15 @@ const delivery: EmailDelivery = {
     });
   },
 };
-const app = createApp({
+const ownedServers: Server[] = [];
+const createApp = async (
+  dependencies: Parameters<typeof createExpressApp>[0],
+): Promise<Server> => {
+  const server = await listenOnTestLoopback(createExpressApp(dependencies));
+  ownedServers.push(server);
+  return server;
+};
+const app = await createApp({
   database,
   logger: pino({ level: "silent" }),
   emailDelivery: delivery,
@@ -124,13 +137,14 @@ describe("real HTTP authentication boundary", () => {
   });
 
   afterAll(async () => {
+    await closeTestServers(ownedServers);
     await database.$disconnect();
     rmSync(mediaFixtureRoot, { recursive: true, force: true });
   });
 
   it("fails startup for an unsafe media root", () => {
     expect(() =>
-      createApp({
+      createExpressApp({
         database,
         logger: pino({ level: "silent" }),
         emailDelivery: delivery,
@@ -142,7 +156,7 @@ describe("real HTTP authentication boundary", () => {
   it("keeps liveness while readiness degrades after media storage loss", async () => {
     const isolatedRoot = join(mediaFixtureRoot, "runtime-loss");
     mkdirSync(isolatedRoot);
-    const isolatedApp = createApp({
+    const isolatedApp = await createApp({
       database,
       logger: pino({ level: "silent" }),
       emailDelivery: delivery,

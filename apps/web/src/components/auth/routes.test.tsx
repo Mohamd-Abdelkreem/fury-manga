@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/settings",
+  useSearchParams: () => new URLSearchParams(window.location.search),
   useRouter: () => ({ replace: mocks.replace }),
 }));
 
@@ -58,6 +59,7 @@ const session = (
 describe("GuestOnlyRoute", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.history.replaceState({}, "", "/auth/login");
   });
 
   it("shows the session loader while pending", () => {
@@ -117,7 +119,7 @@ describe("ProtectedRoute", () => {
     render(<ProtectedRoute>Private content</ProtectedRoute>);
     fireEvent.click(screen.getByRole("button", { name: "إعادة المحاولة" }));
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "Session lookup failed.",
+      "تعذّر إتمام الطلب. راجع البيانات وحاول مرة أخرى.",
     );
     expect(mocks.refetch).toHaveBeenCalledOnce();
   });

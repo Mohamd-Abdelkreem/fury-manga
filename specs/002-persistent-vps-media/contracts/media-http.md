@@ -1,5 +1,10 @@
 # P02 Media HTTP Contract
 
+Current source-format and processing rules follow the dated 2026-11-01 owner
+overlay below. Earlier blanket animation-rejection wording is historical and is
+superseded only for the three authorized Work-media classes; private/public
+authority and other base contract rules remain applicable.
+
 Base path is `/api/v1/media`. This is the proposed browser–Express interface for implementation and OpenAPI; it does not expose a public media URL. Shared browser-safe Zod schemas in `@fury/contracts` own every JSON body, params, query, output and error-code enum. Inferred `z.input` describes caller input; `z.output`/`z.infer` describes parsed output. API DTO modules alias those exports. Multipart bytes use a bounded parser plus the shared scalar/form/header schemas; no TypeScript type is treated as runtime file validation.
 
 ## Common wire rules
@@ -82,3 +87,30 @@ UUID header, bearer/CSRF security, binary response, exact error statuses, and
 JSON envelopes. Schema/mapper, OpenAPI route, central adapter, real Express, and
 browser tests must agree. A future public/reader media consumer still needs its
 own reviewed delivery contract.
+
+## Current animation/limits overlay — 2026-11-01
+
+The owner-approved numeric table in spec.md's dated overlay supersedes the old
+representative-artwork gate. Work cover/background/Chapter-page uploads additionally
+accept GIF image/gif/.gif and multi-frame WebP image/webp/.webp. GIF canonicalizes
+to clean lossless WebP, retaining ordered composited frames, canvas, delay and loop.
+Stored asset DTO/content headers remain image/webp for that output; output media
+MIME enum is not expanded to GIF. JPEG/PNG/static-WebP behavior remains. Non-Work
+classes still reject animation/GIF; detected APNG and unsupported types return
+415 MEDIA_UNSUPPORTED_TYPE. Corrupt/truncated containers return400 MEDIA_INVALID_FILE;
+byte/canvas/frame/aggregate or per-process decoder-capacity exhaustion returns
+413 MEDIA_LIMIT_EXCEEDED; existing attempt/replay/rollback semantics remain.
+Processing defaults and verification belong to the current plan/evidence overlay.
+No protected Chapter content becomes public or credential-free.
+
+Implementation-review clarification (2026-11-01): processing capacity is transient
+503 MEDIA_PROCESSING_BUSY, not a false413 file-size failure. It is an explicitly
+rejected attempt with no retrievable asset; deliberate retry uses a new key.
+The adapter/attempt schema/OpenAPI and current candidate feedback agree. Two
+validation jobs are admitted per composition-owned processor (one API application
+per standard server process); no global multi-instance coordination is claimed.
+Sharp's10s active timeout applies to each metadata/encoding operation, excluding
+libuv queue wait; both native stages are bounded, so this is not a hard10s HTTP
+wall-clock guarantee. Encoded bytes,100 frames/24M canvas/32M aggregate pixels and
+finite admitted jobs bound pending processing. Stored playback duration/looping
+does not make server decoding repeat indefinitely.

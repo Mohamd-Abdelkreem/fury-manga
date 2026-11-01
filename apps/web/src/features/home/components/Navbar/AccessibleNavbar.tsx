@@ -7,7 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
 import { useSession } from "@/features/auth/hooks/auth.hooks";
-import { NAV_LINKS } from "@/features/home/data/heroData";
+import { NAV_LINKS } from "@/features/home/model/navigation";
 import {
   NOTIFICATION_FIXTURES,
   type NotificationFixture,
@@ -131,6 +131,7 @@ export function Navbar({ minimal = false }: Readonly<{ minimal?: boolean }>) {
                     id="global-search"
                     className={styles["searchInput"]}
                     type="search"
+                    maxLength={100}
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
                     placeholder="ابحث في جميع الأعمال…"
@@ -288,6 +289,7 @@ export function Navbar({ minimal = false }: Readonly<{ minimal?: boolean }>) {
               id="mobile-global-search"
               className={styles["mobileSearchInput"]}
               type="search"
+              maxLength={100}
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="ابحث في جميع الأعمال…"

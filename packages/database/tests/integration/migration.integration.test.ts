@@ -4,7 +4,7 @@ import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { join, resolve, sep } from "node:path";
 import { promisify } from "node:util";
 
-import { Pool } from "pg";
+import { Client, Pool } from "pg";
 import { describe, expect, it } from "vitest";
 
 const execFileAsync = promisify(execFile);
@@ -478,7 +478,7 @@ describe("fresh post-P01 migration chain", () => {
     const adminPool = new Pool({ connectionString: databaseUrl() });
     const stagedUrl = new URL(databaseUrl());
     stagedUrl.pathname = "/" + databaseName;
-    let stagedPool: Pool | undefined;
+    let stagedClient: Client | undefined;
     if (!temporaryRoot.startsWith(cacheRoot + sep)) {
       throw new Error("Temporary migration path escaped the package cache.");
     }
@@ -511,10 +511,11 @@ export default defineConfig({
         stagedUrl.toString(),
         join(temporaryRoot, "prisma.config.ts"),
       );
-      stagedPool = new Pool({ connectionString: stagedUrl.toString() });
+      stagedClient = new Client({ connectionString: stagedUrl.toString() });
+      await stagedClient.connect();
       const userId = "99999999-9999-4999-8999-999999999999";
       const tokenId = "88888888-8888-4888-8888-888888888888";
-      await stagedPool.query(
+      await stagedClient.query(
         "INSERT INTO users (id, email, password_hash, full_name, phone, status, email_verified_at, updated_at) VALUES ($1, $2, $3, $4, $5, 'ACTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
         [
           userId,
@@ -524,7 +525,7 @@ export default defineConfig({
           "+201000000000",
         ],
       );
-      await stagedPool.query(
+      await stagedClient.query(
         "INSERT INTO refresh_tokens (id, user_id, token_hash, expires_at) VALUES ($1, $2, $3, CURRENT_TIMESTAMP + INTERVAL '1 day')",
         [tokenId, userId, "b".repeat(64)],
       );
@@ -543,7 +544,7 @@ export default defineConfig({
         "11111111-1111-4111-8111-111111111111",
         "22222222-2222-4222-8222-222222222222",
       ] as const;
-      await stagedPool.query(
+      await stagedClient.query(
         `INSERT INTO categories
            (id, display_name, slug, created_at, updated_at)
          VALUES
@@ -555,7 +556,7 @@ export default defineConfig({
       const draftWorkId = "44444444-4444-4444-8444-444444444444";
       const publishedWorkId = "55555555-5555-4555-8555-555555555555";
       const publicationEventId = "66666666-6666-4666-8666-666666666666";
-      await stagedPool.query(
+      await stagedClient.query(
         `INSERT INTO works
            (id, title, slug, type, story_status, created_at, updated_at)
          VALUES
@@ -563,13 +564,13 @@ export default defineConfig({
            ($2, 'Legacy Published', 'legacy-published', 'novel', 'completed', '2026-01-02T00:00:00Z', '2026-01-02T00:00:00Z')`,
         [draftWorkId, publishedWorkId],
       );
-      await stagedPool.query(
+      await stagedClient.query(
         `INSERT INTO work_categories (work_id, category_id)
          VALUES ($1, $2), ($3, $4)`,
         [draftWorkId, categoryIds[1], publishedWorkId, categoryIds[2]],
       );
       const chapterId = "77777777-7777-4777-8777-777777777777";
-      await stagedPool.query(
+      await stagedClient.query(
         `INSERT INTO chapters
            (id, work_id, number, content_type, text_content, created_at, updated_at)
          VALUES ($1, $2, 1, 'text', $3::jsonb, '2026-01-03T00:00:00Z', '2026-01-03T00:00:00Z')`,
@@ -580,12 +581,12 @@ export default defineConfig({
         ],
       );
       const publishedAt = new Date("2026-01-04T00:00:00.000Z");
-      await stagedPool.query(
+      await stagedClient.query(
         `INSERT INTO publication_events (id, work_id, occurred_at)
          VALUES ($1, $2, $3)`,
         [publicationEventId, publishedWorkId, publishedAt],
       );
-      await stagedPool.query(
+      await stagedClient.query(
         `UPDATE works
             SET publication_status = 'published', published_at = $2,
                 current_publication_event_id = $3
@@ -593,7 +594,7 @@ export default defineConfig({
         [publishedWorkId, publishedAt, publicationEventId],
       );
 
-      const preserved = await stagedPool.query<{
+      const preserved = await stagedClient.query<{
         email: string;
         full_name: string;
         token_hash: string;
@@ -617,7 +618,7 @@ export default defineConfig({
         stagedUrl.toString(),
         join(temporaryRoot, "prisma.config.ts"),
       );
-      const retiredPhone = await stagedPool.query<{ column_name: string }>(
+      const retiredPhone = await stagedClient.query<{ column_name: string }>(
         `SELECT column_name
            FROM information_schema.columns
           WHERE table_schema = 'public'
@@ -625,7 +626,7 @@ export default defineConfig({
             AND column_name = 'phone'`,
       );
       expect(retiredPhone.rows).toEqual([]);
-      const retainedAccount = await stagedPool.query<{
+      const retainedAccount = await stagedClient.query<{
         email: string;
         full_name: string;
         token_hash: string;
@@ -643,7 +644,7 @@ export default defineConfig({
         stagedUrl.toString(),
         join(temporaryRoot, "prisma.config.ts"),
       );
-      const mediaTables = await stagedPool.query<{ table_name: string }>(
+      const mediaTables = await stagedClient.query<{ table_name: string }>(
         `SELECT table_name FROM information_schema.tables
           WHERE table_schema = 'public'
             AND table_name IN ('media_assets', 'upload_attempts', 'media_references', 'media_reference_events')
@@ -657,13 +658,13 @@ export default defineConfig({
       ]);
       const assetId = "88888888-8888-4888-8888-888888888888";
       const referenceId = "99999999-9999-4999-8999-999999999999";
-      await stagedPool.query(
+      await stagedClient.query(
         `INSERT INTO media_assets
            (id, media_class, scope, uploaded_by_user_id, relative_key)
          VALUES ($1, 'work_cover', 'admin', $2, 'legacy-cover.bin')`,
         [assetId, userId],
       );
-      await stagedPool.query(
+      await stagedClient.query(
         `INSERT INTO media_references
            (id, asset_id, work_id, slot, updated_at)
          VALUES ($1, $2, $3, 'work_cover', CURRENT_TIMESTAMP)`,
@@ -690,7 +691,7 @@ export default defineConfig({
         ),
       ).rejects.toThrow();
 
-      const failedColumns = await stagedPool.query<{
+      const failedColumns = await stagedClient.query<{
         table_name: string;
         column_name: string;
       }>(
@@ -703,7 +704,7 @@ export default defineConfig({
             )
           ORDER BY table_name, column_name`,
       );
-      const failedTagTable = await stagedPool.query<{ table_name: string }>(
+      const failedTagTable = await stagedClient.query<{ table_name: string }>(
         `SELECT table_name FROM information_schema.tables
           WHERE table_schema = 'public' AND table_name = 'work_tags'`,
       );
@@ -721,7 +722,7 @@ export default defineConfig({
         join(temporaryRoot, "prisma.config.ts"),
       );
 
-      const backfilledCategories = await stagedPool.query<{
+      const backfilledCategories = await stagedClient.query<{
         id: string;
         display_position: number;
         enabled: boolean;
@@ -746,7 +747,7 @@ export default defineConfig({
           enabled: true,
         },
       ]);
-      const preservedWorks = await stagedPool.query<{
+      const preservedWorks = await stagedClient.query<{
         id: string;
         slug: string;
         publication_status: string;
@@ -792,7 +793,7 @@ export default defineConfig({
           featured_order: null,
         },
       ]);
-      const retainedRelations = await stagedPool.query<{
+      const retainedRelations = await stagedClient.query<{
         chapter_count: number;
         category_count: number;
         publication_event_count: number;
@@ -811,7 +812,7 @@ export default defineConfig({
         publication_event_count: 1,
         tag_count: 0,
       });
-      const retainedMedia = await stagedPool.query<{
+      const retainedMedia = await stagedClient.query<{
         asset_id: string;
         reference_id: string;
         work_id: string;
@@ -825,7 +826,7 @@ export default defineConfig({
       expect(retainedMedia.rows).toEqual([
         { asset_id: assetId, reference_id: referenceId, work_id: draftWorkId },
       ]);
-      const incompletePublished = await stagedPool.query<{ id: string }>(
+      const incompletePublished = await stagedClient.query<{ id: string }>(
         `SELECT w.id FROM works w
          WHERE w.publication_status = 'published'
            AND (w.synopsis IS NULL OR w.author IS NULL
@@ -853,7 +854,7 @@ export default defineConfig({
           join(temporaryRoot, "prisma.config.ts"),
         ),
       ).rejects.toThrow();
-      const stillPublished = await stagedPool.query<{ id: string }>(
+      const stillPublished = await stagedClient.query<{ id: string }>(
         `SELECT id FROM works WHERE id = $1 AND publication_status = 'published'`,
         [publishedWorkId],
       );
@@ -863,13 +864,13 @@ export default defineConfig({
         join(temporaryRoot, "prisma.config.ts"),
         p03ReadinessMigration,
       );
-      await stagedPool.query(
+      await stagedClient.query(
         `UPDATE works SET publication_status = 'draft', published_at = NULL,
            current_publication_event_id = NULL, version = version + 1,
            updated_at = CURRENT_TIMESTAMP WHERE id = $1`,
         [publishedWorkId],
       );
-      const afterRemediation = await stagedPool.query<{ id: string }>(
+      const afterRemediation = await stagedClient.query<{ id: string }>(
         `SELECT w.id FROM works w
          WHERE w.publication_status = 'published'
            AND (btrim(w.title) = ''
@@ -889,10 +890,11 @@ export default defineConfig({
              ))`,
       );
       expect(afterRemediation.rows).toEqual([]);
-      const retainedPublicationHistory = await stagedPool.query<{ id: string }>(
-        `SELECT id FROM publication_events WHERE work_id = $1`,
-        [publishedWorkId],
-      );
+      const retainedPublicationHistory = await stagedClient.query<{
+        id: string;
+      }>(`SELECT id FROM publication_events WHERE work_id = $1`, [
+        publishedWorkId,
+      ]);
       expect(retainedPublicationHistory.rows).toEqual([
         { id: publicationEventId },
       ]);
@@ -910,7 +912,7 @@ export default defineConfig({
         stagedUrl.toString(),
         join(temporaryRoot, "prisma.config.ts"),
       );
-      const legacyInsert = await stagedPool.query<{
+      const legacyInsert = await stagedClient.query<{
         display_position: number;
       }>(
         `INSERT INTO categories (display_name, slug, updated_at)
@@ -919,7 +921,7 @@ export default defineConfig({
       );
       expect(legacyInsert.rows[0]?.display_position).toBe(4);
 
-      const afterMediaAccount = await stagedPool.query<{
+      const afterMediaAccount = await stagedClient.query<{
         email: string;
         full_name: string;
         token_hash: string;
@@ -934,10 +936,9 @@ export default defineConfig({
       );
       expect(redeployOutput).toMatch(/No pending migrations|already in sync/iu);
     } finally {
-      await stagedPool?.end();
-      await adminPool.query(
-        `DROP DATABASE IF EXISTS "${databaseName}" WITH (FORCE)`,
-      );
+      // Pool.end() can resolve before its idle sockets close; Client.end() waits.
+      await stagedClient?.end();
+      await adminPool.query(`DROP DATABASE IF EXISTS "${databaseName}"`);
       await adminPool.end();
       await rm(temporaryRoot, { recursive: true, force: true });
     }

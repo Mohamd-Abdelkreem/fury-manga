@@ -195,3 +195,54 @@ An operator can restore media and its recorded identities as one coherent set af
 - P02 may support safe media reference operations against existing content identities to prove lifecycle integrity, while user-facing parent-record save/publish/bind flows remain with their roadmap owners.
 - An unbound media asset is private to its permitted manager or owner. Future public visibility is granted only by later phases' publication and binding rules; P02 does not infer it from a successful upload.
 - No automatic expiry or silent garbage collection of unbound accepted assets is assumed for P02. Authorized explicit removal and reference-aware retention provide the initial lifecycle; any automated retention window requires a separately accepted policy.
+
+## Owner-decision overlay — 2026-11-01 media foundation
+
+The current owner explicitly approves the existing numerical product limits below.
+This supersedes the former requirement to obtain a representative-artwork decision
+as a prerequisite to these limits (T002/T067, FR-005–006/SC-001 and readiness CHK016).
+No historical/generated-artwork review is claimed. Existing accepted review markers
+remain historical; this dated owner decision supplies the current numerical choice.
+
+| Class              | Encoded maximum | Width px | Height px | Additional constraint     |
+| ------------------ | --------------- | -------- | --------- | ------------------------- |
+| work_cover         | 8 MiB           | 300–4000 | 400–6000  | ratio 0.65–0.85           |
+| work_background    | 8 MiB           | 800–6000 | 450–4000  | ratio 1.5–2               |
+| chapter_page       | 12 MiB          | 300–6000 | 300–12000 | stable ordered identity   |
+| user_avatar        | 4 MiB           | 128–4096 | 128–4096  | existing owner authority  |
+| avatar_frame       | 4 MiB           | 128–4096 | 128–4096  | PNG/WebP nonopaque pixels |
+| comment_decoration | 4 MiB           | 64–4096  | 64–4096   | PNG/WebP nonopaque pixels |
+
+Source inspection of shared byte constants and image-validation.ts found no numerical
+discrepancy. The static decoded-pixel ceiling remains24 million. The old unconditional
+single-frame/animated-rejection clauses are historical and superseded only for
+work_cover/work_background/chapter_page. Static JPEG/PNG/WebP remains supported;
+ordinary GIF and animated WebP in those three classes must preserve animation.
+Avatar/frame/decoration remain static. Detected APNG/other animation is unsupported415.
+
+- **FR-025**: Authorized Work-media GIF/WebP animation must retain distinct ordered
+  composited frames, delays, looping, transparency and logical canvas through clean
+  canonical processing, durable storage, restart/reconciliation and actual consumers.
+  Canonical animated output is lossless WebP; stored MIME/bytes/dimensions/hash and
+  delivery must agree. Existing static behavior and all authority/publication rules remain.
+- **FR-026**: Animation processing must bound frame count, canvas pixels, aggregate
+  decoded pixels, time and per-process concurrent work, reject unsafe/truncated/mismatched
+  or excessive inputs without a retrievable partial asset, and clean up failures.
+- **FR-027**: Existing persisted illustrated previews must consume a reusable pure
+  priority/window policy and bounded effects: visible first, initial10/lookahead near5,
+  finite transfers/byte/decoded budgets, no whole-Chapter startup, dedup/cancel/retry,
+  stable layout and safe release on jump/reversal/Chapter/account/denial/unmount.
+  Slow/data-saving connections reduce background work; reduced motion changes display
+  only, retaining stored animation. Public versus protected transport remains distinct.
+- **FR-028**: Record exact P07 integration/long-Chapter acceptance obligations in the
+  existing roadmap/engineering owners. The fixture reader remains a protected prototype;
+  no progress, resume, open-event or full P07 implementation is authorized here.
+- **SC-008**: Output frame/timing/loop/canvas/transparency and retrieved hashes agree
+  across the tested valid animations; unsupported and exhausted cases expose no partial asset.
+- **SC-009**: Actual current persisted preview network traces demonstrate bounded
+  initial/lookahead/concurrency/retention, visible priority, truthful recovery and cleanup,
+  measured cold/warm/slow behavior at narrow/wide widths, without claiming universal speed.
+
+Constitution2.2.0 permits only necessary image handling, hints/minimal functional
+Arabic feedback and scheduling within the current design. Backend acceptance precedes
+consumer integration. Existing task identities/history and earlier P05 work are preserved.

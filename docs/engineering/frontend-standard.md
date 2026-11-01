@@ -1,5 +1,21 @@
 # Frontend coding standard
 
+The media-foundation exception in constitution VI (owner decision 2026-11-01)
+also applies to existing P02 media and its current P04 illustrated-preview/P05
+Work-image consumers: approved numerical limits, class-specific GIF/WebP animation,
+bounded progressive loading, necessary image hints/retry and reduced-motion display.
+Preserve design, authority/publication and stored animation; do not implement P07,
+progress/resume/opens or another feature. Apply both explicit exceptions to general
+freeze wording below. Reconciliation, backend acceptance and real verification remain.
+
+The P05 functional exception in constitution VI (owner decision 2026-11-01)
+applies only to `specs/006-public-catalog-discovery-seo`: persisted public data,
+truthful states/minimal functional copy, deferred unsupported controls, technical
+SEO and necessary accessibility within the existing design. It does not authorize
+redesign, unrelated phases, new product destinations/dialogs or changes to protected
+surfaces. Apply that exact exception to general freeze wording below; all other
+gates remain.
+
 F01–F31 define reusable frontend engineering behavior. Apply relevant sections to
 new/touched code; optional credential/device/publication capabilities do not create
 product requirements. Use the current project's package names, form/error/UI
@@ -963,3 +979,36 @@ Check the actual response/cache, current route identity, dirty input, access own
 and rendered interaction; a disabled button alone is insufficient. Use F IDs to
 select meaningful tests and browser evidence. Do not load optional device/privacy
 sections into a simple presentation-only task unless that boundary is affected.
+
+## Persisted illustrated-image loading — P02 foundation / P07 handoff
+
+The owner-approved 2026-11-01 media exception permits necessary image hints,
+loading/retry feedback and temporary reduced-motion still display while preserving
+layout and stored animation. Existing administrator preview consumes
+`features/content/components/ChapterContentRenderer.tsx`, the pure policy in
+`features/content/model/progressive-images.ts` and scoped resource effects under
+`features/content/hooks/`. Public Work images retain their separate eligible,
+credential-free transport; private Chapter content uses authenticated media reads.
+
+Current continuous policy: initial ten eligible pages; extend toward twenty near
+page five; visible first, then two bounded transfers, two rear pages, at most twenty
+retained resources, 24 MiB encoded and 32M decoded pixels (all animation frames).
+Reduced-motion still resources have a 96 MiB byte ceiling and charge one canvas;
+server limits remain unchanged. These are application-owned resource ceilings,
+not a guarantee about browser/native/GPU RSS or short-lived transfer buffers.
+Constrained/save-data uses one transfer, initial five, extension near page three.
+Single-page policy limits neighbors further. Budgets may reduce any window.
+
+F04/F15/F25–F28 acceptance includes late-response fencing, strict actor/chapter
+identity, authenticated GET/HEAD, no persistent protected-byte cache, cancellation
+without freeing a slot before settlement, exact object-URL cleanup, denial that
+cannot be undone by background success, deliberate retry, and stable geometry.
+Repeated observer callbacks must not duplicate work. Prefetch is not a reading or
+publication event. Native animation must remain observable under normal motion;
+reduced motion changes temporary display only.
+
+P07 must integrate the same bounded policy through a real user-reader API with
+active/verified/publication authority, continuous/single-page navigation and
+long-persisted-chapter browser evidence. Follow [PLAN.md P07](../../PLAN.md#p07--protected-readers-progress-completion-and-resume)
+for exact obligations. The existing fixture reader and administrator transport do
+not establish protected user-reader completion.

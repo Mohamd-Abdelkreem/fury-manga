@@ -4,6 +4,8 @@ import {
   commonHttpErrorCodeSchema,
   paginationMetaSchema,
   paginationQuerySchema,
+  successEnvelopeSchema,
+  type PaginationMeta,
 } from "../http/http.schema.ts";
 
 const MAX_STRUCTURED_TEXT_BYTES = 512 * 1024;
@@ -80,6 +82,7 @@ export const chapterContentTypeSchema = z.enum(["illustrated", "text"]);
 export const contentErrorCodeSchema = z
   .enum([
     "CONTENT_CONFLICT",
+    "CONTENT_SLUG_CONFLICT",
     "CONTENT_IMMUTABLE",
     "CONTENT_TYPE_CONFLICT",
     "CONTENT_TRANSITION_CONFLICT",
@@ -229,6 +232,18 @@ export const structuredTextBlockSchema = z.discriminatedUnion("type", [
   structuredTextListSchema,
 ]);
 
+const jsonbSeparatorBytes = (value: unknown): number => {
+  if (value === null || typeof value !== "object") return 0;
+  const members: unknown[] = Object.values(value);
+  const separators =
+    Math.max(0, members.length - 1) +
+    (Array.isArray(value) ? 0 : members.length);
+  return members.reduce<number>(
+    (total, member) => total + jsonbSeparatorBytes(member),
+    separators,
+  );
+};
+
 export const structuredTextDocumentSchema = z
   .object({
     version: z.literal(1),
@@ -237,7 +252,9 @@ export const structuredTextDocumentSchema = z
   .strict()
   .refine(
     (value) =>
-      new TextEncoder().encode(JSON.stringify(value)).byteLength <=
+      // The persisted JSONB text adds one space after each structural comma/colon.
+      new TextEncoder().encode(JSON.stringify(value)).byteLength +
+        jsonbSeparatorBytes(value) <=
       MAX_STRUCTURED_TEXT_BYTES,
     { message: "structured text must not exceed 512 KiB" },
   );
@@ -623,6 +640,9 @@ export const adminChapterPageSchema = z
     position: positiveIntegerSchema,
     assetId: contentIdSchema,
     assetStatus: z.enum(["available", "unavailable"]),
+    width: positiveIntegerSchema.optional(),
+    height: positiveIntegerSchema.optional(),
+    byteLength: positiveIntegerSchema.optional(),
   })
   .strict();
 
@@ -700,6 +720,304 @@ export const adminWorkListDataSchema = listDataSchema(adminWorkListItemSchema);
 export const adminChapterListDataSchema = listDataSchema(
   adminChapterSummarySchema,
 );
+
+export const CATALOG_WORK_PAGE_SIZE = 12;
+export const CATALOG_CATEGORY_PAGE_SIZE = 24;
+
+const catalogPageSchema = paginationQuerySchema.shape.page.pipe(
+  z.number().int().max(1_000),
+);
+const catalogSearchSchema = z
+  .string()
+  .refine((query) => !hasControlCharacter(query), {
+    message: "must not contain control characters",
+  })
+  .transform(normalizeText)
+  .pipe(z.string().max(100))
+  .transform((query) => (query === "" ? undefined : query))
+  .optional();
+
+export const catalogCategoryListQuerySchema = z
+  .object({ q: catalogSearchSchema, page: catalogPageSchema })
+  .strict()
+  .transform(({ q, ...selection }) => ({
+    ...selection,
+    ...(q === undefined ? {} : { q }),
+  }));
+
+export const catalogWorkListQuerySchema = z
+  .object({
+    view: z.enum(["all", "stories"]).default("all"),
+    q: catalogSearchSchema,
+    category: contentSlugSchema.optional(),
+    type: workTypeSchema.optional(),
+    status: storyStatusSchema.optional(),
+    sort: z
+      .enum(["newest", "chapter-latest", "title-asc", "title-desc"])
+      .default("newest"),
+    page: catalogPageSchema,
+  })
+  .strict()
+  .superRefine((query, context) => {
+    if (
+      query.view === "stories" &&
+      query.type !== undefined &&
+      query.type !== "novel" &&
+      query.type !== "text-story"
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["type"],
+        message: "stories supports text work types only",
+      });
+    }
+  })
+  .transform(({ q, ...selection }) => ({
+    ...selection,
+    ...(q === undefined ? {} : { q }),
+  }));
+
+export const catalogCategorySchema = z
+  .object({
+    slug: contentSlugSchema,
+    displayName: editorialText(1, 100),
+  })
+  .strict();
+
+export const catalogWorkSchema = z
+  .object({
+    slug: contentSlugSchema,
+    title: editorialText(1, 200),
+    alternativeTitle: editorialText(1, 200).nullable(),
+    type: workTypeSchema,
+    storyStatus: storyStatusSchema,
+    publishedAt: contentTimestampSchema,
+    categories: z.array(catalogCategorySchema).min(1).max(100),
+    coverPath: z.string().max(200),
+  })
+  .strict()
+  .refine(
+    (work) => work.coverPath === `/api/v1/content/works/${work.slug}/cover`,
+    { path: ["coverPath"], message: "must identify this work's public cover" },
+  );
+
+export const catalogWorkListDataSchema = z
+  .object({
+    items: z.array(catalogWorkSchema).max(CATALOG_WORK_PAGE_SIZE),
+    pagination: paginationMetaSchema.safeExtend({
+      limit: z.literal(CATALOG_WORK_PAGE_SIZE),
+    }),
+  })
+  .strict()
+  .refine(
+    ({ items }) =>
+      new Set(items.map((work) => work.slug)).size === items.length,
+    { path: ["items"], message: "work slugs must be distinct" },
+  );
+
+export const catalogCategoryListDataSchema = z
+  .object({
+    items: z.array(catalogCategorySchema).max(CATALOG_CATEGORY_PAGE_SIZE),
+    pagination: paginationMetaSchema.safeExtend({
+      limit: z.literal(CATALOG_CATEGORY_PAGE_SIZE),
+    }),
+  })
+  .strict()
+  .refine(
+    ({ items }) =>
+      new Set(items.map((category) => category.slug)).size === items.length,
+    { path: ["items"], message: "category slugs must be distinct" },
+  );
+
+const hasMatchingCatalogPagination = (
+  envelope: Readonly<{
+    data: Readonly<{ pagination: PaginationMeta }>;
+    paginationMeta?: PaginationMeta | undefined;
+  }>,
+): boolean => {
+  const topLevel = envelope.paginationMeta;
+  return (
+    topLevel === undefined ||
+    paginationMetaSchema
+      .keyof()
+      .options.every((key) => topLevel[key] === envelope.data.pagination[key])
+  );
+};
+
+export const catalogWorkListResponseSchema = successEnvelopeSchema
+  .safeExtend({
+    statusCode: z.literal(200),
+    data: catalogWorkListDataSchema,
+  })
+  .refine(hasMatchingCatalogPagination, {
+    path: ["paginationMeta"],
+    message: "must match data.pagination",
+  });
+
+export const catalogCategoryListResponseSchema = successEnvelopeSchema
+  .safeExtend({
+    statusCode: z.literal(200),
+    data: catalogCategoryListDataSchema,
+  })
+  .refine(hasMatchingCatalogPagination, {
+    path: ["paginationMeta"],
+    message: "must match data.pagination",
+  });
+
+export const catalogChapterSchema = z.strictObject({
+  number: z.number().int().positive(),
+  title: editorialText(1, 200),
+  contentType: chapterContentTypeSchema,
+  publishedAt: z.iso.datetime({ offset: true }),
+});
+
+const catalogSuggestionSchema = z
+  .strictObject({
+    category: catalogCategorySchema,
+    works: z.array(catalogWorkSchema).min(1).max(6),
+  })
+  .refine(
+    (tab) =>
+      new Set(tab.works.map((work) => work.slug)).size === tab.works.length &&
+      tab.works.every((work) =>
+        work.categories.some((category) => category.slug === tab.category.slug),
+      ),
+    { message: "Suggestion Works must be distinct members of their category." },
+  );
+
+export const catalogHomeDataSchema = z
+  .strictObject({
+    featured: z.array(catalogWorkSchema).max(5),
+    categoryShortcuts: z.array(catalogCategorySchema).max(12),
+    latestReleases: z
+      .array(
+        z.strictObject({
+          work: catalogWorkSchema,
+          chapter: catalogChapterSchema,
+        }),
+      )
+      .max(12),
+    suggestions: z.array(catalogSuggestionSchema).max(3),
+  })
+  .refine(
+    (home) =>
+      new Set(home.featured.map((work) => work.slug)).size ===
+        home.featured.length &&
+      new Set(home.categoryShortcuts.map((category) => category.slug)).size ===
+        home.categoryShortcuts.length &&
+      new Set(home.suggestions.map((tab) => tab.category.slug)).size ===
+        home.suggestions.length &&
+      new Set(
+        home.latestReleases.map(
+          (release) => `${release.work.slug}:${String(release.chapter.number)}`,
+        ),
+      ).size === home.latestReleases.length,
+    { message: "Home sections must have distinct item identities." },
+  );
+export type CatalogChapter = z.output<typeof catalogChapterSchema>;
+export type CatalogHomeData = z.output<typeof catalogHomeDataSchema>;
+
+export const catalogWorkDetailSchema = catalogWorkSchema
+  .safeExtend({
+    synopsis: editorialText(20, 5000),
+    author: editorialText(1, 150),
+    artist: editorialText(1, 150).nullable(),
+    tags: z.array(workTagSchema).max(20),
+    backgroundPath: z.string().max(200).nullable(),
+  })
+  .refine(
+    (work) =>
+      work.backgroundPath === null ||
+      work.backgroundPath === `/api/v1/content/works/${work.slug}/background`,
+    {
+      message: "Background path must be scoped to the public Work.",
+      path: ["backgroundPath"],
+    },
+  );
+
+export const catalogDetailDataSchema = z
+  .strictObject({
+    work: catalogWorkDetailSchema,
+    chapters: z.strictObject({
+      items: z.array(catalogChapterSchema).max(25),
+      pagination: paginationMetaSchema.safeExtend({
+        page: z.literal(1),
+        limit: z.literal(25),
+      }),
+    }),
+    firstChapter: catalogChapterSchema.nullable(),
+    latestChapter: catalogChapterSchema.nullable(),
+    similar: z.array(catalogWorkSchema).max(6),
+  })
+  .refine(
+    (detail) => {
+      const { items, pagination } = detail.chapters;
+      if (
+        items.length !== Math.min(pagination.total, 25) ||
+        items.some(
+          (chapter, index) =>
+            index > 0 && (items[index - 1]?.number ?? 0) >= chapter.number,
+        )
+      )
+        return false;
+      if (pagination.total === 0) {
+        if (detail.firstChapter !== null || detail.latestChapter !== null)
+          return false;
+      } else if (
+        detail.firstChapter === null ||
+        detail.latestChapter === null ||
+        detail.firstChapter.number !== items[0]?.number ||
+        detail.latestChapter.number < (items.at(-1)?.number ?? 0)
+      )
+        return false;
+      return (
+        new Set(detail.similar.map((work) => work.slug)).size ===
+          detail.similar.length &&
+        detail.similar.every(
+          (work) =>
+            work.slug !== detail.work.slug &&
+            work.categories.some((category) =>
+              detail.work.categories.some(
+                (current) => current.slug === category.slug,
+              ),
+            ),
+        )
+      );
+    },
+    {
+      message:
+        "Detail Chapters and similar Works must be coherent and distinct.",
+    },
+  );
+export type CatalogWorkDetail = z.output<typeof catalogWorkDetailSchema>;
+export type CatalogDetailData = z.output<typeof catalogDetailDataSchema>;
+
+export const catalogNoQuerySchema = z.strictObject({});
+export const catalogSitemapDataSchema = z
+  .strictObject({ items: z.array(z.strictObject({ slug: contentSlugSchema })) })
+  .refine(
+    (data) =>
+      new Set(data.items.map((work) => work.slug)).size === data.items.length,
+    { message: "Sitemap slugs must be distinct." },
+  );
+export type CatalogSitemapData = z.output<typeof catalogSitemapDataSchema>;
+
+export type CatalogWorkListQueryInput = z.input<
+  typeof catalogWorkListQuerySchema
+>;
+export type CatalogWorkListQuery = z.output<typeof catalogWorkListQuerySchema>;
+export type CatalogCategoryListQueryInput = z.input<
+  typeof catalogCategoryListQuerySchema
+>;
+export type CatalogCategoryListQuery = z.output<
+  typeof catalogCategoryListQuerySchema
+>;
+export type CatalogCategory = z.infer<typeof catalogCategorySchema>;
+export type CatalogWork = z.infer<typeof catalogWorkSchema>;
+export type CatalogWorkListData = z.infer<typeof catalogWorkListDataSchema>;
+export type CatalogCategoryListData = z.infer<
+  typeof catalogCategoryListDataSchema
+>;
 
 export type WorkType = z.infer<typeof workTypeSchema>;
 export type StoryStatus = z.infer<typeof storyStatusSchema>;

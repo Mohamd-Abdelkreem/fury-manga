@@ -1,0 +1,24 @@
+{
+  "kind": "actual temporary upstream503 via owned network fault proxy",
+  "workHtml": [
+    {
+      "agent": "Mozilla/5.0",
+      "status": 200,
+      "title": ["المحتوى غير متاح مؤقتًا | Fury"],
+      "absenceNotFabricated": true,
+      "privateOriginExposed": false
+    },
+    {
+      "agent": "Twitterbot/1.0",
+      "status": 200,
+      "title": ["المحتوى غير متاح مؤقتًا | Fury"],
+      "absenceNotFabricated": true,
+      "privateOriginExposed": false
+    }
+  ],
+  "sitemap": {
+    "status": 500,
+    "partialUrlsReturned": false
+  },
+  "productionApiAndRateLimitsUnchanged": true
+}

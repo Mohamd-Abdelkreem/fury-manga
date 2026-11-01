@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { useLogout, useLogoutAll } from "@/features/auth/hooks/auth.hooks";
+import { localizeAuthMessage } from "@/features/auth/utils/auth-messages";
 import { replaceWithLogin } from "@/features/auth/utils/session-navigation";
 import { getApiError } from "@/services/api/api-client";
 
@@ -18,7 +19,7 @@ export function SessionControls() {
       onError: (error: unknown) => {
         const apiError = getApiError(error);
         setSessionError(
-          `${apiError.message} لم نتمكن من تأكيد تسجيل خروج هذه الجلسة من الخادم.`,
+          `${localizeAuthMessage(apiError.message)} لم نتمكن من تأكيد تسجيل خروج هذه الجلسة من الخادم.`,
         );
       },
     });
@@ -35,7 +36,7 @@ export function SessionControls() {
         const apiError = getApiError(error);
 
         setSessionError(
-          `${apiError.message} لم نتمكن من تأكيد إنهاء الجلسات على أجهزتك الأخرى.`,
+          `${localizeAuthMessage(apiError.message)} لم نتمكن من تأكيد إنهاء الجلسات على أجهزتك الأخرى.`,
         );
       },
     });

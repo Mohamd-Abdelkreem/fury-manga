@@ -1,10 +1,12 @@
+import { animatedImageFixture } from "../../test-support/animated-image.test-helper.js";
+import { ImageProcessor } from "../../infrastructure/media/image-processor.js";
 import { createHash, randomUUID } from "node:crypto";
 import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import sharp from "sharp";
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, beforeEach, describe, expect, it } from "vitest";
 
 import { createDatabaseClient } from "@fury/database";
 
@@ -24,7 +26,7 @@ const fixtureRoot = mkdtempSync(join(tmpdir(), "fury-media-reconcile-"));
 const mediaRoot = join(fixtureRoot, "persistent");
 mkdirSync(mediaRoot);
 const storage = new MediaStorage(createMediaConfig(mediaRoot));
-const service = new MediaService(database, storage);
+const service = new MediaService(database, storage, new ImageProcessor());
 const categories = new CategoryManagementService(database);
 const works = new WorkManagementService(database, service);
 const publicContent = new PublicContentService(database);
@@ -46,6 +48,13 @@ const createAdmin = async (): Promise<string> => {
   });
   return id;
 };
+
+beforeEach(async () => {
+  // Reconciliation scans all assets; prior suites use different private file roots.
+  await database.$executeRawUnsafe(
+    "TRUNCATE media_reference_events, media_references, upload_attempts, media_assets, publication_events, chapter_pages, chapters, work_tags, work_categories, categories, works",
+  );
+});
 
 afterAll(async () => {
   await database.$executeRawUnsafe(
@@ -127,91 +136,110 @@ describe("operator media reconciliation", () => {
       await database.publicationEvent.count({ where: { workId: work.id } }),
     ).toBe(1);
   });
-  it("accepts provable staged bytes and terminally rejects incomplete uploads", async () => {
-    const actorUserId = await createAdmin();
-    const acceptedKey = randomUUID();
-    const reservation = await service.reserveAdminUpload(
-      actorUserId,
-      acceptedKey,
-      "work_cover",
-    );
-    if (reservation.assetId === null)
-      throw new Error("Expected asset identity.");
-    const bytes = await sharp({
-      create: { width: 600, height: 800, channels: 3, background: "purple" },
-    })
-      .webp()
-      .toBuffer();
-    await storage.stage(reservation.assetId, bytes);
-    await database.mediaAsset.update({
-      where: { id: reservation.assetId },
-      data: {
-        contentType: "image/webp",
-        byteLength: bytes.length,
-        width: 600,
-        height: 800,
-        sha256: createHash("sha256").update(bytes).digest("hex"),
-      },
-    });
-    await database.uploadAttempt.update({
-      where: {
-        actorUserId_id: { actorUserId, id: acceptedKey },
-      },
-      data: {
-        sourceSha256: createHash("sha256").update(bytes).digest("hex"),
-      },
-    });
-    const incompleteKey = randomUUID();
-    const incomplete = await service.reserveAdminUpload(
-      actorUserId,
-      incompleteKey,
-      "work_cover",
-    );
+  it.each([false, true])(
+    "reconciles complete and interrupted staged uploads (animated=%s)",
+    async (animated) => {
+      const actorUserId = await createAdmin();
+      const acceptedKey = randomUUID();
+      const reservation = await service.reserveAdminUpload(
+        actorUserId,
+        acceptedKey,
+        "work_cover",
+      );
+      if (reservation.assetId === null)
+        throw new Error("Expected asset identity.");
+      const bytes = animated
+        ? await animatedImageFixture("webp")
+        : await sharp({
+            create: {
+              width: 600,
+              height: 800,
+              channels: 3,
+              background: "purple",
+            },
+          })
+            .webp()
+            .toBuffer();
+      await storage.stage(reservation.assetId, bytes);
+      await database.mediaAsset.update({
+        where: { id: reservation.assetId },
+        data: {
+          contentType: "image/webp",
+          byteLength: bytes.length,
+          width: 600,
+          height: 800,
+          sha256: createHash("sha256").update(bytes).digest("hex"),
+        },
+      });
+      await database.uploadAttempt.update({
+        where: {
+          actorUserId_id: { actorUserId, id: acceptedKey },
+        },
+        data: {
+          sourceSha256: createHash("sha256").update(bytes).digest("hex"),
+        },
+      });
+      const incompleteKey = randomUUID();
+      const incomplete = await service.reserveAdminUpload(
+        actorUserId,
+        incompleteKey,
+        "work_cover",
+      );
 
-    const report = await service.reconcile(100);
-    expect(report).toMatchObject({
-      acceptedUploads: 1,
-      rejectedUploads: 1,
-    });
-    expect(
-      await service.getAdminAttempt(actorUserId, acceptedKey),
-    ).toMatchObject({
-      state: "accepted",
-      assetId: reservation.assetId,
-    });
-    expect(
-      await service.getAdminAttempt(actorUserId, incompleteKey),
-    ).toMatchObject({
-      state: "rejected",
-      assetId: null,
-      safeFailureCode: "UPLOAD_INCOMPLETE",
-    });
-    expect(
-      await database.mediaAsset.findUniqueOrThrow({
-        where: { id: incomplete.assetId ?? "" },
-      }),
-    ).toMatchObject({ status: "REMOVED" });
-    await expect(
-      service.uploadAdmin({
-        actorUserId,
-        attemptId: incompleteKey,
-        mediaClass: "work_cover",
-        source: bytes,
-        declaredType: "image/webp",
-        sourceName: "cover.webp",
-      }),
-    ).rejects.toMatchObject({ code: "UPLOAD_ATTEMPT_CONFLICT" });
-    await expect(
-      service.uploadAdmin({
-        actorUserId,
-        attemptId: randomUUID(),
-        mediaClass: "work_cover",
-        source: bytes,
-        declaredType: "image/webp",
-        sourceName: "cover.webp",
-      }),
-    ).resolves.toMatchObject({ asset: { status: "available" } });
-  });
+      const report = await service.reconcile(100);
+      expect(await storage.read(reservation.assetId)).toEqual(bytes);
+      if (animated)
+        expect(
+          (
+            await sharp(await storage.read(reservation.assetId), {
+              animated: true,
+            }).metadata()
+          ).pages,
+        ).toBe(3);
+      expect(report).toMatchObject({
+        acceptedUploads: 1,
+        rejectedUploads: 1,
+      });
+      expect(
+        await service.getAdminAttempt(actorUserId, acceptedKey),
+      ).toMatchObject({
+        state: "accepted",
+        assetId: reservation.assetId,
+      });
+      expect(
+        await service.getAdminAttempt(actorUserId, incompleteKey),
+      ).toMatchObject({
+        state: "rejected",
+        assetId: null,
+        safeFailureCode: "UPLOAD_INCOMPLETE",
+      });
+      expect(
+        await database.mediaAsset.findUniqueOrThrow({
+          where: { id: incomplete.assetId ?? "" },
+        }),
+      ).toMatchObject({ status: "REMOVED" });
+      await expect(
+        service.uploadAdmin({
+          actorUserId,
+          attemptId: incompleteKey,
+          mediaClass: "work_cover",
+          source: bytes,
+          declaredType: "image/webp",
+          sourceName: "cover.webp",
+        }),
+      ).rejects.toMatchObject({ code: "UPLOAD_ATTEMPT_CONFLICT" });
+      await expect(
+        service.uploadAdmin({
+          actorUserId,
+          attemptId: randomUUID(),
+          mediaClass: "work_cover",
+          source: bytes,
+          declaredType: "image/webp",
+          sourceName: "cover.webp",
+        }),
+      ).resolves.toMatchObject({ asset: { status: "available" } });
+    },
+  );
 
   it("marks damaged bytes unavailable, restores verified bytes, and completes removal", async () => {
     const actorUserId = await createAdmin();

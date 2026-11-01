@@ -11,6 +11,7 @@ import type { z } from "zod";
 
 import { FormField } from "@/components/forms/form-field";
 import { useSession } from "@/features/auth/hooks/auth.hooks";
+import { localizeAuthMessage } from "@/features/auth/utils/auth-messages";
 import { useUpdateProfile } from "@/features/users/hooks/users.hooks";
 import { applyApiFormError } from "@/shared/forms/form";
 
@@ -82,7 +83,7 @@ export function ProfileForm() {
       </div>
       {message === null ? null : (
         <p className="form-notice" role="status">
-          {message}
+          {localizeAuthMessage(message)}
         </p>
       )}
       <button className="button" type="submit" disabled={isSubmitting}>

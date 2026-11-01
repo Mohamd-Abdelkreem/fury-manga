@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "explicitRetryAfterExhaustedAutomaticAttempt": true,
+  "title": "عمل Mixed 00 manga | Fury",
+  "focus": {
+    "tag": "DIV",
+    "label": "تفاصيل العمل",
+    "outline": "solid",
+    "outlineWidth": "3px"
+  },
+  "robots": ["index, follow"]
+}

@@ -7,8 +7,15 @@ const appDirectory = fileURLToPath(
   new URL("../apps/web/src/app/", import.meta.url),
 );
 const baseUrl = process.argv[2] ?? "http://localhost:3000";
+const publicWorkSlug = process.argv[3];
+assert.ok(
+  typeof publicWorkSlug === "string" &&
+    /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(publicWorkSlug) &&
+    publicWorkSlug.length <= 120,
+  "Provide an existing published Work slug: pnpm test:web-routes <web-origin> <work-slug>",
+);
 const examples = {
-  id: "1",
+  id: publicWorkSlug,
   workId: "trait-hoarder",
   userId: "user-1",
   messageId: "msg-1",
@@ -52,7 +59,7 @@ async function collectRoutes(directory, segments = []) {
 
 const routes = new Set([
   ...(await collectRoutes(appDirectory)),
-  "/story/trait-hoarder",
+  `/story/${publicWorkSlug}`,
   "/story/trait-hoarder/chapter/43",
   "/story/1/chapter/1",
   "/story/1/chapter/2",

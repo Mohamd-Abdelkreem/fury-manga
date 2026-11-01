@@ -12,12 +12,12 @@ export const isTransactionConflict = (error: unknown): boolean =>
     error.message.includes("40P01") ||
     error.message.includes("40001"));
 
-export const isFeaturedPositionConflict = (error: unknown): boolean => {
+const uniqueConflictFields = (error: unknown): readonly unknown[] => {
   if (
     !(error instanceof Prisma.PrismaClientKnownRequestError) ||
     error.code !== "P2002"
   )
-    return false;
+    return [];
   const adapter = error.meta?.["driverAdapterError"];
   const cause =
     typeof adapter === "object" && adapter !== null && "cause" in adapter
@@ -33,10 +33,21 @@ export const isFeaturedPositionConflict = (error: unknown): boolean => {
     "fields" in constraint
       ? constraint.fields
       : null;
+  return Array.isArray(fields) ? fields : [];
+};
+
+export const isFeaturedPositionConflict = (error: unknown): boolean => {
+  const fields = uniqueConflictFields(error);
+  return fields.length === 1 && fields[0] === "featured_order";
+};
+
+export const isWorkSlugConflict = (error: unknown): boolean => {
+  const fields = uniqueConflictFields(error);
   return (
-    Array.isArray(fields) &&
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    error.meta?.["modelName"] === "Work" &&
     fields.length === 1 &&
-    fields[0] === "featured_order"
+    fields[0] === "slug"
   );
 };
 

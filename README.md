@@ -1,5 +1,21 @@
 # Fury Turbo
 
+The media-foundation exception in constitution VI (owner decision 2026-11-01)
+also applies to existing P02 media and its current P04 illustrated-preview/P05
+Work-image consumers: approved numerical limits, class-specific GIF/WebP animation,
+bounded progressive loading, necessary image hints/retry and reduced-motion display.
+Preserve design, authority/publication and stored animation; do not implement P07,
+progress/resume/opens or another feature. Apply both explicit exceptions to general
+freeze wording below. Reconciliation, backend acceptance and real verification remain.
+
+The P05 functional exception in constitution VI (owner decision 2026-11-01)
+applies only to `specs/006-public-catalog-discovery-seo`: persisted public data,
+truthful states/minimal functional copy, deferred unsupported controls, technical
+SEO and necessary accessibility within the existing design. It does not authorize
+redesign, unrelated phases, new product destinations/dialogs or changes to protected
+surfaces. Apply that exact exception to general freeze wording below; all other
+gates remain.
+
 A Next.js 16, Express 5, PostgreSQL, and Prisma 7 foundation with a complete
 email/password account lifecycle, P01 content records, private P02 media, and
 P03 saved category and work administration, and the P04 admin Chapter authoring
@@ -165,8 +181,7 @@ P01 persists Categories, Works, Work–Category associations, Chapters, ordered
 illustrated page metadata, and immutable publication events. P03 adds category
 enablement and global order, work editorial fields and tags, featured preference,
 and private cover/background references through P02. P04 adds saved admin Chapter
-authoring and Chapter-page media association. Reader output, public image
-delivery, and personalization remain outside this workflow.
+authoring and Chapter-page media association. Reader output and personalization remain outside the admin editing workflow.
 
 The API exposes four credential-free metadata reads beneath
 `/api/v1/content/works`. Public Work and Chapter visibility requires the Work
@@ -197,15 +212,60 @@ reference history, and version checks. Text Chapters store a strict version-1 JS
 headings, paragraphs with bounded inline emphasis/internal links, and ordered
 or unordered lists. Illustrated Chapters store ordered positive page positions
 only. Chapter editor/preview and Work-scoped list use persisted Chapters; public
-discovery/text-story screens and the fixture reader remain separate.
+catalog pages consume eligible summaries. The fixture reader remains separate pending P07.
+
+## Public catalog backend and integration boundary
+
+P05 adds anonymous `GET` operations beneath `/api/v1/content`: `/catalog/works`,
+`/catalog/categories`, `/catalog/home`, `/catalog/works/{workSlug}`,
+`/catalog/sitemap-works`, and `/works/{workSlug}/cover` or `/background`.
+Lists/search/order/counts run against eligible persisted records in PostgreSQL.
+Detail carries editorial fields and eligible Chapter summaries, never Chapter
+bodies/pages or private media IDs. The four older metadata operations retain
+compatible responses. Express also supports HEAD with the same status/headers
+and no body. All public content methods receive `Cache-Control: no-store` before
+early middleware can fail; unknown paths/methods use safe route identities in
+errors and logs. `/media` remains authenticated.
+
+Work-scoped images verify stored length and SHA-256 before delivery. Missing or
+corrupt bytes with saved asset status `AVAILABLE` yield image `503`, while
+metadata remains eligible; committed cover `UNAVAILABLE` hides the Work with
+`404`. An absent optional background is `404`. Operator reconciliation and
+verified-byte repair restore eligibility without creating a publication event.
+Do not treat transport failure as confirmed absence or repair it with invented data.
+
+The public home, discovery, stories, category directory and Work-detail routes now
+consume validated persisted data through `apps/web/src/features/public-catalog`.
+Search, filters and pagination use normalized URL state and server totals. Real
+Chapter summaries remain informational until P07. Fabricated engagement and
+trending are removed from P05; existing bookmark controls are clearly deferred.
+Optional community links require a validated owner-maintained `COMMUNITY_URL`.
+
+Request-time metadata, dynamic sitemap and robots use trusted configured origins.
+Filtered URLs are noindex with a base canonical. Public images use credential-free
+Blob reads without a shared image optimizer. Newer Work denial fences stale client
+reads; recovery requires a later matching Work GET. See [the closeout register](docs/product/legacy-closeout.md)
+for technical acceptance and remaining owner/release gates.
+
+For local adapter development, set `NEXT_PUBLIC_API_URL` to the browser-reachable
+API prefix, and set `SERVER_API_URL` to its server-reachable equivalent (for example
+`http://localhost:4000/api/v1`). Set `SITE_ORIGIN` to the trusted site origin only,
+without path/query/hash; production requires HTTPS. Optional `COMMUNITY_URL` must
+be an absolute HTTPS URL. These keys are documented in `apps/web/.env.example`;
+server configuration rejects credential-bearing/malformed URLs and reports only
+invalid key names. Restart/rebuild the web application after changing its public
+build-time API URL. The server adapter uses per-request credential-free, no-store
+reads; it does not import browser session state. It throws on safe upstream failure
+rather than substituting fixtures. The connected public pages use this adapter for initial server rendering.
 
 ## Private media platform
 
 P02 stores validated JPEG, PNG, and WebP assets beneath the configured private
 media root. Five media classes require an active verified `ADMIN`; an active
 verified user may upload and remove only their own unbound avatar candidates.
-Every metadata and binary read is authenticated, binaries use private no-store
-headers, and no public media route exists.
+Every metadata and binary read under `/api/v1/media` is authenticated and binaries
+use private no-store headers. P05's separate work-scoped image reads authorize
+current public Work eligibility before returning bytes.
 
 Uploads use an actor-scoped UUID idempotency key, bounded multipart parsing,
 class-specific byte, dimension, and transparency checks, canonical re-encoding,
@@ -324,3 +384,34 @@ pnpm verify:build-output
 
 See [PROJECT_REFERENCE.md](./PROJECT_REFERENCE.md) for boundaries and extension
 guidance.
+
+## Media-foundation extension — 2026-11-01
+
+The owner approved the existing numerical limits for all six classes. Work cover,
+Work background and illustrated Chapter-page upload now accepts GIF and animated
+WebP as well as static JPEG/PNG/WebP. GIF/animated WebP is canonically stored and
+served as animated lossless WebP; avatar, frame and decoration remain static.
+APNG receives safe unsupported-type rejection. No migration or public Chapter
+payload was added.
+
+Animation is bounded to 100 frames, 24M canvas pixels, 32M aggregate decoded pixels,
+and two admitted processing jobs per API composition/process. Sharp's 10-second
+native timeout applies per metadata/encoding stage, excluding its native queue;
+it is not a hard HTTP wall-clock deadline. Excess processing capacity returns
+503 `MEDIA_PROCESSING_BUSY`, leaving a terminal rejected attempt that may be
+retried deliberately with a new key. Existing encoded limits and static processing
+quality remain unchanged.
+
+The existing persisted administrator Chapter preview consumes the shared bounded
+loader: visible first, initial ten, extension near page five, two transfers,
+finite retained bytes/pixels and cleanup on scope/authority changes. Slow/save-data
+uses a smaller one-transfer policy. Temporary reduced-motion still display leaves
+the stored animation intact. Protected bytes stay in the current viewer's memory;
+public Work images retain their separate publication-scoped transport.
+
+The protected reader still uses `MOCK_PAGES`; real reading/progress/resume/opens
+remain P07. Exact integration/acceptance obligations are in [PLAN.md P07](PLAN.md#p07--protected-readers-progress-completion-and-resume).
+See [current media evidence](specs/002-persistent-vps-media/evidence/media-foundation/README.md)
+and [the legacy register](docs/product/legacy-closeout.md) for measured behavior,
+failed-run history, final gates and current readiness. Generated technical samples
+are not owner-reviewed artwork, and local verification is not deployment approval.

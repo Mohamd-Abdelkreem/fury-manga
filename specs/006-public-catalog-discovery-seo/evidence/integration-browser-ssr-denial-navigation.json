@@ -1,0 +1,17 @@
+{
+  "passed": true,
+  "action": "same SPA navigation after real administrator unpublication",
+  "reads": [
+    {
+      "path": "/story/browser-illustrated",
+      "rsc": true,
+      "status": 200
+    },
+    {
+      "path": "/api/v1/content/catalog/works/browser-illustrated",
+      "rsc": false,
+      "status": 404
+    }
+  ],
+  "oldWorkAbsent": true
+}

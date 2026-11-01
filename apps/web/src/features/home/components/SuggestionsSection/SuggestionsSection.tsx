@@ -11,15 +11,20 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/Carousel/Carousel";
-import {
-  SUGGESTIONS_DATA,
-  SUGGESTION_CATEGORIES,
-  type SuggestionCategory,
-} from "@/features/home/data/suggestionsData";
+import type { CatalogHomeData } from "@fury/contracts";
+import { useReducedMotion } from "@/shared/hooks/use-reduced-motion";
 import styles from "./SuggestionsSection.module.css";
 
-export function SuggestionsSection() {
-  const [active, setActive] = useState<SuggestionCategory>("أكشن");
+export function SuggestionsSection({
+  suggestions,
+}: Readonly<{ suggestions: CatalogHomeData["suggestions"] }>) {
+  const [selected, setActive] = useState(suggestions[0]?.category.slug ?? "");
+  const reducedMotion = useReducedMotion();
+  const tab =
+    suggestions.find((item) => item.category.slug === selected) ??
+    suggestions[0];
+  if (tab === undefined) return null;
+  const active = tab.category.slug;
 
   return (
     <section dir="rtl" className={styles["section"]}>
@@ -51,27 +56,28 @@ export function SuggestionsSection() {
                 border: "1px solid var(--border)",
               }}
             >
-              {SUGGESTION_CATEGORIES.map((cat) => (
+              {suggestions.map(({ category }) => (
                 <button
-                  key={cat}
-                  onClick={() => setActive(cat)}
+                  key={category.slug}
+                  onClick={() => setActive(category.slug)}
+                  aria-pressed={active === category.slug}
                   className={styles["tabBtn"]}
                   style={{
                     background:
-                      active === cat
+                      active === category.slug
                         ? "linear-gradient(135deg, var(--primary), var(--primary-hover))"
                         : "transparent",
                     color:
-                      active === cat
+                      active === category.slug
                         ? "var(--foreground)"
                         : "var(--muted-foreground)",
                     boxShadow:
-                      active === cat
+                      active === category.slug
                         ? "0 2px 10px rgba(255, 71, 71, 0.2)"
                         : "none",
                   }}
                 >
-                  {cat}
+                  {category.displayName}
                 </button>
               ))}
             </div>
@@ -103,26 +109,28 @@ export function SuggestionsSection() {
               align: "start",
               loop: true,
               direction: "rtl",
-              duration: 60,
+              duration: reducedMotion ? 0 : 60,
             }}
           >
             <CarouselContent style={{ marginLeft: "-1rem" }}>
-              {SUGGESTIONS_DATA[active].map((manga) => (
+              {tab.works.map((work) => (
                 <CarouselItem
-                  key={manga.id}
+                  key={work.slug}
                   className={styles["carouselItem"]}
                   style={{ paddingLeft: "1rem" }}
                 >
-                  <MangaCard {...manga} stretch />
+                  <MangaCard work={work} stretch />
                 </CarouselItem>
               ))}
             </CarouselContent>
 
             <div className={styles["arrowsWrapper"]}>
               <CarouselPrevious
+                aria-label="المقترحات السابقة"
                 className={`${styles["arrowBtn"]} ${styles["arrowLeft"]}`}
               />
               <CarouselNext
+                aria-label="المقترحات التالية"
                 className={`${styles["arrowBtn"]} ${styles["arrowRight"]}`}
               />
             </div>

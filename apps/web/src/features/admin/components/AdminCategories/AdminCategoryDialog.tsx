@@ -109,7 +109,7 @@ export function AdminCategoryDialog({
             }}
             readOnly={mode === "edit" || lockDraft}
             maxLength={120}
-            pattern="[A-Za-z0-9-]+"
+            pattern="[A-Za-z0-9\-]+"
             aria-invalid={fieldErrors.slug === undefined ? undefined : true}
             aria-describedby={
               fieldErrors.slug === undefined ? undefined : "category-slug-error"

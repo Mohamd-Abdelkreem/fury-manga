@@ -1,0 +1,16 @@
+{
+  "head": [
+    {
+      "html": "<meta name=\"robots\" content=\"index, follow\">",
+      "parent": "HEAD",
+      "previous": "<meta name=\"description\" content=\"Saved by the actual administrator browser flow for public catalog verification.\">",
+      "next": "<link rel=\"canonical\" href=\"https://fury.example.test/story/browser-illustrated\">"
+    },
+    {
+      "html": "<meta name=\"robots\" content=\"noindex\">",
+      "parent": "BODY",
+      "previous": "<script>self.__next_f.push([1,\"18:I[62520,[],\\\"IconMark\\\"]\\ne:null\\n13:[[\\\"$\\\",\\\"title\\\",\\\"0\\\",{\\\"children\\\":\\\"العمل غير موجود | Fury\\\"}],[\\\"$\\\",\\\"meta\\\",\\\"1\\\",{\\\"name\\\":\\\"description\\\",\\\"content\\\":\\\"",
+      "next": "<script>document.querySelectorAll('body link[rel=\"icon\"], body link[rel=\"apple-touch-icon\"]').forEach(el => document.head.appendChild(el))</script>"
+    }
+  ]
+}

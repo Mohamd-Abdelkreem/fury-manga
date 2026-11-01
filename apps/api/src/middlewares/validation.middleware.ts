@@ -1,6 +1,7 @@
 import type { RequestHandler } from "express";
 import type { z } from "zod";
 
+import { BadRequestException } from "../core/errors/bad-request.error.js";
 import { ValidationException } from "../core/errors/validation.error.js";
 import type { FieldError } from "../core/responses/api-response.js";
 
@@ -37,6 +38,7 @@ const parseTarget = async (
   target: RequestTarget,
   schema: z.ZodType | undefined,
   value: unknown,
+  hideUnknownKeys = false,
 ): Promise<ParseResult> => {
   if (schema === undefined) return { kind: "missing" };
   const result = await schema.safeParseAsync(value);
@@ -44,17 +46,42 @@ const parseTarget = async (
     ? { kind: "valid", data: result.data }
     : {
         kind: "invalid",
-        errors: formatValidationErrors(target, result.error.issues),
+        errors: formatValidationErrors(
+          target,
+          result.error.issues.map((issue) =>
+            hideUnknownKeys && issue.code === "unrecognized_keys"
+              ? { ...issue, message: "Unknown field." }
+              : issue,
+          ),
+        ),
       };
 };
 
 export const validationMiddleware =
-  (schemas: RequestSchemas): RequestHandler =>
+  (
+    schemas: RequestSchemas,
+    options: Readonly<{ strictQueryEncoding?: boolean }> = {},
+  ): RequestHandler =>
   async (request, _response, next) => {
+    if (options.strictQueryEncoding === true) {
+      const rawQuery = request.originalUrl.split("?", 2)[1];
+      if (rawQuery !== undefined) {
+        try {
+          decodeURIComponent(rawQuery);
+        } catch {
+          throw new BadRequestException("Malformed request URL.");
+        }
+      }
+    }
     const [body, params, query] = await Promise.all([
       parseTarget("body", schemas.body, request.body),
       parseTarget("params", schemas.params, request.params),
-      parseTarget("query", schemas.query, request.query),
+      parseTarget(
+        "query",
+        schemas.query,
+        request.query,
+        options.strictQueryEncoding === true,
+      ),
     ]);
 
     const errors = [body, params, query].flatMap((result) =>

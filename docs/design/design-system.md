@@ -1,5 +1,21 @@
 # Fury frontend preservation and integration
 
+The media-foundation exception in constitution VI (owner decision 2026-11-01)
+also applies to existing P02 media and its current P04 illustrated-preview/P05
+Work-image consumers: approved numerical limits, class-specific GIF/WebP animation,
+bounded progressive loading, necessary image hints/retry and reduced-motion display.
+Preserve design, authority/publication and stored animation; do not implement P07,
+progress/resume/opens or another feature. Apply both explicit exceptions to general
+freeze wording below. Reconciliation, backend acceptance and real verification remain.
+
+The P05 functional exception in constitution VI (owner decision 2026-11-01)
+applies only to `specs/006-public-catalog-discovery-seo`: persisted public data,
+truthful states/minimal functional copy, deferred unsupported controls, technical
+SEO and necessary accessibility within the existing design. It does not authorize
+redesign, unrelated phases, new product destinations/dialogs or changes to protected
+surfaces. Apply that exact exception to general freeze wording below; all other
+gates remain.
+
 This guide applies the frozen current Fury frontend under
 [constitution VI](../../.specify/memory/constitution.md). Root
 [DESIGN-SYSTEM.md](../../DESIGN-SYSTEM.md) is the visual reference. Preserve the

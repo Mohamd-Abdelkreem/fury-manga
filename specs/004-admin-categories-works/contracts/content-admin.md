@@ -62,3 +62,22 @@ The category move response has a dedicated strict `categoryMoveDataSchema` conta
 - Extend `contentErrorCodeSchema` with stable `CONTENT_NOT_READY`, `CONTENT_CATEGORY_IN_USE`, and `CONTENT_FEATURED_CONFLICT`; preserve existing `CONTENT_CONFLICT`, `CONTENT_IMMUTABLE`, `CONTENT_TRANSITION_CONFLICT`, `CONTENT_STALE_WRITE`. Add `CONTENT_NOT_READY` to `mediaOperationErrorCodeSchema` and its OpenAPI responses for the affected direct work-cover commands. A readiness 409 includes safe field paths (`body.synopsis`, `body.author`, `body.categoryIds`, `body.coverAssetId`) without raw internal detail. A stale 409 returns no success and requires refetch; direct P02 stale media retains its existing `VERSION_CONFLICT` where applicable. Unknown errors remain safe 500; real temporary unavailability is 503, never a fabricated 200.
 - No automatic mutation retry. For uncertain create, GET submitted UUID and compare saved identity/state; if absent, deliberate same-ID retry. For uncertain edit/transition, GET current Work and event pointer; if result cannot be proven, display unknown outcome with manual refresh, not success. The browser preserves unsaved form input. Cache invalidation follows confirmed response only.
 - `openapi.ts`, shared schema tests, mapper tests, Supertest and web adapter tests must agree on all methods/paths/statuses/security and exact envelope. Test outgoing auth/CSRF after central interceptors. Existing P01 minimal requests remain accepted; expanded strict output schemas require a coordinated API/contracts/web deployment for independently deployed clients. There is no evidence of a supported external management client; do not claim seamless compatibility without that coordination.
+
+## UI acceptance correction — 2026-11-01
+
+`POST /content/admin/works` returns HTTP409 `CONTENT_SLUG_CONFLICT` when the
+requested slug belongs to another Work and the caller-supplied create ID remains
+unoccupied. The browser reports this at the existing slug field and permits an
+explicit corrected submission with the same create ID. This is an additive error-code
+distinction; status, request/success shapes, authority and atomicity are unchanged.
+Both API producer and web consumer are updated together in the current unreleased
+checkout. The shared `contentErrorCodeSchema` and generated OpenAPI own the wire code.
+
+An occupied caller identity, including a conflict that cannot be classified as a
+Work slug collision, remains HTTP409 `CONTENT_CONFLICT`. Its existing conservative
+check/reconciliation behavior is preserved. A generic conflict followed by404 does
+not authorize a new identity or an automatic POST. The service inspects the actual
+unique-constraint failure and checks caller-ID occupancy before emitting the
+specific slug code; a preflight slug lookup does not replace database uniqueness.
+Real HTTP/PostgreSQL regression coverage verifies the rejected insert, corrected
+same-ID create, occupied-ID distinction and final row count.

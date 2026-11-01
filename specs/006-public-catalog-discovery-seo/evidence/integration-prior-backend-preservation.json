@@ -1,0 +1,177 @@
+{
+  "allPreserved": true,
+  "rows": [
+    {
+      "path": "apps/api/src/app.integration.test.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/app.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/content.integration.test.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/infrastructure/email/email.service.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/infrastructure/logger/request-sanitizer.test.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/infrastructure/logger/request-sanitizer.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/infrastructure/media/media-read-integrity.test.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/infrastructure/media/media-read-integrity.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/infrastructure/media/media.errors.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/infrastructure/openapi/openapi.test.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/infrastructure/openapi/openapi.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/infrastructure/security/index.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/infrastructure/security/jwt-tokens.test.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/infrastructure/security/jwt-tokens.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/infrastructure/security/jwt.service.test.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/infrastructure/security/jwt.service.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/media.integration.test.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/middlewares/auth.middleware.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/middlewares/error-handler.middleware.test.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/middlewares/error-handler.middleware.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/middlewares/not-found.middleware.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/middlewares/validation.middleware.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/modules/auth/auth.service.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/modules/content/content.mapper.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/modules/content/content.queries.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/modules/content/content.routes.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/modules/content/content.types.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/modules/content/dto/content.dto.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/modules/content/public-content.controller.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/modules/content/public-content.integration.test.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/modules/content/public-content.service.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/modules/media/media.errors.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/modules/media/media.reconcile.integration.test.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/modules/media/media.service.integration.test.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/modules/media/media.service.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/router.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/src/test-support/http-server.test-helper.ts",
+      "preserved": true
+    },
+    {
+      "path": "apps/api/vitest.setup.ts",
+      "preserved": true
+    },
+    {
+      "path": "packages/contracts/src/content/content.schema.test.ts",
+      "preserved": true
+    },
+    {
+      "path": "packages/contracts/src/content/content.schema.ts",
+      "preserved": true
+    },
+    {
+      "path": "packages/contracts/src/index.ts",
+      "preserved": true
+    },
+    {
+      "path": "packages/database/tests/integration/content-domain.integration.test.ts",
+      "preserved": true
+    },
+    {
+      "path": "packages/database/tests/integration/migration.integration.test.ts",
+      "preserved": true
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "passed": true,
+  "version": "after",
+  "cdpMax": 2,
+  "cdpEvents": [
+    {
+      "id": "33536.319",
+      "index": 1,
+      "kind": "start",
+      "time": 289082.693366
+    },
+    {
+      "id": "33536.351",
+      "index": 2,
+      "kind": "start",
+      "time": 289085.496765
+    },
+    {
+      "id": "33536.352",
+      "index": 3,
+      "kind": "start",
+      "time": 289085.496969
+    },
+    {
+      "id": "33536.319",
+      "kind": "finish",
+      "time": 289085.492591
+    },
+    {
+      "id": "33536.351",
+      "kind": "finish",
+      "time": 289085.583317
+    },
+    {
+      "id": "33536.352",
+      "kind": "finish",
+      "time": 289085.583344
+    }
+  ],
+  "cdpScope": "GET content only; CORS preflight excluded",
+  "viewport": 320,
+  "profile": {
+    "slow": true,
+    "latencyMs": 150,
+    "downloadBytesPerSecond": 196608
+  },
+  "persistedPages": 30,
+  "firstUsefulMs": 2854,
+  "encodedDataBytesBeforeUseful": 375161,
+  "initialRequests": [1, 2, 3],
+  "initialWindowRequests": [1, 2, 3],
+  "initialPreparedMs": 2891,
+  "maxApplicationOutstandingContentRequests": 3,
+  "requests": [
+    {
+      "index": 1,
+      "startedMs": 47
+    },
+    {
+      "index": 2,
+      "startedMs": 2851
+    },
+    {
+      "index": 3,
+      "startedMs": 2851
+    }
+  ],
+  "boundaries": [],
+  "resources": {
+    "base": {
+      "active": 0,
+      "bytes": 0,
+      "maximum": 0,
+      "maxBytes": 0
+    },
+    "firstReady": {
+      "active": 1,
+      "bytes": 375161,
+      "maximum": 1,
+      "maxBytes": 375161
+    },
+    "atEnd": {
+      "active": 1,
+      "bytes": 375161,
+      "maximum": 1,
+      "maxBytes": 375161
+    },
+    "afterClose": {
+      "active": 0,
+      "bytes": 0,
+      "maximum": 1,
+      "maxBytes": 375161
+    }
+  },
+  "layout": {
+    "width": 320,
+    "scrollWidth": 320,
+    "initialFirstPageHeight": 317.328125,
+    "readyFirstPageHeight": 317.328125,
+    "shifts": []
+  },
+  "heap": {
+    "usedSize": 20159224,
+    "totalSize": 35373056,
+    "limit": "JavaScript heap only; excludes native decoder/GPU animation memory"
+  },
+  "measurement": "One controlled real-Chromium/Express/PostgreSQL sample; warm means retained ready pages within this open viewer, not cross-session protected persistence"
+}

@@ -1,0 +1,58 @@
+{
+  "path": "/story/1/chapter/1",
+  "title": "Fury",
+  "headings": [
+    "Trait Hoarder - الفصل 01",
+    "تعليقات الفصل",
+    "روابط سريعة",
+    "الدعم",
+    "المجتمع"
+  ],
+  "alerts": [""],
+  "images": [
+    {
+      "loaded": true,
+      "srcKind": "https"
+    },
+    {
+      "loaded": true,
+      "srcKind": "https"
+    },
+    {
+      "loaded": true,
+      "srcKind": "https"
+    },
+    {
+      "loaded": true,
+      "srcKind": "https"
+    },
+    {
+      "loaded": false,
+      "srcKind": "https"
+    },
+    {
+      "loaded": false,
+      "srcKind": "https"
+    },
+    {
+      "loaded": false,
+      "srcKind": "https"
+    },
+    {
+      "loaded": false,
+      "srcKind": "https"
+    },
+    {
+      "loaded": true,
+      "srcKind": "https"
+    },
+    {
+      "loaded": true,
+      "srcKind": "https"
+    },
+    {
+      "loaded": true,
+      "srcKind": "https"
+    }
+  ]
+}

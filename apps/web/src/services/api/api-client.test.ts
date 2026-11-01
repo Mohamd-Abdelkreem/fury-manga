@@ -19,6 +19,12 @@ const navigationMocks = vi.hoisted(() => ({
   getLocation: vi.fn(() => ({ pathname: "/", search: "" })),
 }));
 
+vi.mock("@/config/public-environment", () => ({
+  publicEnvironment: Object.freeze({
+    NEXT_PUBLIC_API_URL: "http://localhost:4000/api/v1///",
+  }),
+}));
+
 vi.mock("./browser-location", () => ({
   assignBrowserLocation: navigationMocks.assign,
   getBrowserLocation: navigationMocks.getLocation,
@@ -101,6 +107,7 @@ const refreshResponse = (config: InternalAxiosRequestConfig) =>
 const defaultAdapter = apiClient.defaults.adapter;
 
 afterEach(() => {
+  vi.unstubAllGlobals();
   clearAccessToken();
   if (defaultAdapter !== undefined) apiClient.defaults.adapter = defaultAdapter;
   navigationMocks.assign.mockReset();
@@ -505,5 +512,135 @@ describe("apiClient transport security", () => {
         : rejectFor(config);
     await expect(apiClient.get("/users/me")).rejects.toBeDefined();
     expect(navigationMocks.assign).not.toHaveBeenCalled();
+  });
+});
+
+describe("credential-free public reads", () => {
+  it("uses the final fetch adapter with omitted credentials and no inherited authority", async () => {
+    const outgoing: Request[] = [];
+    const fallback = vi.fn((config: InternalAxiosRequestConfig) =>
+      Promise.resolve(responseFor(config, { ok: true })),
+    );
+    apiClient.defaults.adapter = fallback;
+    vi.stubGlobal("fetch", (input: RequestInfo | URL) => {
+      if (!(input instanceof Request)) throw new Error("Expected a Request.");
+      outgoing.push(input);
+      return Promise.resolve(
+        new Response(JSON.stringify({ ok: true }), {
+          headers: { "content-type": "application/json" },
+        }),
+      );
+    });
+    setAccessToken("private-session-token");
+    Object.defineProperty(document, "cookie", {
+      configurable: true,
+      value: "csrfToken=private-csrf; refreshToken=private-refresh",
+    });
+
+    const response = await apiClient.get("/content/catalog/works", {
+      furyPublicRead: true,
+      withCredentials: true,
+      withXSRFToken: true,
+      auth: { username: "private-user", password: "private-password" },
+      headers: {
+        Authorization: "inherited-bearer",
+        Cookie: "refreshToken=inherited-refresh",
+        "x-csrf-token": "inherited-csrf",
+        "Proxy-Authorization": "inherited-proxy",
+      },
+      fetchOptions: {
+        credentials: "include",
+        headers: { Authorization: "fetch-option-bearer" },
+      },
+    });
+
+    expect(response.data).toEqual({ ok: true });
+    expect(fallback).not.toHaveBeenCalled();
+    expect(outgoing).toHaveLength(1);
+    expect(outgoing[0]?.credentials).toBe("omit");
+    for (const header of [
+      "authorization",
+      "cookie",
+      "x-csrf-token",
+      "proxy-authorization",
+    ]) {
+      expect(outgoing[0]?.headers.has(header), header).toBe(false);
+    }
+    expect(getAccessToken()).toEqual({
+      kind: "value",
+      value: "private-session-token",
+    });
+  });
+
+  it("preserves the session and public 401 without refresh or login navigation", async () => {
+    const protectedAdapter = vi.fn((config: InternalAxiosRequestConfig) =>
+      rejectFor(config),
+    );
+    apiClient.defaults.adapter = protectedAdapter;
+    vi.stubGlobal("fetch", () =>
+      Promise.resolve(
+        new Response(JSON.stringify(errorEnvelope(401, "UNAUTHORIZED")), {
+          status: 401,
+          headers: { "content-type": "application/json" },
+        }),
+      ),
+    );
+    setAccessToken("still-valid-private-token");
+
+    const failure = await captureFailure(
+      apiClient.get("/content/catalog/works", { furyPublicRead: true }),
+    );
+
+    expect(getApiError(failure).statusCode).toBe(401);
+    expect(protectedAdapter).not.toHaveBeenCalled();
+    expect(navigationMocks.assign).not.toHaveBeenCalled();
+    expect(getAccessToken()).toEqual({
+      kind: "value",
+      value: "still-valid-private-token",
+    });
+  });
+
+  it("refuses using public mode to bypass unsafe-request protection", async () => {
+    const adapter = vi.fn((config: InternalAxiosRequestConfig) =>
+      Promise.resolve(responseFor(config, {})),
+    );
+    apiClient.defaults.adapter = adapter;
+    await expect(
+      apiClient.post("/content/admin/works", {}, { furyPublicRead: true }),
+    ).rejects.toThrow("Public transport supports GET requests only.");
+    expect(adapter).not.toHaveBeenCalled();
+  });
+
+  it.each(["http://[private-sentinel", "javascript:private-sentinel"])(
+    "rejects a malformed or non-HTTP public URL without disclosing it: %s",
+    async (url) => {
+      const fetchBoundary = vi.fn(() => Promise.resolve(new Response("{}")));
+      vi.stubGlobal("fetch", fetchBoundary);
+      const failure = await captureFailure(
+        apiClient.get(url, { furyPublicRead: true }),
+      );
+      expect(failure).toBeInstanceOf(Error);
+      expect(failure).toHaveProperty(
+        "message",
+        "Public transport requires a valid HTTP URL.",
+      );
+      expect(fetchBoundary).not.toHaveBeenCalled();
+    },
+  );
+
+  it("rejects credentials embedded in a public URL before dispatch", async () => {
+    const adapter = vi.fn((config: InternalAxiosRequestConfig) =>
+      Promise.resolve(responseFor(config, {})),
+    );
+    apiClient.defaults.adapter = adapter;
+    await expect(
+      apiClient.get(
+        "https://private-user:private-password@example.test/catalog",
+        {
+          furyPublicRead: true,
+        },
+      ),
+    ).rejects.toThrow("Public transport cannot use URL credentials.");
+    expect(adapter).not.toHaveBeenCalled();
   });
 });

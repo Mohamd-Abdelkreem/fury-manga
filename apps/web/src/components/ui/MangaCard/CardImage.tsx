@@ -2,6 +2,7 @@
 
 import React from "react";
 import { BookOpenText, Flame, Palette } from "lucide-react";
+import { PublicWorkImage } from "@/features/public-catalog/components/PublicWorkImage";
 import styles from "./MangaCard.module.css";
 
 interface CardImageProps {
@@ -12,7 +13,8 @@ interface CardImageProps {
   isHot?: boolean | undefined;
   badge?: string | undefined;
   badgeIcon?: "palette" | "book" | undefined;
-  rating: number;
+  rating?: number | undefined;
+  publicSlug?: string | undefined;
 }
 
 function renderFlagImage(flag: string): React.ReactNode {
@@ -71,18 +73,29 @@ export function CardImage({
   badge,
   badgeIcon = "palette",
   rating,
+  publicSlug,
 }: CardImageProps) {
-  const showAccentBadge = isNew || badge || !isHot;
-  const showHotBadge = isHot || rating >= 4.7;
+  const publicCatalog = publicSlug !== undefined;
+  const showAccentBadge = publicCatalog ? badge : isNew || badge || !isHot;
+  const showHotBadge = isHot || (rating !== undefined && rating >= 4.7);
 
   return (
     <>
-      <img
-        src={src}
-        alt={title}
-        loading="lazy"
-        className={styles["coverImage"]}
-      />
+      {publicSlug !== undefined ? (
+        <PublicWorkImage
+          slug={publicSlug}
+          alt={title}
+          className={styles["coverImage"]}
+          retryable={false}
+        />
+      ) : (
+        <img
+          src={src}
+          alt={title}
+          loading="lazy"
+          className={styles["coverImage"]}
+        />
+      )}
 
       {/* Origin Flag */}
       {flag && (

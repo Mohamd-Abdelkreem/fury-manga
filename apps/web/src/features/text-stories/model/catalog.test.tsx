@@ -1,85 +1,89 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
-
+import { render, screen, fireEvent } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { normalizeCatalogSearch } from "@/features/public-catalog/model/catalog-query";
 import { TextStoriesListing } from "../components/TextStoriesListing/TextStoriesListing";
-import { TEXT_WORKS } from "../data/textStories";
-import {
-  catalogHref,
-  filterAndSortTextWorks,
-  parseCatalogQuery,
-  type TextCatalogQuery,
-} from "./catalog";
 
-const defaultQuery: TextCatalogQuery = {
-  q: "",
-  category: "",
-  status: "",
-  type: "",
-  sort: "default",
-  page: 1,
-};
-
-describe("text story catalog", () => {
-  it.each([
-    [{ q: "City of Amber" }, ["city-of-amber"]],
-    [{ q: "قمر" }, ["paper-moon"]],
-    [{ category: "mystery", status: "archived" }, ["archive-of-ash"]],
-    [{ type: "short-story" }, ["paper-moon", "seventh-window"]],
-  ] as const)("filters fixtures for %o", (overrides, expectedIds) => {
-    const result = filterAndSortTextWorks(TEXT_WORKS, {
-      ...defaultQuery,
-      ...overrides,
-    });
-    expect(result.map((work) => work.id)).toEqual(
-      expect.arrayContaining([...expectedIds]),
+const client = new QueryClient({
+  defaultOptions: { queries: { retry: false } },
+});
+afterEach(() => {
+  client.clear();
+  vi.unstubAllGlobals();
+});
+describe("live stories selection", () => {
+  it("restricts type choices to text and preserves saved/unknown category and search", () => {
+    const { query } = normalizeCatalogSearch(
+      "category=unknown&q=Mixed&sort=chapter-latest",
+      "stories",
     );
-    expect(result).toHaveLength(expectedIds.length);
-  });
-
-  it.each([
-    ["updated", "clockmakers-daughter"],
-    ["added", "silent-orchard"],
-    ["title-asc", "ابنة صانع الساعات"],
-    ["title-desc", "منارة عند آخر البحر"],
-  ] as const)("sorts %s with the expected first work", (sort, expected) => {
-    const result = filterAndSortTextWorks(TEXT_WORKS, {
-      ...defaultQuery,
-      sort,
-    });
-    expect(sort.startsWith("title") ? result[0]?.title : result[0]?.id).toBe(
-      expected,
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(() => new Promise(() => {})),
     );
-  });
-
-  it("preserves search and filters while changing pagination in the URL", () => {
-    const query = parseCatalogQuery({
-      q: "قمر",
-      category: "fantasy",
-      status: "completed",
-      type: "short-story",
-      sort: "updated",
-      page: "2",
-    });
-    expect(catalogHref(query, { page: 3 })).toBe(
-      "/stories?q=%D9%82%D9%85%D8%B1&category=fantasy&status=completed&type=short-story&sort=updated&page=3",
+    render(
+      <QueryClientProvider client={client}>
+        <TextStoriesListing
+          query={query}
+          categories={{
+            items: [{ slug: "saved", displayName: "تصنيف محفوظ" }],
+            pagination: {
+              page: 1,
+              limit: 24,
+              total: 1,
+              totalPages: 1,
+              hasNextPage: false,
+              hasPreviousPage: false,
+            },
+          }}
+        >
+          <p>Server results</p>
+        </TextStoriesListing>
+      </QueryClientProvider>,
     );
-  });
-
-  it("renders real previous and next links for a paginated result", () => {
-    render(<TextStoriesListing query={{ ...defaultQuery, page: 1 }} />);
-    expect(
-      screen.getByRole("heading", { name: "الروايات والقصص النصية" }),
-    ).toBeInTheDocument();
-    expect(screen.getByLabelText("التصنيفات")).toHaveValue("");
-    expect(screen.getByLabelText("الحالة")).toHaveValue("");
-    expect(screen.getByLabelText("النوع")).toHaveValue("");
-    expect(screen.getByLabelText("بحسب")).toHaveValue("default");
-    expect(screen.getByRole("link", { name: "التالي" })).toHaveAttribute(
-      "href",
-      "/stories?page=2",
+    expect(screen.getByRole("combobox", { name: "التصنيفات" })).toHaveValue(
+      "unknown",
+    );
+    expect(screen.getByRole("option", { name: "تصنيف محفوظ" })).toHaveValue(
+      "saved",
     );
     expect(
-      screen.queryByRole("link", { name: "السابق" }),
+      screen.queryByRole("option", { name: "مانجا" }),
     ).not.toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "قصة نصية" })).toHaveValue(
+      "text-story",
+    );
+    expect(screen.getByRole("combobox", { name: "بحسب" })).toHaveValue(
+      "chapter-latest",
+    );
+    expect(
+      screen.getByRole("button", { name: "البحث" }).closest("form"),
+    ).toHaveAttribute("action", "/stories");
+    expect(screen.getByDisplayValue("Mixed")).toHaveAttribute("name", "q");
+  });
+  it("resets unsubmitted controls when pagination navigates to a new URL identity", () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(() => new Promise(() => {})),
+    );
+    const { query } = normalizeCatalogSearch("sort=chapter-latest", "stories");
+    const view = (page: number) => (
+      <QueryClientProvider client={client}>
+        <TextStoriesListing query={{ ...query, page }}>
+          <p>Results</p>
+        </TextStoriesListing>
+      </QueryClientProvider>
+    );
+    const { rerender } = render(view(1));
+    fireEvent.change(screen.getByRole("combobox", { name: "بحسب" }), {
+      target: { value: "title-desc" },
+    });
+    expect(screen.getByRole("combobox", { name: "بحسب" })).toHaveValue(
+      "title-desc",
+    );
+    rerender(view(2));
+    expect(screen.getByRole("combobox", { name: "بحسب" })).toHaveValue(
+      "chapter-latest",
+    );
   });
 });

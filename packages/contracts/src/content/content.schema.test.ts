@@ -13,6 +13,16 @@ import {
   adminWorkListItemSchema,
   adminWorkListQuerySchema,
   adminWorkSchema,
+  catalogSitemapDataSchema,
+  catalogNoQuerySchema,
+  catalogDetailDataSchema,
+  catalogHomeDataSchema,
+  catalogCategoryListQuerySchema,
+  catalogCategorySchema,
+  catalogWorkListQuerySchema,
+  catalogWorkSchema,
+  catalogWorkListResponseSchema,
+  catalogCategoryListResponseSchema,
   categoryListQuerySchema,
   categoryPositionBodySchema,
   contentErrorCodeSchema,
@@ -52,6 +62,7 @@ describe("content request contracts", () => {
   it("owns the complete browser-safe P01 conflict-code vocabulary", () => {
     expect(contentErrorCodeSchema.options).toEqual([
       "CONTENT_CONFLICT",
+      "CONTENT_SLUG_CONFLICT",
       "CONTENT_IMMUTABLE",
       "CONTENT_TYPE_CONFLICT",
       "CONTENT_TRANSITION_CONFLICT",
@@ -1094,5 +1105,405 @@ describe("Phase 6 administrative Work listing", () => {
     expect(
       adminWorkListItemSchema.safeParse({ ...item, views: 10 }).success,
     ).toBe(false);
+  });
+});
+
+describe("public catalog wire contracts", () => {
+  const card = {
+    slug: "saved-work",
+    title: "Saved Work",
+    alternativeTitle: null,
+    type: "manga",
+    storyStatus: "ongoing",
+    publishedAt: "2026-09-27T00:00:00.000Z",
+    categories: [{ slug: "action", displayName: "Action" }],
+    coverPath: "/api/v1/content/works/saved-work/cover",
+  };
+  const pagination = {
+    page: 1,
+    limit: 12,
+    total: 1,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  };
+  const envelope = {
+    success: true,
+    statusCode: 200,
+    message: "Catalog loaded.",
+    data: { items: [card], pagination },
+    requestId: "catalog-contract",
+    timestamp: "2026-09-27T00:00:00.000Z",
+    path: "/api/v1/content/catalog/works",
+  };
+
+  it("normalizes search and defaults without dropping an unknown category", () => {
+    expect(
+      catalogWorkListQuerySchema.parse({
+        q: "  Cafe\u0301  ",
+        category: "Unknown-Category",
+        page: "002",
+      }),
+    ).toEqual({
+      view: "all",
+      q: "Café",
+      category: "unknown-category",
+      sort: "newest",
+      page: 2,
+    });
+    expect(catalogWorkListQuerySchema.parse({ q: "   " })).toEqual({
+      view: "all",
+      sort: "newest",
+      page: 1,
+    });
+    expect(catalogCategoryListQuerySchema.parse({ q: "   " })).toEqual({
+      page: 1,
+    });
+    expect(
+      catalogWorkListQuerySchema.parse({ page: "1000", q: "x".repeat(100) })
+        .page,
+    ).toBe(1000);
+  });
+
+  it.each([
+    { page: "0" },
+    { page: "1001" },
+    { page: "1.5" },
+    { page: "1e2" },
+    { page: ["1", "2"] },
+    { q: ["first", "second"] },
+    { q: "x".repeat(101) },
+    { q: "\nprivate" },
+    { q: null },
+    { category: "" },
+    { category: ["one", "two"] },
+    { type: "short-story" },
+    { status: "unknown" },
+    { sort: "rating" },
+    { limit: "100" },
+    { view: "stories", type: "manga" },
+  ])("rejects invalid/repeated or authority-expanding query %#", (query) => {
+    expect(catalogWorkListQuerySchema.safeParse(query).success).toBe(false);
+  });
+
+  it.each(["manga", "manhwa", "manhua", "comics", "novel", "text-story"])(
+    "supports public %s cards and enforces the stories restriction",
+    (type) => {
+      expect(catalogWorkSchema.parse({ ...card, type }).type).toBe(type);
+      const result = catalogWorkListQuerySchema.safeParse({
+        view: "stories",
+        type,
+      });
+      expect(result.success).toBe(type === "novel" || type === "text-story");
+      if (!result.success)
+        expect(
+          result.error.issues.some((issue) => issue.path[0] === "type"),
+        ).toBe(true);
+    },
+  );
+
+  it.each([
+    { id: firstId },
+    { version: 1 },
+    { coverAssetId: firstId },
+    { rating: 0 },
+    { textContent: validStructuredText },
+  ])("rejects nonpublic card field %#", (privateFields) => {
+    expect(
+      catalogWorkSchema.safeParse({ ...card, ...privateFields }).success,
+    ).toBe(false);
+  });
+
+  it("accepts only work-scoped imagery and enabled category projections", () => {
+    for (const coverPath of [
+      "https://example.test/cover",
+      "/api/v1/media/assets/" + firstId + "/content",
+      "/api/v1/content/works/another-work/cover",
+      "/private/storage/cover.jpg",
+    ])
+      expect(catalogWorkSchema.safeParse({ ...card, coverPath }).success).toBe(
+        false,
+      );
+    expect(
+      catalogWorkSchema.safeParse({ ...card, alternativeTitle: "" }).success,
+    ).toBe(false);
+    expect(
+      catalogWorkSchema.safeParse({ ...card, categories: [] }).success,
+    ).toBe(false);
+    expect(
+      catalogCategorySchema.safeParse({
+        slug: "action",
+        displayName: "Action",
+        enabled: true,
+      }).success,
+    ).toBe(false);
+    expect(
+      catalogCategoryListQuerySchema.safeParse({ q: ["a", "b"] }).success,
+    ).toBe(false);
+  });
+
+  it("requires consistent optional top-level pagination and fixed page sizes", () => {
+    expect(
+      catalogWorkListResponseSchema.parse(envelope).data.items,
+    ).toHaveLength(1);
+    expect(
+      catalogWorkListResponseSchema.parse({
+        ...envelope,
+        paginationMeta: pagination,
+      }).paginationMeta,
+    ).toEqual(pagination);
+    expect(
+      catalogWorkListResponseSchema.safeParse({
+        ...envelope,
+        paginationMeta: { ...pagination, page: 2, hasPreviousPage: true },
+      }).success,
+    ).toBe(false);
+    expect(
+      catalogWorkListResponseSchema.safeParse({
+        ...envelope,
+        data: { items: [card, card], pagination: { ...pagination, total: 2 } },
+      }).success,
+    ).toBe(false);
+    expect(
+      catalogWorkListResponseSchema.safeParse({
+        ...envelope,
+        data: { items: [card], pagination: { ...pagination, limit: 25 } },
+      }).success,
+    ).toBe(false);
+    const categoryPagination = { ...pagination, limit: 24 };
+    expect(
+      catalogCategoryListResponseSchema.parse({
+        ...envelope,
+        data: { items: card.categories, pagination: categoryPagination },
+        paginationMeta: categoryPagination,
+      }).data.items,
+    ).toEqual(card.categories);
+    expect(
+      catalogCategoryListResponseSchema.safeParse({
+        ...envelope,
+        data: { items: card.categories, pagination: categoryPagination },
+        paginationMeta: pagination,
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe("public home contract", () => {
+  const category = { slug: "action", displayName: "Action" };
+  const work = {
+    slug: "saved-work",
+    title: "Saved Work",
+    alternativeTitle: null,
+    type: "novel",
+    storyStatus: "ongoing",
+    publishedAt: "2026-09-27T12:00:00.000Z",
+    categories: [category],
+    coverPath: "/api/v1/content/works/saved-work/cover",
+  };
+  const chapter = {
+    number: 1,
+    title: "Saved Chapter",
+    contentType: "text",
+    publishedAt: "2026-09-27T12:00:00.000Z",
+  };
+  const home = {
+    featured: [work],
+    categoryShortcuts: [category],
+    latestReleases: [{ work, chapter }],
+    suggestions: [{ category, works: [work] }],
+  };
+  it("accepts bounded saved projections and genuinely empty sections", () => {
+    expect(catalogHomeDataSchema.parse(home)).toEqual(home);
+    expect(
+      catalogHomeDataSchema.parse({
+        featured: [],
+        categoryShortcuts: [],
+        latestReleases: [],
+        suggestions: [],
+      }),
+    ).toEqual({
+      featured: [],
+      categoryShortcuts: [],
+      latestReleases: [],
+      suggestions: [],
+    });
+    const drama = { slug: "drama", displayName: "Drama" };
+    const shared = { ...work, categories: [category, drama] };
+    expect(
+      catalogHomeDataSchema.safeParse({
+        ...home,
+        suggestions: [
+          { category, works: [shared] },
+          { category: drama, works: [shared] },
+        ],
+      }).success,
+    ).toBe(true);
+  });
+  it.each([
+    { trending: [] },
+    { rating: 4 },
+    {
+      featured: Array.from({ length: 6 }, (_, index) => ({
+        ...work,
+        slug: `work-${String(index)}`,
+        coverPath: `/api/v1/content/works/work-${String(index)}/cover`,
+      })),
+    },
+    {
+      categoryShortcuts: Array.from({ length: 13 }, (_, index) => ({
+        slug: `category-${String(index)}`,
+        displayName: "Saved category",
+      })),
+    },
+    {
+      latestReleases: Array.from({ length: 13 }, (_, index) => ({
+        work,
+        chapter: { ...chapter, number: index + 1 },
+      })),
+    },
+    {
+      suggestions: Array.from({ length: 4 }, (_, index) => {
+        const next = {
+          slug: `category-${String(index)}`,
+          displayName: "Saved",
+        };
+        return { category: next, works: [{ ...work, categories: [next] }] };
+      }),
+    },
+    { featured: [work, work] },
+    { suggestions: [{ category, works: [] }] },
+    { suggestions: [{ category, works: [work, work] }] },
+    {
+      suggestions: [
+        { category: { slug: "other", displayName: "Other" }, works: [work] },
+      ],
+    },
+    {
+      latestReleases: [
+        {
+          work,
+          chapter: { ...chapter, textContent: { version: 1, blocks: [] } },
+        },
+      ],
+    },
+  ])(
+    "rejects extra claims, duplicate identities, wrong membership and unbounded sections: %j",
+    (override) => {
+      expect(
+        catalogHomeDataSchema.safeParse({ ...home, ...override }).success,
+      ).toBe(false);
+    },
+  );
+});
+
+describe("public detail contract", () => {
+  const work = {
+    slug: "saved-work",
+    title: "Saved Work",
+    alternativeTitle: null,
+    type: "novel",
+    storyStatus: "ongoing",
+    publishedAt: "2026-09-27T12:00:00.000Z",
+    categories: [{ slug: "action", displayName: "Action" }],
+    coverPath: "/api/v1/content/works/saved-work/cover",
+    synopsis: "A complete saved public synopsis.",
+    author: "Saved Author",
+    artist: null,
+    tags: [],
+    backgroundPath: null,
+  };
+  const pagination = {
+    page: 1,
+    limit: 25,
+    total: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  };
+  const empty = {
+    work,
+    chapters: { items: [], pagination },
+    firstChapter: null,
+    latestChapter: null,
+    similar: [],
+  };
+  const chapter = {
+    number: 7,
+    title: "Saved Chapter",
+    contentType: "text",
+    publishedAt: "2026-09-27T12:00:00.000Z",
+  };
+  it("accepts absent optional fields, zero Chapters and full-set boundary summaries", () => {
+    expect(catalogDetailDataSchema.parse(empty)).toEqual(empty);
+    const detail = {
+      ...empty,
+      chapters: {
+        items: [chapter],
+        pagination: { ...pagination, total: 1, totalPages: 1 },
+      },
+      firstChapter: chapter,
+      latestChapter: chapter,
+    };
+    expect(catalogDetailDataSchema.parse(detail)).toEqual(detail);
+    expect(
+      catalogDetailDataSchema.safeParse({
+        ...empty,
+        work: {
+          ...work,
+          artist: "Saved Artist",
+          tags: ["saved"],
+          backgroundPath: "/api/v1/content/works/saved-work/background",
+        },
+      }).success,
+    ).toBe(true);
+  });
+  it.each([
+    { work: { ...work, id: "private" } },
+    { work: { ...work, author: "" } },
+    { work: { ...work, artist: "" } },
+    {
+      work: { ...work, backgroundPath: "/api/v1/media/assets/private/content" },
+    },
+    {
+      chapters: {
+        items: [{ ...chapter, textContent: {} }],
+        pagination: { ...pagination, total: 1, totalPages: 1 },
+      },
+    },
+    { chapters: { items: [], pagination: { ...pagination, limit: 100 } } },
+    { firstChapter: chapter },
+    { similar: [{ ...work, synopsis: undefined }] },
+  ])(
+    "rejects private, unsafe and contradictory detail outputs: %j",
+    (override) => {
+      expect(
+        catalogDetailDataSchema.safeParse({ ...empty, ...override }).success,
+      ).toBe(false);
+    },
+  );
+});
+
+describe("complete sitemap projection", () => {
+  it("accepts only a complete distinct slug projection and no query", () => {
+    expect(catalogSitemapDataSchema.parse({ items: [] })).toEqual({
+      items: [],
+    });
+    expect(
+      catalogSitemapDataSchema.parse({
+        items: [{ slug: "saved-work" }, { slug: "second-work" }],
+      }),
+    ).toEqual({ items: [{ slug: "saved-work" }, { slug: "second-work" }] });
+    expect(catalogNoQuerySchema.parse({})).toEqual({});
+  });
+  it.each([
+    { items: [{ slug: "saved-work", id: "private" }] },
+    { items: [{ slug: "same" }, { slug: "same" }] },
+    { items: [], cursor: "private" },
+    { items: [{ slug: "invalid/slug" }] },
+  ])("rejects private/duplicate/invalid sitemap output %j", (value) => {
+    expect(catalogSitemapDataSchema.safeParse(value).success).toBe(false);
+  });
+  it("rejects unsupported sitemap query parameters", () => {
+    expect(catalogNoQuerySchema.safeParse({ page: "1" }).success).toBe(false);
   });
 });

@@ -1,51 +1,11 @@
 "use client";
 
-import Image from "next/image";
-import { useEffect, useRef } from "react";
 import {
   structuredTextInlineSchema,
   type StructuredTextDocument,
 } from "@fury/contracts";
-import { useAdminMediaCandidate } from "@/features/media/hooks/media.hooks";
-
-type IllustratedPage = Readonly<{ id?: string; assetId: string }>;
-
-function PrivateChapterPage({
-  assetId,
-  position,
-}: Readonly<{ assetId: string; position: number }>) {
-  const { state, load } = useAdminMediaCandidate("chapter_page");
-  const loadRef = useRef(load);
-
-  useEffect(() => {
-    loadRef.current = load;
-  });
-
-  useEffect(() => {
-    void loadRef.current(assetId);
-  }, [assetId]);
-
-  return (
-    <li>
-      {state.previewUrl === null || state.assetId !== assetId ? (
-        <p role="status">
-          {state.phase === "error"
-            ? "تعذر عرض الصورة الخاصة."
-            : "جارٍ تحميل الصفحة…"}
-        </p>
-      ) : (
-        <Image
-          src={state.previewUrl}
-          alt={`صفحة ${String(position)}`}
-          width={720}
-          height={1024}
-          unoptimized
-          style={{ display: "block", width: "100%", height: "auto" }}
-        />
-      )}
-    </li>
-  );
-}
+import type { IllustratedPage } from "../model/progressive-images";
+import { IllustratedChapterPages } from "./IllustratedChapterPages";
 
 function StructuredText({
   document,
@@ -105,24 +65,22 @@ function StructuredText({
 export function ChapterContentRenderer({
   pages,
   document,
+  scopeKey = "preview",
 }: Readonly<
-  | { pages: readonly IllustratedPage[]; document?: never }
-  | { pages?: never; document: StructuredTextDocument | null }
+  | { pages: readonly IllustratedPage[]; document?: never; scopeKey?: string }
+  | {
+      pages?: never;
+      document: StructuredTextDocument | null;
+      scopeKey?: string;
+    }
 >) {
   if (document !== undefined) return <StructuredText document={document} />;
   if (pages.length === 0) return <p>لا توجد صفحات للمعاينة.</p>;
   return (
-    <ol
-      aria-label="صفحات الفصل المصور"
-      style={{ listStyle: "none", padding: 0, margin: 0 }}
-    >
-      {pages.map((page, index) => (
-        <PrivateChapterPage
-          key={page.id ?? `${page.assetId}-${String(index)}`}
-          assetId={page.assetId}
-          position={index + 1}
-        />
-      ))}
-    </ol>
+    <IllustratedChapterPages
+      key={`${scopeKey}:${pages.map((page) => page.id ?? page.assetId).join(":")}`}
+      pages={pages}
+      scopeKey={scopeKey}
+    />
   );
 }

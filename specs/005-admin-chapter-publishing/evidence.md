@@ -240,3 +240,32 @@ Guard review: `clean-code-guard` found the shared schema and explicit public map
 ## Owner requirements-review disposition — 2026-09-27
 
 The owner confirmed completed human review of the written P04 requirements. All 37 reviewer-owned items in `checklists/readiness.md` are accepted. The preceding implementation evidence remains an isolated synthetic-data acceptance, not proof of real populated-data migration, deployment recovery, inherited phase exits, or P04 release acceptance.
+
+## Legacy closeout reconciliation — 2026-10-31
+
+PHASE_ID=P04 / TASK_SCOPE=T076,T077,T078,T079,T080,T081 (existing evidence reconciliation; no P04 application edits). All 94 task identities and the ten existing Markdown artifacts were compared with the accepted synthetic-development decision and current Chapter owners. The separate expand/enforce forward migrations, shared title-bearing metadata contract, canonical text schema, retained page/reference identities, focused Chapter/publication services, read-only inventory and scoped admin API/hooks/editor/renderer remain implemented. Earlier combined service/controller paths were deliberately replaced by P01 T072; source ownership resolves to the focused owners rather than missing work. No schema or migration was rewritten in this closeout.
+
+Fresh final shared verification passed the real PostgreSQL migration/domain/recovery suites (5 files / 36 tests) and real Express/service/media suites (11 / 156), including synthetic populated expand → failed enforcement → recorded repair → zero-violation inventory → separate enforcement/redeploy, paired synthetic database/media restore, immutable events, direct integrity constraints, page-set rollback, type-correct text, parent/Chapter eligibility, stale/concurrent commands and private media authority. Current web regressions (72 / 474, freshly executed in the preceding pattern aggregate and reused unchanged in the final enum aggregate) retain editor/preview, ordering, actor/Work/Chapter denial fences, dirty drafts, unknown outcomes and focus tests. See the P05 evidence owner for exact final commands/caches/failures; no green unit suite is substituted for real persistence or HTTP.
+
+The detailed 2026-09-27 real Chromium illustrated/text/admin/denial/viewport and same-state/race journeys above remain reused historical evidence. This run did not repeat their full browser matrix, physical devices, other engines or a deployment cutover. The current existing presentation remains frozen; the only unrelated component syntax repair is P03 T105. The isolated runtime used synthetic published illustrated/text Works and Chapters and retained counts after public GETs; it does not represent a deployment dataset.
+
+Read-only convergence found no additional unowned technical remediation. The owner's written requirements acceptance and synthetic task completion are retained, with no checklist changes. **P04 T001/T089's inherited formal exits and independent phase disposition remain unaccepted.** T006/T043/T084/T091's future real-data inventory/editorial decisions, matching deployment recovery point, staged cutover and rollback evidence remain **release-only external obligations** under the recorded owner exception; successful synthetic proof does not discharge them. They are not relabeled as a P06 admission requirement or waived: PLAN §10 still independently blocks P06 through unfinished P05/formal predecessor exits. No production accounts, providers, migrations, messages or deployment were used.
+
+## Independent legacy acceptance reconciliation — 2026-11-01
+
+The separately authorized independent reviewer `/root/legacy_review` inspected
+literal task/phase criteria, current owners, historical execution records and
+accepted written requirements. The final post-T082 shared verification is linked
+in [P05 evidence](../006-public-catalog-discovery-seo/evidence.md); it is a local
+synthetic check, not production or human artwork approval. No written-review or
+human acceptance marker was changed.
+
+P04 T001 is complete because it permits named blockers; T089's
+synthetic exception record is also complete. Independent technical review of T081
+supports local implementation **PASS**: both Chapter kinds persist/reload/preview,
+page position/retirement invariants, sanitized structured text, idempotent events,
+parent/Chapter eligibility, authorization and excluded-feature boundaries have
+actual historical/current regression evidence. Formal inherited acceptance remains
+**BLOCKED through P02/P03**. T006/T043/T084/T091's actual deployment inventory,
+editorial choices, paired production recovery and cutover/rollback obligations
+remain explicitly release-only under the existing accepted isolated-data exception.

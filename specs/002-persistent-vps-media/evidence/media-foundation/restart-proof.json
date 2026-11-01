@@ -1,0 +1,26 @@
+{
+  "realOperatingSystemApiRestart": true,
+  "before": {
+    "status": 200,
+    "contentType": "image/webp",
+    "cacheControl": "no-store",
+    "sha256": "7a7aeb7ad4ffdb50596f4c409e6781fc527ba316550f0be5054e1f19634aaa8e",
+    "bytes": 276,
+    "pages": 3,
+    "canvas": [600, 800],
+    "loop": 0,
+    "delay": [80, 140, 200]
+  },
+  "after": {
+    "status": 200,
+    "contentType": "image/webp",
+    "cacheControl": "no-store",
+    "sha256": "7a7aeb7ad4ffdb50596f4c409e6781fc527ba316550f0be5054e1f19634aaa8e",
+    "bytes": 276,
+    "pages": 3,
+    "canvas": [600, 800],
+    "loop": 0,
+    "delay": [80, 140, 200]
+  },
+  "matchingStoredBytes": true
+}

@@ -1,0 +1,47 @@
+{
+  "passed": true,
+  "reportedConnection": {
+    "saveData": true,
+    "effectiveType": "4g",
+    "source": "Controlled native EventTarget network-preference boundary, not a physical data-saver/device claim"
+  },
+  "initialRequests": [1, 1, 2, 3, 4, 5],
+  "afterJump": [1, 1, 2, 3, 4, 5, 25, 26, 24],
+  "requests": [
+    1, 1, 2, 3, 4, 5, 25, 26, 24, 27, 23, 28, 29, 5, 6, 4, 7, 3, 8, 11, 11, 25,
+    26, 24, 27, 23, 28, 1, 2, 3, 4, 5
+  ],
+  "failed": [
+    {
+      "url": "54cd25f0-d2f1-4ea6-8620-043476e09ace/content",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "url": "8674ca88-fc03-4f3a-a9e0-9efd158f40af/content",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "url": "cdeb1a27-050f-45c4-bbd7-99f1734da809/content",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "url": "8af1ee40-ef2f-41c7-ad42-dcaa6c60932c/content",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    }
+  ],
+  "actualExpressPrivateWrongActor": 404,
+  "actualExpressAdminEndpointDenial": 403,
+  "denialInjection": "Real USER content GET returns non-disclosing 404; real administrator Chapter endpoint returns403, replayed at controlled media transport boundary to verify global denial fencing",
+  "individual503": "Controlled network fault then actual authenticated read retry",
+  "deniedRecoveryJump": "Retry11 then immediate jump25 under250ms latency; explicit retry surface at25 recovered",
+  "ownedUrlsAfterClose": 0,
+  "scope": "Current draft to saved persisted preview; exact Chapter/account/unmount races also covered at real QueryClient/transport boundary"
+}

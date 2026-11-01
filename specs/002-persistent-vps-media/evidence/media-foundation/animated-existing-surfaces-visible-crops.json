@@ -1,0 +1,412 @@
+{
+  "passed": true,
+  "results": [
+    {
+      "reduced": false,
+      "privateImages": [
+        {
+          "alt": "صفحة 2",
+          "width": 600,
+          "height": 800,
+          "type": "image/webp",
+          "distinctColors": 3,
+          "samples": [
+            {
+              "ms": 39,
+              "pngFingerprint": "4fea5fb3"
+            },
+            {
+              "ms": 155,
+              "pngFingerprint": "4d3cd53c"
+            },
+            {
+              "ms": 278,
+              "pngFingerprint": "de1ed9e6"
+            },
+            {
+              "ms": 393,
+              "pngFingerprint": "de1ed9e6"
+            },
+            {
+              "ms": 506,
+              "pngFingerprint": "4fea5fb3"
+            },
+            {
+              "ms": 627,
+              "pngFingerprint": "4d3cd53c"
+            },
+            {
+              "ms": 743,
+              "pngFingerprint": "de1ed9e6"
+            },
+            {
+              "ms": 861,
+              "pngFingerprint": "4fea5fb3"
+            },
+            {
+              "ms": 975,
+              "pngFingerprint": "4d3cd53c"
+            },
+            {
+              "ms": 1091,
+              "pngFingerprint": "de1ed9e6"
+            }
+          ]
+        },
+        {
+          "alt": "صفحة 6",
+          "width": 600,
+          "height": 800,
+          "type": "image/webp",
+          "distinctColors": 3,
+          "samples": [
+            {
+              "ms": 30,
+              "pngFingerprint": "84c1d623"
+            },
+            {
+              "ms": 147,
+              "pngFingerprint": "b09fd76d"
+            },
+            {
+              "ms": 261,
+              "pngFingerprint": "b09fd76d"
+            },
+            {
+              "ms": 381,
+              "pngFingerprint": "60e1eed"
+            },
+            {
+              "ms": 498,
+              "pngFingerprint": "84c1d623"
+            },
+            {
+              "ms": 616,
+              "pngFingerprint": "b09fd76d"
+            },
+            {
+              "ms": 732,
+              "pngFingerprint": "60e1eed"
+            },
+            {
+              "ms": 848,
+              "pngFingerprint": "60e1eed"
+            },
+            {
+              "ms": 968,
+              "pngFingerprint": "84c1d623"
+            },
+            {
+              "ms": 1081,
+              "pngFingerprint": "b09fd76d"
+            }
+          ]
+        }
+      ],
+      "publicImages": [
+        {
+          "alt": "",
+          "width": 900,
+          "height": 500,
+          "type": "image/webp",
+          "distinctColors": 3,
+          "samples": [
+            {
+              "ms": 38,
+              "pngFingerprint": "d5c13f75"
+            },
+            {
+              "ms": 158,
+              "pngFingerprint": "affc7c54"
+            },
+            {
+              "ms": 273,
+              "pngFingerprint": "17d6f7f2"
+            },
+            {
+              "ms": 395,
+              "pngFingerprint": "17d6f7f2"
+            },
+            {
+              "ms": 509,
+              "pngFingerprint": "affc7c54"
+            },
+            {
+              "ms": 624,
+              "pngFingerprint": "17d6f7f2"
+            },
+            {
+              "ms": 738,
+              "pngFingerprint": "17d6f7f2"
+            },
+            {
+              "ms": 858,
+              "pngFingerprint": "d5c13f75"
+            },
+            {
+              "ms": 974,
+              "pngFingerprint": "affc7c54"
+            },
+            {
+              "ms": 1089,
+              "pngFingerprint": "17d6f7f2"
+            }
+          ]
+        },
+        {
+          "alt": "Media Foundation عمل",
+          "width": 600,
+          "height": 800,
+          "type": "image/webp",
+          "distinctColors": 3,
+          "samples": [
+            {
+              "ms": 23,
+              "pngFingerprint": "60e1eed"
+            },
+            {
+              "ms": 143,
+              "pngFingerprint": "b09fd76d"
+            },
+            {
+              "ms": 259,
+              "pngFingerprint": "b09fd76d"
+            },
+            {
+              "ms": 377,
+              "pngFingerprint": "60e1eed"
+            },
+            {
+              "ms": 496,
+              "pngFingerprint": "84c1d623"
+            },
+            {
+              "ms": 609,
+              "pngFingerprint": "b09fd76d"
+            },
+            {
+              "ms": 729,
+              "pngFingerprint": "60e1eed"
+            },
+            {
+              "ms": 842,
+              "pngFingerprint": "60e1eed"
+            },
+            {
+              "ms": 960,
+              "pngFingerprint": "84c1d623"
+            },
+            {
+              "ms": 1075,
+              "pngFingerprint": "b09fd76d"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "reduced": true,
+      "privateImages": [
+        {
+          "alt": "صفحة 2",
+          "width": 600,
+          "height": 800,
+          "type": "image/png",
+          "distinctColors": 1,
+          "samples": [
+            {
+              "ms": 37,
+              "pngFingerprint": "4fea5fb3"
+            },
+            {
+              "ms": 153,
+              "pngFingerprint": "4fea5fb3"
+            },
+            {
+              "ms": 270,
+              "pngFingerprint": "4fea5fb3"
+            },
+            {
+              "ms": 389,
+              "pngFingerprint": "4fea5fb3"
+            },
+            {
+              "ms": 507,
+              "pngFingerprint": "4fea5fb3"
+            },
+            {
+              "ms": 621,
+              "pngFingerprint": "4fea5fb3"
+            },
+            {
+              "ms": 738,
+              "pngFingerprint": "4fea5fb3"
+            },
+            {
+              "ms": 854,
+              "pngFingerprint": "4fea5fb3"
+            },
+            {
+              "ms": 971,
+              "pngFingerprint": "4fea5fb3"
+            },
+            {
+              "ms": 1088,
+              "pngFingerprint": "4fea5fb3"
+            }
+          ]
+        },
+        {
+          "alt": "صفحة 6",
+          "width": 600,
+          "height": 800,
+          "type": "image/png",
+          "distinctColors": 1,
+          "samples": [
+            {
+              "ms": 29,
+              "pngFingerprint": "84c1d623"
+            },
+            {
+              "ms": 143,
+              "pngFingerprint": "84c1d623"
+            },
+            {
+              "ms": 262,
+              "pngFingerprint": "84c1d623"
+            },
+            {
+              "ms": 379,
+              "pngFingerprint": "84c1d623"
+            },
+            {
+              "ms": 496,
+              "pngFingerprint": "84c1d623"
+            },
+            {
+              "ms": 613,
+              "pngFingerprint": "84c1d623"
+            },
+            {
+              "ms": 729,
+              "pngFingerprint": "84c1d623"
+            },
+            {
+              "ms": 846,
+              "pngFingerprint": "84c1d623"
+            },
+            {
+              "ms": 963,
+              "pngFingerprint": "84c1d623"
+            },
+            {
+              "ms": 1080,
+              "pngFingerprint": "84c1d623"
+            }
+          ]
+        }
+      ],
+      "publicImages": [
+        {
+          "alt": "",
+          "width": 900,
+          "height": 500,
+          "type": "image/png",
+          "distinctColors": 1,
+          "samples": [
+            {
+              "ms": 28,
+              "pngFingerprint": "d5c13f75"
+            },
+            {
+              "ms": 145,
+              "pngFingerprint": "d5c13f75"
+            },
+            {
+              "ms": 263,
+              "pngFingerprint": "d5c13f75"
+            },
+            {
+              "ms": 380,
+              "pngFingerprint": "d5c13f75"
+            },
+            {
+              "ms": 496,
+              "pngFingerprint": "d5c13f75"
+            },
+            {
+              "ms": 613,
+              "pngFingerprint": "d5c13f75"
+            },
+            {
+              "ms": 730,
+              "pngFingerprint": "d5c13f75"
+            },
+            {
+              "ms": 847,
+              "pngFingerprint": "d5c13f75"
+            },
+            {
+              "ms": 963,
+              "pngFingerprint": "d5c13f75"
+            },
+            {
+              "ms": 1080,
+              "pngFingerprint": "d5c13f75"
+            }
+          ]
+        },
+        {
+          "alt": "Media Foundation عمل",
+          "width": 600,
+          "height": 800,
+          "type": "image/png",
+          "distinctColors": 1,
+          "samples": [
+            {
+              "ms": 25,
+              "pngFingerprint": "84c1d623"
+            },
+            {
+              "ms": 143,
+              "pngFingerprint": "84c1d623"
+            },
+            {
+              "ms": 260,
+              "pngFingerprint": "84c1d623"
+            },
+            {
+              "ms": 377,
+              "pngFingerprint": "84c1d623"
+            },
+            {
+              "ms": 495,
+              "pngFingerprint": "84c1d623"
+            },
+            {
+              "ms": 609,
+              "pngFingerprint": "84c1d623"
+            },
+            {
+              "ms": 726,
+              "pngFingerprint": "84c1d623"
+            },
+            {
+              "ms": 843,
+              "pngFingerprint": "84c1d623"
+            },
+            {
+              "ms": 961,
+              "pngFingerprint": "84c1d623"
+            },
+            {
+              "ms": 1075,
+              "pngFingerprint": "84c1d623"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "measurement": "Native production Chromium visible compositor crop screenshots, ten timed samples per displayed image; canvas drawImage uses a default still frame and is not animation evidence. Stored originals independently retain three WebP frames"
+}

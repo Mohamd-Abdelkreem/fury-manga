@@ -1,0 +1,77 @@
+{
+  "passed": true,
+  "operations": [
+    {
+      "kind": "owned disposable media integrity transition",
+      "imageKind": "cover",
+      "action": "missing",
+      "assetStatus": "AVAILABLE",
+      "workStatus": "PUBLISHED",
+      "publicationEventsBefore": 111,
+      "publicationEventsAfter": 111
+    },
+    {
+      "kind": "owned disposable media integrity transition",
+      "imageKind": "cover",
+      "action": "restore-bytes",
+      "assetStatus": "AVAILABLE",
+      "workStatus": "PUBLISHED",
+      "publicationEventsBefore": 111,
+      "publicationEventsAfter": 111
+    },
+    {
+      "kind": "owned disposable media integrity transition",
+      "imageKind": "background",
+      "action": "missing",
+      "assetStatus": "AVAILABLE",
+      "workStatus": "PUBLISHED",
+      "publicationEventsBefore": 111,
+      "publicationEventsAfter": 111
+    },
+    {
+      "kind": "owned disposable media integrity transition",
+      "imageKind": "background",
+      "action": "restore-bytes",
+      "assetStatus": "AVAILABLE",
+      "workStatus": "PUBLISHED",
+      "publicationEventsBefore": 111,
+      "publicationEventsAfter": 111
+    },
+    {
+      "kind": "owned disposable media integrity transition",
+      "imageKind": "cover",
+      "action": "repair",
+      "assetStatus": "AVAILABLE",
+      "workStatus": "PUBLISHED",
+      "publicationEventsBefore": 111,
+      "publicationEventsAfter": 111,
+      "reconciliation": {
+        "inspected": 32,
+        "acceptedUploads": 0,
+        "rejectedUploads": 0,
+        "completedRemovals": 0,
+        "markedUnavailable": 0,
+        "restoredAvailable": 0,
+        "removedOrphanStages": 0
+      }
+    },
+    {
+      "kind": "owned disposable media integrity transition",
+      "imageKind": "background",
+      "action": "repair",
+      "assetStatus": "AVAILABLE",
+      "workStatus": "PUBLISHED",
+      "publicationEventsBefore": 111,
+      "publicationEventsAfter": 111,
+      "reconciliation": {
+        "inspected": 32,
+        "acceptedUploads": 0,
+        "rejectedUploads": 0,
+        "completedRemovals": 0,
+        "markedUnavailable": 0,
+        "restoredAvailable": 0,
+        "removedOrphanStages": 0
+      }
+    }
+  ]
+}

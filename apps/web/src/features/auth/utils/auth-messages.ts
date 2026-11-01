@@ -5,6 +5,9 @@ const messages: Readonly<Record<string, string>> = {
   "Verify your email before signing in.":
     "أكّد بريدك الإلكتروني قبل تسجيل الدخول.",
   "Account is suspended.": "تم إيقاف هذا الحساب.",
+  "Current password is not correct.": "كلمة المرور الحالية غير صحيحة.",
+  "New password must differ from current password.":
+    "يجب أن تختلف كلمة المرور الجديدة عن كلمة المرور الحالية.",
   "Password confirmation does not match.": "تأكيد كلمة المرور غير مطابق.",
   "Invalid or expired reset token.":
     "رابط استعادة كلمة المرور غير صالح أو منتهي الصلاحية.",
@@ -20,6 +23,8 @@ const messages: Readonly<Record<string, string>> = {
   "The request timed out. Try again.": "انتهت مهلة الطلب. حاول مرة أخرى.",
   "Too many requests. Wait a moment and try again.":
     "محاولات كثيرة. انتظر قليلًا ثم حاول مرة أخرى.",
+  "Too many requests. Please try again later.":
+    "محاولات كثيرة. انتظر قليلًا ثم حاول مرة أخرى.",
   "Your session has expired. Sign in again to continue.":
     "انتهت جلستك. سجّل الدخول مرة أخرى للمتابعة.",
   "You do not have permission to perform this action.":
@@ -28,6 +33,10 @@ const messages: Readonly<Record<string, string>> = {
     "الخدمة غير متاحة مؤقتًا. حاول مرة أخرى لاحقًا.",
 };
 
+export function localizeAuthMessage(message: string): string;
+export function localizeAuthMessage(
+  message: string | null | undefined,
+): string | undefined;
 export function localizeAuthMessage(
   message: string | null | undefined,
 ): string | undefined {

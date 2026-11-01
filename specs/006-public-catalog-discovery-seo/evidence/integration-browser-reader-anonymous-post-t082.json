@@ -1,0 +1,5 @@
+{
+  "passed": true,
+  "anonymousReaderRedirect": "/auth/login",
+  "readerSourcePreserved": true
+}

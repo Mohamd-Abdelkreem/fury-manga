@@ -3,7 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import ChapterReadingPage from "@/app/story/[id]/chapter/[chapterId]/page";
 import { ChapterList } from "./components/ChapterList/ChapterList";
-import { STORY_DETAIL } from "./data/storyData";
+import { publicDetailFixture } from "@/features/public-catalog/api/public-catalog.test-helper";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const navigation = vi.hoisted(() => ({
   params: { id: "1", chapterId: "1" },
@@ -51,28 +52,27 @@ describe("story navigation", () => {
     navigation.push.mockClear();
   });
 
-  it.each(["1", "trait-hoarder"])(
-    "keeps chapter links under the current story %s",
-    (storyId) => {
-      render(<ChapterList {...STORY_DETAIL} storyId={storyId} />);
-      const chapterLinks = screen
-        .getAllByRole("link")
-        .filter((link) => link.getAttribute("href")?.includes("/chapter/"));
-      expect(chapterLinks).toHaveLength(STORY_DETAIL.chapters.length + 2);
-      for (const link of chapterLinks) {
-        expect(link.getAttribute("href")).toMatch(
-          new RegExp(`^/story/${storyId}/chapter/\\d+$`),
-        );
-      }
-      expect(screen.getByRole("link", { name: /الفصل الأول/ })).toHaveAttribute(
-        "href",
-        `/story/${storyId}/chapter/01`,
-      );
-      expect(
-        screen.getByRole("link", { name: /الفصل الجديد/ }),
-      ).toHaveAttribute("href", `/story/${storyId}/chapter/43`);
-    },
-  );
+  it("keeps persisted work chapters informational and category links canonical", () => {
+    const client = new QueryClient();
+    const detail = publicDetailFixture("persisted-slug");
+    const { container } = render(
+      <QueryClientProvider client={client}>
+        <ChapterList detail={detail} />
+      </QueryClientProvider>,
+    );
+    expect(
+      screen.getByRole("heading", { name: detail.work.title, level: 1 }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Action" })).toHaveAttribute(
+      "href",
+      "/discover?category=action",
+    );
+    expect(container.querySelector('a[href*="/chapter/"]')).toBeNull();
+    expect(
+      screen.getByText("القراءة غير متاحة بعد؛ هذه معلومات الفصول المنشورة."),
+    ).toBeInTheDocument();
+    client.clear();
+  });
 
   it.each(["1", "01"])(
     "recognizes first chapter %s and navigates forward",

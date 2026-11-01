@@ -473,18 +473,21 @@ export class AuthService {
     newPassword: string,
   ): Promise<User> {
     const passwordHash = await generateHash(newPassword);
-    return this.database.$transaction(async (transaction) => {
-      const updated = await transaction.user.update({
-        where: { id: userId },
-        data: {
-          passwordHash,
-          resetTokenHash: null,
-          resetTokenExpiresAt: null,
-        },
-      });
-      await transaction.refreshToken.deleteMany({ where: { userId } });
-      return updated;
-    });
+    const updatedUser = await this.database.$transaction(
+      async (transaction) => {
+        const updated = await transaction.user.update({
+          where: { id: userId },
+          data: {
+            passwordHash,
+            resetTokenHash: null,
+            resetTokenExpiresAt: null,
+          },
+        });
+        await transaction.refreshToken.deleteMany({ where: { userId } });
+        return updated;
+      },
+    );
+    return updatedUser;
   }
 
   private buildTokenPair(
@@ -497,11 +500,13 @@ export class AuthService {
     const ttlSeconds = rememberMe
       ? authConfig.refreshRememberedTtlSeconds
       : authConfig.refreshFamilyTtlSeconds;
-    return this.buildTokenPairWithExpiry(
+    const expiresAt = new Date(Date.now() + ttlSeconds * 1_000);
+    const tokenPair = this.buildTokenPairWithExpiry(
       user,
       rememberMe,
-      new Date(Date.now() + ttlSeconds * 1_000),
+      expiresAt,
     );
+    return tokenPair;
   }
 
   private buildTokenPairWithExpiry(

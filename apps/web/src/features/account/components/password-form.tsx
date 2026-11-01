@@ -88,7 +88,7 @@ export function PasswordForm() {
       </div>
       {message === null ? null : (
         <p className="form-notice form-notice--error" role="alert">
-          {message}
+          {localizeAuthMessage(message)}
         </p>
       )}
       <button className="button" type="submit" disabled={isSubmitting}>

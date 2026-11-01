@@ -9,7 +9,8 @@ interface CardMetaProps {
   id: number | string;
   title: string;
   chapter: string;
-  rating: number;
+  rating?: number | undefined;
+  publicCatalog?: boolean;
   isSmall: boolean;
 }
 
@@ -19,16 +20,22 @@ export function CardMeta({
   chapter,
   rating,
   isSmall,
+  publicCatalog = false,
 }: CardMetaProps) {
   const displayRating =
-    rating > 5 ? (rating / 2).toFixed(1) : rating.toFixed(1);
+    rating === undefined
+      ? undefined
+      : rating > 5
+        ? (rating / 2).toFixed(1)
+        : rating.toFixed(1);
 
   const numMatch = chapter.match(/\d+/);
   const latestNum = numMatch ? parseInt(numMatch[0], 10) : null;
 
-  const chapters = latestNum
-    ? [latestNum, latestNum - 1].filter((n) => n > 0).slice(0, 2)
-    : [];
+  const chapters =
+    !publicCatalog && latestNum
+      ? [latestNum, latestNum - 1].filter((n) => n > 0).slice(0, 2)
+      : [];
 
   return (
     <div className={styles["meta"]}>
@@ -62,18 +69,20 @@ export function CardMeta({
           )}
         </div>
 
-        <div className={styles["metaRating"]}>
-          <Star
-            className={styles["starIcon"]}
-            style={{
-              width: isSmall ? 12 : 14,
-              height: isSmall ? 12 : 14,
-              fill: "var(--accent)",
-              color: "var(--accent)",
-            }}
-          />
-          <span className={styles["ratingValue"]}>{displayRating}</span>
-        </div>
+        {displayRating !== undefined ? (
+          <div className={styles["metaRating"]}>
+            <Star
+              className={styles["starIcon"]}
+              style={{
+                width: isSmall ? 12 : 14,
+                height: isSmall ? 12 : 14,
+                fill: "var(--accent)",
+                color: "var(--accent)",
+              }}
+            />
+            <span className={styles["ratingValue"]}>{displayRating}</span>
+          </div>
+        ) : null}
       </div>
     </div>
   );

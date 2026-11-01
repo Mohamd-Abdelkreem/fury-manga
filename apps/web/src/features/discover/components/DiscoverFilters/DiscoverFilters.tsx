@@ -1,32 +1,36 @@
+import { publicQueryParameters } from "@/features/public-catalog/model/catalog-query";
 import { ChevronDown, Search } from "lucide-react";
-
+import type {
+  CatalogWorkListQuery,
+  CatalogCategoryListData,
+} from "@fury/contracts";
 import {
-  DISCOVER_GENRES,
-  DISCOVER_ORDERS,
-  DISCOVER_STATUSES,
-  DISCOVER_TYPES,
-  type FilterOption,
-} from "../../data/discoverData";
-import type { DiscoverCatalogQuery } from "../../model/catalog";
+  workTypeLabels,
+  storyStatusLabels,
+} from "@/features/public-catalog/model/public-catalog.presentation";
+import { CatalogCategorySelect } from "@/features/public-catalog/components/CatalogCategorySelect";
 import styles from "./DiscoverFilters.module.css";
 
-type DiscoverFiltersProps = Readonly<{ query: DiscoverCatalogQuery }>;
-
-type FilterSelectProps = Readonly<{
+type FilterOption = Readonly<{ value: string; label: string }>;
+function FilterSelect({
+  id,
+  label,
+  name,
+  value,
+  options,
+}: Readonly<{
   id: string;
   label: string;
   name: string;
   value: string;
   options: readonly FilterOption[];
-}>;
-
-function FilterSelect({ id, label, name, value, options }: FilterSelectProps) {
+}>) {
   return (
     <div className={styles["selectControl"]}>
       <label htmlFor={id}>{label}</label>
-      <select id={id} name={name} defaultValue={value}>
+      <select key={value} id={id} name={name} defaultValue={value}>
         {options.map((option) => (
-          <option key={option.value || "all"} value={option.value}>
+          <option key={option.value} value={option.value}>
             {option.label}
           </option>
         ))}
@@ -35,64 +39,83 @@ function FilterSelect({ id, label, name, value, options }: FilterSelectProps) {
     </div>
   );
 }
-
-export function DiscoverFilters({ query }: DiscoverFiltersProps) {
-  const sortOptions = DISCOVER_ORDERS.map((option) => ({
-    ...option,
-    value:
-      option.value === "title"
-        ? "title-asc"
-        : option.value === "titlereverse"
-          ? "title-desc"
-          : option.value === "update"
-            ? "latest"
-            : option.value === ""
-              ? "default"
-              : option.value,
-  })).filter((option) =>
-    ["default", "title-asc", "title-desc", "latest"].includes(option.value),
-  );
-
+export function DiscoverFilters({
+  query,
+  categories,
+}: Readonly<{
+  query: CatalogWorkListQuery;
+  categories?: CatalogCategoryListData | undefined;
+}>) {
+  const base = query.view === "stories" ? "/stories" : "/discover";
+  const options = (labels: Record<string, string>) => [
+    { value: "", label: "الكل" },
+    ...Object.entries(labels).map(([value, label]) => ({ value, label })),
+  ];
   return (
     <div className={styles["filterContainer"]} dir="rtl">
-      <form action="/discover" method="get" className={styles["filterForm"]}>
+      <form
+        key={publicQueryParameters(query).toString()}
+        action={base}
+        method="get"
+        className={styles["filterForm"]}
+      >
         <div className={styles["queryControl"]}>
-          <label htmlFor="discover-query">البحث في كل الأعمال</label>
+          <label htmlFor="discover-query">
+            البحث في{" "}
+            {query.view === "stories" ? "الأعمال النصية" : "كل الأعمال"}
+          </label>
           <input
+            key={query.q ?? ""}
             id="discover-query"
             type="search"
             name="q"
-            defaultValue={query.q}
+            defaultValue={query.q ?? ""}
+            maxLength={100}
             placeholder="ابحث بالعنوان…"
           />
         </div>
-        <FilterSelect
-          id="discover-category"
-          label="التصنيف"
-          name="category"
-          value={query.category}
-          options={[{ value: "", label: "الكل" }, ...DISCOVER_GENRES]}
-        />
+        <div className={styles["selectControl"]}>
+          <label htmlFor="discover-category">التصنيف</label>
+          <CatalogCategorySelect
+            key={query.category ?? ""}
+            id="discover-category"
+            value={query.category ?? ""}
+            seed={categories}
+          />
+          <ChevronDown aria-hidden="true" />
+        </div>
         <FilterSelect
           id="discover-status"
           label="الحالة"
           name="status"
-          value={query.status}
-          options={DISCOVER_STATUSES}
+          value={query.status ?? ""}
+          options={options(storyStatusLabels)}
         />
         <FilterSelect
           id="discover-type"
           label="النوع"
           name="type"
-          value={query.type}
-          options={DISCOVER_TYPES}
+          value={query.type ?? ""}
+          options={options(
+            query.view === "stories"
+              ? {
+                  novel: workTypeLabels.novel,
+                  "text-story": workTypeLabels["text-story"],
+                }
+              : workTypeLabels,
+          )}
         />
         <FilterSelect
           id="discover-sort"
           label="الترتيب"
           name="sort"
           value={query.sort}
-          options={sortOptions}
+          options={[
+            { value: "newest", label: "الأحدث إضافة" },
+            { value: "chapter-latest", label: "آخر فصل منشور" },
+            { value: "title-asc", label: "أ - ي" },
+            { value: "title-desc", label: "ي - أ" },
+          ]}
         />
         <button type="submit" className={styles["searchBtn"]}>
           <Search aria-hidden="true" />

@@ -107,6 +107,8 @@ export const adminWorkErrorMessage = (error: unknown): string => {
   switch (error.code) {
     case "CONTENT_CONFLICT":
       return "تعارضت بيانات العمل أو الوسائط. راجع اختياراتك ثم حاول مجددًا.";
+    case "CONTENT_SLUG_CONFLICT":
+      return "الرابط المختصر مستخدم بالفعل. صحّح الحقل المحدد ثم حاول مجددًا.";
     case "CONTENT_NOT_READY":
       return "لا يمكن نشر العمل قبل إكمال الحقول المطلوبة والتصنيف المفعل والغلاف المتاح. راجع الحقول المحددة ثم حاول مجددًا.";
     case "CONTENT_FEATURED_CONFLICT":
@@ -141,6 +143,12 @@ export const adminWorkErrorMessage = (error: unknown): string => {
 };
 
 export const workFieldErrors = (error: unknown): WorkFieldErrors => {
+  if (
+    error instanceof SafeAdminContentError &&
+    error.code === "CONTENT_SLUG_CONFLICT"
+  ) {
+    return { slug: "هذا الرابط مستخدم لعمل آخر. اختر رابطًا مختلفًا." };
+  }
   if (
     !(error instanceof SafeAdminContentError) ||
     (error.code !== "VALIDATION_ERROR" && error.code !== "CONTENT_NOT_READY")

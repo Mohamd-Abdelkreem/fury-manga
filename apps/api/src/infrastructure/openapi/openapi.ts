@@ -1,7 +1,17 @@
 import { z } from "zod";
-import { createDocument } from "zod-openapi";
+import { createDocument, type oas31 } from "zod-openapi";
 
 import {
+  catalogSitemapDataSchema,
+  catalogDetailDataSchema,
+  catalogWorkDetailSchema,
+  catalogHomeDataSchema,
+  catalogWorkSchema,
+  catalogCategorySchema,
+  catalogWorkListQuerySchema,
+  catalogCategoryListQuerySchema,
+  catalogWorkListDataSchema,
+  catalogCategoryListDataSchema,
   accountResponseSchemas,
   adminCategoryDataSchema,
   adminCategoryListDataSchema,
@@ -159,6 +169,11 @@ const mediaIdentityErrors = {
 
 const mediaUploadErrors = {
   ...mediaReadErrors,
+  "503": mediaErrorResponse("Media storage or processing unavailable", [
+    "MEDIA_UNAVAILABLE",
+    "SERVICE_UNAVAILABLE",
+    "MEDIA_PROCESSING_BUSY",
+  ]),
   "400": mediaErrorResponse("Invalid media request or image", [
     "VALIDATION_ERROR",
     "BAD_REQUEST",
@@ -216,7 +231,63 @@ const adminContentErrors = {
   "403": contentErrorResponse(["FORBIDDEN"]),
 };
 
+const publicNoStoreHeader = {
+  "Cache-Control": {
+    description: "Public content is never stored.",
+    schema: { type: "string" as const, const: "no-store" },
+  },
+};
+
 const contentNotFound = contentErrorResponse(["NOT_FOUND"]);
+const publicSuccessResponse = (description: string, data: z.ZodType) => ({
+  ...successResponse(description, data),
+  headers: publicNoStoreHeader,
+});
+const publicContentErrors = {
+  "403": {
+    ...contentErrorResponse(["FORBIDDEN"]),
+    headers: publicNoStoreHeader,
+  },
+  "400": { ...contentCommonErrors["400"], headers: publicNoStoreHeader },
+  "429": { ...contentCommonErrors["429"], headers: publicNoStoreHeader },
+  "500": { ...contentCommonErrors["500"], headers: publicNoStoreHeader },
+  "503": { ...contentCommonErrors["503"], headers: publicNoStoreHeader },
+};
+const publicContentNotFound = {
+  ...contentNotFound,
+  headers: publicNoStoreHeader,
+};
+
+const publicWorkImageResponses = {
+  "200": {
+    description: "Approved saved image bytes",
+    headers: {
+      ...publicNoStoreHeader,
+      "Content-Length": { schema: { type: "string" } },
+      "Content-Disposition": {
+        schema: { type: "string", const: "inline" },
+      },
+      "X-Content-Type-Options": {
+        schema: { type: "string", const: "nosniff" },
+      },
+    },
+    content: {
+      "image/jpeg": { schema: z.string().meta({ format: "binary" }) },
+      "image/png": { schema: z.string().meta({ format: "binary" }) },
+      "image/webp": { schema: z.string().meta({ format: "binary" }) },
+    },
+  },
+  ...publicContentErrors,
+  "404": publicContentNotFound,
+  "503": {
+    ...mediaErrorResponse("Stored media or service unavailable", [
+      "MEDIA_UNAVAILABLE",
+      "SERVICE_UNAVAILABLE",
+    ]),
+    headers: publicNoStoreHeader,
+  },
+} as const;
+
 const contentConflict = (
   codes: readonly [ContentErrorCode, ...ContentErrorCode[]],
 ) => contentErrorResponse(codes);
@@ -236,8 +307,8 @@ const healthSchema = z
   })
   .strict();
 
-export const buildOpenApiDocument = () =>
-  createDocument({
+export const buildOpenApiDocument = () => {
+  const document = createDocument({
     openapi: "3.1.0",
     info: {
       title: `${appConfig.name} OpenAPI`,
@@ -261,6 +332,14 @@ export const buildOpenApiDocument = () =>
         },
       },
       schemas: {
+        CatalogSitemapData: catalogSitemapDataSchema,
+        CatalogWorkDetail: catalogWorkDetailSchema,
+        CatalogDetailData: catalogDetailDataSchema,
+        CatalogHomeData: catalogHomeDataSchema,
+        CatalogWork: catalogWorkSchema,
+        CatalogCategory: catalogCategorySchema,
+        CatalogWorkListData: catalogWorkListDataSchema,
+        CatalogCategoryListData: catalogCategoryListDataSchema,
         SafeUser: accountResponseSchemas.safeUser,
         AuthUserData: accountResponseSchemas.authUserData,
         AuthSessionData: accountResponseSchemas.authSessionData,
@@ -452,6 +531,112 @@ export const buildOpenApiDocument = () =>
           },
         },
       },
+      "/content/catalog/home": {
+        get: {
+          summary: "Read the current public home aggregate",
+          description:
+            "One snapshot of bounded saved featured order, enabled shortcuts, latest eligible Chapters and the first three populated categories. No query or engagement claim. All responses use no-store.",
+          requestParams: { query: emptyObjectSchema },
+          responses: {
+            "200": publicSuccessResponse("Public home", catalogHomeDataSchema),
+            ...publicContentErrors,
+          },
+        },
+      },
+      "/content/catalog/sitemap-works": {
+        get: {
+          summary: "Export all currently eligible canonical Work slugs",
+          description:
+            "Complete distinct slug set from one repeatable-read visibility snapshot using internal batches of 100. No cursor, pagination, query, private identifier or partial success. All responses use no-store.",
+          requestParams: { query: emptyObjectSchema },
+          responses: {
+            "200": publicSuccessResponse(
+              "Complete public sitemap Works",
+              catalogSitemapDataSchema,
+            ),
+            ...publicContentErrors,
+          },
+        },
+      },
+      "/content/catalog/works/{workSlug}": {
+        get: {
+          summary: "Read saved public Work detail",
+          description:
+            "One repeatable-read snapshot of editorial fields, enabled categories, saved tags, bounded Chapter summaries, full-set first/latest and up to six similar Works. No query, body/page/asset identifier or engagement. All responses use no-store.",
+          requestParams: {
+            path: workSlugParamsSchema,
+            query: emptyObjectSchema,
+          },
+          responses: {
+            "200": publicSuccessResponse(
+              "Public Work detail",
+              catalogDetailDataSchema,
+            ),
+            ...publicContentErrors,
+            "404": publicContentNotFound,
+          },
+        },
+      },
+      "/content/works/{workSlug}/background": {
+        get: {
+          summary: "Read the currently eligible optional Work background",
+          description:
+            "Anonymous Work-scoped approved bytes. Absent background and hidden/unknown Work yield NOT_FOUND; failed available bytes yield MEDIA_UNAVAILABLE. No query. All responses use no-store.",
+          requestParams: {
+            path: workSlugParamsSchema,
+            query: emptyObjectSchema,
+          },
+          responses: publicWorkImageResponses,
+        },
+      },
+      "/content/catalog/works": {
+        get: {
+          summary: "Read the public catalog",
+          description:
+            "Anonymous bounded catalog. Credentials never widen visibility. Unknown enabled-category selections return filtered-empty. No search values are logged. All responses use Cache-Control: no-store.",
+          requestParams: { query: catalogWorkListQuerySchema },
+          responses: {
+            "200": {
+              ...publicSuccessResponse(
+                "Public catalog",
+                catalogWorkListDataSchema,
+              ),
+              headers: publicNoStoreHeader,
+            },
+            ...publicContentErrors,
+          },
+        },
+      },
+      "/content/catalog/categories": {
+        get: {
+          summary: "Read enabled public categories",
+          description:
+            "Anonymous bounded directory in saved order. All responses use Cache-Control: no-store.",
+          requestParams: { query: catalogCategoryListQuerySchema },
+          responses: {
+            "200": {
+              ...publicSuccessResponse(
+                "Public categories",
+                catalogCategoryListDataSchema,
+              ),
+              headers: publicNoStoreHeader,
+            },
+            ...publicContentErrors,
+          },
+        },
+      },
+      "/content/works/{workSlug}/cover": {
+        get: {
+          summary: "Read the currently eligible Work cover",
+          description:
+            "Anonymous Work-scoped approved bytes. No query is accepted. Hidden and unknown Works share NOT_FOUND. All responses use Cache-Control: no-store.",
+          requestParams: {
+            path: workSlugParamsSchema,
+            query: emptyObjectSchema,
+          },
+          responses: publicWorkImageResponses,
+        },
+      },
       "/content/works": {
         get: {
           summary: "List published Works",
@@ -459,11 +644,11 @@ export const buildOpenApiDocument = () =>
             "Credential-free metadata only; ambient credentials do not widen visibility.",
           requestParams: { query: paginationQuerySchema },
           responses: {
-            "200": successResponse(
+            "200": publicSuccessResponse(
               "Published Work metadata",
               publicWorkListDataSchema,
             ),
-            ...contentCommonErrors,
+            ...publicContentErrors,
           },
         },
       },
@@ -472,11 +657,17 @@ export const buildOpenApiDocument = () =>
           summary: "Read one published Work",
           description:
             "Missing, draft, and archived Works share the same NOT_FOUND outcome.",
-          requestParams: { path: workSlugParamsSchema },
+          requestParams: {
+            path: workSlugParamsSchema,
+            query: emptyObjectSchema,
+          },
           responses: {
-            "200": successResponse("Published Work", publicWorkDataSchema),
-            "404": contentNotFound,
-            ...contentCommonErrors,
+            "200": publicSuccessResponse(
+              "Published Work",
+              publicWorkDataSchema,
+            ),
+            "404": publicContentNotFound,
+            ...publicContentErrors,
           },
         },
       },
@@ -490,12 +681,12 @@ export const buildOpenApiDocument = () =>
             query: paginationQuerySchema,
           },
           responses: {
-            "200": successResponse(
+            "200": publicSuccessResponse(
               "Published Chapter metadata",
               publicChapterListDataSchema,
             ),
-            "404": contentNotFound,
-            ...contentCommonErrors,
+            "404": publicContentNotFound,
+            ...publicContentErrors,
           },
         },
       },
@@ -504,14 +695,17 @@ export const buildOpenApiDocument = () =>
           summary: "Read one published Chapter",
           description:
             "The parent Work and Chapter must be eligible and published; unavailable page images hide the Chapter. Public metadata includes the title but excludes body and page metadata.",
-          requestParams: { path: publicChapterParamsSchema },
+          requestParams: {
+            path: publicChapterParamsSchema,
+            query: emptyObjectSchema,
+          },
           responses: {
-            "200": successResponse(
+            "200": publicSuccessResponse(
               "Published Chapter metadata",
               publicChapterDataSchema,
             ),
-            "404": contentNotFound,
-            ...contentCommonErrors,
+            "404": publicContentNotFound,
+            ...publicContentErrors,
           },
         },
       },
@@ -806,6 +1000,8 @@ export const buildOpenApiDocument = () =>
         },
         post: {
           summary: "Upload an authorized private media asset",
+          description:
+            "Work covers, backgrounds and Chapter pages accept JPEG/PNG/WebP and GIF. Animated GIF/WebP is canonically stored as lossless animated WebP with its canvas, composited frames, timing and loop. Avatar/frame/decoration remain static; APNG is unsupported. Existing byte/dimension limits remain; animated inputs are bounded to 100 frames, 24M canvas pixels, 32M aggregate decoded pixels and a 10-second native timeout per metadata/encoding stage, excluding native queue wait (not a hard HTTP wall-clock deadline). Two validation jobs per API process; excess capacity returns 503 MEDIA_PROCESSING_BUSY. Binary output remains JPEG/PNG/WebP, not GIF.",
           security: [{ BearerAuth: [], CsrfHeader: [] }],
           requestParams: {
             header: z.object({ "Idempotency-Key": mediaAttemptHeader }),
@@ -979,3 +1175,33 @@ export const buildOpenApiDocument = () =>
       },
     },
   });
+
+  // Express dispatches HEAD through each public GET handler; its response has headers only.
+  for (const [path, item] of Object.entries(document.paths ?? {})) {
+    if (
+      !path.startsWith("/content/") ||
+      path.startsWith("/content/admin/") ||
+      item.get === undefined
+    )
+      continue;
+    const headResponses: Record<
+      string,
+      oas31.ResponseObject | oas31.ReferenceObject
+    > = {};
+    for (const [status, response] of Object.entries<
+      oas31.ResponseObject | oas31.ReferenceObject
+    >(item.get.responses ?? {})) {
+      if ("$ref" in response) headResponses[status] = response;
+      else {
+        const { content: _content, ...headersOnly } = response;
+        headResponses[status] = headersOnly;
+      }
+    }
+    item.head = {
+      ...item.get,
+      summary: `${item.get.summary ?? "Public content"} (headers only)`,
+      responses: headResponses,
+    };
+  }
+  return document;
+};

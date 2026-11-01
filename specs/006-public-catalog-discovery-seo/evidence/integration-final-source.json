@@ -1,0 +1,716 @@
+{
+  "head": "868948bb9f51fe9fdf6f40d18e8d8b7d920a1f9f",
+  "sourceState": "final verified uncommitted application/test/tool source after T082 and formatting; subsequent changes are evidence/task reconciliation only",
+  "files": [
+    {
+      "path": "apps/api/src/app.integration.test.ts",
+      "exists": true,
+      "sha256": "98561174a4c349729535eb0ba1769a4c14aa27e8926c61f7b58cb1f75d490c48"
+    },
+    {
+      "path": "apps/api/src/app.ts",
+      "exists": true,
+      "sha256": "322e03444e983cf3f5376241ad39806fa021b4415188acf25751c35e3318e4e0"
+    },
+    {
+      "path": "apps/api/src/content.integration.test.ts",
+      "exists": true,
+      "sha256": "101ef16896a7acc816f289772433ff2519c71470c274f65a69d3a857b11fa9b4"
+    },
+    {
+      "path": "apps/api/src/infrastructure/email/email.service.ts",
+      "exists": true,
+      "sha256": "4c151fff591184683600dcb10e38682770c3a9875c72ef37432caad4534bd571"
+    },
+    {
+      "path": "apps/api/src/infrastructure/logger/request-sanitizer.test.ts",
+      "exists": true,
+      "sha256": "963a891cd338c6dd6a6653643f48a87faeecd5403c1602daad1bf6031f042882"
+    },
+    {
+      "path": "apps/api/src/infrastructure/logger/request-sanitizer.ts",
+      "exists": true,
+      "sha256": "2e9aa34c815ca12d179fd633d8ceeb72baf922acd581d3538eefde9f02498223"
+    },
+    {
+      "path": "apps/api/src/infrastructure/media/media-read-integrity.test.ts",
+      "exists": true,
+      "sha256": "ece6078d9371c561dc90cc3ac387f8f52b7fbcd0b8a19e1522b479b2d44c7951"
+    },
+    {
+      "path": "apps/api/src/infrastructure/media/media-read-integrity.ts",
+      "exists": true,
+      "sha256": "00ba73999dd3f2828469aff84da9b6c21377be8fc09a80b14ee364465dc72c2c"
+    },
+    {
+      "path": "apps/api/src/infrastructure/media/media.errors.ts",
+      "exists": true,
+      "sha256": "ec3d7f66c76d06b3373a072dc3531c71f403f9505f6260c1001a0f90b9a8046d"
+    },
+    {
+      "path": "apps/api/src/infrastructure/openapi/openapi.test.ts",
+      "exists": true,
+      "sha256": "7ebbeb61d945a5ebd0b04febac21d6cc5a1e4278c72f0e140fa9c63b8156cdf0"
+    },
+    {
+      "path": "apps/api/src/infrastructure/openapi/openapi.ts",
+      "exists": true,
+      "sha256": "c1916f7e98a881d6ae2a36e40f61b3ac8a643f23b55c46df684afdfd551cb53d"
+    },
+    {
+      "path": "apps/api/src/infrastructure/security/index.ts",
+      "exists": true,
+      "sha256": "b60120af1a0ac2d51e022ec3a90390c9443a8b109ac7edaa964677244f69b39f"
+    },
+    {
+      "path": "apps/api/src/infrastructure/security/jwt-tokens.test.ts",
+      "exists": true,
+      "sha256": "770a475a8789cf50f999bddab12ed4627bafcc9d2645f1338144693a0f25cecc"
+    },
+    {
+      "path": "apps/api/src/infrastructure/security/jwt-tokens.ts",
+      "exists": true,
+      "sha256": "4ccf8f3b525e4b14f6f0539d5a33960b7ab58cd16a30a8b3b32f4c9ae229b45a"
+    },
+    {
+      "path": "apps/api/src/infrastructure/security/jwt.service.test.ts",
+      "exists": false,
+      "sha256": null
+    },
+    {
+      "path": "apps/api/src/infrastructure/security/jwt.service.ts",
+      "exists": false,
+      "sha256": null
+    },
+    {
+      "path": "apps/api/src/media.integration.test.ts",
+      "exists": true,
+      "sha256": "d09baed262528e0ea3c76c2dd7ea2272b2f45bf46594d3f328b10e1b26052f70"
+    },
+    {
+      "path": "apps/api/src/middlewares/auth.middleware.ts",
+      "exists": true,
+      "sha256": "30b8031746568130aba7f4e580d97bc52a43390b2b6425bfa47852edfedb2f6a"
+    },
+    {
+      "path": "apps/api/src/middlewares/error-handler.middleware.test.ts",
+      "exists": true,
+      "sha256": "67e55fa4105a4f3a0b5f47c7b9736dd68431c47927c258d9bee073b2455c9897"
+    },
+    {
+      "path": "apps/api/src/middlewares/error-handler.middleware.ts",
+      "exists": true,
+      "sha256": "78b374490c7e77a51f68396d54bec090209f3cef862e757dc62bd8312d5357bf"
+    },
+    {
+      "path": "apps/api/src/middlewares/not-found.middleware.ts",
+      "exists": true,
+      "sha256": "eb9cca63c8153a53abe8be45366d4d6bbf518d4c0a6b7ba01cfe0ca804cd5cc5"
+    },
+    {
+      "path": "apps/api/src/middlewares/validation.middleware.ts",
+      "exists": true,
+      "sha256": "19885a2ef65ecf610af50d6b89424d10bca459324005a7f61126e059316f72cf"
+    },
+    {
+      "path": "apps/api/src/modules/auth/auth.service.ts",
+      "exists": true,
+      "sha256": "5b94bc4e5e6702cfe1f497eb7c5a5a9eadad0b8c60e227e219dd201960509f40"
+    },
+    {
+      "path": "apps/api/src/modules/content/content.mapper.ts",
+      "exists": true,
+      "sha256": "b1fd6e2efddf461e65305849b3deb70ad915a844c8ee1a95de22bca6eb98ed55"
+    },
+    {
+      "path": "apps/api/src/modules/content/content.queries.ts",
+      "exists": true,
+      "sha256": "a9d1d13ad0c98e1b90cb573acc70c7ce9e65bb33b9ffc2e1f40aee0fb418e1a1"
+    },
+    {
+      "path": "apps/api/src/modules/content/content.routes.ts",
+      "exists": true,
+      "sha256": "892b3ad7f2600de18b58cfedc304bd5fdaa16dc8bb3758c9abed272a19f3d932"
+    },
+    {
+      "path": "apps/api/src/modules/content/content.types.ts",
+      "exists": true,
+      "sha256": "b61f6c28d6af50d9638ffa58c035597789cef7ee6f468c0034a90e92c7c7d1d4"
+    },
+    {
+      "path": "apps/api/src/modules/content/dto/content.dto.ts",
+      "exists": true,
+      "sha256": "2b81ea7b742e5b5922687728a46753627e05e9433fa2534d72bf3418a7ebcd86"
+    },
+    {
+      "path": "apps/api/src/modules/content/public-content.controller.ts",
+      "exists": true,
+      "sha256": "a1cfe01dab2e7efd4ecbde979385b124c924b5d1e0e83eaa7697b55de131883b"
+    },
+    {
+      "path": "apps/api/src/modules/content/public-content.integration.test.ts",
+      "exists": true,
+      "sha256": "bf315da3731b04173d41233be4b1009ed969a6707f61892460c82f2010228841"
+    },
+    {
+      "path": "apps/api/src/modules/content/public-content.service.ts",
+      "exists": true,
+      "sha256": "51900123a23dec4d68e4841968c128fd9bb4a72b6c540dd1615c7ec2ee986b3b"
+    },
+    {
+      "path": "apps/api/src/modules/media/media.errors.ts",
+      "exists": true,
+      "sha256": "b8d1f327c3ce718ad84f21461a71628d881df767801cb3d7c326a83962a723d0"
+    },
+    {
+      "path": "apps/api/src/modules/media/media.reconcile.integration.test.ts",
+      "exists": true,
+      "sha256": "e2086d9b88dbeb0bfd5e540ce5658a07400d6d09e9c1d7b71cecfc772c868be2"
+    },
+    {
+      "path": "apps/api/src/modules/media/media.service.integration.test.ts",
+      "exists": true,
+      "sha256": "61d224489a3eb54954983e322d3cb956afab2c0ed0d44e6ee0e673530a762d5e"
+    },
+    {
+      "path": "apps/api/src/modules/media/media.service.ts",
+      "exists": true,
+      "sha256": "c5716e0019164ac8e3c1feaa5cb92a070ff5c8d15a0a69668980a820aab13036"
+    },
+    {
+      "path": "apps/api/src/router.ts",
+      "exists": true,
+      "sha256": "c030a1f64854d519fa457c38ff4acbd1ac4d0aa753ec143b759226ad2b3c5d8b"
+    },
+    {
+      "path": "apps/api/src/test-support/http-server.test-helper.ts",
+      "exists": true,
+      "sha256": "62cbe82c748f8b7f6777eb64ab0fd15dab9ec06580327e336d21586d3f87097c"
+    },
+    {
+      "path": "apps/api/vitest.setup.ts",
+      "exists": true,
+      "sha256": "1d7977346fdc5ef1ee622568385ff6a3be6d2e251cc8389d10eca4e75e65133d"
+    },
+    {
+      "path": "apps/web/.env.example",
+      "exists": true,
+      "sha256": "8077da53a09a7b5b78b333c611b09bcc9a2f59cc14b199b1d770f55ae256a996"
+    },
+    {
+      "path": "apps/web/src/app/categories/page.tsx",
+      "exists": true,
+      "sha256": "755e3cd63d4b07e2760267d1402248719542a923929bb7de12e0e010d4964c23"
+    },
+    {
+      "path": "apps/web/src/app/discover/page.tsx",
+      "exists": true,
+      "sha256": "9d6f2e1d5c00b9d58f3cfc7ea5d0b0eef4154fb278e87b250024ba7e9906ddec"
+    },
+    {
+      "path": "apps/web/src/app/error.tsx",
+      "exists": true,
+      "sha256": "a416c1c9c6c4f3471da885b4b59fa34ac9bf73a0f440d6d37d2fdfb5e40d0940"
+    },
+    {
+      "path": "apps/web/src/app/layout.tsx",
+      "exists": true,
+      "sha256": "d36d92dba7a010947837ee22d0d9fc03e0fb0d10fb58164d53c6d839d7492379"
+    },
+    {
+      "path": "apps/web/src/app/loading.tsx",
+      "exists": true,
+      "sha256": "df262a44f57a430652d3ab7fc676331278a1d766aa22e35158ec3188e5a62334"
+    },
+    {
+      "path": "apps/web/src/app/not-found.tsx",
+      "exists": true,
+      "sha256": "6f175ced1e02ce05b41a1f291b4e153d2c2e8cfa1270b1a03a378419147c43f6"
+    },
+    {
+      "path": "apps/web/src/app/page.tsx",
+      "exists": true,
+      "sha256": "3cf7f9060b3b2aaa3475bae7995719b8419d6ccafbb840832d126f39bf402477"
+    },
+    {
+      "path": "apps/web/src/app/robots.ts",
+      "exists": true,
+      "sha256": "9a86792e6159a8ce537b72048884c154ed26c924410b551b72d1c7744c33d1c7"
+    },
+    {
+      "path": "apps/web/src/app/seo.test.ts",
+      "exists": true,
+      "sha256": "dbf5b42c4ac874f7830bc615642f18cc47675ca093a364c191865fdce37c8cee"
+    },
+    {
+      "path": "apps/web/src/app/sitemap.ts",
+      "exists": true,
+      "sha256": "2e97811d6c1b0134a077c371491a4d7f51f507ea9b6f947873624fd21a31ca37"
+    },
+    {
+      "path": "apps/web/src/app/stories/page.tsx",
+      "exists": true,
+      "sha256": "0dcaa290826db1dcc98796fbe8abb2142b64c8c2176e9f14fded6adb4dd5455f"
+    },
+    {
+      "path": "apps/web/src/app/story/[id]/not-found.tsx",
+      "exists": true,
+      "sha256": "f96ffe78f19e820c37b82c8ce47c03b305f700a6b0dd852d70ef2de2e0463fbe"
+    },
+    {
+      "path": "apps/web/src/app/story/[id]/page.tsx",
+      "exists": true,
+      "sha256": "28443543110b1c6c9d38544caab0b4baf3f8c460d4a7989bbbc02bb83bd73030"
+    },
+    {
+      "path": "apps/web/src/app/story/[id]/template.tsx",
+      "exists": true,
+      "sha256": "4dd00d8dc5b65ecffe25340d8f974bcbbaca159cc6899cf69c6d8e4b757c9948"
+    },
+    {
+      "path": "apps/web/src/components/ui/MangaCard/CardImage.tsx",
+      "exists": true,
+      "sha256": "dc620bd6b4fe25c29d9593fdba59c757a5ce507989ea129625818049e9bca533"
+    },
+    {
+      "path": "apps/web/src/components/ui/MangaCard/CardMeta.tsx",
+      "exists": true,
+      "sha256": "35bf329de975b450f204cd678847452b51a31ef9a685c1e1a4571e09777785c9"
+    },
+    {
+      "path": "apps/web/src/components/ui/MangaCard/CardOverlay.tsx",
+      "exists": true,
+      "sha256": "7f5ea7a9b782f1bdb18d5557edad170d1dc645a6eb93a29956a48d17c926961b"
+    },
+    {
+      "path": "apps/web/src/components/ui/MangaCard/MangaCard.test.tsx",
+      "exists": true,
+      "sha256": "782e1fb9d7e5f4d91e3851765fc9ff93752f957dce03511e43da9ac77931b395"
+    },
+    {
+      "path": "apps/web/src/components/ui/MangaCard/MangaCard.tsx",
+      "exists": true,
+      "sha256": "c82428b15b66cb4e5406371334eb80f88641c3354254ed50a0b76816944e4ae6"
+    },
+    {
+      "path": "apps/web/src/config/public-media.ts",
+      "exists": true,
+      "sha256": "e263294e0530f09d08aafb14ec1d84ef81aa21099fb6337d7b750d5cfb699249"
+    },
+    {
+      "path": "apps/web/src/config/server-environment.test.ts",
+      "exists": true,
+      "sha256": "7e36987b8771b71d0d2b9d7237c3705bfd3743b73e8232532ec9b11bf9eb477c"
+    },
+    {
+      "path": "apps/web/src/config/server-environment.ts",
+      "exists": true,
+      "sha256": "ddd02d48fdc412f2785e203403ced534844fc06040361d76eade3a3688ff2f49"
+    },
+    {
+      "path": "apps/web/src/features/admin/components/AdminCategories/AdminCategoryDialog.tsx",
+      "exists": true,
+      "sha256": "3e182e80042ffe8ec1fe10eb203b4d6d3069bed18543abbf68601df8b0cfc750"
+    },
+    {
+      "path": "apps/web/src/features/categories/components/CategoriesDirectory/CategoriesDirectory.test.tsx",
+      "exists": true,
+      "sha256": "11172895e4b73bc78b8a8efab93c124980f419c1ba2e2d0c56b48f7a6c859699"
+    },
+    {
+      "path": "apps/web/src/features/categories/components/CategoriesDirectory/CategoriesDirectory.tsx",
+      "exists": true,
+      "sha256": "72af14cb5153cc1e6770e0012611af31fcb152927cb0ebc2f4999ea266d9f76a"
+    },
+    {
+      "path": "apps/web/src/features/categories/data/categories.ts",
+      "exists": false,
+      "sha256": null
+    },
+    {
+      "path": "apps/web/src/features/discover/components/DiscoverFilters/DiscoverFilters.tsx",
+      "exists": true,
+      "sha256": "d9a411f9ad41073961e63f3aef3b05e23652c95a9befc5f9174a7f7073b8ae21"
+    },
+    {
+      "path": "apps/web/src/features/discover/components/DiscoverGrid/DiscoverGrid.tsx",
+      "exists": true,
+      "sha256": "4ff2295bc187fa8e517d1a24f5aa854e683b18f2e6583831226b1c096ab2307f"
+    },
+    {
+      "path": "apps/web/src/features/discover/data/discoverData.ts",
+      "exists": false,
+      "sha256": null
+    },
+    {
+      "path": "apps/web/src/features/discover/model/catalog.test.ts",
+      "exists": true,
+      "sha256": "79d05df17a12d34e4dc0198aac432b0defb68c1cf72f3e71a369fed25686e562"
+    },
+    {
+      "path": "apps/web/src/features/discover/model/catalog.ts",
+      "exists": false,
+      "sha256": null
+    },
+    {
+      "path": "apps/web/src/features/home/components/DiscordBanner/DiscordBanner.tsx",
+      "exists": true,
+      "sha256": "b0545523e7c90c70729b157b171ed95c9339e9a60a704c11692e87dcb43297a8"
+    },
+    {
+      "path": "apps/web/src/features/home/components/Footer/AccessibleFooter.tsx",
+      "exists": true,
+      "sha256": "41401633ccf682477fa70e7f8d6c113eb096230cc2285fc8708eaff6ad8f4ea1"
+    },
+    {
+      "path": "apps/web/src/features/home/components/HeroSection/HeroSection.module.css",
+      "exists": true,
+      "sha256": "e914706ad6762f94e08b1332f4a59335fb3f649ddac1d70a2c6536491ae3aff1"
+    },
+    {
+      "path": "apps/web/src/features/home/components/HeroSection/HeroSection.tsx",
+      "exists": true,
+      "sha256": "bb13c201661848e083c44a9ca5323e37775f14e8f1ee69e80217fc62114cd258"
+    },
+    {
+      "path": "apps/web/src/features/home/components/LatestReleases/LatestReleases.tsx",
+      "exists": true,
+      "sha256": "1745fe8b4ec821c715c1bca2fb62f90867f3ab30eac94d08bd515abefc22f0f8"
+    },
+    {
+      "path": "apps/web/src/features/home/components/Navbar/AccessibleNavbar.tsx",
+      "exists": true,
+      "sha256": "b0ee51587b0dd6a6f724bf9017df5099061aeec3b579504d6b6798c28e29ea0f"
+    },
+    {
+      "path": "apps/web/src/features/home/components/PublicHome.tsx",
+      "exists": true,
+      "sha256": "e940cca4fe7cf1830b6eedf387739facf9d9f12c5af992ec637f2861753cd822"
+    },
+    {
+      "path": "apps/web/src/features/home/components/SuggestionsSection/SuggestionsSection.module.css",
+      "exists": true,
+      "sha256": "0d7c696ea2e7921a643daa13caa5321d6d863a3d3f7662f2103e807e9f0d099e"
+    },
+    {
+      "path": "apps/web/src/features/home/components/SuggestionsSection/SuggestionsSection.tsx",
+      "exists": true,
+      "sha256": "4bfb84a9797d37a29a459bd8cf60de1e73c24668e928e5da214166bd4d55af10"
+    },
+    {
+      "path": "apps/web/src/features/home/components/TrendingSection/TrendingSection.tsx",
+      "exists": true,
+      "sha256": "26c65b8cc5efb923b60cf6ab6197f7b9ac01b4799edf21b5b6cba929229679ea"
+    },
+    {
+      "path": "apps/web/src/features/home/components/navigation-links.test.tsx",
+      "exists": true,
+      "sha256": "a7afceb943da53cb0b6e6c72e494af8da4a7d927395c93095ae554d44b8f2e3f"
+    },
+    {
+      "path": "apps/web/src/features/home/components/public-home.test.tsx",
+      "exists": true,
+      "sha256": "fa387f378349639f44ad428628e56d123d96419f9a7219ecc9fb9b24d88e5016"
+    },
+    {
+      "path": "apps/web/src/features/home/data/heroData.ts",
+      "exists": false,
+      "sha256": null
+    },
+    {
+      "path": "apps/web/src/features/home/data/latestData.ts",
+      "exists": false,
+      "sha256": null
+    },
+    {
+      "path": "apps/web/src/features/home/data/suggestionsData.ts",
+      "exists": false,
+      "sha256": null
+    },
+    {
+      "path": "apps/web/src/features/home/data/trendingData.ts",
+      "exists": false,
+      "sha256": null
+    },
+    {
+      "path": "apps/web/src/features/home/model/navigation.ts",
+      "exists": true,
+      "sha256": "d5328f5acdbad0381177a40f40eb5aa17f696948a71041079c0cc071eb6e5430"
+    },
+    {
+      "path": "apps/web/src/features/home/model/public-home.ts",
+      "exists": true,
+      "sha256": "1ed4652aa36022fd2ab5b5dbafd21263bd9ff70008805d7a4deef8cafcfc3552"
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/api/public-catalog.api.test.ts",
+      "exists": true,
+      "sha256": "41d0ebcc5091b3db60697f18dbd6852f8740de45850681bc2ca7e0979f77bb2b"
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/api/public-catalog.api.ts",
+      "exists": true,
+      "sha256": "a38c51ba4c90080d2bacaf4372e7d4274ccaaf69ab83a2333d2968deac52f9e3"
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/api/public-catalog.pages.ts",
+      "exists": true,
+      "sha256": "2349a111a34d01252eaecc1308835d03f0f850788317ee29fa2a850367c117ff"
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/api/public-catalog.seo.ts",
+      "exists": true,
+      "sha256": "646b6bfa75d5c2bdcf68c809e6e4e42b8915a2c0ac900d710a5739301d949f7a"
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/api/public-catalog.server.test.ts",
+      "exists": true,
+      "sha256": "c2aa612ab0405733eb915af76ccc40dffd4800af04b9d922d25bdda42da20478"
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/api/public-catalog.server.ts",
+      "exists": true,
+      "sha256": "c42e06fd861ba8848a3390b400083d7efab14e7b603c23eec9b00ce6ca775f1b"
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/api/public-catalog.test-helper.ts",
+      "exists": true,
+      "sha256": "86591cec2cb0351d2d5344e23d11cac0ba6dd7c6d45e2af96b0302306fb83ab3"
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/api/public-catalog.transport.ts",
+      "exists": true,
+      "sha256": "49a85d4117b2e5a97f88a5d03734e2f8a9331ee86d468010b4e676b953b1198c"
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/components/CatalogCategorySelect.tsx",
+      "exists": true,
+      "sha256": "0dc158b534dff6aad8792ba1028365eb6ea5f559205ed319b5316e9acdbfa8c1"
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/components/CatalogPagination.tsx",
+      "exists": true,
+      "sha256": "2cd649d85efa52664b3805f8461c88ef0a09347a6842732b0c5860766657b9d6"
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/components/PublicCatalogListing.test.tsx",
+      "exists": true,
+      "sha256": "7fdc92d1941a4b99d76fb9a08f7ecb7cc75b19ad2387491a70fc5a10c0434233"
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/components/PublicCatalogListing.tsx",
+      "exists": true,
+      "sha256": "c580d35b40fada5463d5a700efdf93b80981436237b57970d0c89f8a98dc09be"
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/components/PublicCatalogState.test.tsx",
+      "exists": true,
+      "sha256": "a3627e1b5c128b13874bf722bf9b6d5e0f73e74c4db35f1f619c0bca8b5bb09a"
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/components/PublicCatalogState.tsx",
+      "exists": true,
+      "sha256": "cfa89f7dade770fa2ffcd0777e3c6524c6dac1b1c2c707082f74fec234f06a83"
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/components/PublicWorkBoundary.tsx",
+      "exists": true,
+      "sha256": "f11df7ab8a35dc579bba0f2e0db293522dd09696bef3f16511e39b25be85d3b5"
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/components/PublicWorkDetails.tsx",
+      "exists": true,
+      "sha256": "dc2fad4e0ae710b5803718cbdd939284e72929a6807ef27de0d43be446dbf74c"
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/components/PublicWorkImage.test.tsx",
+      "exists": true,
+      "sha256": "9a17f0cdf180e83e17516dac84c02652d46b5bf785cfc47ef88d672a3c52a5ee"
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/components/PublicWorkImage.tsx",
+      "exists": true,
+      "sha256": "b4c44c3277a7c9f1da350bcd70d3afcab634cd59ee2f1c0dda13204c342013a6"
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/components/PublicWorkNotFound.test.tsx",
+      "exists": true,
+      "sha256": "1fa09df832c9ead236ecdda4aaf1690cf28fa5937735e5bee0f07621a7c4aaf9"
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/components/PublicWorkNotFound.tsx",
+      "exists": true,
+      "sha256": "815430ded98ab0496c86ecc6e004fee1a83aa09c3e835e8ee85a864951a28f63"
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/components/public-image.test-helper.tsx",
+      "exists": true,
+      "sha256": "1fc0e30c95faa53f95f8fbe1c40ef47bb81ee16070efb2840cb89a8a2e4dc6c2"
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/hooks/public-catalog.access.ts",
+      "exists": true,
+      "sha256": "4780b1b82dca5a7e9f49cb9f847045910ef771f6230b8c9008e2b87d87ac9e6f"
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/hooks/public-catalog.hooks.test.tsx",
+      "exists": true,
+      "sha256": "9d4c498f625d3ece02ed6be1df8b438512140988f274963481881f8fa678846e"
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/hooks/public-catalog.hooks.ts",
+      "exists": true,
+      "sha256": "2153479be61aa9c4d7210fd96589a4865ae798fcd5d5247f19c8880997dc7785"
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/hooks/public-catalog.keys.ts",
+      "exists": true,
+      "sha256": "0de8ea6db3c5c31edefde15dadde58549956441a8734df10618bc7fe8d6f9a60"
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/hooks/use-public-retry-focus.ts",
+      "exists": true,
+      "sha256": "028fe2924eefac4fa45505230016806ec8833ea305613ead152e4a6a2260ebaf"
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/hooks/use-reduced-motion.ts",
+      "exists": true,
+      "sha256": "5965cfe4d9efa6797b6e23c1eb1eb9371f46cd9056998ef55bce4ecd9559b4fd"
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/model/catalog-query.test.ts",
+      "exists": true,
+      "sha256": "e1bca5a9be58b3d8278e790ab772a2f9d6a63940fe19d5a9fdf554fef2c3a279"
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/model/catalog-query.ts",
+      "exists": true,
+      "sha256": "1210709717dd8051473d2824e8ac2ea871662500c99c384f6bca62b375b8542e"
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/model/public-catalog.errors.ts",
+      "exists": true,
+      "sha256": "b6d9282a5339a38a6f59361df0914231032932808b9499a1af9510bcb14df915"
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/model/public-catalog.presentation.ts",
+      "exists": true,
+      "sha256": "3497726927519a3101b7fbb81d878d0ac6faecf8dec710fae48d9ee1629cbe3a"
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/model/public-catalog.responses.ts",
+      "exists": true,
+      "sha256": "1fb3968ada7fb9e768a8a4c53e0203846641aa8081ca08988ee672c09906865b"
+    },
+    {
+      "path": "apps/web/src/features/public-catalog/model/public-catalog.types.ts",
+      "exists": true,
+      "sha256": "693888cf4631b15ead41a179fe9b01fec32a341b3b0af325dffa8cde3e4e09b3"
+    },
+    {
+      "path": "apps/web/src/features/story/components/ChapterList/ChapterList.tsx",
+      "exists": true,
+      "sha256": "bf12599408f35feb97d5da7dc671c65673d56a472ee1c51995bd9b880da2be09"
+    },
+    {
+      "path": "apps/web/src/features/story/components/SimilarStories/SimilarStories.tsx",
+      "exists": true,
+      "sha256": "76315f0c39557f58fc8a22fa2dc3ad9f08fe8f6455f48c38b4b323d5b16bbf51"
+    },
+    {
+      "path": "apps/web/src/features/story/components/StoryBanner/StoryBanner.tsx",
+      "exists": true,
+      "sha256": "c24998d26c1cd43297fa406223d46f701a4ba3fbff63d8686ade222d333b7fd3"
+    },
+    {
+      "path": "apps/web/src/features/story/components/StorySidebar/StorySidebar.tsx",
+      "exists": true,
+      "sha256": "e7440d30a6c934ec50a166481580fa12cc0ee6f09e06f63864cd35598d87a0d7"
+    },
+    {
+      "path": "apps/web/src/features/story/routing.test.tsx",
+      "exists": true,
+      "sha256": "05fd41df03f048d3b1bc9d1d4c84e309f8ed92748adccb9104fa63b1f4f8ff58"
+    },
+    {
+      "path": "apps/web/src/features/text-stories/components/TextStoriesListing/TextStoriesListing.tsx",
+      "exists": true,
+      "sha256": "96847a7634364b52f921273a8cac82f8786998726d97916984defeb97e8057dd"
+    },
+    {
+      "path": "apps/web/src/features/text-stories/components/TextStoryCard/TextStoryCard.tsx",
+      "exists": false,
+      "sha256": null
+    },
+    {
+      "path": "apps/web/src/features/text-stories/components/TextWorkDetails/TextWorkDetails.test.tsx",
+      "exists": true,
+      "sha256": "e535e0dfe659392035eb61d4ee04c5a9d62402206d04e04ccf216f25fed742b1"
+    },
+    {
+      "path": "apps/web/src/features/text-stories/components/TextWorkDetails/TextWorkDetails.tsx",
+      "exists": true,
+      "sha256": "5a74a81287da31dcb7615709154eec8d9a518f56607055d76ef14628a23103a9"
+    },
+    {
+      "path": "apps/web/src/features/text-stories/model/catalog.test.tsx",
+      "exists": true,
+      "sha256": "ef736f559ef6b5d817a6bab2e4fc2ea07a696228f7a11a7b06f4a9c951dc00d3"
+    },
+    {
+      "path": "apps/web/src/features/text-stories/model/catalog.ts",
+      "exists": false,
+      "sha256": null
+    },
+    {
+      "path": "apps/web/src/services/api/api-client.test.ts",
+      "exists": true,
+      "sha256": "b9aac93df6aa103ace171b52fd2c71a212b0a9585f45143400e5ba472268cb93"
+    },
+    {
+      "path": "apps/web/src/services/api/api-client.ts",
+      "exists": true,
+      "sha256": "20684e25eafc7c6247df0fdec2a2cd5c3f58fbf99c5915685892dd585138ff63"
+    },
+    {
+      "path": "apps/web/src/styles/integration.css",
+      "exists": true,
+      "sha256": "6c168f60870cf9d0c35ea23aeb31a54b00d941e374fb499678c3281905f35cfd"
+    },
+    {
+      "path": "packages/contracts/src/content/content.schema.test.ts",
+      "exists": true,
+      "sha256": "a44a65117e77ba18a5d0e15e92e326a5af9a821883ae672c0541f2e63791035c"
+    },
+    {
+      "path": "packages/contracts/src/content/content.schema.ts",
+      "exists": true,
+      "sha256": "de930340bbac860baa32bf4aeba4ff654081f12226c72d2b3ec6913b47ce0c39"
+    },
+    {
+      "path": "packages/contracts/src/index.ts",
+      "exists": true,
+      "sha256": "df9af72e04c7c804ac392845ec5c3d3ab5d78b2165e87102ec9b4e1df95bae39"
+    },
+    {
+      "path": "packages/database/tests/integration/content-domain.integration.test.ts",
+      "exists": true,
+      "sha256": "51c267d5c72dbee97c5d06c413fa3aa2732c54c880073ae07e528317c472881d"
+    },
+    {
+      "path": "packages/database/tests/integration/migration.integration.test.ts",
+      "exists": true,
+      "sha256": "21435ae8a9882c39f7a3a27eb562e382ba9bc96dd7c15b001c2fe99f6ac29ab0"
+    },
+    {
+      "path": "scripts/check-web-routes.mjs",
+      "exists": true,
+      "sha256": "0908d5b6e43069681a770ec99019cc885ee514eafb845534ec68862cbaf85333"
+    },
+    {
+      "path": "turbo.json",
+      "exists": true,
+      "sha256": "55470c1d0ca34f4ea5c114d298f47efc0be152d941701f64dafd7cecce6c5381"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "protectedFilesChecked": 200,
+  "protectedDifferences": [
+    "features/admin/components/AdminWorkForm/AdminWorkForm.test.tsx",
+    "features/admin/components/AdminWorkForm/AdminWorkForm.tsx",
+    "features/admin/model/admin-work-editor.test.ts",
+    "features/admin/model/admin-work-editor.ts"
+  ],
+  "existingCssFiles": 65,
+  "cssSelectorExtensionsOnly": [
+    "features/home/components/SuggestionsSection/SuggestionsSection.module.css",
+    "features/home/components/HeroSection/HeroSection.module.css",
+    "styles/integration.css"
+  ],
+  "featurePointerBytesPreserved": true,
+  "head": "868948bb9f51fe9fdf6f40d18e8d8b7d920a1f9f",
+  "originalDirtyPaths": 117,
+  "byteIdenticalProtectedFiles": 196,
+  "authorizedPrerequisiteRepair": "P03 T106: revision-stamped publication confirmation and meaningful regressions; presentation unchanged",
+  "preExistingBackendPackageEntriesChecked": 43,
+  "backendPackageDifferences": [],
+  "existingCssDeclarationBlocksPreserved": true
+}

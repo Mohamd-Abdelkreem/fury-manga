@@ -1,0 +1,57 @@
+{
+  "passed": true,
+  "sorts": [
+    {
+      "sort": "newest",
+      "titles": [
+        "Browser illustrated عمل",
+        "عمل Mixed 36 manga",
+        "عمل Mixed 30 manga",
+        "عمل Mixed 24 manga",
+        "عمل Mixed 18 manga",
+        "عمل Mixed 12 manga",
+        "عمل Mixed 06 manga",
+        "عمل Mixed 00 manga"
+      ]
+    },
+    {
+      "sort": "chapter-latest",
+      "titles": [
+        "Browser illustrated عمل",
+        "عمل Mixed 00 manga",
+        "عمل Mixed 24 manga",
+        "عمل Mixed 18 manga",
+        "عمل Mixed 06 manga",
+        "عمل Mixed 30 manga",
+        "عمل Mixed 36 manga",
+        "عمل Mixed 12 manga"
+      ]
+    },
+    {
+      "sort": "title-asc",
+      "titles": [
+        "Browser illustrated عمل",
+        "عمل Mixed 00 manga",
+        "عمل Mixed 06 manga",
+        "عمل Mixed 12 manga",
+        "عمل Mixed 18 manga",
+        "عمل Mixed 24 manga",
+        "عمل Mixed 30 manga",
+        "عمل Mixed 36 manga"
+      ]
+    },
+    {
+      "sort": "title-desc",
+      "titles": [
+        "عمل Mixed 36 manga",
+        "عمل Mixed 30 manga",
+        "عمل Mixed 24 manga",
+        "عمل Mixed 18 manga",
+        "عمل Mixed 12 manga",
+        "عمل Mixed 06 manga",
+        "عمل Mixed 00 manga",
+        "Browser illustrated عمل"
+      ]
+    }
+  ]
+}

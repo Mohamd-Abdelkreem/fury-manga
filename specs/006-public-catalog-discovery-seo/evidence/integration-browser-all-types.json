@@ -1,0 +1,35 @@
+{
+  "passed": true,
+  "results": [
+    {
+      "type": "manga",
+      "count": 7,
+      "matchingSavedTitles": true
+    },
+    {
+      "type": "manhwa",
+      "count": 7,
+      "matchingSavedTitles": true
+    },
+    {
+      "type": "manhua",
+      "count": 7,
+      "matchingSavedTitles": true
+    },
+    {
+      "type": "comics",
+      "count": 7,
+      "matchingSavedTitles": true
+    },
+    {
+      "type": "novel",
+      "count": 7,
+      "matchingSavedTitles": true
+    },
+    {
+      "type": "text-story",
+      "count": 7,
+      "matchingSavedTitles": true
+    }
+  ]
+}

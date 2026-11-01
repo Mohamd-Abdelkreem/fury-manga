@@ -1,3 +1,4 @@
+import { ImageProcessor } from "../../infrastructure/media/image-processor.js";
 import { randomUUID } from "node:crypto";
 import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -17,7 +18,10 @@ import {
 import { createMediaConfig } from "../../core/config/media.config.js";
 import { MediaStorage } from "../../infrastructure/media/media-storage.js";
 import { CategoryManagementService } from "./category-management.service.js";
-import { ContentConflictException } from "./content.errors.js";
+import {
+  ContentConflictException,
+  ContentWorkSlugConflictException,
+} from "./content.errors.js";
 import { WorkManagementService } from "./work-management.service.js";
 import { PublicContentService } from "./public-content.service.js";
 import { MediaService } from "../media/media.service.js";
@@ -32,7 +36,7 @@ const fixtureRoot = mkdtempSync(join(tmpdir(), "fury-work-management-"));
 const mediaRoot = join(fixtureRoot, "private-media");
 mkdirSync(mediaRoot);
 const mediaStorage = new MediaStorage(createMediaConfig(mediaRoot));
-const media = new MediaService(database, mediaStorage);
+const media = new MediaService(database, mediaStorage, new ImageProcessor());
 const works = new WorkManagementService(database, media);
 const publicContent = new PublicContentService(database);
 const categories = new CategoryManagementService(database);
@@ -525,7 +529,7 @@ describe("complete Work draft management with PostgreSQL", () => {
     try {
       const saved = await new WorkManagementService(
         reconnected,
-        new MediaService(reconnected, mediaStorage),
+        new MediaService(reconnected, mediaStorage, new ImageProcessor()),
       ).getWork(manga.id);
       const currentManga = await works.getWork(manga.id);
       expect(saved).toEqual(currentManga);
@@ -549,7 +553,7 @@ describe("complete Work draft management with PostgreSQL", () => {
         ...uniqueWorkBody({ title: "Conflicting slug" }),
         slug: created.slug,
       }),
-    ).rejects.toBeInstanceOf(ContentConflictException);
+    ).rejects.toBeInstanceOf(ContentWorkSlugConflictException);
     await expect(
       database.work.count({ where: { id: identity } }),
     ).resolves.toBe(1);

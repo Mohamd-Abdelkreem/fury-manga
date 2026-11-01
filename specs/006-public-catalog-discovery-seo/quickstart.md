@@ -6,7 +6,7 @@ This is the smallest runnable end-to-end validation for the owner's 2026-09-27 P
 
 - Node.js 24, pnpm 11, a working Docker/Compose runtime for local PostgreSQL and Testcontainers, and a private writable media directory outside the checkout.
 - An **isolated fresh or P04-remediated** database whose configured `DATABASE_URL` has been checked against the intended disposable local target before any migration command. Do not deploy the combined migration chain to unremediated populated content; follow `docs/operations/p04-chapter-upgrade.md` first. No production migration is authorized by this journey.
-- `.env` and `apps/web/.env.local` created from their examples. Set `DATABASE_URL`, independent `AUTH_*_SECRET` values (at least 32 characters), `MEDIA_STORAGE_ROOT`, and `NEXT_PUBLIC_API_URL=http://localhost:4000/api/v1`. P05 implementation must document/set validated `SERVER_API_URL=http://localhost:4000/api/v1` and `SITE_ORIGIN=http://localhost:3000`; `COMMUNITY_URL` may be unset. Never put credentials or private media paths into a public URL.
+- `.env` and `apps/web/.env.local` created from their examples. Set `DATABASE_URL`, independent `AUTH_*_SECRET` values (at least 32 characters), `MEDIA_STORAGE_ROOT`, and `NEXT_PUBLIC_API_URL=http://localhost:4000/api/v1`. P05 implementation must document/set validated `SERVER_API_URL=http://localhost:4000/api/v1` and `SITE_ORIGIN=https://your-trusted-test-origin.example` (production builds require HTTPS); `COMMUNITY_URL` may be unset. Never put credentials or private media paths into a public URL.
 - An active verified ADMIN account. Use the existing optional `SEED_ADMIN_EMAIL`, `SEED_ADMIN_NAME`, and `SEED_ADMIN_PASSWORD` values with `pnpm db:seed`, or an existing authorized ADMIN. There are no default credentials. Use only synthetic licensed test cover/background/page media in this isolated environment.
 - P03/P04 admin work/category/chapter and P02 media flows functional in this checkout. If they fail, record a dependency failure rather than substituting fixtures.
 
@@ -51,7 +51,8 @@ pnpm --filter @fury/contracts test
 pnpm --filter @fury/api test
 pnpm --filter @fury/api test:integration
 pnpm --filter @fury/web test
-pnpm test:web-routes
+P05_PUBLIC_WORK_SLUG="replace-with-the-published-slug-from-step-1"
+pnpm test:web-routes http://localhost:3000 "$P05_PUBLIC_WORK_SLUG"
 pnpm --filter @fury/contracts check-types
 pnpm --filter @fury/api check-types
 pnpm --filter @fury/web check-types
@@ -61,3 +62,20 @@ pnpm verify
 ```
 
 The integration suite needs Testcontainers. `pnpm verify` is the final local implementation gate after contract, API and web changes settle; record actual results, warnings and any unverified physical-device/CDN behavior. Inspect existing and new public content JSON/image responses through Express: success, validation/404/503 and limiter 429 must retain `Cache-Control: no-store`; list JSON includes matching top-level `paginationMeta`. Check a deployed proxy/CDN separately at release if one is not present locally. Use sentinel public search text, malformed URL and unknown P05 path values to confirm request logs and safe errors retain none of them. Repeat public GETs and confirm persisted publication history/business-event counts do not change. Failure checks are: hidden work in any public/SEO response, cookie/bearer on a public read, 401 login redirect for anonymous browsing, image path or asset ID leak, stale fixture data, false empty on server failure, URL state lost on refresh, or any regression in existing ADMIN/auth/reader protection. Do not mark local implementation complete while any of these occurs; do not mark P05 released while formal dependency and deployment gates remain open.
+
+## 2026-11-01 execution boundary
+
+Constitution 2.1.0 records the owner's limited P05 functional exception. The design
+freeze continues elsewhere. The implementation evidence uses an owned disposable
+PostgreSQL/Express/production Next environment, synthetic accounts/media and real
+ADMIN controls. Preserve local settings; do not replay its ephemeral ports or
+credentials as deployment configuration. Use a real published immutable slug in
+the route smoke above; the protected fixture-reader probes remain separate.
+
+Check both same-SPA and fresh navigation after unpublication. A matching public
+Work GET must succeed before recovery; retry must restore visible keyboard focus.
+Inspect regular and crawler metadata again after recovery, including removal of
+the former not-found noindex. Next streamed not-found responses may have HTTP200;
+the public API/image denial remains404 and rendered absence must disclose no
+withdrawn metadata. Keep rate-limit failures distinct from publication denial and
+respect the unchanged limiter's actual reset window.

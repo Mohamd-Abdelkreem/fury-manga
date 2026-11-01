@@ -1,0 +1,28 @@
+{
+  "command": "pnpm verify",
+  "exitCode": 0,
+  "databaseTarget": "Unreachable sentinel127.0.0.1:9 for orchestration; integration harnesses create real isolated PostgreSQL18.4 Testcontainers",
+  "freshTests": {
+    "contracts": 117,
+    "databaseUnit": 10,
+    "apiUnit": 164,
+    "web": 528,
+    "apiIntegration": 164,
+    "databaseIntegration": 36
+  },
+  "cache": "All tests and both integration suites fresh. Contract/database builds and lint replay cached outputs; web/API build and web lint fresh; types fresh. See exact Turbo statuses in raw log.",
+  "buildOutput": {
+    "requiredEntries": 6,
+    "emittedFiles": 390,
+    "emittedTests": 0
+  },
+  "routeSmoke": "40 existing routes plus404 fallback pass on final owned Next build",
+  "finalShuffledProcesses": [110183, 110197, 110201, 110203, 110207],
+  "testsPerShuffledProcess": 28,
+  "failedSeed110183": "Four timeouts during recorded565-second host maintenance sleep; original failure preserved, same seed passes awake without configuration/timeout changes",
+  "warnings": [
+    "Existing pg client.query concurrency deprecation retained",
+    "Intentional public Blob img optimizer advisory retained"
+  ],
+  "review": "Executing-agent clean-code/test/docs/React guard passes; not independent/human approval"
+}

@@ -73,7 +73,7 @@ Security infrastructure is in `src/infrastructure/security`:
 
 - `password-hasher.ts`: Argon2id hash/verify
 - `token-hasher.ts`: SHA-256 token fingerprint
-- `jwt.service.ts`: issue/verify purpose-bound access, refresh, verification,
+- `jwt-tokens.ts`: issue/verify purpose-bound access, refresh, verification,
   and reset JWTs
 
 Auth DTOs use file-per-DTO modules. Auth rate-limit configuration is separate
@@ -119,12 +119,13 @@ created pending user so the address can retry.
 ## Content module
 
 `src/modules/content` owns feature-local rules, bounded queries, explicit
-administrative/public mappers, a management service, a public read service,
+administrative/public mappers, focused Category/Work/Chapter/publication services,
+a public read service,
 thin controllers, and route wiring. `src/router.ts` constructs those owners with
 the injected Prisma client. No browser/API implementation import or generic
 repository crosses package boundaries.
 
-The 20 content operations documented in OpenAPI are:
+The 20 existing metadata/ADMIN content operations remain documented in OpenAPI:
 
 - public `GET`: `/content/works`, `/content/works/{workSlug}`,
   `/content/works/{workSlug}/chapters`, and
@@ -164,7 +165,7 @@ one consistent filtered total; admin output explicitly maps saved fields.
 Publication and edits to published works require complete metadata, an enabled
 category, and an available associated cover. Public reads expose only eligible
 published metadata and return the same 404 for private and absent slugs. The
-public API does not deliver cover bytes. See the
+P05 additionally delivers narrowly scoped verified cover/background bytes as described below. See the
 [P03 upgrade procedure](docs/operations/p03-content-upgrade.md) for migration
 inventory, remediation, and recovery constraints.
 
@@ -193,6 +194,62 @@ page/media readiness and appends an event only for a real transition. Public
 Chapter list/detail/count share the eligibility predicate and expose the title
 only after the separate enforcement migration. See the
 [P04 upgrade procedure](docs/operations/p04-chapter-upgrade.md).
+
+### P05 catalog producers and connected consumers
+
+Seven additional anonymous GET operations are registered in `content.routes.ts`
+and the shared OpenAPI owner: `/content/catalog/works`,
+`/content/catalog/categories`, `/content/catalog/home`,
+`/content/catalog/works/{workSlug}`, `/content/catalog/sitemap-works`, and
+`/content/works/{workSlug}/cover` or `/background`. Shared strict catalog schemas
+live in `@fury/contracts`; old metadata DTOs retain their identities. Queries use
+one published-and-ready predicate, bounded selections, explicit public mappers,
+and repeatable-read composite snapshots. Sitemap traversal uses internal batches
+of 100 in one snapshot and returns the complete slug set or failure.
+
+`apps/web/src/features/public-catalog/api` owns runtime-parsed browser/server
+requests; `model` owns URL normalization, safe errors and public projections;
+`hooks/public-catalog.access.ts` owns per-QueryClient subscriptions, cache effects,
+asynchronous read ordering and denial fencing; `hooks/public-catalog.hooks.ts`
+binds those policies to query lifecycle. Raw Axios/Blob/Fetch failure projection
+lives in `api/public-catalog.transport.ts`; models contain pure rules and safe error types. Browser
+public GET mode uses the existing central Axios instance with its Fetch adapter,
+no-store and omitted credentials; public 401 does not clear private session state
+or dispatch refresh. Server reads use native Fetch with no-store, omitted
+credentials and redirect rejection, with validated `SERVER_API_URL` / `SITE_ORIGIN`
+and optional HTTPS `COMMUNITY_URL` from the server-only config owner. Newer
+validated Work 404 remains authoritative across reset/remount/cache writes and
+older in-flight success until a later matching Work GET succeeds. A Chapter 404
+refreshes parent-derived data without declaring the Work absent; image 503 is
+independent of Work eligibility.
+
+Express applies no-store to all public content methods before CORS, parsing, validation and rate-limit errors. GET and implicit HEAD share visibility/status/headers; HEAD has no body. Scoped public
+logging excludes search values and malformed/unmatched dynamic paths, including raw
+Referer/proxy URL headers. Public request headers are omitted; ADMIN/private
+logging retains its established redaction. Metadata
+eligibility follows committed state; image byte-integrity failure while status
+remains `AVAILABLE` is 503, while committed cover withdrawal denies fresh reads.
+Private media routes keep their existing ADMIN/owner authority.
+Reusable media-domain errors live in `modules/media/media.errors.ts`.
+The shared unavailable-read error lives in `infrastructure/media/media.errors.ts`;
+the feature error owner retains its existing export for compatible callers.
+Public and private reads reuse that definition without changing wire codes/messages.
+
+The public `/`, `/discover`, `/stories`, `/categories` and `/story/[id]` pages use
+live server seeds and public Query hooks. Presentation-only helpers live in
+`model/public-catalog.presentation.ts`; `PublicWorkImage` owns Blob URL lifecycle
+and viewport-triggered reads. `PublicCatalogState` and retry-focus hooks provide
+truthful Arabic states. Protected reader fixtures retain their separate ownership.
+Request-time SEO lives in `api/public-catalog.seo.ts`, `app/sitemap.ts` and
+`app/robots.ts`. Scoped Work framework boundaries bridge actual server denial into
+the client owner and reset a latched same-path 404 only after fresh server output.
+Ship the compatible API before the web consumer; roll back the consumer before
+removing its API dependencies. No deployment or rollback was executed.
+P06 bookmarks/ratings/library, P07 readers/progress, P08 community/moderation,
+P09 notifications, P10 gifts/appearance, P11 support/legal, P12 admin users/metrics
+and P13 advertising remain outside this closeout. See the
+[P05 evidence](specs/006-public-catalog-discovery-seo/evidence.md) and
+[legacy register](docs/product/legacy-closeout.md) for current gates.
 
 ## Media module
 
@@ -317,3 +374,34 @@ or other immediate-revocation store is included.
 7. Never store refresh tokens in JavaScript storage, expose Prisma users, log
    credentials or production links, or add domain-specific defaults to the
    template. Local console action links belong only in ignored preview files.
+
+## Media and progressive-preview ownership — 2026-11-01
+
+The current owner-approved P02 extension replaces the historical blanket
+single-frame rule for `work_cover`, `work_background` and `chapter_page` only.
+All six existing numerical limits are approved by the dated owner decision, not a
+claimed review of generated artwork. Source policy is shared through
+`packages/contracts/src/media/media.schema.ts`; stored/output MIME remains
+JPEG/PNG/WebP, with GIF and animated WebP canonicalized to animated lossless WebP.
+APNG is explicitly unsupported. Existing private authority, eligible Work-scoped
+public images, immutable reference history, integrity and no-store rules remain.
+
+`apps/api/src/infrastructure/media/image-container.ts` bounds frame/container
+inspection; `image-validation.ts` validates logical canvas dimensions and decoded
+work; composition-owned `image-processor.ts` bounds admitted native jobs. New
+optional private admin Chapter-page width/height/byte length comes from existing
+MediaAsset columns through the content mapper, without a migration or public page
+exposure. OpenAPI documents the source/output distinction and busy503 outcome.
+
+Current `ChapterContentRenderer` delegates illustrated pages to
+`IllustratedChapterPages`; pure scheduling lives in `features/content/model/`,
+with per-viewer private resources and authenticated effects in
+`features/content/hooks/`. The existing ChapterPreviewModal actually consumes it.
+Normal display preserves animation; temporary reduced-motion PNGs are released
+with their owner. Public Work images and administrator candidate previews use
+shared motion detection/display primitives without introducing another HTTP stack.
+
+The fixture protected reader is still a P07 obligation. Its eventual adapter must
+use user-reader publication authority, not administrator media authority. See
+[the existing P07 handoff](PLAN.md#p07--protected-readers-progress-completion-and-resume)
+and [current media evidence](specs/002-persistent-vps-media/evidence/media-foundation/README.md).

@@ -1,0 +1,52 @@
+{
+  "kind": "real persisted discovery and URL history journey",
+  "passed": true,
+  "results": [
+    {
+      "case": "pagination, copied URL, reload, back and forward",
+      "first": [
+        "browser-illustrated",
+        "browser-text",
+        "saved-manga-0",
+        "saved-manhwa-1",
+        "saved-manhua-2",
+        "saved-comics-3",
+        "saved-novel-4",
+        "saved-text-story-5",
+        "saved-manga-6",
+        "saved-manhwa-7",
+        "saved-manhua-8",
+        "saved-comics-9"
+      ],
+      "second": [
+        "saved-novel-10",
+        "saved-text-story-11",
+        "saved-manga-12",
+        "saved-manhwa-13",
+        "saved-manhua-14",
+        "saved-comics-15",
+        "saved-novel-16",
+        "saved-text-story-17",
+        "saved-manga-18",
+        "saved-manhwa-19",
+        "saved-manhua-20",
+        "saved-comics-21"
+      ],
+      "copiedPath": "/discover?sort=title-asc&page=2"
+    },
+    {
+      "case": "search/type with filter page reset",
+      "types": ["manga", "manhwa", "manhua", "comics", "novel", "text-story"],
+      "selection": "?q=Mixed&type=novel&sort=title-asc",
+      "works": [
+        "saved-novel-4",
+        "saved-novel-10",
+        "saved-novel-16",
+        "saved-novel-22",
+        "saved-novel-28",
+        "saved-novel-34",
+        "saved-novel-40"
+      ]
+    }
+  ]
+}

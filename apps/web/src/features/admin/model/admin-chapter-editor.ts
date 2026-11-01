@@ -10,16 +10,24 @@ export type EditableChapterPage = Readonly<{
   id?: string;
   assetId: string;
   assetStatus?: "available" | "unavailable";
+  width?: number;
+  height?: number;
+  byteLength?: number;
 }>;
 
 export const savedChapterPages = (
   chapter: AdminChapter,
 ): EditableChapterPage[] =>
-  chapter.pages.map(({ id, assetId, assetStatus }) => ({
-    id,
-    assetId,
-    assetStatus,
-  }));
+  chapter.pages.map(
+    ({ id, assetId, assetStatus, width, height, byteLength }) => ({
+      id,
+      assetId,
+      assetStatus,
+      ...(width === undefined ? {} : { width }),
+      ...(height === undefined ? {} : { height }),
+      ...(byteLength === undefined ? {} : { byteLength }),
+    }),
+  );
 
 export const appendChapterPage = (
   pages: readonly EditableChapterPage[],

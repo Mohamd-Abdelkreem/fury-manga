@@ -4,7 +4,9 @@ import React from "react";
 import { Users, ArrowLeft } from "lucide-react";
 import styles from "./DiscordBanner.module.css";
 
-export function DiscordBanner() {
+export function DiscordBanner({
+  communityUrl,
+}: Readonly<{ communityUrl?: string | undefined }>) {
   return (
     <div dir="rtl" className={styles["banner"]}>
       {/* Background gradient */}
@@ -70,7 +72,7 @@ export function DiscordBanner() {
                 letterSpacing: "-0.3px",
               }}
             >
-              انضم إلى مجتمعنا على ديسكورد
+              مجتمع Fury
             </h3>
             <p
               style={{
@@ -81,63 +83,52 @@ export function DiscordBanner() {
                 marginTop: "3px",
               }}
             >
-              +5000 عضو نشط · ناقش المانجا والأنمي مع أصدقائك
+              {communityUrl === undefined
+                ? "رابط المجتمع غير متاح حاليًا."
+                : "ناقش الأعمال مع القرّاء عبر رابط المجتمع."}
             </p>
           </div>
         </div>
 
         <div className={styles["rightGroup"]}>
-          {/* Online status */}
-          <div className={styles["onlineStatus"]}>
-            <div
-              className={`${styles["onlineDot"]} animate-pulse`}
-              style={{ background: "#22c55e" }}
-            />
-            <span
+          {/* Join button */}
+          {communityUrl === undefined ? null : (
+            <a
+              href={communityUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles["joinBtn"]}
               style={{
-                fontSize: "12px",
-                color: "#e2e8f0",
+                background: "#ffffff",
+                color: "#5865F2",
                 fontFamily: "'Cairo', sans-serif",
-                fontWeight: 600,
+                fontWeight: 800,
+                fontSize: "0.9rem",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+                border: "1px solid rgba(255, 255, 255, 0.5)",
+              }}
+              onMouseEnter={(e) => {
+                const el = e.currentTarget;
+                el.style.background = "#5865F2";
+                el.style.color = "#ffffff";
+                el.style.borderColor = "#5865F2";
+                el.style.transform = "translateY(-2px)";
+                el.style.boxShadow = "0 8px 24px rgba(88, 101, 242, 0.4)";
+              }}
+              onMouseLeave={(e) => {
+                const el = e.currentTarget;
+                el.style.background = "#ffffff";
+                el.style.color = "#5865F2";
+                el.style.borderColor = "rgba(255, 255, 255, 0.5)";
+                el.style.transform = "translateY(0)";
+                el.style.boxShadow = "0 4px 20px rgba(0,0,0,0.15)";
               }}
             >
-              382 متصل الآن
-            </span>
-          </div>
-
-          {/* Join button */}
-          <button
-            className={styles["joinBtn"]}
-            style={{
-              background: "#ffffff",
-              color: "#5865F2",
-              fontFamily: "'Cairo', sans-serif",
-              fontWeight: 800,
-              fontSize: "0.9rem",
-              boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
-              border: "1px solid rgba(255, 255, 255, 0.5)",
-            }}
-            onMouseEnter={(e) => {
-              const el = e.currentTarget;
-              el.style.background = "#5865F2";
-              el.style.color = "#ffffff";
-              el.style.borderColor = "#5865F2";
-              el.style.transform = "translateY(-2px)";
-              el.style.boxShadow = "0 8px 24px rgba(88, 101, 242, 0.4)";
-            }}
-            onMouseLeave={(e) => {
-              const el = e.currentTarget;
-              el.style.background = "#ffffff";
-              el.style.color = "#5865F2";
-              el.style.borderColor = "rgba(255, 255, 255, 0.5)";
-              el.style.transform = "translateY(0)";
-              el.style.boxShadow = "0 4px 20px rgba(0,0,0,0.15)";
-            }}
-          >
-            <Users style={{ width: 15, height: 15 }} />
-            انضم الآن
-            <ArrowLeft style={{ width: 14, height: 14 }} />
-          </button>
+              <Users style={{ width: 15, height: 15 }} />
+              انضم الآن
+              <ArrowLeft style={{ width: 14, height: 14 }} />
+            </a>
+          )}
         </div>
       </div>
     </div>

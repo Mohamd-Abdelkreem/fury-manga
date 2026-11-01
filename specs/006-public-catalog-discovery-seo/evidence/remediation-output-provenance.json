@@ -1,0 +1,110 @@
+[
+  {
+    "artifact": "remediation-head-invocation-failure.txt",
+    "sourceSha256": "ce5e08a4c048d39eb9987e5a30f01bb3d243c16cb5df3e262de5b3495a4bed2d",
+    "sourceDate": "2026-11-01",
+    "scope": "actual recorded execution; machine paths and host sanitized"
+  },
+  {
+    "artifact": "remediation-head-red.txt",
+    "sourceSha256": "d691a4ddc6e645a25f268975a2e5d077d8f8f9ab1086fa48a5f70621d3d111cf",
+    "sourceDate": "2026-11-01",
+    "scope": "actual recorded execution; machine paths and host sanitized"
+  },
+  {
+    "artifact": "remediation-head-green.txt",
+    "sourceSha256": "583bb3c34ba51b1936abd7efd1eae8a883b5eee3edd3a2fafa3813bd57057596",
+    "sourceDate": "2026-11-01",
+    "scope": "actual recorded execution; machine paths and host sanitized"
+  },
+  {
+    "artifact": "remediation-api-unit-fixture-failure.txt",
+    "sourceSha256": "158044fed021bda499836af83b7a5c527eaf93c95edfcfe1915af67c1a636f5c",
+    "sourceDate": "2026-11-01",
+    "scope": "actual recorded execution; machine paths and host sanitized"
+  },
+  {
+    "artifact": "remediation-t075-red.txt",
+    "sourceSha256": "40e0f57a77184a82fa2af391ec135cc90897ce70e27dc526dcd433d76e8a2d2b",
+    "sourceDate": "2026-11-01",
+    "scope": "actual recorded execution; machine paths and host sanitized"
+  },
+  {
+    "artifact": "remediation-t075-green.txt",
+    "sourceSha256": "aa4c44d47581cb9effaa737c8e0085d5d4ae8ce9b7502f700bb46883310863fe",
+    "sourceDate": "2026-11-01",
+    "scope": "actual recorded execution; machine paths and host sanitized"
+  },
+  {
+    "artifact": "remediation-t076-red.txt",
+    "sourceSha256": "940a2c7d3fd3ecc356667dd116ddacb681432dcde64d10cc24dfe2fcef7f41f1",
+    "sourceDate": "2026-11-01",
+    "scope": "actual recorded execution; machine paths and host sanitized"
+  },
+  {
+    "artifact": "remediation-t076-green.txt",
+    "sourceSha256": "bdd54f9f35df15608a24fc02cd41870e58667e9b5937ade44e9ed467f2cff81c",
+    "sourceDate": "2026-11-01",
+    "scope": "actual recorded execution; machine paths and host sanitized"
+  },
+  {
+    "artifact": "remediation-media-import-failure.txt",
+    "sourceSha256": "a67f194182786d0b34cf6b85c92508eb3e244569e784de71bdc87a4b7d42e99e",
+    "sourceDate": "2026-11-01",
+    "scope": "actual recorded execution; machine paths and host sanitized"
+  },
+  {
+    "artifact": "remediation-media-green.txt",
+    "sourceSha256": "5c23c06b1f147a02357c9f5dbc8363a3e37090396cb85591c81daf78f7609b99",
+    "sourceDate": "2026-11-01",
+    "scope": "actual recorded execution; machine paths and host sanitized"
+  },
+  {
+    "artifact": "remediation-shared-fixture-failure.txt",
+    "sourceSha256": "9ba8110389dfa9912548a70ddcb247cea4e996e4cae49066e5ca1cf9e8b4508b",
+    "sourceDate": "2026-11-01",
+    "scope": "actual recorded execution; machine paths and host sanitized"
+  },
+  {
+    "artifact": "remediation-first-verify.txt",
+    "sourceSha256": "ee57382385a811a9069769199a50476f5f78ebd475426ac481ef4f8c801b0861",
+    "sourceDate": "2026-11-01",
+    "scope": "actual recorded execution; machine paths and host sanitized"
+  },
+  {
+    "artifact": "remediation-after-media-verify.txt",
+    "sourceSha256": "7bf13bc5cb16c0ae2ba8bcd3bab67f3339d4ce763eb604dac8b698f141561c07",
+    "sourceDate": "2026-11-01",
+    "scope": "actual recorded execution; machine paths and host sanitized"
+  },
+  {
+    "artifact": "remediation-fixture-order-6201.txt",
+    "sourceSha256": "b6baca58ec93663c17ca2c41f40418cd49ff2062891e84abfaa95e80a6f226de",
+    "sourceDate": "2026-11-01",
+    "scope": "actual recorded execution; machine paths and host sanitized"
+  },
+  {
+    "artifact": "remediation-fixture-order-6202.txt",
+    "sourceSha256": "704a84f622d2126f666edd141c2ffdc6e3c5280eef2fcb74111467878b579c19",
+    "sourceDate": "2026-11-01",
+    "scope": "actual recorded execution; machine paths and host sanitized"
+  },
+  {
+    "artifact": "remediation-fixture-order-6204.txt",
+    "sourceSha256": "283ba4cb0ae7d7cd77ca186be35f98286bca72929f016c0f95a4a5076e75789d",
+    "sourceDate": "2026-11-01",
+    "scope": "actual recorded execution; machine paths and host sanitized"
+  },
+  {
+    "artifact": "remediation-contracts-fresh.txt",
+    "sourceSha256": "21d46351e77b9658c376d2cb19804b97c9781a6c47976a4944cf05c1ad3ae483",
+    "sourceDate": "2026-11-01",
+    "scope": "actual recorded execution; machine paths and host sanitized"
+  },
+  {
+    "artifact": "remediation-database-unit-fresh.txt",
+    "sourceSha256": "2551a21819a9a21e854ac573ed91ee87cf97ffb1b702674c6c7d4e610ce20fec",
+    "sourceDate": "2026-11-01",
+    "scope": "actual recorded execution; machine paths and host sanitized"
+  }
+]

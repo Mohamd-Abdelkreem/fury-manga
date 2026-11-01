@@ -203,3 +203,145 @@ The first final `pnpm verify` stopped only because this newly added evidence sec
 ## Owner requirements-review disposition — 2026-09-27
 
 The owner confirmed completed human review of the written requirements. All 34 reviewer-owned items in `checklists/readiness.md` are accepted. This does not supply the representative-artwork decision in T002/T067, formal P00/P01/P02 phase-exit evidence in T001/T065/T066, or a real deployment restore.
+
+## Legacy closeout named-result review — 2026-10-31
+
+PHASE_ID=P02 / TASK_SCOPE=T079. The accepted written-requirements checklist remains read-only. Existing technical-continuation authority and the owner's bounded closeout request permit this behavior-preserving maintenance; formal predecessor exits and representative-artwork acceptance remain open. `MediaService` now names awaited delegation/database results for reconciliation, upload reservation/completion/replay, protected bytes, metadata lookup, list projection and removal. Transactional upload-attempt creation and removal-state updates remain inside their original transaction callbacks. No reference, attempt, replay, state, limit, storage, provider or UI policy changed.
+
+Clean-code-guard review checked the full production diff and immediate controller/reconciler callers against B02/B33: helpers remain inside the class, permitted one-argument mappers remain direct, and no class wrapper/cache/retry or extra abstraction was introduced. Existing real PostgreSQL, HTTP and storage tests retain all assertions; no new mirror tests were needed. API types and lint passed. API integration passed 11 files / 156 tests (`/tmp/fury-closeout-p02-owner-integration.log`, 21.76 seconds). The existing pg concurrent-query deprecation remains visible. T079 awaits the final shared gate before completion.
+
+## Final local closeout disposition — 2026-10-31
+
+PHASE_ID=P02 / TASK_SCOPE=T079. The final source aggregate passed (`/tmp/fury-closeout-verify-final-enums.log`), including 156 actual API integrations and 36 actual database integrations, plus package checks and build-output validation. T079 is complete. The final media-service diff was reviewed for unchanged transaction callbacks, upload-attempt identity/replay, protected authority, reference history and byte checks. P05's reused integrity helper preserves the private `MediaUnavailableException` boundary and exact length/SHA behavior. No limits, media-class policy, provider or presentation changed.
+
+All 79 task identities and existing P02 artifacts were reconciled against actual media owners and current regression discovery. The class bounds/decoder, private storage/path protections, multipart limits, real upload/read/reference/remove/reconcile, duplicate/race/rollback and paired database/media recovery suites remain present and pass. Historical 2026-09-24 browser, process restart/release replacement and paired recovery records remain dated evidence, not newly performed manual operations. The current real filesystem/PostgreSQL suites corroborate integrity and recovery. The earlier Work form type-file reference in T028 moved into the later accepted P03 Work editor/model owners; it is not a missing P02 feature. P04 now owns Chapter-page association writes and explicitly rejects the former generic-media route, with preserved real HTTP tests; P05's anonymous Work-scoped cover/background reads do not make private `/media` public.
+
+Read-only convergence found no new unowned technical task. **T001/T002/T065/T066/T067 remain uncompleted gate identities**: formal P00/P01 exits and phase disposition, plus owner-approved representative artwork/bounds acceptance. The 2026-09-27 written requirements acceptance remains accepted and read-only; it does not resolve those gates. Six generated technical images are not owner artwork approval. No deployment, physical-device, proxy/CDN or future dataset recovery acceptance was fabricated.
+
+## T079 completion correction — 2026-11-01
+
+The remediation request authorized current P00–P05 repairs and sequential stage continuation. After the P05 T071–T075 implementation/checks and read-only convergence, the feature was selected to P02 between stages. IMPLEMENT bound only T079; both written-quality checklists (16/16 and 34/34) were reviewed without changing approval markers. The recorded technical continuation permits this maintenance; P00/P01 independent exits and P02 representative-artwork/phase/release acceptance remain open.
+
+A complete current-source review found that the earlier T079 pass had missed the outer transaction returns in `bindReference`, `replaceReference` and `retireReference`. Its completion claim was therefore incomplete. The same adequate task was reopened during IMPLEMENT, corrected and rechecked; no duplicate task was invented. Each method now awaits a named result inside its existing try/catch and returns it afterward. Every transaction operation, lock order, isolation level, exact-replay condition, conflict translation, immutable event and published-cover refusal remains unchanged. Related slot/class comparisons use existing `MediaReferenceSlot`/`MediaClass` constants with identical values. No migration, limit, presentation, role or storage policy changed.
+
+The first correction omitted the `MediaClass` import: type checking reported TS2304 and four of 26 actual media service/HTTP cases failed with ReferenceError/500. This was an introduced import error, not reproduction of an existing behavior defect. The import was corrected; fresh types and the same **26/26** real PostgreSQL/HTTP/filesystem cases passed, including concurrent replacement, retry, stale loser, active-reference safety, private authority and publication history. No assertion/timeout/retry/suppression changed; no mirror test was added for named variables.
+
+Clean-code-guard reviewed complete methods and immediate controller/Work-management callers, including await/catch and rollback behavior. AST inspection of all **16** service/controller owners found zero B33 top-level violations; MediaService has no non-mapper returned call expressions. A source search found no direct `return await` or `return this.*` in API service owners. The subsequent full root `pnpm verify` exited **0**: API unit **154**, API integration **158**, DB integration **36**, API lint/types/build and build-output validation passed freshly; unchanged web **474**, contracts **117**, DB unit **10** and other shared outputs were cached in this aggregate, with preceding fresh web execution and separate fresh contracts **117** / DB unit **10** recorded in the P05 evidence. The pg/jsdom notices remain visible. T079 is technically complete after this correction, with no human/phase/release acceptance implied.
+
+## T080 error ownership — 2026-11-01
+
+A separately selected read-only P02 CONVERGE recorded B12's remaining repeated inline error definitions as T080; IMPLEMENT bound only T080 after the unchanged 16/16 and 34/34 written-quality preflight and existing technical continuation. `media.errors.ts` now owns concrete resource/attempt/reference conflict and absence errors, while existing common Forbidden/Unauthorized exceptions own generic actor denials. The reusable unavailable-read error moved to `infrastructure/media/media.errors.ts` because actual private-media and public-content consumers share it; the old feature path re-exports the same class. The integrity helper and public service reuse this definition. No error framework, wrapper service, migration, authority, retry, publication or presentation behavior was added.
+
+The complete MediaService throw sequence was checked through TypeScript AST against the beginning-of-request source: **60 throw sites** preserve their message/status/code outcomes or unchanged domain construction. All current catch/rollback/replay callers were reviewed; operational errors do not expose subclass names in the public envelope. The first type run found the base `AppError` import was still required for catch classification; it was restored before tests ran. The corrected types/lint and **154 API units / 158 actual API integrations** passed. The subsequent root `pnpm verify` exited **0**, freshly repeating API checks/integration/build and **36 DB integrations**, with **6 required entries / 386 emitted files** and no emitted tests. Unchanged web/contracts/database unit/build outputs are cached with their separately recorded current fresh evidence. Existing warnings remain unsuppressed. No constructor mirror test was added.
+
+Clean-code-guard verified B12 error ownership/dependency direction, concrete reusable error responsibilities, exact safe wire compatibility, B33 class boundaries and preserved behavior. Test-guard checked the existing actual HTTP/PG/filesystem/error cases; docs-guard checked shared ownership and current verification numbers. P02 T080 is technically complete; representative artwork and formal predecessor/phase/release approvals remain open. A read-only P02 convergence follows; the original feature pointer will be restored only between stages.
+
+## Representative artwork decision package — 2026-11-01
+
+**Still unresolved: T002 and T067; FR-005–FR-006, SC-001.** An independent
+closeout reviewer rechecked the actual media contracts, decoder/storage/HTTP
+owners and existing technical acceptance evidence. The six generated PNG previews
+in `acceptance-artwork/` demonstrate technical handling only. They have no recorded
+owner approval as representative editorial artwork; no such approval is inferred.
+
+The remaining owner action is to approve representative images for **all six
+classes** against these enforced limits, or identify concrete bounds to change:
+
+| Class                    | Encoded limit | Width × height       | Additional rule                |
+| ------------------------ | ------------- | -------------------- | ------------------------------ |
+| Work cover               | 8 MiB         | 300–4000 × 400–6000  | Ratio0.65–0.85                 |
+| Work background          | 8 MiB         | 800–6000 × 450–4000  | Ratio1.5–2                     |
+| Illustrated Chapter page | 12 MiB        | 300–6000 × 300–12000 | Ordered saved page identity    |
+| Avatar                   | 4 MiB         | 128–4096 × 128–4096  | Owner-scoped media authority   |
+| Frame                    | 4 MiB         | 128–4096 × 128–4096  | PNG/WebP with nonopaque pixels |
+| Decoration               | 4 MiB         | 64–4096 × 64–4096    | PNG/WebP with nonopaque pixels |
+
+All classes have a 24-million decoded-pixel ceiling, one frame and bounded decode.
+The shared contracts, browser hints, OpenAPI and validation tests must change
+together if the owner selects different bounds. The existing technical checks
+remain useful evidence; they cannot supply the missing human editorial judgment.
+This decision blocks formal P02 exit and inherited phase acceptance/admission.
+It does not invalidate the explicitly authorized isolated synthetic P05 work.
+
+## Independent legacy acceptance reconciliation — 2026-11-01
+
+The separately authorized independent reviewer `/root/legacy_review` inspected
+literal task/phase criteria, current owners, historical execution records and
+accepted written requirements. The final post-T082 shared verification is linked
+in [P05 evidence](../006-public-catalog-discovery-seo/evidence.md); it is a local
+synthetic check, not production or human artwork approval. No written-review or
+human acceptance marker was changed.
+
+T001/T066 prerequisite and written-review obligations: **PASS** after
+current P00/P01 dispositions; the owner's34 accepted P02 written items date to
+2026-09-27. This retrospective closeout does not pretend the formal prerequisites
+were accepted before the historical technical continuation.
+
+T065 is complete as an evidence/comparison task: its wording requires actual
+checks and pass/fail/unverified boundaries, not universal acceptance. Each P02 exit
+item was compared: all-six-class positive/negative uploads PASS; MIME/decode/size/
+executable/path rejection PASS; restart/release-replacement persistence PASS;
+unauthorized upload/replacement/removal PASS; active-reference protection PASS;
+paired database/media restore PASS, using the existing actual local evidence and
+current full media/database/HTTP regressions. The additional spec gate FR-005–006/
+SC-001 remains **UNACCEPTED**: no approved representative-artwork/bounds decision.
+T002/T067 remain unchecked. Their reviewable six-class decision package is above.
+**P02 formal phase exit remains blocked**, even though T065 records this comparison
+and independent technical work is complete. Actual VPS/CDN/editorial release
+acceptance is not inferred from synthetic fixtures.
+
+The generated technical previews are directly reviewable:
+[cover](acceptance-artwork/work-cover.png),
+[background](acceptance-artwork/work-background.png),
+[Chapter page](acceptance-artwork/chapter-page.png),
+[avatar](acceptance-artwork/user-avatar.png),
+[frame](acceptance-artwork/avatar-frame.png), and
+[decoration](acceptance-artwork/comment-decoration.png).
+They are explicitly not representative owner-approved artwork. The requested
+acceptance is the six-class bounds decision against appropriate approved images,
+not approval of a passing test run or these generated previews by implication.
+
+## Current owner limits decision and extension intake — 2026-11-01
+
+Numerical limits: OWNER APPROVAL RECORDED directly from the current request.
+All six byte/dimension/ratio/transparency-policy entries match current source.
+The dated spec/plan/contract overlay supersedes T002/T067's artwork prerequisite;
+no generated-artwork or historical personal review is claimed. New animation and
+progressive tasks T081–T085 remain unverified until executed. The prior P05 closure
+and accepted predecessor technical dispositions remain dated, reusable evidence.
+The original selection is P05; P02 was selected only between command stages.
+Baseline HEAD remains868948bb9f51fe9fdf6f40d18e8d8b7d920a1f9f on main, with1292
+versionable entries copied/hashed outside the checkout before this request's edits.
+Governance2.1.0→2.2.0 changed only constitution/guidance/templates/adapters;1054
+application/package/accepted-artifact/pointer entries remained byte-identical.
+
+## Current media-foundation execution — 2026-11-01
+
+The dated current owner decision approves all six existing numerical limits and
+supersedes T002/T067's old artwork prerequisite; no generated-artwork review is
+claimed. Constitution2.2.0 and the appended accepted requirements authorize the
+scoped P02 extension, with original IDs/history preserved.
+
+T081/T082 complete class-specific GIF/WebP production, bounded processing and
+actual storage/HTTP/replay/rollback/concurrency/reconciliation/restart acceptance.
+T083/T084 integrate existing private/public animated/motion consumers and consume
+bounded progressive loading in the actual saved administrator Chapter preview.
+The protected reader still uses `MOCK_PAGES`; exact future P07 obligations are in
+the existing roadmap/frontend guide, without future-reader implementation.
+
+[Current execution record](evidence/media-foundation/README.md) retains fresh
+focused checks, five shuffled processes, actual persisted-browser measurements,
+failed history/corrections, native animation proof and measurement limits. Final
+aggregate, convergence, task counts, preservation and owned cleanup are separate
+explicit records; prior human/independent approvals remain historical.
+
+Final T085 closure: root `pnpm verify` exit0, fresh full tests/integration, final
+production-browser static/animated/slow/recovery proof, unchanged prefetch business
+fingerprints, all40 route probes plus404, clean separate1494-entry convergence,
+exact P05 selection restoration and owned runtime cleanup are complete. The
+[current final ledger](evidence/media-foundation/final-legacy-dispositions.json)
+records458legacy identities:456verified and2superseded, with no active legacy work.
+The existing fixture protected reader remains P07; local synthetic acceptance is
+separate from later real deployment-data/recovery/rollout obligations. **LEGACY
+CLOSEOUT: COMPLETE. NEXT SPEC: READY.** No new human/artwork/independent approval or
+release is asserted.

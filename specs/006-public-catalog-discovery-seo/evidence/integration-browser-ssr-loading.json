@@ -1,0 +1,6 @@
+{
+  "kind": "actual Next SSR initial streaming loading while upstream is held",
+  "pending": true,
+  "loadingText": ["جارٍ تحميل المحتوىننتظر البيانات المنشورة، يرجى الانتظار."],
+  "privateOriginExposed": false
+}

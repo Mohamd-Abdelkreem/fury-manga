@@ -1,84 +1,122 @@
 "use client";
-
-import { Search } from "lucide-react";
+import { Search, BookOpen } from "lucide-react";
 import Link from "next/link";
-import { useDeferredValue, useId, useState } from "react";
-
-import { FeatureState } from "@/components/ui/FeatureState/FeatureState";
-import { CATEGORIES, type Category } from "../../data/categories";
+import type {
+  CatalogCategoryListData,
+  CatalogCategoryListQuery,
+} from "@fury/contracts";
+import { usePublicCatalogCategories } from "@/features/public-catalog/hooks/public-catalog.hooks";
+import { PublicCatalogState } from "@/features/public-catalog/components/PublicCatalogState";
+import { CatalogPagination } from "@/features/public-catalog/components/CatalogPagination";
+import { categoryHref } from "@/features/public-catalog/model/public-catalog.presentation";
+import { usePublicRetryFocus } from "@/features/public-catalog/hooks/use-public-retry-focus";
 import styles from "./CategoriesDirectory.module.css";
 
-type CategoriesDirectoryProps = Readonly<{
-  categories?: readonly Category[];
-}>;
-
 export function CategoriesDirectory({
-  categories = CATEGORIES,
-}: CategoriesDirectoryProps) {
-  const searchId = useId();
-  const [query, setQuery] = useState("");
-  const deferredQuery = useDeferredValue(query.trim());
-  const filtered = categories.filter((category) =>
-    category.name.includes(deferredQuery),
+  query,
+  seed,
+  initialUnavailable = false,
+}: Readonly<{
+  query: CatalogCategoryListQuery;
+  seed?: CatalogCategoryListData;
+  initialUnavailable?: boolean;
+}>) {
+  const result = usePublicCatalogCategories(
+    query,
+    seed === undefined ? {} : { seed: { query, data: seed } },
   );
-
+  const data = result.data;
+  const { target, requestFocus } = usePublicRetryFocus(
+    JSON.stringify(query),
+    result,
+  );
   return (
-    <main className={styles["main"]} id="main-content">
+    <main
+      data-public-catalog-focus=""
+      ref={target}
+      tabIndex={-1}
+      className={styles["main"]}
+      id="main-content"
+      dir="rtl"
+    >
       <header className={styles["hero"]}>
         <p className="eyebrow">دليل Fury</p>
         <h1>التصنيفات</h1>
-        <p>ابدأ من النوع الذي تحبه، ثم استكشف الأعمال المصوّرة المطابقة له.</p>
+        <p>ابدأ من النوع الذي تحبه، ثم استكشف الأعمال المطابقة له.</p>
       </header>
-
-      <div className={styles["searchField"]}>
-        <label htmlFor={searchId}>ابحث في أسماء التصنيفات</label>
+      <form
+        key={categoryHref(query.q, query.page)}
+        action="/categories"
+        method="get"
+        className={styles["searchField"]}
+      >
+        <label htmlFor="category-search">ابحث في أسماء التصنيفات</label>
         <div className={styles["searchControl"]}>
           <Search aria-hidden="true" />
           <input
-            id={searchId}
+            key={query.q ?? ""}
+            id="category-search"
             type="search"
-            value={query}
-            onChange={(event) => {
-              setQuery(event.target.value);
-            }}
+            enterKeyHint="search"
+            name="q"
+            maxLength={100}
+            defaultValue={query.q ?? ""}
             placeholder="مثال: أكشن أو خيال"
           />
         </div>
-      </div>
-
-      {categories.length === 0 ? (
-        <FeatureState
-          kind="empty"
-          title="لا توجد تصنيفات الآن"
-          message="ستظهر التصنيفات هنا عندما تصبح متاحة."
+      </form>
+      {result.isError || (data === undefined && initialUnavailable) ? (
+        <PublicCatalogState
+          kind="unavailable"
+          retrying={result.isFetching}
+          onRetry={() => {
+            requestFocus();
+            void result.refetch();
+          }}
         />
-      ) : filtered.length === 0 ? (
-        <FeatureState
-          kind="filtered-empty"
-          title="لا يوجد تصنيف مطابق"
-          message={`لم نعثر على تصنيف باسم «${deferredQuery}». جرّب كلمة أقصر.`}
-        />
+      ) : data === undefined ? (
+        <PublicCatalogState kind="loading" />
       ) : (
-        <section aria-label="قائمة التصنيفات" className={styles["grid"]}>
-          {filtered.map((category) => {
-            const Icon = category.icon;
-            return (
-              <Link
-                key={category.slug}
-                href={`/discover?genre=${category.slug}`}
-                className={styles["card"]}
-              >
-                <span className={styles["iconWrap"]}>
-                  <Icon aria-hidden="true" />
-                </span>
-                <span>
-                  <strong>{category.name}</strong>
-                  <small>{category.description}</small>
-                </span>
-              </Link>
-            );
-          })}
-        </section>
+        <>
+          {result.isFetching ? (
+            <p role="status">جارٍ تحديث التصنيفات…</p>
+          ) : null}
+          {data.items.length === 0 ? (
+            <PublicCatalogState
+              kind={
+                query.page > 1
+                  ? "out-of-range"
+                  : query.q
+                    ? "filtered-empty"
+                    : "empty"
+              }
+              resetHref={categoryHref(query.page > 1 ? query.q : undefined, 1)}
+            />
+          ) : (
+            <section aria-label="قائمة التصنيفات" className={styles["grid"]}>
+              {data.items.map((category) => (
+                <Link
+                  key={category.slug}
+                  href={`/discover?category=${category.slug}`}
+                  className={styles["card"]}
+                >
+                  <span className={styles["iconWrap"]}>
+                    <BookOpen aria-hidden="true" />
+                  </span>
+                  <span>
+                    <strong>{category.displayName}</strong>
+                    <small>استكشف الأعمال المنشورة في هذا التصنيف</small>
+                  </span>
+                </Link>
+              ))}
+            </section>
+          )}
+          <CatalogPagination
+            page={query.page}
+            totalPages={data.pagination.totalPages}
+            href={(page) => categoryHref(query.q, page)}
+          />
+        </>
       )}
     </main>
   );

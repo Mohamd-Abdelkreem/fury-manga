@@ -28,6 +28,9 @@ pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Local browser automation output (curated acceptance evidence is retained separately)
+.playwright-cli/
+
 # TypeScript
 *.tsbuildinfo
 

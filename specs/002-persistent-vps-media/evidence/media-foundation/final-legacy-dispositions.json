@@ -1,0 +1,3252 @@
+{
+  "taskCount": 458,
+  "checked": 457,
+  "unchecked": 1,
+  "dispositions": {
+    "VERIFIED COMPLETE": 456,
+    "SUPERSEDED": 2,
+    "OWNER DECISION REQUIRED": 0
+  },
+  "remainingActiveLegacyTasks": [],
+  "remainingUnchecked": [
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T004",
+      "checked": false,
+      "disposition": "SUPERSEDED"
+    }
+  ],
+  "phaseAcceptance": {
+    "P00": "Historical independent technical disposition reused",
+    "P01": "Historical written approval and independent technical disposition reused",
+    "P02": "Current numerical owner decision recorded, animation/progressive extension verified; no fabricated artwork/independent approval",
+    "P03": "Technical complete; inherited P02 numerical gate resolved",
+    "P04": "Local synthetic complete; inherited gate resolved; release-only deployment-data/recovery/rollout obligations preserved",
+    "P05": "Implementation complete; inherited numerical gate resolved; current Work image extension verified"
+  },
+  "verdicts": {
+    "NUMERICAL LIMITS": "OWNER APPROVAL RECORDED",
+    "LEGACY ANIMATED MEDIA": "COMPLETE",
+    "CURRENT PROGRESSIVE-LOADING FOUNDATION": "VERIFIED",
+    "REAL PROTECTED READER": "MOCK_PAGES/session-local prototype; real API/content/progress/resume/opens owned by P07",
+    "LEGACY CLOSEOUT": "COMPLETE",
+    "NEXT SPEC": "READY"
+  },
+  "releaseOnlyBoundaries": [
+    "P04 T006/T043/T084/T091 actual deployment-data/recovery/cutover/rollback obligations remain for release under the recorded synthetic exception; not current legacy blockers"
+  ],
+  "featureSelection": {
+    "restored": "specs/006-public-catalog-discovery-seo",
+    "exactOriginalBytes": true,
+    "sha256": "c08a2f35e886c973caf9fb7c7e28c3a5c28f8cfbff2b21403331f1c033e7470d"
+  },
+  "tasks": [
+    {
+      "phase": "P00",
+      "feature": "003-repository-product-alignment",
+      "task": "T001",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P00",
+      "feature": "003-repository-product-alignment",
+      "task": "T002",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P00",
+      "feature": "003-repository-product-alignment",
+      "task": "T003",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P00",
+      "feature": "003-repository-product-alignment",
+      "task": "T004",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P00",
+      "feature": "003-repository-product-alignment",
+      "task": "T005",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P00",
+      "feature": "003-repository-product-alignment",
+      "task": "T006",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P00",
+      "feature": "003-repository-product-alignment",
+      "task": "T007",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P00",
+      "feature": "003-repository-product-alignment",
+      "task": "T008",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P00",
+      "feature": "003-repository-product-alignment",
+      "task": "T009",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P00",
+      "feature": "003-repository-product-alignment",
+      "task": "T010",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P00",
+      "feature": "003-repository-product-alignment",
+      "task": "T011",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P00",
+      "feature": "003-repository-product-alignment",
+      "task": "T012",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P00",
+      "feature": "003-repository-product-alignment",
+      "task": "T013",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P00",
+      "feature": "003-repository-product-alignment",
+      "task": "T014",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P00",
+      "feature": "003-repository-product-alignment",
+      "task": "T015",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P00",
+      "feature": "003-repository-product-alignment",
+      "task": "T016",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P00",
+      "feature": "003-repository-product-alignment",
+      "task": "T017",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P00",
+      "feature": "003-repository-product-alignment",
+      "task": "T018",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T001",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T002",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T003",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T004",
+      "checked": false,
+      "disposition": "SUPERSEDED"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T005",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T006",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T007",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T008",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T009",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T010",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T011",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T012",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T013",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T014",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T015",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T016",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T017",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T018",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T019",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T020",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T021",
+      "checked": true,
+      "disposition": "SUPERSEDED"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T022",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T023",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T024",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T025",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T026",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T027",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T028",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T029",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T030",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T031",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T032",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T033",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T034",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T035",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T036",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T037",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T038",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T039",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T040",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T041",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T042",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T043",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T044",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T045",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T046",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T047",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T048",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T049",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T050",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T051",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T052",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T053",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T054",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T055",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T056",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T057",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T058",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T059",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T060",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T061",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T062",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T063",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T064",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T065",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T066",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T067",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T068",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T069",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T070",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T071",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P01",
+      "feature": "001-content-domain-foundation",
+      "task": "T072",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T001",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T002",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T003",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T004",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T005",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T006",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T007",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T008",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T009",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T010",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T011",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T012",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T013",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T014",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T015",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T016",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T017",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T018",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T019",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T020",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T021",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T022",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T023",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T024",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T025",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T026",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T027",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T028",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T029",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T030",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T031",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T032",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T033",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T034",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T035",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T036",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T037",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T038",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T039",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T040",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T041",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T042",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T043",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T044",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T045",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T046",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T047",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T048",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T049",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T050",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T051",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T052",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T053",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T054",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T055",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T056",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T057",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T058",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T059",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T060",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T061",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T062",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T063",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T064",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T065",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T066",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T067",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T068",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T069",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T070",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T071",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T072",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T073",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T074",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T075",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T076",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T077",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T078",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T079",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T080",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T081",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T082",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T083",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T084",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P02",
+      "feature": "002-persistent-vps-media",
+      "task": "T085",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T001",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T002",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T003",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T004",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T005",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T006",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T007",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T008",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T009",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T010",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T011",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T012",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T013",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T014",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T015",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T016",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T017",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T018",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T019",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T020",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T021",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T022",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T023",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T024",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T025",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T026",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T027",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T028",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T029",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T030",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T031",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T032",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T033",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T034",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T035",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T036",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T037",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T038",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T039",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T040",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T041",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T042",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T043",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T044",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T045",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T046",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T047",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T048",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T049",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T050",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T051",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T052",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T053",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T054",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T055",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T056",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T057",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T058",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T059",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T060",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T061",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T062",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T063",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T064",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T065",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T066",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T067",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T068",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T069",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T070",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T071",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T072",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T073",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T074",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T075",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T076",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T077",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T078",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T079",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T080",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T081",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T082",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T083",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T084",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T085",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T086",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T087",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T088",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T089",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T090",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T091",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T092",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T093",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T094",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T095",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T096",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T097",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T098",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T099",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T100",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T101",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T102",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T103",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T104",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T105",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P03",
+      "feature": "004-admin-categories-works",
+      "task": "T106",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T001",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T002",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T003",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T004",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T005",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T006",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T007",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T008",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T009",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T010",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T011",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T012",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T013",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T014",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T015",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T016",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T017",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T018",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T019",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T020",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T021",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T022",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T023",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T024",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T025",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T026",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T027",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T028",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T029",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T030",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T031",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T032",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T033",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T034",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T035",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T036",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T037",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T038",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T039",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T040",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T041",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T042",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T043",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T044",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T045",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T046",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T047",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T048",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T049",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T050",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T051",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T052",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T053",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T054",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T055",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T056",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T057",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T058",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T059",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T060",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T061",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T062",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T063",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T064",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T065",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T066",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T067",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T068",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T069",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T070",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T071",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T072",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T073",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T074",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T075",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T076",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T077",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T078",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T079",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T080",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T081",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T082",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T083",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T084",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T085",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T086",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T087",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T088",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T089",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T090",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T091",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T092",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T093",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P04",
+      "feature": "005-admin-chapter-publishing",
+      "task": "T094",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T001",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T002",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T003",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T004",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T005",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T006",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T007",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T008",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T009",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T010",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T011",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T012",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T013",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T014",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T015",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T016",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T017",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T018",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T019",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T020",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T021",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T022",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T023",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T024",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T025",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T026",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T027",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T028",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T029",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T030",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T031",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T032",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T033",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T034",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T035",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T036",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T037",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T038",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T039",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T040",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T041",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T042",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T043",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T044",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T045",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T046",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T047",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T048",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T049",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T050",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T051",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T052",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T053",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T054",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T055",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T056",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T057",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T058",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T059",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T060",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T061",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T062",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T063",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T064",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T065",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T066",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T067",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T068",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T069",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T070",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T071",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T072",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T073",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T074",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T075",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T076",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T077",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T078",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T079",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T080",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T081",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T082",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    },
+    {
+      "phase": "P05",
+      "feature": "006-public-catalog-discovery-seo",
+      "task": "T083",
+      "checked": true,
+      "disposition": "VERIFIED COMPLETE"
+    }
+  ]
+}

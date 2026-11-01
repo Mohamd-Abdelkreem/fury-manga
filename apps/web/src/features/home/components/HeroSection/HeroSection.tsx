@@ -4,14 +4,18 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import {
   BookOpen,
-  Star,
   Play,
   TrendingUp,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { HERO_ITEMS, GENRES } from "@/features/home/data/heroData";
-import type { HeroItem } from "@/types";
+import type { CatalogHomeData, CatalogCategory } from "@fury/contracts";
+import {
+  publicHeroItem,
+  type PublicHeroItem as HeroItem,
+} from "../../model/public-home";
+import { useReducedMotion } from "@/shared/hooks/use-reduced-motion";
+import { PublicWorkImage } from "@/features/public-catalog/components/PublicWorkImage";
 import styles from "./HeroSection.module.css";
 
 // ── HeroBackground ────────────────────────────────────────────────────────
@@ -24,10 +28,12 @@ function HeroBackground({ activeIndex, items }: HeroBackgroundProps) {
   return (
     <div className={styles["bgLayer"]}>
       {items.map((item, idx) => (
-        <img
+        <PublicWorkImage
+          loading="eager"
+          retryable={false}
           key={`bg-${item.id}`}
-          src={item.image}
-          alt="hero background"
+          slug={item.id}
+          alt=""
           className={styles["bgImage"]}
           style={{
             filter: "brightness(0.48) saturate(0.85)",
@@ -74,10 +80,12 @@ function HeroCharacter({ activeIndex, items }: HeroCharacterProps) {
   return (
     <div className={styles["characterPane"]}>
       {items.map((item, idx) => (
-        <img
+        <PublicWorkImage
+          loading="eager"
+          retryable={false}
           key={`char-${item.id}`}
-          src={item.characterImage}
-          alt="character"
+          slug={item.id}
+          alt=""
           className={styles["characterImage"]}
           style={{
             maskImage:
@@ -133,6 +141,7 @@ function HeroContent({ item }: HeroContentProps) {
 
         {/* Title */}
         <h1
+          dir="auto"
           style={{
             fontFamily: "'Cairo Play', 'Cairo', sans-serif",
             fontWeight: 900,
@@ -142,7 +151,7 @@ function HeroContent({ item }: HeroContentProps) {
             textShadow: "0 2px 24px rgba(0,0,0,0.5)",
             letterSpacing: "-0.01em",
             textAlign: "left",
-            direction: "ltr",
+            unicodeBidi: "plaintext",
             marginBottom: "0.75rem",
           }}
         >
@@ -150,53 +159,6 @@ function HeroContent({ item }: HeroContentProps) {
           <br />
           <span style={{ color: "var(--primary)" }}>{item.titleAccent}</span>
         </h1>
-
-        {/* Rating */}
-        <div className={styles["ratingRow"]}>
-          <div className={styles["starGroup"]}>
-            {[1, 2, 3, 4, 5].map((s) => (
-              <Star
-                key={s}
-                style={{
-                  width: 13,
-                  height: 13,
-                  fill: "var(--accent)",
-                  color: "var(--accent)",
-                }}
-              />
-            ))}
-            <span
-              style={{
-                fontSize: "0.875rem",
-                marginRight: "0.375rem",
-                color: "var(--accent)",
-                fontFamily: "'Cairo', sans-serif",
-                fontWeight: 700,
-              }}
-            >
-              {item.rating}
-            </span>
-          </div>
-          <span
-            style={{
-              fontSize: "0.75rem",
-              color: "var(--muted-foreground)",
-              fontFamily: "'Cairo', sans-serif",
-            }}
-          >
-            <BookOpen style={{ display: "inline", width: 12, height: 12 }} />{" "}
-            {item.chapters}
-          </span>
-          <span
-            style={{
-              fontSize: "0.75rem",
-              color: "var(--muted-foreground)",
-              fontFamily: "'Cairo', sans-serif",
-            }}
-          >
-            {item.reads}
-          </span>
-        </div>
 
         {/* Description */}
         <p
@@ -220,11 +182,11 @@ function HeroContent({ item }: HeroContentProps) {
 }
 
 // ── HeroActions ───────────────────────────────────────────────────────────
-function HeroActions({ storyId }: { storyId: number }) {
+function HeroActions({ storyId }: { storyId: string }) {
   return (
     <div className={styles["buttonsRow"]}>
       <Link
-        href={`/story/${storyId}/chapter/01`}
+        href={`/story/${storyId}`}
         className={styles["btnPrimary"]}
         style={{
           background: "var(--primary)",
@@ -248,7 +210,7 @@ function HeroActions({ storyId }: { storyId: number }) {
         }}
       >
         <BookOpen style={{ width: 17, height: 17 }} />
-        اقرأ الآن
+        تفاصيل العمل
       </Link>
       <Link
         href={`/story/${storyId}`}
@@ -301,10 +263,18 @@ function HeroNavigation({
     <>
       {/* Arrows */}
       <div className={styles["arrowsOverlay"]}>
-        <button onClick={onPrev} className={styles["navArrow"]}>
+        <button
+          aria-label="العمل المميز السابق"
+          onClick={onPrev}
+          className={styles["navArrow"]}
+        >
           <ChevronRight style={{ width: 22, height: 22 }} />
         </button>
-        <button onClick={onNext} className={styles["navArrow"]}>
+        <button
+          aria-label="العمل المميز التالي"
+          onClick={onNext}
+          className={styles["navArrow"]}
+        >
           <ChevronLeft style={{ width: 22, height: 22 }} />
         </button>
       </div>
@@ -317,6 +287,8 @@ function HeroNavigation({
         {Array.from({ length: total }).map((_, idx) => (
           <button
             key={idx}
+            aria-label={`عرض العمل المميز ${idx + 1}`}
+            aria-pressed={activeIndex === idx}
             onClick={() => onDotClick(idx)}
             className={styles["dot"]}
             style={{
@@ -338,18 +310,17 @@ function HeroNavigation({
 }
 
 // ── GenreBar ──────────────────────────────────────────────────────────────
-interface GenreBarProps {
-  activeGenre: string | null;
-  onGenreChange: (id: string | null) => void;
-}
-
-function GenreBar({ activeGenre, onGenreChange }: GenreBarProps) {
+function GenreBar({ categories }: { categories: readonly CatalogCategory[] }) {
+  const reducedMotion = useReducedMotion();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scrollGenres = (dir: "left" | "right") => {
     const el = scrollRef.current;
     if (!el) return;
-    el.scrollBy({ left: dir === "left" ? -240 : 240, behavior: "smooth" });
+    el.scrollBy({
+      left: dir === "left" ? -240 : 240,
+      behavior: reducedMotion ? "instant" : "smooth",
+    });
   };
 
   return (
@@ -377,56 +348,48 @@ function GenreBar({ activeGenre, onGenreChange }: GenreBarProps) {
           ref={scrollRef}
           className={`${styles["genreScroll"]} no-scrollbar`}
         >
-          {GENRES.map((g) => {
-            const isActive = activeGenre === g.id;
-            return (
-              <button
-                key={g.id}
-                onClick={() => onGenreChange(isActive ? null : g.id)}
-                className={styles["genreBtn"]}
-                style={{
-                  background: isActive ? "rgba(255,71,71,0.08)" : "transparent",
-                  fontWeight: isActive ? 700 : 500,
-                  color: isActive ? "#ffffff" : "rgba(255,255,255,0.5)",
-                }}
-                onMouseEnter={(e) => {
-                  if (isActive) return;
-                  const el = e.currentTarget;
-                  el.style.color = "#ffffff";
-                  el.style.background = "rgba(255,255,255,0.04)";
-                  const line = el.querySelector(
-                    `.${styles["genreLine"]}`,
-                  ) as HTMLElement;
-                  if (line) {
-                    line.style.opacity = "1";
-                    line.style.transform = "scaleX(1)";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (isActive) return;
-                  const el = e.currentTarget;
-                  el.style.color = "rgba(255,255,255,0.5)";
-                  el.style.background = "transparent";
-                  const line = el.querySelector(
-                    `.${styles["genreLine"]}`,
-                  ) as HTMLElement;
-                  if (line) {
-                    line.style.opacity = "0";
-                    line.style.transform = "scaleX(0)";
-                  }
-                }}
-              >
-                {g.label}
-                <span
-                  className={styles["genreLine"]}
-                  style={{
-                    opacity: isActive ? 1 : 0,
-                    transform: isActive ? "scaleX(1)" : "scaleX(0)",
-                  }}
-                />
-              </button>
-            );
-          })}
+          {categories.map((g) => (
+            <Link
+              key={g.slug}
+              href={`/discover?category=${g.slug}`}
+              className={styles["genreBtn"]}
+              onMouseEnter={(event) => {
+                const element = event.currentTarget;
+                element.style.color = "#ffffff";
+                element.style.background = "rgba(255,255,255,0.04)";
+                const line = element.querySelector<HTMLElement>(
+                  `.${styles["genreLine"]}`,
+                );
+                if (line !== null) {
+                  line.style.opacity = "1";
+                  line.style.transform = "scaleX(1)";
+                }
+              }}
+              onMouseLeave={(event) => {
+                const element = event.currentTarget;
+                element.style.color = "rgba(255,255,255,0.5)";
+                element.style.background = "transparent";
+                const line = element.querySelector<HTMLElement>(
+                  `.${styles["genreLine"]}`,
+                );
+                if (line !== null) {
+                  line.style.opacity = "0";
+                  line.style.transform = "scaleX(0)";
+                }
+              }}
+              style={{
+                background: "transparent",
+                fontWeight: 500,
+                color: "rgba(255,255,255,0.5)",
+              }}
+            >
+              {g.displayName}
+              <span
+                className={styles["genreLine"]}
+                style={{ opacity: 0, transform: "scaleX(0)" }}
+              />
+            </Link>
+          ))}
         </div>
 
         {/* Scroll left */}
@@ -443,32 +406,63 @@ function GenreBar({ activeGenre, onGenreChange }: GenreBarProps) {
 }
 
 // ── HeroSection Orchestrator ──────────────────────────────────────────────
-export function HeroSection() {
+export function HeroSection({
+  featured,
+  categories,
+}: Readonly<{
+  featured: CatalogHomeData["featured"];
+  categories: CatalogHomeData["categoryShortcuts"];
+}>) {
+  const HERO_ITEMS = featured.map(publicHeroItem);
+  const reducedMotion = useReducedMotion();
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const paused = hovered || focused;
   const [activeIndex, setActiveIndex] = useState(0);
-  const [activeGenre, setActiveGenre] = useState<string | null>(null);
 
   const handleNext = useCallback(() => {
     setActiveIndex((prev) => (prev + 1) % HERO_ITEMS.length);
-  }, []);
+  }, [HERO_ITEMS.length]);
 
   const handlePrev = useCallback(() => {
     setActiveIndex(
       (prev) => (prev - 1 + HERO_ITEMS.length) % HERO_ITEMS.length,
     );
-  }, []);
+  }, [HERO_ITEMS.length]);
 
   // Auto-rotate every 7 seconds, restarts whenever activeIndex changes (e.g. manual navigation)
   useEffect(() => {
+    if (reducedMotion || paused || HERO_ITEMS.length < 2) return;
     const timer = setInterval(handleNext, 7000);
     return () => clearInterval(timer);
-  }, [activeIndex, handleNext]);
+  }, [activeIndex, handleNext, reducedMotion, paused, HERO_ITEMS.length]);
 
-  const activeItem = HERO_ITEMS[activeIndex]!;
+  const safeIndex = activeIndex % Math.max(1, HERO_ITEMS.length);
+  const activeItem = HERO_ITEMS[safeIndex];
+  if (activeItem === undefined)
+    return categories.length === 0 ? null : (
+      <section
+        aria-label="تصنيفات الأعمال"
+        style={{ position: "relative", height: 52 }}
+      >
+        <GenreBar categories={categories} />
+      </section>
+    );
 
   return (
-    <section dir="rtl" className={styles["section"]}>
-      <HeroBackground activeIndex={activeIndex} items={HERO_ITEMS} />
-      <HeroCharacter activeIndex={activeIndex} items={HERO_ITEMS} />
+    <section
+      dir="rtl"
+      className={styles["section"]}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onFocusCapture={() => setFocused(true)}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget))
+          setFocused(false);
+      }}
+    >
+      <HeroBackground activeIndex={safeIndex} items={HERO_ITEMS} />
+      <HeroCharacter activeIndex={safeIndex} items={HERO_ITEMS} />
 
       <div className={styles["contentContainer"]}>
         <HeroContent item={activeItem} />
@@ -476,13 +470,13 @@ export function HeroSection() {
 
       <HeroNavigation
         total={HERO_ITEMS.length}
-        activeIndex={activeIndex}
+        activeIndex={safeIndex}
         onPrev={handlePrev}
         onNext={handleNext}
         onDotClick={setActiveIndex}
       />
 
-      <GenreBar activeGenre={activeGenre} onGenreChange={setActiveGenre} />
+      <GenreBar categories={categories} />
     </section>
   );
 }

@@ -1,0 +1,393 @@
+{
+  "passed": true,
+  "version": "after",
+  "cdpMax": 2,
+  "cdpEvents": [
+    {
+      "id": "33307.346",
+      "index": 1,
+      "kind": "start",
+      "time": 289022.278914
+    },
+    {
+      "id": "33307.365",
+      "index": 2,
+      "kind": "start",
+      "time": 289022.34371
+    },
+    {
+      "id": "33307.366",
+      "index": 3,
+      "kind": "start",
+      "time": 289022.343833
+    },
+    {
+      "id": "33307.346",
+      "kind": "finish",
+      "time": 289022.340738
+    },
+    {
+      "id": "33307.365",
+      "kind": "finish",
+      "time": 289022.36703
+    },
+    {
+      "id": "33307.373",
+      "index": 4,
+      "kind": "start",
+      "time": 289022.369475
+    },
+    {
+      "id": "33307.388",
+      "index": 5,
+      "kind": "start",
+      "time": 289022.424643
+    },
+    {
+      "id": "33307.366",
+      "kind": "finish",
+      "time": 289022.423246
+    },
+    {
+      "id": "33307.393",
+      "index": 6,
+      "kind": "start",
+      "time": 289022.447765
+    },
+    {
+      "id": "33307.373",
+      "kind": "finish",
+      "time": 289022.446176
+    },
+    {
+      "id": "33307.393",
+      "kind": "finish",
+      "time": 289022.469274
+    },
+    {
+      "id": "33307.399",
+      "index": 7,
+      "kind": "start",
+      "time": 289022.471089
+    },
+    {
+      "id": "33307.406",
+      "index": 8,
+      "kind": "start",
+      "time": 289022.488781
+    },
+    {
+      "id": "33307.388",
+      "kind": "finish",
+      "time": 289022.487346
+    },
+    {
+      "id": "33307.414",
+      "index": 9,
+      "kind": "start",
+      "time": 289022.552859
+    },
+    {
+      "id": "33307.399",
+      "kind": "finish",
+      "time": 289022.551265
+    },
+    {
+      "id": "33307.423",
+      "index": 10,
+      "kind": "start",
+      "time": 289022.568455
+    },
+    {
+      "id": "33307.406",
+      "kind": "finish",
+      "time": 289022.566884
+    },
+    {
+      "id": "33307.414",
+      "kind": "finish",
+      "time": 289022.634298
+    },
+    {
+      "id": "33307.423",
+      "kind": "finish",
+      "time": 289022.647904
+    },
+    {
+      "id": "33307.467",
+      "index": 11,
+      "kind": "start",
+      "time": 289022.706632
+    },
+    {
+      "id": "33307.468",
+      "index": 12,
+      "kind": "start",
+      "time": 289022.706773
+    },
+    {
+      "id": "33307.487",
+      "index": 13,
+      "kind": "start",
+      "time": 289022.802992
+    },
+    {
+      "id": "33307.467",
+      "kind": "finish",
+      "time": 289022.800257
+    },
+    {
+      "id": "33307.493",
+      "index": 14,
+      "kind": "start",
+      "time": 289022.803904
+    },
+    {
+      "id": "33307.468",
+      "kind": "finish",
+      "time": 289022.800495
+    },
+    {
+      "id": "33307.502",
+      "index": 15,
+      "kind": "start",
+      "time": 289022.899815
+    },
+    {
+      "id": "33307.487",
+      "kind": "finish",
+      "time": 289022.898585
+    },
+    {
+      "id": "33307.511",
+      "index": 16,
+      "kind": "start",
+      "time": 289022.90176
+    },
+    {
+      "id": "33307.493",
+      "kind": "finish",
+      "time": 289022.898883
+    },
+    {
+      "id": "33307.511",
+      "kind": "finish",
+      "time": 289022.905788
+    },
+    {
+      "id": "33307.527",
+      "index": 16,
+      "kind": "start",
+      "time": 289022.958334
+    },
+    {
+      "id": "33307.528",
+      "index": 17,
+      "kind": "start",
+      "time": 289022.958466
+    },
+    {
+      "id": "33307.502",
+      "kind": "finish",
+      "time": 289022.957049
+    },
+    {
+      "id": "33307.540",
+      "index": 12,
+      "kind": "start",
+      "time": 289023.052349
+    },
+    {
+      "id": "33307.527",
+      "kind": "finish",
+      "time": 289023.051108
+    },
+    {
+      "id": "33307.546",
+      "index": 11,
+      "kind": "start",
+      "time": 289023.053514
+    },
+    {
+      "id": "33307.528",
+      "kind": "finish",
+      "time": 289023.051642
+    },
+    {
+      "id": "33307.540",
+      "kind": "finish",
+      "time": 289023.082816
+    },
+    {
+      "id": "33307.546",
+      "kind": "finish",
+      "time": 289023.082869
+    }
+  ],
+  "cdpScope": "GET content only; CORS preflight excluded",
+  "viewport": 1280,
+  "profile": {
+    "slow": false,
+    "latencyMs": 20,
+    "downloadBytesPerSecond": 10485760
+  },
+  "persistedPages": 30,
+  "firstUsefulMs": 111,
+  "encodedDataBytesBeforeUseful": 375161,
+  "initialRequests": [1, 2, 3, 4],
+  "initialWindowRequests": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  "initialPreparedMs": 410,
+  "maxApplicationOutstandingContentRequests": 3,
+  "requests": [
+    {
+      "index": 1,
+      "startedMs": 41
+    },
+    {
+      "index": 2,
+      "startedMs": 105
+    },
+    {
+      "index": 3,
+      "startedMs": 105
+    },
+    {
+      "index": 4,
+      "startedMs": 131
+    },
+    {
+      "index": 5,
+      "startedMs": 186
+    },
+    {
+      "index": 6,
+      "startedMs": 209
+    },
+    {
+      "index": 7,
+      "startedMs": 232
+    },
+    {
+      "index": 8,
+      "startedMs": 250
+    },
+    {
+      "index": 9,
+      "startedMs": 314
+    },
+    {
+      "index": 10,
+      "startedMs": 330
+    },
+    {
+      "index": 11,
+      "startedMs": 468
+    },
+    {
+      "index": 12,
+      "startedMs": 468
+    },
+    {
+      "index": 13,
+      "startedMs": 564
+    },
+    {
+      "index": 14,
+      "startedMs": 565
+    },
+    {
+      "index": 15,
+      "startedMs": 661
+    },
+    {
+      "index": 16,
+      "startedMs": 663
+    },
+    {
+      "index": 16,
+      "startedMs": 720
+    },
+    {
+      "index": 17,
+      "startedMs": 720
+    },
+    {
+      "index": 12,
+      "startedMs": 814
+    },
+    {
+      "index": 11,
+      "startedMs": 815
+    }
+  ],
+  "boundaries": [
+    {
+      "page": 5,
+      "stallMs": 100,
+      "requested": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    },
+    {
+      "page": 10,
+      "stallMs": 100,
+      "requested": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+    },
+    {
+      "page": 15,
+      "stallMs": 150,
+      "requested": [
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 16, 17
+      ]
+    },
+    {
+      "kind": "warm reversal",
+      "page": 13,
+      "stallMs": 33,
+      "newRequests": 0,
+      "newTargetRequests": 0
+    }
+  ],
+  "resources": {
+    "base": {
+      "active": 0,
+      "bytes": 0,
+      "maximum": 0,
+      "maxBytes": 0
+    },
+    "firstReady": {
+      "active": 2,
+      "bytes": 375437,
+      "maximum": 2,
+      "maxBytes": 375437
+    },
+    "atEnd": {
+      "active": 3,
+      "bytes": 1125483,
+      "maximum": 10,
+      "maxBytes": 3001840
+    },
+    "afterClose": {
+      "active": 0,
+      "bytes": 0,
+      "maximum": 10,
+      "maxBytes": 3001840
+    }
+  },
+  "layout": {
+    "width": 1280,
+    "scrollWidth": 1280,
+    "initialFirstPageHeight": 1000,
+    "readyFirstPageHeight": 1000,
+    "shifts": [
+      {
+        "value": 0.027480468749999997,
+        "hadRecentInput": false
+      }
+    ]
+  },
+  "heap": {
+    "usedSize": 23964928,
+    "totalSize": 35635200,
+    "limit": "JavaScript heap only; excludes native decoder/GPU animation memory"
+  },
+  "measurement": "One controlled real-Chromium/Express/PostgreSQL sample; warm means retained ready pages within this open viewer, not cross-session protected persistence"
+}

@@ -1,45 +1,28 @@
-import { Navbar } from "@/features/home/components/Navbar/Navbar";
-import { HeroSection } from "@/features/home/components/HeroSection/HeroSection";
-import { TrendingSection } from "@/features/home/components/TrendingSection/TrendingSection";
-import { DiscordBanner } from "@/features/home/components/DiscordBanner/DiscordBanner";
-import { LatestReleases } from "@/features/home/components/LatestReleases/LatestReleases";
-import { SuggestionsSection } from "@/features/home/components/SuggestionsSection/SuggestionsSection";
-import { Footer } from "@/features/home/components/Footer/Footer";
-import { AdvertisementSlot } from "@/features/advertising/components/AdvertisementSlot/AdvertisementSlot";
-import styles from "./page.module.css";
+import { PublicHome } from "@/features/home/components/PublicHome";
+import { publicCatalogServer } from "@/features/public-catalog/api/public-catalog.server";
+import { SafePublicCatalogError } from "@/features/public-catalog/model/public-catalog.errors";
+import { getServerEnvironment } from "@/config/server-environment";
+import { publicPageMetadata } from "@/features/public-catalog/api/public-catalog.seo";
 
-export default function HomePage() {
+export const generateMetadata = () =>
+  publicPageMetadata(
+    "/",
+    "Fury — اكتشف الأعمال المنشورة",
+    "اكتشف الأعمال المميزة وأحدث الفصول والتصنيفات المنشورة على Fury.",
+  );
+export const dynamic = "force-dynamic";
+export default async function HomePage() {
+  const { COMMUNITY_URL: communityUrl } = getServerEnvironment();
+  let seed;
+  try {
+    seed = await publicCatalogServer.getHome();
+  } catch (error) {
+    if (!(error instanceof SafePublicCatalogError)) throw error;
+  }
   return (
-    <div className={styles["pageWrapper"]} dir="rtl">
-      <div style={{ position: "relative", zIndex: 10 }}>
-        <Navbar />
-
-        <HeroSection />
-
-        <div style={{ background: "var(--background)" }}>
-          <TrendingSection />
-        </div>
-
-        <div className={styles["contentContainer"]}>
-          <DiscordBanner />
-
-          <div className={styles["layoutGrid"]}>
-            <main className={styles["mainCol"]}>
-              <LatestReleases />
-            </main>
-
-            <aside className={styles["adCol"]}>
-              <AdvertisementSlot placement="home-banner" />
-            </aside>
-          </div>
-        </div>
-
-        <div style={{ background: "var(--background)" }}>
-          <SuggestionsSection />
-        </div>
-
-        <Footer />
-      </div>
-    </div>
+    <PublicHome
+      {...(seed === undefined ? { initialUnavailable: true } : { seed })}
+      communityUrl={communityUrl}
+    />
   );
 }

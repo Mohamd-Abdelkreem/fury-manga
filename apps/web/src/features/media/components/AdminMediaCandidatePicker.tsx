@@ -1,6 +1,6 @@
 "use client";
 
-import type { MediaClass } from "@fury/contracts";
+import { MEDIA_SOURCE_TYPES, type MediaClass } from "@fury/contracts";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
@@ -8,12 +8,14 @@ import {
   useAdminMediaCandidate,
   useAdminMediaList,
 } from "../hooks/media.hooks";
+import { useMediaPreviewSource } from "../hooks/use-media-preview-source";
 
 type AdminClass = Exclude<MediaClass, "user_avatar">;
 
 const errorMessages: Record<string, string> = {
   MEDIA_INVALID_FILE: "ملف الصورة غير صالح لهذا النوع.",
   MEDIA_LIMIT_EXCEEDED: "تجاوزت الصورة الحد المسموح.",
+  MEDIA_PROCESSING_BUSY: "الخادم مشغول بمعالجة الصور. أعد المحاولة لاحقًا.",
   MEDIA_UNSUPPORTED_TYPE: "صيغة الصورة غير مدعومة.",
   UPLOAD_ATTEMPT_CONFLICT: "تعارضت محاولة الرفع. اختر الملف مرة أخرى.",
   UPLOAD_INCOMPLETE: "لم يكتمل الرفع. اختر الملف مرة أخرى.",
@@ -45,6 +47,10 @@ export function AdminMediaCandidatePicker({
   const { state, select, cancel, clear, load, checkAttempt, retry, available } =
     useAdminMediaCandidate(mediaClass);
   const list = useAdminMediaList(mediaClass);
+  const preview = useMediaPreviewSource(
+    state.previewUrl,
+    MEDIA_SOURCE_TYPES[mediaClass].some((type) => type === "image/gif"),
+  );
   const inputRef = useRef<HTMLInputElement>(null);
   const statusRef = useRef<HTMLDivElement>(null);
   const messageRef = useRef<HTMLParagraphElement>(null);
@@ -98,11 +104,7 @@ export function AdminMediaCandidatePicker({
         <input
           ref={inputRef}
           type="file"
-          accept={
-            mediaClass === "avatar_frame" || mediaClass === "comment_decoration"
-              ? "image/png,image/webp"
-              : "image/jpeg,image/png,image/webp"
-          }
+          accept={MEDIA_SOURCE_TYPES[mediaClass].join(",")}
           disabled={!available || busy}
           onChange={(event) => {
             const file = event.currentTarget.files?.[0];
@@ -116,9 +118,11 @@ export function AdminMediaCandidatePicker({
         />
       </label>
 
-      {state.previewUrl !== null ? (
+      {preview.pending ? <p role="status">جارٍ تجهيز معاينة الصورة…</p> : null}
+      {preview.error ? <p role="alert">تعذّر عرض معاينة الصورة.</p> : null}
+      {preview.url !== null ? (
         <Image
-          src={state.previewUrl}
+          src={preview.url}
           alt={
             state.previewKind === "temporary"
               ? `معاينة مؤقتة ${label}`

@@ -161,3 +161,55 @@ packages/database/prisma/            # inspected; no planned P05 edit
 ```
 
 **Structure decision:** Extend the existing content feature and page components rather than introduce another database model or app. `research.md` resolves technical choices; no `data-model.md` exists because stored state is unchanged. The executable sequence is in `tasks.md`.
+
+## Current execution overlay — 2026-11-01
+
+Constitution 2.1.0 VI/IX and the owner's 2026-11-01 P05 completion request govern
+execution. This replaces only the 2026-10-31 current-policy overlay; the original
+requirements, plan decisions, task identities, progress and dated evidence remain.
+The whole backend group (T009–T017, T026–T032, T040–T045, T051–T054) requires
+contracts, real PostgreSQL, media integrity, Express authority/log/cache and
+OpenAPI acceptance before dependent rendered integration. Preserve T071–T077,
+P02 T079/T080 and T021's completed navigation extraction.
+
+The former blanket presentation conflicts are resolved only within constitution
+VI's exact P05 exception. Execute the 23 original unfinished tasks in dependency-safe
+batches: T020–T025, T035–T039, T048–T050, T055–T057, T059, T061–T063, T068–T069.
+Existing consumer/model/hooks T018–T019, T033–T034, T046–T047 and T058/T060 remain
+owners to reuse, not duplicate. Common recovery/state work may precede dependent
+story integration. Report exact IDs/dependencies before each batch. Preserve the
+visual identity and existing protected surfaces; capture the current design before
+application changes and compare narrow, intermediate and wide rendered output.
+
+Governance, artifact reconciliation, IMPLEMENT and CONVERGE are separate sequential
+stages. The owner authorizes continuation through these batches and subsequent
+necessary uniquely tasked P05 remediation. CONVERGE remains read-only except new
+traceable task append; subsequent IMPLEMENT fixes those findings. Real admin-to-public,
+failure/recovery, crawler/image visibility, five separate shuffled critical-hook
+processes, independent reviews and final `pnpm verify` remain mandatory. Technical
+completion does not manufacture predecessor, human artwork, owner or release approval.
+No new specification, future-only phase, commit, push, deployment or production
+migration is authorized.
+
+### Verified framework recovery detail — 2026-11-01
+
+T081/T082 preserve the accepted server `notFound()` result and per-QueryClient
+authority. The installed Next16 HTTP fallback boundary keeps its triggered 404 on
+same-path refresh. A request-render ID in the scoped Work template resets that
+boundary after fresh server output; its client wrapper keys only an exact direct
+Work route. Nested reader children pass through unchanged and the root query
+provider remains above the boundary. A matching later Work GET is still required
+for recovery. The old streamed bare BODY robots/noindex marker is outside Next's
+managed head metadata; matching eligible server detail removes only that obsolete
+body marker. Unavailable/not-found renders do not perform this cleanup. Explicit
+retry focus waits for connected visible successful detail after fetch completion.
+Actual browser acceptance proves recovered title, index/follow and 3px focus.
+These are bounded lifecycle/SEO corrections, not a design or product-scope change.
+
+## Media-foundation maintenance overlay — 2026-11-01
+
+The separately owner-authorized existing P02 T081–T085 extension covers animated
+Work/Chapter media and bounded existing persisted-preview/public-image consumers
+under constitution2.2.0. Preserve completed phase task IDs and current data/authority,
+publication, design and denial fences. This maintenance does not reopen the completed
+original implementation, create a specification or implement the future P07 reader.

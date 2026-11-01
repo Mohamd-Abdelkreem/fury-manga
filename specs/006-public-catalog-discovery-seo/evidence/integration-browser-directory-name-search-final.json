@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "links": [
+    {
+      "href": "/discover?category=browser-category-a",
+      "text": "Browser Category A"
+    },
+    {
+      "href": "/discover?category=browser-category-b",
+      "text": "Browser Category B"
+    },
+    {
+      "href": "/discover?category=browser-category-c",
+      "text": "Browser Category C"
+    }
+  ],
+  "nativeEnterNameSearch": true,
+  "filteredEmpty": true,
+  "path": "/categories?q=No+matching+saved+category"
+}

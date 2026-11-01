@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "constantServer503": true,
+  "browserSuccesses": 2,
+  "automaticServerRefreshes": 1,
+  "boundedAcrossTemplateRemount": true,
+  "visiblePartialPageRetry": true,
+  "geometry": {
+    "viewport": 320,
+    "scroll": 320,
+    "dir": "rtl"
+  },
+  "title": "المحتوى غير متاح مؤقتًا | Fury",
+  "robots": ["noindex, nofollow"]
+}

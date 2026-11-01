@@ -1,0 +1,56 @@
+{
+  "passed": true,
+  "actualChapterAdministratorTransitions": true,
+  "result": [
+    {
+      "slug": "browser-illustrated",
+      "hidden": {
+        "status": 200,
+        "count": 0,
+        "first": null,
+        "latest": null
+      },
+      "recovered": {
+        "status": 200,
+        "count": 1,
+        "first": {
+          "number": 1,
+          "title": "Browser chapter عنوان",
+          "contentType": "illustrated",
+          "publishedAt": "2026-11-01T10:52:03.826Z"
+        },
+        "latest": {
+          "number": 1,
+          "title": "Browser chapter عنوان",
+          "contentType": "illustrated",
+          "publishedAt": "2026-11-01T10:52:03.826Z"
+        }
+      }
+    },
+    {
+      "slug": "browser-text",
+      "hidden": {
+        "status": 200,
+        "count": 0,
+        "first": null,
+        "latest": null
+      },
+      "recovered": {
+        "status": 200,
+        "count": 1,
+        "first": {
+          "number": 1,
+          "title": "Browser chapter عنوان",
+          "contentType": "text",
+          "publishedAt": "2026-11-01T10:52:04.297Z"
+        },
+        "latest": {
+          "number": 1,
+          "title": "Browser chapter عنوان",
+          "contentType": "text",
+          "publishedAt": "2026-11-01T10:52:04.297Z"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "actualByteRepairKeyboardRetry": true,
+  "workRemainsVisible": true,
+  "focus": {
+    "tag": "IMG",
+    "outline": "solid",
+    "outlineWidth": "3px"
+  }
+}

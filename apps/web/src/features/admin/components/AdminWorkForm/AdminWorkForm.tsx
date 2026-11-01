@@ -35,6 +35,7 @@ import {
 } from "../../model/admin-content.errors";
 import {
   adoptServerWork,
+  displayedWorkPublicationStatus,
   continueDraftAgainstServer,
   createWorkCommand,
   createPublishedWorkCommand,
@@ -46,6 +47,7 @@ import {
   workMatchesUpdateCommand,
   type MediaDraftSelection,
   type WorkEditorState,
+  type WorkPublicationConfirmation,
 } from "../../model/admin-work-editor";
 import { AdminConfirmDialog } from "../AdminConfirmDialog/AdminConfirmDialog";
 import { AdminWorkBasicFields } from "./AdminWorkBasicFields";
@@ -128,8 +130,15 @@ function ActorWorkForm({
     "draft" | "published" | "transition" | null
   >(null);
   const [isCheckingTransition, setIsCheckingTransition] = useState(false);
-  const [confirmedStatus, setConfirmedStatus] =
-    useState<PublicationStatus | null>(null);
+  const [publicationConfirmation, setPublicationConfirmation] =
+    useState<WorkPublicationConfirmation | null>(null);
+  const confirmPublication = ({
+    id,
+    version,
+    publicationStatus,
+  }: WorkPublicationConfirmation) => {
+    setPublicationConfirmation({ id, version, publicationStatus });
+  };
   const submitIntent = useRef<"draft" | "published">("draft");
   const createId = useRef<string | null>(null);
   const lastCreateCommand = useRef<CreateWorkBody | null>(null);
@@ -329,7 +338,11 @@ function ActorWorkForm({
       if (!canFinishSave(identity)) return;
       setBaseline({ workId: initialWork.id, version: result.version });
       syncedWorkVersion.current = result.version;
-      setConfirmedStatus(result.publicationStatus);
+      confirmPublication({
+        id: initialWork.id,
+        version: result.version,
+        publicationStatus: result.publicationStatus,
+      });
       setFormMessage(
         result.transitioned
           ? targetState === "archived"
@@ -370,7 +383,7 @@ function ActorWorkForm({
     try {
       const work = await transitionWork.readback(initialWork.id);
       if (!canFinishSave(identity)) return;
-      setConfirmedStatus(work.publicationStatus);
+      confirmPublication(work);
       setBaseline({ workId: work.id, version: work.version });
       syncedWorkVersion.current = work.version;
       setTransitionUnknown(false);
@@ -500,7 +513,7 @@ function ActorWorkForm({
               return;
             setBaseline({ workId: saved.id, version: saved.version });
             syncedWorkVersion.current = saved.version;
-            setConfirmedStatus(saved.publicationStatus);
+            confirmPublication(saved);
             if (
               draftRevision.current !== submittedRevision ||
               currentDraft.current !== submittedDraft
@@ -654,7 +667,7 @@ function ActorWorkForm({
       if (workMatchesUpdateCommand(saved, body)) {
         setBaseline({ workId: saved.id, version: saved.version });
         syncedWorkVersion.current = saved.version;
-        setConfirmedStatus(saved.publicationStatus);
+        confirmPublication(saved);
         currentUnknown.current = false;
         setEditOutcomeUnknown(false);
         if (currentDraft.current === lastEditDraft.current) {
@@ -744,12 +757,10 @@ function ActorWorkForm({
     transitionWork.isPending ||
     isCheckingCreate ||
     isCheckingTransition;
-  const displayedStatus =
-    initialWork === undefined
-      ? null
-      : baseline.version !== null && baseline.version >= initialWork.version
-        ? (confirmedStatus ?? initialWork.publicationStatus)
-        : initialWork.publicationStatus;
+  const displayedStatus = displayedWorkPublicationStatus(
+    initialWork,
+    publicationConfirmation,
+  );
 
   if (mode === "edit" && initialWork === undefined) {
     return (

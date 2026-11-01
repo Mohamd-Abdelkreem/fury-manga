@@ -1,0 +1,18 @@
+{
+  "baselineEntries": 398,
+  "unchangedEntries": 388,
+  "changedExistingEntries": [
+    "apps/web/src/features/admin/components/AdminChapterForm/AdminChapterForm.tsx",
+    "apps/web/src/features/admin/components/AdminChapterForm/ChapterPreviewModal.tsx",
+    "apps/web/src/features/admin/model/admin-chapter-editor.ts",
+    "apps/web/src/features/content/components/ChapterContentRenderer.test.tsx",
+    "apps/web/src/features/content/components/ChapterContentRenderer.tsx",
+    "apps/web/src/features/media/components/AdminMediaCandidatePicker.tsx",
+    "apps/web/src/features/media/hooks/media.hooks.ts",
+    "apps/web/src/features/public-catalog/components/PublicWorkImage.tsx",
+    "apps/web/src/features/public-catalog/hooks/use-reduced-motion.ts",
+    "apps/web/src/styles/integration.css"
+  ],
+  "unchangedRouteAndSharedComponentEntries": 83,
+  "scope": "Only owner-authorized media/shared illustrated preview consumers, invisible geometry/scheduling/motion and one existing focus selector extension; no route/layout/navigation/static-design changes. Original preexisting P05 source remains in the snapshot."
+}

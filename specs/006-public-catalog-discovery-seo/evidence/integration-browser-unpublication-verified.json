@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "action": "actual administrator unpublish",
+  "result": [
+    {
+      "slug": "browser-illustrated",
+      "savedDraft": true,
+      "actionAlreadyPersistedByPriorHarness": true
+    },
+    {
+      "slug": "browser-text",
+      "status": 200,
+      "savedDraft": true
+    }
+  ]
+}

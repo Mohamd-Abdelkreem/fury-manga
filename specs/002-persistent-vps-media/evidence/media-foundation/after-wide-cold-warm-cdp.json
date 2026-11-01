@@ -1,0 +1,591 @@
+{
+  "passed": true,
+  "version": "after",
+  "cdpMax": 4,
+  "cdpEvents": [
+    {
+      "id": "6A21B1244FBC66F67A8A67F48BA44DBE",
+      "index": 1,
+      "kind": "start",
+      "time": 286607.537793
+    },
+    {
+      "id": "22110.359",
+      "index": 1,
+      "kind": "start",
+      "time": 286607.537512
+    },
+    {
+      "id": "6A21B1244FBC66F67A8A67F48BA44DBE",
+      "kind": "finish",
+      "time": 286607.538637
+    },
+    {
+      "id": "A92D710DC49550E23BD878CCF45F5DA1",
+      "index": 2,
+      "kind": "start",
+      "time": 286607.604947
+    },
+    {
+      "id": "22110.379",
+      "index": 2,
+      "kind": "start",
+      "time": 286607.604695
+    },
+    {
+      "id": "22110.380",
+      "index": 3,
+      "kind": "start",
+      "time": 286607.604807
+    },
+    {
+      "id": "22110.359",
+      "kind": "finish",
+      "time": 286607.602397
+    },
+    {
+      "id": "5A5E2437590CFCB2061C597C29FFCA9B",
+      "index": 3,
+      "kind": "start",
+      "time": 286607.605285
+    },
+    {
+      "id": "A92D710DC49550E23BD878CCF45F5DA1",
+      "kind": "finish",
+      "time": 286607.605608
+    },
+    {
+      "id": "5A5E2437590CFCB2061C597C29FFCA9B",
+      "kind": "finish",
+      "time": 286607.605956
+    },
+    {
+      "id": "22110.379",
+      "kind": "finish",
+      "time": 286607.627608
+    },
+    {
+      "id": "22110.386",
+      "index": 4,
+      "kind": "start",
+      "time": 286607.629693
+    },
+    {
+      "id": "71CB67110B035D915A61FFBFB9A31CC5",
+      "index": 4,
+      "kind": "start",
+      "time": 286607.630029
+    },
+    {
+      "id": "71CB67110B035D915A61FFBFB9A31CC5",
+      "kind": "finish",
+      "time": 286607.630711
+    },
+    {
+      "id": "22110.392",
+      "index": 5,
+      "kind": "start",
+      "time": 286607.680612
+    },
+    {
+      "id": "22110.380",
+      "kind": "finish",
+      "time": 286607.679217
+    },
+    {
+      "id": "5FF1D5582930183ED15F5AAE8E14932C",
+      "index": 5,
+      "kind": "start",
+      "time": 286607.681003
+    },
+    {
+      "id": "5FF1D5582930183ED15F5AAE8E14932C",
+      "kind": "finish",
+      "time": 286607.681751
+    },
+    {
+      "id": "22110.397",
+      "index": 6,
+      "kind": "start",
+      "time": 286607.702872
+    },
+    {
+      "id": "22110.386",
+      "kind": "finish",
+      "time": 286607.701517
+    },
+    {
+      "id": "E073D524B5C41E95A7600C1BF41EA5EF",
+      "index": 6,
+      "kind": "start",
+      "time": 286607.703193
+    },
+    {
+      "id": "E073D524B5C41E95A7600C1BF41EA5EF",
+      "kind": "finish",
+      "time": 286607.703943
+    },
+    {
+      "id": "22110.397",
+      "kind": "finish",
+      "time": 286607.724665
+    },
+    {
+      "id": "22110.403",
+      "index": 7,
+      "kind": "start",
+      "time": 286607.726076
+    },
+    {
+      "id": "CEDEEB7EB10B3C9FF8435E7DA716AE14",
+      "index": 7,
+      "kind": "start",
+      "time": 286607.726371
+    },
+    {
+      "id": "CEDEEB7EB10B3C9FF8435E7DA716AE14",
+      "kind": "finish",
+      "time": 286607.727001
+    },
+    {
+      "id": "22110.410",
+      "index": 8,
+      "kind": "start",
+      "time": 286607.739849
+    },
+    {
+      "id": "22110.392",
+      "kind": "finish",
+      "time": 286607.738674
+    },
+    {
+      "id": "4B31279C40730516EE78E057EFF983C4",
+      "index": 8,
+      "kind": "start",
+      "time": 286607.740088
+    },
+    {
+      "id": "4B31279C40730516EE78E057EFF983C4",
+      "kind": "finish",
+      "time": 286607.740585
+    },
+    {
+      "id": "22110.418",
+      "index": 9,
+      "kind": "start",
+      "time": 286607.807649
+    },
+    {
+      "id": "22110.403",
+      "kind": "finish",
+      "time": 286607.806329
+    },
+    {
+      "id": "B8B9176C68E38F9C85FCA2F3EDA8C33D",
+      "index": 9,
+      "kind": "start",
+      "time": 286607.80799
+    },
+    {
+      "id": "B8B9176C68E38F9C85FCA2F3EDA8C33D",
+      "kind": "finish",
+      "time": 286607.808502
+    },
+    {
+      "id": "22110.427",
+      "index": 10,
+      "kind": "start",
+      "time": 286607.820854
+    },
+    {
+      "id": "22110.410",
+      "kind": "finish",
+      "time": 286607.819608
+    },
+    {
+      "id": "8D3375865D64846003EE1E07996DA589",
+      "index": 10,
+      "kind": "start",
+      "time": 286607.821105
+    },
+    {
+      "id": "8D3375865D64846003EE1E07996DA589",
+      "kind": "finish",
+      "time": 286607.821576
+    },
+    {
+      "id": "22110.418",
+      "kind": "finish",
+      "time": 286607.88756
+    },
+    {
+      "id": "22110.427",
+      "kind": "finish",
+      "time": 286607.90056
+    },
+    {
+      "id": "22110.471",
+      "index": 11,
+      "kind": "start",
+      "time": 286607.967607
+    },
+    {
+      "id": "22110.472",
+      "index": 12,
+      "kind": "start",
+      "time": 286607.967727
+    },
+    {
+      "id": "F0B0F08FEA811C8451C28451361E175B",
+      "index": 11,
+      "kind": "start",
+      "time": 286607.968113
+    },
+    {
+      "id": "567BB887432E5462298E1329116AAAD2",
+      "index": 12,
+      "kind": "start",
+      "time": 286607.968168
+    },
+    {
+      "id": "F0B0F08FEA811C8451C28451361E175B",
+      "kind": "finish",
+      "time": 286607.968725
+    },
+    {
+      "id": "567BB887432E5462298E1329116AAAD2",
+      "kind": "finish",
+      "time": 286607.969165
+    },
+    {
+      "id": "22110.491",
+      "index": 13,
+      "kind": "start",
+      "time": 286608.068176
+    },
+    {
+      "id": "22110.471",
+      "kind": "finish",
+      "time": 286608.067033
+    },
+    {
+      "id": "E88797AAEC6C8CF4C9EA63D2E45F4FA8",
+      "index": 13,
+      "kind": "start",
+      "time": 286608.068497
+    },
+    {
+      "id": "22110.497",
+      "index": 14,
+      "kind": "start",
+      "time": 286608.068981
+    },
+    {
+      "id": "22110.472",
+      "kind": "finish",
+      "time": 286608.067313
+    },
+    {
+      "id": "E88797AAEC6C8CF4C9EA63D2E45F4FA8",
+      "kind": "finish",
+      "time": 286608.069148
+    },
+    {
+      "id": "9173F5110BDAA55F14EA5096B53BC357",
+      "index": 14,
+      "kind": "start",
+      "time": 286608.069528
+    },
+    {
+      "id": "9173F5110BDAA55F14EA5096B53BC357",
+      "kind": "finish",
+      "time": 286608.070493
+    },
+    {
+      "id": "22110.505",
+      "index": 15,
+      "kind": "start",
+      "time": 286608.16647
+    },
+    {
+      "id": "D998A0F194DDA6D0567E7DA95A13FFA3",
+      "index": 15,
+      "kind": "start",
+      "time": 286608.166864
+    },
+    {
+      "id": "22110.491",
+      "kind": "finish",
+      "time": 286608.166692
+    },
+    {
+      "id": "22110.497",
+      "kind": "finish",
+      "time": 286608.166718
+    },
+    {
+      "id": "D998A0F194DDA6D0567E7DA95A13FFA3",
+      "kind": "finish",
+      "time": 286608.167781
+    },
+    {
+      "id": "22110.507",
+      "index": 16,
+      "kind": "start",
+      "time": 286608.231333
+    },
+    {
+      "id": "22110.508",
+      "index": 14,
+      "kind": "start",
+      "time": 286608.23146
+    },
+    {
+      "id": "22110.505",
+      "kind": "finish",
+      "time": 286608.230067
+    },
+    {
+      "id": "D8BB9925C5502F55EAF75C3B5A96323A",
+      "index": 16,
+      "kind": "start",
+      "time": 286608.231746
+    },
+    {
+      "id": "D8BB9925C5502F55EAF75C3B5A96323A",
+      "kind": "finish",
+      "time": 286608.232366
+    },
+    {
+      "id": "22110.511",
+      "index": 17,
+      "kind": "start",
+      "time": 286608.326071
+    },
+    {
+      "id": "22110.508",
+      "kind": "finish",
+      "time": 286608.324838
+    },
+    {
+      "id": "6145422E8B73FAA5A97954FDA5B01C09",
+      "index": 17,
+      "kind": "start",
+      "time": 286608.326425
+    },
+    {
+      "id": "22110.515",
+      "index": 13,
+      "kind": "start",
+      "time": 286608.327053
+    },
+    {
+      "id": "22110.507",
+      "kind": "finish",
+      "time": 286608.325057
+    },
+    {
+      "id": "6145422E8B73FAA5A97954FDA5B01C09",
+      "kind": "finish",
+      "time": 286608.327041
+    },
+    {
+      "id": "22110.511",
+      "kind": "finish",
+      "time": 286608.330852
+    },
+    {
+      "id": "22110.531",
+      "index": 12,
+      "kind": "start",
+      "time": 286608.385738
+    },
+    {
+      "id": "22110.532",
+      "index": 11,
+      "kind": "start",
+      "time": 286608.385843
+    },
+    {
+      "id": "22110.515",
+      "kind": "finish",
+      "time": 286608.384623
+    },
+    {
+      "id": "22110.531",
+      "kind": "finish",
+      "time": 286608.44449
+    },
+    {
+      "id": "22110.532",
+      "kind": "finish",
+      "time": 286608.444517
+    }
+  ],
+  "viewport": 1280,
+  "profile": {
+    "slow": false,
+    "latencyMs": 20,
+    "downloadBytesPerSecond": 10485760
+  },
+  "persistedPages": 30,
+  "firstUsefulMs": 119,
+  "encodedDataBytesBeforeUseful": 375161,
+  "initialRequests": [1, 2, 3, 4],
+  "initialWindowRequests": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  "initialPreparedMs": 418,
+  "maxApplicationOutstandingContentRequests": 3,
+  "requests": [
+    {
+      "index": 1,
+      "startedMs": 45
+    },
+    {
+      "index": 2,
+      "startedMs": 112
+    },
+    {
+      "index": 3,
+      "startedMs": 112
+    },
+    {
+      "index": 4,
+      "startedMs": 136
+    },
+    {
+      "index": 5,
+      "startedMs": 187
+    },
+    {
+      "index": 6,
+      "startedMs": 209
+    },
+    {
+      "index": 7,
+      "startedMs": 233
+    },
+    {
+      "index": 8,
+      "startedMs": 246
+    },
+    {
+      "index": 9,
+      "startedMs": 314
+    },
+    {
+      "index": 10,
+      "startedMs": 327
+    },
+    {
+      "index": 11,
+      "startedMs": 474
+    },
+    {
+      "index": 12,
+      "startedMs": 475
+    },
+    {
+      "index": 13,
+      "startedMs": 575
+    },
+    {
+      "index": 14,
+      "startedMs": 576
+    },
+    {
+      "index": 15,
+      "startedMs": 673
+    },
+    {
+      "index": 16,
+      "startedMs": 738
+    },
+    {
+      "index": 14,
+      "startedMs": 738
+    },
+    {
+      "index": 17,
+      "startedMs": 833
+    },
+    {
+      "index": 13,
+      "startedMs": 834
+    },
+    {
+      "index": 12,
+      "startedMs": 893
+    },
+    {
+      "index": 11,
+      "startedMs": 893
+    }
+  ],
+  "boundaries": [
+    {
+      "page": 5,
+      "stallMs": 98,
+      "requested": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    },
+    {
+      "page": 10,
+      "stallMs": 100,
+      "requested": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+    },
+    {
+      "page": 15,
+      "stallMs": 167,
+      "requested": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 14]
+    },
+    {
+      "kind": "warm reversal",
+      "page": 13,
+      "stallMs": 117,
+      "newRequests": 4
+    }
+  ],
+  "resources": {
+    "base": {
+      "active": 0,
+      "bytes": 0,
+      "maximum": 0,
+      "maxBytes": 0
+    },
+    "firstReady": {
+      "active": 2,
+      "bytes": 375437,
+      "maximum": 2,
+      "maxBytes": 375437
+    },
+    "atEnd": {
+      "active": 4,
+      "bytes": 1500644,
+      "maximum": 10,
+      "maxBytes": 3001840
+    },
+    "afterClose": {
+      "active": 0,
+      "bytes": 0,
+      "maximum": 10,
+      "maxBytes": 3001840
+    }
+  },
+  "layout": {
+    "width": 1280,
+    "scrollWidth": 1280,
+    "initialFirstPageHeight": 1000,
+    "readyFirstPageHeight": 1000,
+    "shifts": [
+      {
+        "value": 0.027480468749999997,
+        "hadRecentInput": false
+      }
+    ]
+  },
+  "heap": {
+    "usedSize": 21909244,
+    "totalSize": 36945920,
+    "limit": "JavaScript heap only; excludes native decoder/GPU animation memory"
+  },
+  "measurement": "One controlled real-Chromium/Express/PostgreSQL sample; warm means retained ready pages within this open viewer, not cross-session protected persistence"
+}

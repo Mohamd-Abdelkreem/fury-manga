@@ -1,0 +1,74 @@
+{
+  "passed": true,
+  "actualSignedInCookieNames": ["refreshToken", "csrfToken"],
+  "signedInPublicJsonAndBlobAuthorityOmitted": true,
+  "reads": [
+    {
+      "path": "/api/v1/content/catalog/categories",
+      "credentialHeaderNames": []
+    },
+    {
+      "path": "/api/v1/content/catalog/works",
+      "credentialHeaderNames": []
+    },
+    {
+      "path": "/api/v1/content/works/saved-comics-39/cover",
+      "credentialHeaderNames": []
+    },
+    {
+      "path": "/api/v1/content/works/saved-manhua-38/cover",
+      "credentialHeaderNames": []
+    },
+    {
+      "path": "/api/v1/content/works/saved-text-story-41/cover",
+      "credentialHeaderNames": []
+    },
+    {
+      "path": "/api/v1/content/works/browser-text/cover",
+      "credentialHeaderNames": []
+    },
+    {
+      "path": "/api/v1/content/works/browser-illustrated/cover",
+      "credentialHeaderNames": []
+    },
+    {
+      "path": "/api/v1/content/works/saved-novel-40/cover",
+      "credentialHeaderNames": []
+    },
+    {
+      "path": "/api/v1/content/works/saved-manga-36/cover",
+      "credentialHeaderNames": []
+    },
+    {
+      "path": "/api/v1/content/catalog/categories",
+      "credentialHeaderNames": []
+    },
+    {
+      "path": "/api/v1/content/works/saved-manhwa-37/cover",
+      "credentialHeaderNames": []
+    },
+    {
+      "path": "/api/v1/content/works/saved-text-story-35/cover",
+      "credentialHeaderNames": []
+    },
+    {
+      "path": "/api/v1/content/works/saved-novel-34/cover",
+      "credentialHeaderNames": []
+    },
+    {
+      "path": "/api/v1/content/works/saved-manga-0/cover",
+      "credentialHeaderNames": []
+    },
+    {
+      "path": "/api/v1/content/works/saved-manga-0/background",
+      "credentialHeaderNames": []
+    },
+    {
+      "path": "/api/v1/content/catalog/works/saved-manga-0",
+      "credentialHeaderNames": []
+    }
+  ],
+  "fixtureReaderPath": "/story/1/chapter/1",
+  "fixtureHeading": "Trait Hoarder - الفصل 01",
+  "protectedReaderAvailable": true
+}

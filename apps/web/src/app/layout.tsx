@@ -6,12 +6,12 @@ import "@/styles/globals.css";
 import "@/styles/integration.css";
 
 export const metadata: Metadata = {
+  robots: { index: false, follow: false },
   title: {
-    default: "Fury Turbo",
-    template: "%s | Fury Turbo",
+    default: "Fury",
+    template: "%s | Fury",
   },
-  description:
-    "An Arabic-first manga and manhwa reading experience with discovery, reading, and account tools.",
+  description: "اكتشف المانجا والمانهوا والروايات والقصص المنشورة على Fury.",
 };
 
 type RootLayoutProps = Readonly<{ children: ReactNode }>;

@@ -1,0 +1,16 @@
+{
+  "reads": [
+    {
+      "path": "/api/v1/content/catalog/works/browser-illustrated",
+      "status": 200,
+      "slug": "browser-illustrated"
+    }
+  ],
+  "title": "Browser illustrated عمل | Fury",
+  "headings": ["العمل غير موجود"],
+  "body": "العمل غير موجودهذا العمل غير متاح للعرض.إعادة المحاولة",
+  "focused": {
+    "tag": "DIV",
+    "label": null
+  }
+}

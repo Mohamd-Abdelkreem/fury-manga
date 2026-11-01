@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "action": "same-SPA keyboard retry after real administrator republication with refreshed framework boundary",
+  "path": "/story/browser-illustrated",
+  "focused": {
+    "tag": "DIV",
+    "label": "تفاصيل العمل",
+    "outline": "solid",
+    "outlineWidth": "3px"
+  },
+  "metadataTitle": "Browser illustrated عمل | Fury",
+  "robots": ["index, follow"]
+}

@@ -1,0 +1,80 @@
+{
+  "passed": true,
+  "administratorReloaded": false,
+  "editorWithoutReload": {
+    "url": "http://127.0.0.1:4316/admin/works/fe1afaa5-d050-495c-8690-29b9f925599a/edit",
+    "draftControlsVisible": true,
+    "savedState": "الحالة المحفوظة: مسودة"
+  },
+  "negativeRetryAfterFailedAutomaticWithdrawal": false,
+  "realAdministratorInSeparateContext": true,
+  "anonymousPublicContextPreserved": true,
+  "initialTitle": "Browser illustrated عمل | Fury",
+  "withdrawn": {
+    "title": "العمل غير موجود | Fury",
+    "robots": ["noindex, nofollow", "noindex"],
+    "socialImages": 0,
+    "focus": {
+      "tag": "BODY",
+      "outline": "none",
+      "outlineWidth": "3px"
+    }
+  },
+  "recovered": {
+    "title": "Browser illustrated عمل | Fury",
+    "robots": ["index, follow"],
+    "focus": {
+      "tag": "DIV",
+      "label": "تفاصيل العمل",
+      "outline": "solid",
+      "outlineWidth": "3px"
+    }
+  },
+  "reads": [
+    {
+      "path": "/story/browser-illustrated",
+      "status": 200,
+      "rsc": false
+    },
+    {
+      "path": "/api/v1/content/works/browser-illustrated/cover",
+      "status": 200,
+      "rsc": false
+    },
+    {
+      "path": "/api/v1/content/catalog/works/browser-illustrated",
+      "status": 404,
+      "rsc": false
+    },
+    {
+      "path": "/story/browser-illustrated",
+      "status": 200,
+      "rsc": true
+    },
+    {
+      "path": "/api/v1/content/catalog/works/browser-illustrated",
+      "status": 404,
+      "rsc": false
+    },
+    {
+      "path": "/api/v1/content/catalog/works/browser-illustrated",
+      "status": 200,
+      "rsc": false
+    },
+    {
+      "path": "/story/browser-illustrated",
+      "status": 200,
+      "rsc": true
+    },
+    {
+      "path": "/api/v1/content/works/browser-illustrated/cover",
+      "status": 200,
+      "rsc": false
+    },
+    {
+      "path": "/api/v1/content/catalog/works/browser-illustrated",
+      "status": 200,
+      "rsc": false
+    }
+  ]
+}

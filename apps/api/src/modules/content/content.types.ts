@@ -1,5 +1,5 @@
 import type { PaginationMeta } from "@fury/contracts";
-import type { PublicationStatus } from "@fury/database";
+import type { Prisma, PublicationStatus } from "@fury/database";
 
 export type ContentList<T> = Readonly<{
   items: T[];
@@ -22,4 +22,22 @@ export type PublicationRecord = Readonly<{
   publishedAt: Date | null;
   currentPublicationEventId: string | null;
   version: number;
+}>;
+
+export type PublicContentReadClient = Pick<
+  Prisma.TransactionClient,
+  "work" | "chapter" | "category" | "mediaAsset"
+> &
+  Readonly<{
+    $queryRaw: <T>(
+      query: TemplateStringsArray | Prisma.Sql,
+      ...values: unknown[]
+    ) => Promise<T>;
+  }>;
+
+export type PublicContentDatabase = Readonly<{
+  $transaction: <T>(
+    read: (transaction: PublicContentReadClient) => Promise<T>,
+    options: { isolationLevel: Prisma.TransactionIsolationLevel },
+  ) => Promise<T>;
 }>;

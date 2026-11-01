@@ -1,0 +1,200 @@
+{
+  "passed": true,
+  "kind": "actual PostgreSQL MediaStorage MediaReconciler and Express transitions",
+  "records": [
+    {
+      "kind": "owned disposable media integrity transition",
+      "imageKind": "cover",
+      "action": "missing",
+      "assetStatus": "AVAILABLE",
+      "workStatus": "PUBLISHED",
+      "publicationEventsBefore": 104,
+      "publicationEventsAfter": 104
+    },
+    {
+      "read": "cover",
+      "metadata": 200,
+      "image": 503,
+      "noStore": true
+    },
+    {
+      "kind": "owned disposable media integrity transition",
+      "imageKind": "cover",
+      "action": "restore-bytes",
+      "assetStatus": "AVAILABLE",
+      "workStatus": "PUBLISHED",
+      "publicationEventsBefore": 104,
+      "publicationEventsAfter": 104
+    },
+    {
+      "read": "cover",
+      "metadata": 200,
+      "image": 200,
+      "noStore": true
+    },
+    {
+      "kind": "owned disposable media integrity transition",
+      "imageKind": "cover",
+      "action": "corrupt",
+      "assetStatus": "AVAILABLE",
+      "workStatus": "PUBLISHED",
+      "publicationEventsBefore": 104,
+      "publicationEventsAfter": 104
+    },
+    {
+      "read": "cover",
+      "metadata": 200,
+      "image": 503,
+      "noStore": true
+    },
+    {
+      "kind": "owned disposable media integrity transition",
+      "imageKind": "cover",
+      "action": "reconcile",
+      "assetStatus": "UNAVAILABLE",
+      "workStatus": "PUBLISHED",
+      "publicationEventsBefore": 104,
+      "publicationEventsAfter": 104,
+      "reconciliation": {
+        "inspected": 32,
+        "acceptedUploads": 0,
+        "rejectedUploads": 0,
+        "completedRemovals": 0,
+        "markedUnavailable": 1,
+        "restoredAvailable": 0,
+        "removedOrphanStages": 0
+      }
+    },
+    {
+      "read": "cover",
+      "metadata": 404,
+      "image": 404,
+      "noStore": true
+    },
+    {
+      "emptyHome": true,
+      "enabledCategoriesRemain": 12
+    },
+    {
+      "allHiddenSitemapRootsOnly": true,
+      "urls": 4
+    },
+    {
+      "kind": "owned disposable media integrity transition",
+      "imageKind": "cover",
+      "action": "repair",
+      "assetStatus": "AVAILABLE",
+      "workStatus": "PUBLISHED",
+      "publicationEventsBefore": 104,
+      "publicationEventsAfter": 104,
+      "reconciliation": {
+        "inspected": 32,
+        "acceptedUploads": 0,
+        "rejectedUploads": 0,
+        "completedRemovals": 0,
+        "markedUnavailable": 0,
+        "restoredAvailable": 1,
+        "removedOrphanStages": 0
+      }
+    },
+    {
+      "read": "cover",
+      "metadata": 200,
+      "image": 200,
+      "noStore": true
+    },
+    {
+      "kind": "owned disposable media integrity transition",
+      "imageKind": "background",
+      "action": "missing",
+      "assetStatus": "AVAILABLE",
+      "workStatus": "PUBLISHED",
+      "publicationEventsBefore": 104,
+      "publicationEventsAfter": 104
+    },
+    {
+      "read": "background",
+      "metadata": 200,
+      "image": 503,
+      "noStore": true
+    },
+    {
+      "kind": "owned disposable media integrity transition",
+      "imageKind": "background",
+      "action": "restore-bytes",
+      "assetStatus": "AVAILABLE",
+      "workStatus": "PUBLISHED",
+      "publicationEventsBefore": 104,
+      "publicationEventsAfter": 104
+    },
+    {
+      "read": "background",
+      "metadata": 200,
+      "image": 200,
+      "noStore": true
+    },
+    {
+      "kind": "owned disposable media integrity transition",
+      "imageKind": "background",
+      "action": "corrupt",
+      "assetStatus": "AVAILABLE",
+      "workStatus": "PUBLISHED",
+      "publicationEventsBefore": 104,
+      "publicationEventsAfter": 104
+    },
+    {
+      "read": "background",
+      "metadata": 200,
+      "image": 503,
+      "noStore": true
+    },
+    {
+      "kind": "owned disposable media integrity transition",
+      "imageKind": "background",
+      "action": "reconcile",
+      "assetStatus": "UNAVAILABLE",
+      "workStatus": "PUBLISHED",
+      "publicationEventsBefore": 104,
+      "publicationEventsAfter": 104,
+      "reconciliation": {
+        "inspected": 32,
+        "acceptedUploads": 0,
+        "rejectedUploads": 0,
+        "completedRemovals": 0,
+        "markedUnavailable": 1,
+        "restoredAvailable": 0,
+        "removedOrphanStages": 0
+      }
+    },
+    {
+      "read": "background",
+      "metadata": 200,
+      "image": 404,
+      "noStore": true
+    },
+    {
+      "kind": "owned disposable media integrity transition",
+      "imageKind": "background",
+      "action": "repair",
+      "assetStatus": "AVAILABLE",
+      "workStatus": "PUBLISHED",
+      "publicationEventsBefore": 104,
+      "publicationEventsAfter": 104,
+      "reconciliation": {
+        "inspected": 32,
+        "acceptedUploads": 0,
+        "rejectedUploads": 0,
+        "completedRemovals": 0,
+        "markedUnavailable": 0,
+        "restoredAvailable": 1,
+        "removedOrphanStages": 0
+      }
+    },
+    {
+      "read": "background",
+      "metadata": 200,
+      "image": 200,
+      "noStore": true
+    }
+  ]
+}
