@@ -56,7 +56,7 @@ authorize implementing a later phase.
 ### 2. Establish the current authority and baseline
 
 Read `AGENTS.md`, applicable nested instructions, the populated constitution,
-the whole `PLAN.md`, all eight `docs/engineering/*.md` guides,
+the whole `PLAN.md`, every `docs/engineering/*.md` guide,
 `docs/design/design-system.md`, `docs/workflow/operating-policy.md` and
 `docs/workflow/speckit-prompts.txt`. Read the installed skills before using them.
 Use current session settings; delegate only if I separately request delegation.

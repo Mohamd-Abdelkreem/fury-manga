@@ -20,7 +20,14 @@ mentioned in older sections is superseded; use
 [the current legacy register](legacy-closeout.md) and [media evidence](../../specs/002-persistent-vps-media/evidence/media-foundation/README.md)
 for current verification/readiness. No future phase or release is implemented.
 
-This inventory describes the checked-out implementation, not the intended final product. A rendered sample or a local state change is not evidence of a saved record. `PLAN.md` owns the phase boundaries; the named source files establish current behavior.
+## Historical P03 inventory — 2026-09-26
+
+The table and phase notes below describe the checkout at the original P03 date.
+Some referenced fixture paths have since been replaced; they are historical
+observations, not the current engineering owner map or implementation inventory.
+Use the current overlay and linked legacy register above, then verify actual source.
+A rendered sample or local state change is not proof of persistence. `PLAN.md`
+continues to own phase boundaries; engineering guides own implementation patterns.
 
 | Surface and current source                                                                                                                                                           | Current behavior                                                                                                                                                                | Owning phase                                |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |

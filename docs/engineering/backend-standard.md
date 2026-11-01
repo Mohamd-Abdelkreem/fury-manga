@@ -3,6 +3,11 @@
 Use [the ownership map](README.md), [style](code-style.md), and the linked technical
 guides. A known old pattern is not an exception to an explicit standard.
 
+Use the [module pattern](code-style.md#module-structure-and-pattern-selection)
+while authoring and the [same-rule review procedure](code-review.md) before
+acceptance. Account for applicable defined B IDs and their evidence; a working
+endpoint or green tests do not waive a mandatory structure/style violation.
+
 ## Fury delivery boundary
 
 Use the [actual Fury reference owners](README.md#fury-reference-owners), including

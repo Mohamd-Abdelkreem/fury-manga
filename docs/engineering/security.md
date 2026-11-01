@@ -106,4 +106,5 @@ caches and artifacts where relevant. Exercise wrong owner/role/inactive account,
 malformed redirects, direct protected media, stale/duplicate commands and alternate
 authority headers. Real browser/provider/deployment claims need their own evidence.
 
-Relevant rules: B12–B23/B29/B30/B39–B42, F03–F05/F08/F12–F21/F25–F27/F31.
+Relevant rules: B12–B17/B19/B20/B22/B23/B29/B30/B40–B42,
+F03–F05/F08/F12–F21/F25–F27/F31.

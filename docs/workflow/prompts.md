@@ -171,6 +171,29 @@ Keep original ratification date and distinguish policy from implementation evide
 All artifacts/reports in English. Stop without executing the roadmap.
 ```
 
+## Code review against Fury standards
+
+Use this standalone review for the selected current changes or a named revision
+range. It does not execute a Spec Kit command or authorize repairs. For an
+implementation batch, the same procedure is already part of its completion gate.
+
+```text
+REVIEW_SCOPE=<current Git Changes or an explicit base/head and paths>
+Review only REVIEW_SCOPE using docs/engineering/code-review.md.
+Read the constitution, engineering ownership map and applicable guides. For a
+phase review read every engineering guide and verify its phase/spec/pointer.
+Use the same documented structure, code style and module patterns as authoring.
+Inspect full changed files and relevant callers/contracts/data/consumers; include
+in-scope untracked files and report unread/excluded paths.
+Record applicable guide sections and defined B/F rule IDs with evidence or a
+capability-based N/A. Report concrete file/line findings, impact and minimal fixes.
+Give separate REQUIREMENTS and ENGINEERING STANDARDS verdicts and distinguish
+fresh/reused/cached/unperformed verification. Preserve the current design and
+all selected-command boundaries. This request is read-only: report in the response,
+do not change files, run artifact-writing checks, append tasks, commit or push.
+Produce the review report in English. Stop after the review.
+```
+
 ## Static application audit
 
 For a separate report-only source audit, use

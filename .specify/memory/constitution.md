@@ -1,4 +1,23 @@
 <!--
+Sync Impact Report (2026-11-01, documented engineering compliance)
+- Version change: 2.2.0 -> 2.3.0 (MINOR: explicit standards-based review obligations).
+- Owner decision: code authoring and review must follow the same documented Fury
+  structure, coding style and module patterns.
+- Modified principle: IV; expanded Applicability, Architecture check and Governance.
+- Added guide: docs/engineering/code-review.md. Removed principles/sections: none.
+- Synchronized: AGENTS.md; README.md; engineering owner/style/backend/frontend/data/
+  security/testing guides; workflow operating policy, prompt pack, launchers and
+  audit/legacy launchers; four Spec Kit templates; all ten local command adapters.
+- Corrected documentation routing: unassigned B IDs and dated product/upgrade notes.
+- Reviewed unchanged: API contracts, design/backup guides, historical audit/closeout
+  records and generic constitution template; no product or application change.
+- Ratification remains 2026-09-22. Constitution VI exceptions, backend-first gates,
+  scope/approval/command boundaries and all accepted feature artifacts are preserved.
+- No implementation conformity, test execution, phase exit or release is certified
+  by this documentation amendment. No governance TODO remains.
+-->
+
+<!--
 Sync Impact Report (2026-11-01, media-foundation authorization)
 - Version change: 2.1.0 -> 2.2.0 (MINOR: bounded legacy-media obligations/exception).
 - Explicit owner decision: numerical limits approved; animated Work media and
@@ -237,6 +256,14 @@ runtime validation, documentation, and consumers.
   Findings MUST cite a concrete file and rule with the required correction. Reviewers
   MUST NOT turn subjective style preferences into blocking tasks without a specific
   rule violation or maintainability/correctness risk.
+- Code authoring and review MUST use the same documented engineering baseline.
+  `docs/engineering/README.md` owns guide/rule routing,
+  `docs/engineering/code-style.md` owns module pattern selection, and
+  `docs/engineering/code-review.md` owns review coverage, findings and verdicts.
+  Reviewers MUST record applicable guide sections and defined B/F rule IDs with
+  scoped evidence or an explicit capability-based N/A. They MUST report requirements
+  and engineering-standards verdicts separately. Passing behavior tests MUST NOT
+  waive an applicable mandatory style, ownership or module-boundary violation.
 
 Architecture exists to make authority, failure, and ownership visible to maintainers.
 
@@ -455,6 +482,12 @@ skill catalog and read each applicable skill before using it. A plan or review M
 record the applicable engineering rule IDs and skill gates; implementation MUST check
 the resulting code against them before claiming completion.
 
+For ordinary code work outside Spec Kit, agents MUST read the engineering map and
+the guides relevant to the touched boundaries. Every code review MUST follow
+`docs/engineering/code-review.md`, including the authoring baseline, current scope,
+unreviewed paths, rule coverage and actual evidence. Historical audits, examples and
+old task dispositions MUST NOT replace current normative engineering guidance.
+
 Capability-specific rules apply only when a feature touches that capability. Media,
 advertising, credential URLs, external providers, concurrency control, migrations,
 browser/device checks, and other specialized guidance MUST NOT create new product scope
@@ -470,8 +503,9 @@ Existing deviations are not precedents. When touched, they MUST be corrected wit
 the accepted scope or recorded as explicit unresolved work with impact and ownership.
 Ratification does not certify that every pre-existing line already complies.
 
-The engineering reference map owns code placement. The operating policy owns phase
-and review procedure; `docs/workflow/speckit-prompts.txt` owns the selected-command
+The engineering reference map owns code placement. The code-review guide owns the
+engineering review procedure; the operating policy owns its authorization and phase
+application. `docs/workflow/speckit-prompts.txt` owns the selected-command
 contract and `docs/workflow/prompts.md` provides copyable launchers. These documents
 MUST remain consistent. No model, provider, profile or delegation split is required;
 use the current session settings and delegate only when explicitly requested.
@@ -499,6 +533,8 @@ with a capability reason, or a blocking violation for each check below:
    Apply the `code-style.md` review gate to the named files: names, function scope,
    dependency direction, justified abstractions, duplicated knowledge, dead code,
    boundary and error behavior must have concrete findings or a clean pass.
+   Use `docs/engineering/code-review.md` to record rule applicability, file evidence
+   and separate requirements/engineering verdicts against this same authoring baseline.
 5. **Data and races**: identify invariants, constraints/indexes, transaction and
    concurrency strategy, duplicate/stale/retry/history/deletion/side-effect semantics,
    forward migration, existing-data handling, and recovery evidence where applicable.
@@ -551,4 +587,11 @@ perform the Constitution Check. Unresolved non-compliance MUST block acceptance 
 the constitution itself is amended. Reviews MUST use the current worktree and fresh
 checks rather than inherited claims.
 
-**Version**: 2.2.0 | **Ratified**: 2026-09-22 | **Last Amended**: 2026-11-01
+Conformity to the relevant engineering guides is a mandatory acceptance dimension,
+not an optional reviewer preference. A review MUST identify its source scope and
+applicable rules; missing coverage or required evidence remains explicit. Unresolved
+mandatory violations block the affected acceptance. Recording a justified exception
+does not amend a rule or confer owner approval. The selected command still controls
+whether findings may be repaired, reported or appended as remediation tasks.
+
+**Version**: 2.3.0 | **Ratified**: 2026-09-22 | **Last Amended**: 2026-11-01

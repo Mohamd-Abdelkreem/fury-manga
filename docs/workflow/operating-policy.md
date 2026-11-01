@@ -26,6 +26,8 @@ change model settings, enforce permissions or establish a verification result.
 Explicit current owner decisions govern authorized work. The constitution governs
 engineering and delivery; accepted `PLAN.md` and feature requirements govern product
 intent; the [engineering map](../engineering/README.md) governs code placement.
+The [code review procedure](../engineering/code-review.md) governs engineering
+review coverage, findings and verdicts against that same authoring baseline.
 Source, configuration and fresh checks establish implementation reality. Resolve
 conflicts explicitly rather than copying fixtures or weakening accepted requirements.
 
@@ -129,9 +131,10 @@ read-only. Task checkboxes change only after actual in-scope work and required c
 For every bounded implementation batch:
 
 1. Implement only the accepted behavior through its existing owners.
-2. Review the actual diff and immediate callers using the same engineering rules.
-   Check B33, error/type/query/mapper owners, dependency direction, meaningful reuse,
-   names, failure paths, authority, contracts, data and preserved presentation.
+2. Review the actual changed files and relevant callers using the
+   [code review procedure](../engineering/code-review.md). Record the applicable
+   guide sections and defined B/F rules used for authoring, their evidence and
+   unresolved violations. Neither an old source pattern nor passing tests waives them.
 3. Apply installed matching skills: `clean-code-guard` for nontrivial production,
    `test-guard` for changed tests, `docs-guard` for technical docs and
    `vercel-react-best-practices` for React/Next. Other skills apply by their scope.
@@ -141,7 +144,13 @@ For every bounded implementation batch:
    for browser-only claims. Missing infrastructure leaves the relevant gate open.
 5. Fix required in-scope findings; diagnose whether a failure belongs to code, tests,
    environment or an owner decision. Never weaken valid tests or change policy to pass.
-6. Record actual results, warnings, unavailable checks and batch/phase status.
+6. Record separate requirements and engineering-standards verdicts, actual checks,
+   warnings, unavailable evidence and batch/phase status. Required unresolved
+   violations block the affected acceptance; reviewer preferences add no product scope.
+
+Standalone code review follows the same procedure in read-only mode unless the
+owner explicitly authorizes repairs or a report destination. This is not a new
+Spec Kit command and does not change ANALYZE/CONVERGE's narrower write boundaries.
 
 For documentation-only work, check formatting, links, commands, references and
 examples. Do not run unrelated application suites or an aggregate that formats the

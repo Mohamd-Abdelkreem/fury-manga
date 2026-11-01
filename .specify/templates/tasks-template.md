@@ -38,11 +38,14 @@ imports and the exported class at top level. Include a file-owner audit for touc
 API and web files: errors in feature errors, types in their owner, pure rules/form
 logic in feature model or rules, transport in api, query/cache lifecycle in hooks,
 and UI interaction in components. Add a review task after affected work that
+follows `docs/engineering/code-review.md` using the same authoring baseline and
 checks the `docs/engineering/code-style.md` review gate on the changed files:
 names, coherent functions, justified abstractions, duplicated knowledge, dead
 code, preserved behavior, boundary validation and error handling. The task MUST
-record concrete file/rule findings and fixes or a clean pass, plus fresh package
-type/lint/format outcomes and apply the matching installed skills
+record concrete file/rule findings and fixes or a clean pass, applicability coverage,
+separate requirements and engineering-standards verdicts, and actual package
+type/lint/format outcomes where authorized. Required violations block affected
+acceptance. Apply the matching installed skills
 (`clean-code-guard` for nontrivial production
 code, `test-guard` for test code, `docs-guard` for technical docs, and
 `vercel-react-best-practices` for React/Next.js code). Apply other matching skills by
@@ -125,7 +128,7 @@ or presentation-changing corrections remain owner-decision gates, not checked ta
 ## Phase 4: Selected-Scope Review and Phase Exit
 
 - [ ] T018 Update only affected technical/operation docs against final source and apply docs-guard
-- [ ] T019 Re-run Constitution Check against actual changed files, file-owner/code-quality review, skill findings and fresh type/lint/format/behavior evidence
+- [ ] T019 Re-run Constitution Check and docs/engineering/code-review.md against actual changed files; record guide/rule coverage, separate requirements/engineering verdicts, skill findings and fresh type/lint/format/behavior evidence
 - [ ] T020 Run required affected regressions/full current phase-exit checks from [verified scripts]; record services, outcomes and any unverified boundary
 - [ ] T021 Record exact completed IDs, batch/backend/whole-phase status, frozen-UI evidence, warnings and remaining owner/release gates in [existing feature/evidence owner]
 

@@ -36,6 +36,7 @@ IDs/content on append. Generation is not approval; leave new custom items unchec
 - [ ] CHK004 Are relevant actors, authority/publication/privacy, contracts and state/failure outcomes clear and consistent? [reference]
 - [ ] CHK005 Are applicable data/media/concurrency/recovery requirements and boundaries measurable? [reference]
 - [ ] CHK006 Are real test/review/boundary criteria, services, ownership and remaining decisions specified? [reference]
+- [ ] CHK007 Does the plan map applicable engineering guide sections/defined B/F rules to code owners and require separate requirements/standards verdicts under docs/engineering/code-review.md? [plan reference]
 
 ## Review Evidence
 

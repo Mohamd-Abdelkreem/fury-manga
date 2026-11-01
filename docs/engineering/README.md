@@ -25,24 +25,25 @@ baseline does not authorize redesign or new product scope.
 Read the [operating policy](../workflow/operating-policy.md),
 [command contract](../workflow/speckit-prompts.txt) and
 [English launchers](../workflow/prompts.md) for one selected phase/command. At phase
-start read all eight Markdown files directly in this engineering directory, then
+start read every Markdown file directly in this engineering directory, then
 apply the relevant B/F rules and skill gates to each bounded batch and its review.
 
 ## One owner per topic
 
-| File                                                   | Owns                                                               |
-| ------------------------------------------------------ | ------------------------------------------------------------------ |
-| [AGENTS.md](../../AGENTS.md)                           | Entry and relevant-reference routing                               |
-| README.md                                              | This ownership/read/adoption map                                   |
-| [code-style.md](code-style.md)                         | Naming, imports, types, functions/classes and shared-code criteria |
-| [backend-standard.md](backend-standard.md)             | Backend rule IDs and complete layer-by-layer module example        |
-| [frontend-standard.md](frontend-standard.md)           | Frontend rule IDs, feature/form/cache/async examples               |
-| [api-contracts.md](api-contracts.md)                   | Shared request/output schemas, DTOs and HTTP boundaries            |
-| [data-patterns.md](data-patterns.md)                   | Schema/constraints/query/transaction/migration details             |
-| [testing.md](testing.md)                               | Evidence requirements, test examples, suite selection and cleanup  |
-| [security.md](security.md)                             | Authority, credential/error/log/cache/media boundaries             |
-| [design-system.md](../design/design-system.md)         | Preserving Fury's frozen visual and interaction system             |
-| [operating-policy.md](../workflow/operating-policy.md) | Task brief, delegation/review, decisions, phase stops and resume   |
+| File                                                   | Owns                                                                                 |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| [AGENTS.md](../../AGENTS.md)                           | Entry and relevant-reference routing                                                 |
+| README.md                                              | This ownership/read/adoption map                                                     |
+| [code-style.md](code-style.md)                         | Naming, imports, types, functions/classes and shared-code criteria                   |
+| [code-review.md](code-review.md)                       | Review scope, rule coverage, findings and separate requirements/engineering verdicts |
+| [backend-standard.md](backend-standard.md)             | Backend rule IDs and complete layer-by-layer module example                          |
+| [frontend-standard.md](frontend-standard.md)           | Frontend rule IDs, feature/form/cache/async examples                                 |
+| [api-contracts.md](api-contracts.md)                   | Shared request/output schemas, DTOs and HTTP boundaries                              |
+| [data-patterns.md](data-patterns.md)                   | Schema/constraints/query/transaction/migration details                               |
+| [testing.md](testing.md)                               | Evidence requirements, test examples, suite selection and cleanup                    |
+| [security.md](security.md)                             | Authority, credential/error/log/cache/media boundaries                               |
+| [design-system.md](../design/design-system.md)         | Preserving Fury's frozen visual and interaction system                               |
+| [operating-policy.md](../workflow/operating-policy.md) | Task brief, review authorization/phase application, decisions, stops and resume      |
 
 The table is a responsibility split, not a target number of files.
 Keep each rule's full explanation in its owner. The backend/frontend ID lists may
@@ -81,18 +82,33 @@ in this directory before planning, task generation, implementation, or review. U
 table below to identify which rules apply to the accepted change after that intake.
 For work outside Spec Kit, use the table to select the guides to read.
 
-| Requested change          | Read deeply                                                             |
-| ------------------------- | ----------------------------------------------------------------------- |
-| Small UI/layout change    | Relevant F rules, design and applicable style/tests                     |
-| Form/query mutation       | F01/F02/F05–F08/F20/F24/F26/F27 plus contracts/security/tests           |
-| Backend command           | Applicable B rules plus its contract/data/security/test sections        |
-| Schema/concurrency change | Data, relevant B invariants and real integration evidence               |
-| Shared transport/auth     | Security, contracts, relevant B/F lifecycle rules and cross-layer tests |
-| Documentation             | Referenced rule ownership, portable links, examples and scope           |
+| Requested change          | Read deeply                                                               |
+| ------------------------- | ------------------------------------------------------------------------- |
+| Small UI/layout change    | Relevant F rules, design and applicable style/tests                       |
+| Form/query mutation       | F01/F02/F05–F08/F20/F24/F26/F27 plus contracts/security/tests             |
+| Backend command           | Applicable B rules plus its contract/data/security/test sections          |
+| Schema/concurrency change | Data, relevant B invariants and real integration evidence                 |
+| Shared transport/auth     | Security, contracts, relevant B/F lifecycle rules and cross-layer tests   |
+| Documentation             | Referenced rule ownership, portable links, examples and scope             |
+| Code review               | Review procedure plus the same applicable guides/rules used for authoring |
 
 Do not send every document to every task. The brief names the applicable IDs,
 specific code examples and existing project files. Follow linked details when the
 task touches that boundary; a UI label does not excuse sensitive-data review.
+
+## Normative guidance and historical records
+
+The constitution and current engineering guides define how to write and review
+code. Feature specifications define accepted behavior; operation guides define
+procedures for their stated environment and authorization. Dated product audits,
+implementation inventories, transcripts and closeout records describe observations
+at their recorded revision/date. Read their current overlay and verify source
+before reusing a claim. They do not introduce competing module patterns or waive
+current rules. Examples remain teaching fragments, not new product dependencies.
+
+Use only defined rule IDs from the backend/frontend guides. B18, B21, B24 and B39
+are unassigned in this adopted baseline; preserve numbering and do not infer rules
+from another project's vocabulary. Cite unnumbered guidance by file and heading.
 
 ## Example conventions
 

@@ -43,6 +43,9 @@ cross those boundaries, report the blocked hook instead of executing it.
 
 Read the whole roadmap and all `docs/engineering/*.md` guides at phase start,
 then apply relevant B/F owners and matching skill reviews to each bounded batch.
+For implementation reviews, follow `docs/engineering/code-review.md` using the same
+guide/rule baseline as authoring. Record coverage and separate requirements/standards
+verdicts without expanding this command's permitted writes or execution.
 Preserve the current frontend completely under constitution VI: only authorized
 real-data/handler/access/query binding through existing surfaces, with unchanged
 presentation/static copy/routes/dialogs. Missing UI is an owner-decision gate.

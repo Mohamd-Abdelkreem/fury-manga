@@ -165,4 +165,4 @@ separating them from I/O clarifies behavior. Inject clock/ID sources for time-se
 rules; tests control them instead of sleeping. Promote a helper to shared only for
 a real stable cross-feature responsibility.
 
-Relevant rules: B03/B06–B11/B19/B21/B24–B28/B34/B35/B38/B41–B44/B48/B49.
+Relevant rules: B03/B06–B11/B19/B25–B28/B34/B35/B38/B41–B44/B48/B49.

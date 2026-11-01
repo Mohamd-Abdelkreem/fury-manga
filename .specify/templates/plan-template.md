@@ -110,6 +110,11 @@ frontend work that must wait, existing surfaces to reuse and blocking UI decisio
 
 ## Verification and Review
 
+Apply `docs/engineering/code-review.md` to the same authoring baseline. Map the
+selected guide sections/defined B/F IDs to actual file owners and required evidence.
+Record separate requirements and engineering-standards verdicts before acceptance;
+mandatory structural/style violations remain blockers even when behavior tests pass.
+
 [Requirement/risk -> concrete test path -> real boundary/services -> actual command ->
 expected observable outcome. Include applicable failure/access/race/rollback/privacy,
 shared regressions, frozen-UI browser evidence and phase-exit checks. Name B/F rules

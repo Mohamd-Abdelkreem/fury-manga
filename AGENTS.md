@@ -59,6 +59,9 @@ when appropriate; a partial group, fixture or mock success is not acceptance.
 ## Route the work
 
 - All code: [style](docs/engineering/code-style.md) and the ownership map.
+- Code review: [the review procedure](docs/engineering/code-review.md); apply the
+  same guides used for authoring, record applicable rule/file evidence and report
+  requirements and engineering-standards verdicts separately.
 - Backend: [B01–B54](docs/engineering/backend-standard.md), relevant
   [contracts](docs/engineering/api-contracts.md), [data](docs/engineering/data-patterns.md)
   and [security](docs/engineering/security.md).

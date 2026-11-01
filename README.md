@@ -32,6 +32,9 @@ group before connecting its frontend. Missing UI remains an explicit owner decis
 
 Read [AGENTS.md](AGENTS.md), the [engineering owner map](docs/engineering/README.md)
 and [operating policy](docs/workflow/operating-policy.md). Use the
+[code review procedure](docs/engineering/code-review.md) to assess the same coding
+rules and module patterns used during implementation, with separate requirements
+and engineering-standards verdicts. Use the
 [English phase launchers](docs/workflow/prompts.md) and their
 [selected-command contract](docs/workflow/speckit-prompts.txt) for one phase/command
 at a time. No mandatory model/provider/profile or delegated role split is required.

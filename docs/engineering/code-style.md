@@ -33,6 +33,11 @@ logic into its api/hooks/model owner. A refactor never authorizes a frontend red
 
 ## Names and responsibility
 
+Use the same rules when authoring code and applying the
+[code review procedure](code-review.md). Review requirements and engineering
+compliance separately; neither current source nor a green suite waives an adopted
+style or ownership rule.
+
 - Names describe domain and operation; avoid handleData/processEverything/utils
   as containers for unrelated behavior.
 - Files follow local conventions. Backend examples use domain.role.ts; web features
@@ -45,6 +50,39 @@ logic into its api/hooks/model owner. A refactor never authorizes a frontend red
   Avoid cycles and service initialization during imports.
 - Constants have meaningful owners; use canonical enum/action/reason members
   instead of repeated raw backend strings. No global constants dump.
+
+## Module structure and pattern selection
+
+Before adding code, map the operation to an existing feature and identify its
+entry point, contract, state/rules, persistence/provider boundary and consumer.
+Use the [Fury reference owners](README.md#fury-reference-owners) as inspected
+examples, not automatic certificates of compliance. Record the chosen owners and
+applicable rules in the plan or bounded work brief; review that same map afterwards.
+
+| Responsibility            | Placement and pattern                                                                                                                                                                                         |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| API construction          | Existing composition root constructs and injects dependencies; route factories mount the module. B34/B36.                                                                                                     |
+| Validated HTTP adaptation | Feature routes/middleware and thin exported controller class. B01/B05/B14–B16/B33.                                                                                                                            |
+| Use-case sequencing       | Cohesive exported service class; transaction and failure ownership remain visible. B02/B07/B08/B33.                                                                                                           |
+| Independent feature logic | Feature-local `*.rules.ts`, `*.types.ts` and `*.errors.ts`; complex selections in `*.queries.ts`, output projection in `*.mapper.ts`. B03/B04/B12/B33.                                                        |
+| Wire and persistence      | Shared browser-safe schemas in `@fury/contracts`; API DTOs reuse them; Prisma schema/migrations stay in `@fury/database`. B05/B06/B43.                                                                        |
+| Technical integrations    | Existing infrastructure adapter, supplied through composition; product authority stays with its use case. B34/B37/B38.                                                                                        |
+| Web composition           | App Router page/layout composes existing feature owners with deliberate client/server boundaries. F01.                                                                                                        |
+| Web behavior              | Feature `api` owns contract-aware transport, `hooks` own query/mutation/cache lifecycle, `model` owns pure form/state/error rules, `components` own rendering and transient interaction. F01/F05/F07/F24/F27. |
+| Verification              | Reuse the owning feature's test/harness conventions and test actual outcomes at the required boundary. B45–B51/F30/F31.                                                                                       |
+
+Extend the nearest suitable owner before adding a parallel stack. Follow the
+owner's established filename/export/import convention for its responsibility;
+existing UI component names are not a reason to rename unrelated files. A class
+is required for the existing service/controller convention, not for every pure
+function, hook or adapter. Small focused queries may remain in a service under B03.
+
+When no existing pattern fits, explain the concrete need and dependency direction
+before adding a new owner. Require a real use case for abstractions, injected
+collaborators or shared helpers. Create needed files only; the table does not
+require an empty repository/interface/base-class hierarchy. Keep independently
+owned rules/errors out of private helper sections and keep model logic independent
+of UI. Preserve current presentation during any authorized invisible extraction.
 
 ## Types and values
 
@@ -106,6 +144,9 @@ justified by an actual responsibility? Did the change preserve configuration and
 avoid unrelated refactors? Are optional/unknown values handled truthfully?
 
 ## Review gate for changed production code
+
+The [review procedure](code-review.md) owns scope, rule coverage, findings and
+verdicts. This section owns the code-quality questions used by that procedure.
 
 Inspect the changed code and its immediate callers, not just formatter output.
 Record a file and line for each actionable finding, its owning rule, the behavior

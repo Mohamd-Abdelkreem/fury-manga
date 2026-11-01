@@ -1,6 +1,13 @@
 # P04 Chapter storage upgrade
 
-This procedure is for an operator-reviewed P01–P03 to P04 upgrade. The P04 reviewer and P02/P03 exit gates remain open in `specs/005-admin-chapter-publishing/evidence.md`; local migration tests do not authorize a populated deployment. Use the [data model](../../specs/005-admin-chapter-publishing/data-model.md) for invariants and the [Chapter contract](../../specs/005-admin-chapter-publishing/contracts/chapter-http.md) for the later API cutover.
+This procedure is for an operator-reviewed P01–P03 to P04 upgrade. Current local
+phase dispositions are recorded in the [legacy register](../product/legacy-closeout.md);
+older open-gate statements in the P04 evidence describe their recorded dates.
+Local closeout and migration tests do not authorize a populated deployment or
+replace real-data operator/reviewer acceptance. Use the
+[data model](../../specs/005-admin-chapter-publishing/data-model.md) for invariants
+and the [Chapter contract](../../specs/005-admin-chapter-publishing/contracts/chapter-http.md)
+for the API cutover.
 
 For the owner-approved development-only P04 implementation gate, generate representative legacy Chapters and matching private media in an isolated database, back up and restore both, and rehearse the same staged procedure below. Record synthetic editorial choices as fixture decisions only. Passing this trial permits checked implementation tasks; it does not approve P00–P03 reviewer gates, establish the state of future deployment data, or authorize a deployed migration. On an actual deployment, repeat every inventory, real editorial decision and recovery step with separate authorization.
 

@@ -26,6 +26,11 @@ Read [the ownership map](README.md), [contracts](api-contracts.md),
 [security](security.md), [design](../design/design-system.md) and [testing](testing.md)
 as applicable. Existing implementation is not automatic proof of compliance.
 
+Use the [module pattern](code-style.md#module-structure-and-pattern-selection)
+for authoring and the [review procedure](code-review.md) for the same applicable
+F rules. Record file/rule evidence and assess standards separately from functional
+behavior. The procedure preserves the current frontend and exact exceptions below.
+
 ## Fury frontend freeze and integration gate
 
 Constitution VI freezes all existing public, reader, account, workspace and admin

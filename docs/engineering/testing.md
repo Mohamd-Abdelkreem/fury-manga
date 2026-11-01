@@ -6,6 +6,11 @@ test owner is required. Delegate only when explicitly requested. Apply `test-gua
 to changed test code and the relevant production/docs skills to their own artifacts.
 Never weaken valid assertions to pass.
 
+Use the [code review procedure](code-review.md) to assess requirements and
+engineering compliance separately. Verification results support their actual
+boundary; they do not establish module placement, coding-style conformity or
+complete review coverage. Record those observations against their owning guides.
+
 ## Fury execution and acceptance
 
 Use actual manifest scripts in the `@fury` workspace. Root `pnpm test` and

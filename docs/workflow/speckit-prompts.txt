@@ -1,5 +1,5 @@
 FURY SPEC KIT PROMPT PACK
-Adopted: 2026-10-30 | Amended: 2026-11-01 | Constitution: 2.2.0
+Adopted: 2026-10-30 | Amended: 2026-11-01 | Constitution: 2.3.0
 
 PURPOSE AND USE
 
@@ -32,10 +32,10 @@ A. Authority, current state and one selected phase
 
 - Read AGENTS.md, applicable nested instructions, the selected installed skill,
   .specify/memory/constitution.md, PLAN.md and docs/workflow/operating-policy.md.
-- Read the whole roadmap for dependencies/conflicts. At phase start read all eight
-  Markdown guides directly under docs/engineering/: README.md, code-style.md,
-  backend-standard.md, frontend-standard.md, api-contracts.md, data-patterns.md,
-  security.md and testing.md. Revisit relevant rules/source/callers for each batch.
+- Read the whole roadmap for dependencies/conflicts. At phase start read every
+  Markdown guide directly under docs/engineering/, starting with README.md.
+  Include code-style.md's module pattern and code-review.md's review procedure.
+  Revisit relevant rules/source/callers for each batch.
 - Authority: explicit current owner decisions; constitution; approved selected-phase
   PLAN.md and feature requirements; engineering guides for HOW; actual source and
   configuration for current facts; generated artifacts; old documents and fixtures.
@@ -182,8 +182,11 @@ F. Verification, skills and truthful completion
   then full required current verification at phase exit/before release. Root pnpm
   verify includes schema formatting/generation and builds; it is not read-only and
   must not run during ANALYZE/CONVERGE or this documentation-only workflow.
-- Review actual changed files and immediate callers against the owning guides and
-  skills. Record concrete file/rule findings and fixes or a clean pass. Missing
+- Review actual changed files and relevant callers under
+  docs/engineering/code-review.md against the same guides used for authoring.
+  Record rule/file coverage, concrete findings and separate requirements and
+  engineering-standards verdicts. Passing tests cannot waive mandatory violations.
+  Preserve the selected command's authority to report, append tasks or fix. Missing
   infrastructure or required unperformed checks leaves the relevant gate incomplete.
   Do not weaken tests, suppress warnings, add retries to hide failure or invent passes.
 - Reports name PHASE_ID, feature path, exact task scope, changed files, actual tests,

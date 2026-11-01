@@ -151,6 +151,11 @@ _Example of marking unclear requirements:_
 
 ## Acceptance Evidence _(mandatory)_
 
+Engineering conformity is inherited from the constitution and owning guides.
+The plan identifies actual code owners/rules; `docs/engineering/code-review.md`
+requires separate requirements and standards verdicts. Keep this specification
+focused on accepted behavior rather than duplicating module layouts or rule bodies.
+
 List meaningful automated evidence for every changed behavior. Cover positive,
 negative, boundary, validation, authorization, privacy, state-transition, failure, and
 regression behavior as applicable. Database/transaction claims require real PostgreSQL;
